@@ -2,11 +2,6 @@
 
 Here are the files needed to figure during the build/deploy process.
 
-## wnttapp/public/signature.json
-
-    E.g. {"version":"1.32"}
-    Used to trigger wnttapp to reload when the version is out of date, when loading graph data.
-
 ## local/.env, remote/config/.env
 
     Contains security and configuration values used by wnttapi. Docker compose will read these and add them to the Django runtime environment.  Format is KEY=VALUE with no quotes.
@@ -29,3 +24,15 @@ Here are the files needed to figure during the build/deploy process.
     - VITE_MAX_DATE : Farthest date in future supported by graph. Should match setting in Django .env file.
     - VITE_NAVD88_MLLW_CONVERSTION : Number to be added to NAVD88 elevations to get MLLW. Should match setting in Django .env file.
     - VITE_MAX_GRAPH_QUERIES_IN_CACHE : Max number of graph queries allowed to be held in query cache. Initially 3. Higher values will increase memory pressure on browser.
+
+## wnttapp/public/signature.json
+
+    E.g. {"version":"1.32"}
+    Used to trigger wnttapp to reload when the version is out of date, when loading graph data.
+
+## wnttapp/.buildnum-dev, wnttapp/.buildnum-prod
+
+Contains a string which is used as follows:
+
+-   Pass to "docker build" as a --build-arg when building wnttapp, so Dockerfile and Dockerfile-dev can set VITE_BUILD_NUM in the React environment. The app can then display it on the About page.
+-   Use to populate the signature.json file (see above).
