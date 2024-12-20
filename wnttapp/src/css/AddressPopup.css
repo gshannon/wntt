@@ -1,0 +1,10 @@
+.address-header {
+    height: 50px;
+    background: var(--steel-blue);
+}
+
+.address-body {
+    color: white;
+    font-weight: bold;
+    background: var(--steel-blue);
+}

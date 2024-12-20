@@ -1,0 +1,30 @@
+name: wntt
+
+services:
+    app:
+        container_name: app-c
+        image: wnttapp:arm
+        ports:
+            # Must be identical for dev, else importing local images fails - vite bug?
+            - 3001:3001
+        restart: unless-stopped
+        volumes:
+            - /Users/gshannon/dev/work/docker/swmp/wnttapp/src:/app/src
+
+    api:
+        container_name: api-c
+        image: wnttapi:arm
+        environment:
+            DJANGO_SETTINGS_MODULE: project.settings.dev
+            SECRET_KEY: ${DJANGO_KEY}
+            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
+            MEAN_HIGH_WATER: ${MEAN_HIGH_WATER}
+            VALID_YEARS: ${VALID_YEARS}
+            ASTRONOMICAL_HIGH_TIDES: ${ASTRONOMICAL_HIGH_TIDES}
+            RECORD_TIDE: ${RECORD_TIDE}
+            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
+        ports:
+            - 8000:8001
+        restart: unless-stopped
+        volumes:
+            - /Users/gshannon/surge/data:/surgedata

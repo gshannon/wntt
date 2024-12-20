@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo wnttapp:
+echo branch: `docker inspect -f "{{.Config.Labels.gitbranch}}" gordo169/wnttapp:amd`
+echo sha: `docker inspect -f "{{.Config.Labels.gitsha}}" gordo169/wnttapp:amd`
+echo
+echo wnttapi:
+echo branch: `docker inspect -f "{{.Config.Labels.gitbranch}}" gordo169/wnttapi:amd`
+echo sha: `docker inspect -f "{{.Config.Labels.gitsha}}" gordo169/wnttapi:amd`

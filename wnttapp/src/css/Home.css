@@ -1,0 +1,32 @@
+/* Home screen */
+.home {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.welcome {
+    display: block;
+    position: absolute;
+    width: 50%;
+    left: 25%;
+    top: 5%;
+    text-align: center;
+    padding: 1em;
+    border-radius: 20px;
+    /* color: white; */
+    color: var(--platinum);
+    background: var(--partial-gray);
+    font-size: 1.25rem;
+}
+
+.welcome a {
+    /* color: var(--powder-blue); */
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.welcome a:hover {
+    color: rgb(0, 13, 255);
+}

@@ -1,0 +1,39 @@
+name: wntt
+
+# This is a RUN-ONLY compose.  All building is done on dev machine, and images pushed to DockerHub.
+
+services:
+    app:
+        image: gordo169/wnttapp:amd
+        container_name: app-c
+        environment:
+            NODE_ENV: production
+        ports:
+            - 80:8081
+        restart: unless-stopped
+        volumes:
+            # keep the logs out of the container so they persist between runs.
+            # This blows away the 2 sym links to /dev/stdout & /dev/stderr that the image creates.
+            # The "docker logs" command will no longer show these. Use "tail -f /var/log/wntt/access.log" etc instead.
+            - /var/log/wntt:/var/log/nginx
+        # Uncomment to allow quick debugging on prod
+        #  - /home/devel/nginx:/etc/nginx/conf.d
+
+    api:
+        image: gordo169/wnttapi:amd
+        environment:
+            DJANGO_SETTINGS_MODULE: project.settings.prod
+            SECRET_KEY: ${DJANGO_KEY}
+            API_ALLOWED_HOST: api-c
+            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
+            MEAN_HIGH_WATER: ${MEAN_HIGH_WATER}
+            VALID_YEARS: ${VALID_YEARS}
+            ASTRONOMICAL_HIGH_TIDES: ${ASTRONOMICAL_HIGH_TIDES}
+            RECORD_TIDE: ${RECORD_TIDE}
+            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
+        container_name: api-c
+        # No ports. container will listen on 8001, but it's only accessible via the proxy
+        restart: unless-stopped
+        volumes:
+            - /home/devel/surge/data:/surgedata
+            - /var/log/wntt:/var/log/wntt

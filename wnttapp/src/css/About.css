@@ -1,0 +1,12 @@
+.about-build {
+    text-align: end;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--powder-blue-orig);
+    font-weight: bold;
+}
+
+.accordion-button {
+    font-weight: bold;
+}

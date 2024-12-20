@@ -1,0 +1,12 @@
+/* Top nav bar */
+.navbar-brand,
+.navbar-brand:hover {
+    color: #f72c58;
+    cursor: pointer;
+}
+
+.exp {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 5px;
+}

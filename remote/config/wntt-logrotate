@@ -1,0 +1,10 @@
+/var/log/wntt*/*.log
+{
+    daily
+    minsize 1M
+    missingok
+    rotate 50
+    nocompress
+    notifempty
+    copytruncate
+}

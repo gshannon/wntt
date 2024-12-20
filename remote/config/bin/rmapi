@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker rmi `docker images | grep wnttapi | awk '{print $3}'` || true
+

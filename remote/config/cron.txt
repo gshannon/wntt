@@ -1,0 +1,3 @@
+# as devel, crontab -e and put this in there
+
+0 5,11,17,23 * * * /home/devel/bin/pull-surge-data

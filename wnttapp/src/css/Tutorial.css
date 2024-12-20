@@ -1,0 +1,42 @@
+.tut-header {
+    height: 50px;
+    background: var(--steel-blue);
+    border-bottom-width: 0;
+}
+
+.carousel-item {
+    height: 470px;
+}
+
+.tut-top {
+    align-items: center;
+    justify-content: center;
+    height: 250px;
+}
+
+.tut-bottom {
+    align-items: center;
+    justify-content: center;
+    height: 180px;
+}
+
+.tut-text {
+    text-align: center;
+    line-height: 1.1rem;
+}
+
+.pic-width-90,
+.pic-width-60-90,
+.pic-width-70-90 {
+    width: 90%;
+}
+
+/* Some of the pics need to be narrower when large, else their height is a problem. */
+@media (min-width: 992px) {
+    .pic-width-60-90 {
+        width: 60%;
+    }
+    .pic-width-70-90 {
+        width: 70%;
+    }
+}

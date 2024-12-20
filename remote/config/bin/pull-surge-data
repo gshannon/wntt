@@ -1,0 +1,63 @@
+#!/bin/bash -e
+
+CWD=$(pwd)
+ROOT=$HOME/surge
+TMPDIR=$ROOT/tmp
+INCOMING=$ROOT/incoming
+PORTLAND=$ROOT/portland
+DATADIR=$ROOT/data
+mkdir -p $TMPDIR $INCOMING $PORTLAND $DATADIR
+
+DOWNLOADED=$ROOT/downloaded
+
+WELLS_STN=8419317
+PORTLAND_STN=8418150
+# NOTE: Everything is in GMT here.
+FILEDATE=$(date +%Y%m%d)  # e.g. 20240321
+HOUR=$(date +%H)
+NOW=$(date +%Y%m%d%H%M%S)
+if [ $HOUR -ge 23 ]; then
+    CYCLE='18'
+elif [ $HOUR -ge 17 ]; then
+    CYCLE='12'
+elif [ $HOUR -ge 11 ]; then
+    CYCLE='06'
+elif [ $HOUR -ge 5 ]; then
+    CYCLE='00'
+else
+    # Use yesterday's last cycle
+    FILEDATE=$(date -d '-1 day' +%Y%m%d)
+    CYCLE='18'
+fi
+# This is the file we believe is the latest
+FILE=etss.t${CYCLE}z.csv.tar.gz
+
+SAVEFILE=${FILEDATE}-${CYCLE}.csv
+
+# Do nothing if we already have this file
+if [ $(grep -c $SAVEFILE $DOWNLOADED) -gt 0 ]; then
+  echo "$FILE has been processed already, exiting..."
+  exit 0
+fi
+
+URL="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${FILEDATE}/${FILE}"
+echo $URL
+cd $TMPDIR
+curl --no-progress-meter -o $FILE $URL
+tar zxf $FILE
+# move a nicely named copy to where the webapp can read it
+cp etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv $DATADIR/surge-data.csv
+# move it to where the consumer job can save it to the db and delete it
+mv etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv $INCOMING/$SAVEFILE
+# remember it so we don't download it again. keep the last 10 files downlaoded
+tail -9 $DOWNLOADED > /tmp/_downloaded
+echo $SAVEFILE >> /tmp/_downloaded
+mv /tmp/_downloaded $DOWNLOADED
+
+# also grab Portland data!
+cp etss.$FILEDATE/t${CYCLE}z_csv/${PORTLAND_STN}.csv $PORTLAND/$SAVEFILE
+
+echo "$(date) downloaded: $SAVEFILE" >> $ROOT/log
+rm -rf *
+cd $CWD
+exit 0

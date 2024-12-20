@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+# Look at the nginx log
+ID=`docker inspect --format '{{ .Id }}' api-c`
+sudo less -X /var/lib/docker/containers/$ID/$ID-json.log

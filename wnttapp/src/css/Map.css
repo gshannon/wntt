@@ -1,0 +1,29 @@
+.table {
+    margin-bottom: 0;
+}
+
+.map-vertical-buttons {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    /* align-items: center; */
+}
+
+.map-container {
+    height: 65vh;
+    width: 100%;
+}
+
+.map-text {
+    display: flex;
+    align-items: center;
+    color: black;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+/* Without this, the markers transparent images get white backgrounds and a border */
+.leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+}

@@ -1,0 +1,6 @@
+/* For xs, sm & md we prevent it from exceeding the column boundaries */
+@media (max-width: 991px) {
+    .pic {
+        width: 75%;
+    }
+}

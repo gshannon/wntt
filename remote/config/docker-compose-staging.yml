@@ -1,0 +1,36 @@
+name: wntt
+
+# This is a RUN-ONLY compose.  All building is done on dev machine, and images pushed to DockerHub.
+
+services:
+    appstaging:
+        image: gordo169/wnttapp-s:amd
+        container_name: app-c-staging
+        environment:
+            NODE_ENV: production
+        ports:
+            - 82:8082
+        restart: unless-stopped
+        volumes:
+            - /var/log/wntt-staging:/var/log/nginx
+        # Uncomment to allow quick debugging
+        #  - /home/devel/nginx:/etc/nginx/conf.d
+
+    apistaging:
+        image: gordo169/wnttapi-s:amd
+        environment:
+            DJANGO_SETTINGS_MODULE: project.settings.prod
+            SECRET_KEY: ${DJANGO_KEY}
+            API_ALLOWED_HOST: api-c-staging
+            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
+            MEAN_HIGH_WATER: ${MEAN_HIGH_WATER}
+            VALID_YEARS: ${VALID_YEARS}
+            ASTRONOMICAL_HIGH_TIDES: ${ASTRONOMICAL_HIGH_TIDES}
+            RECORD_TIDE: ${RECORD_TIDE}
+            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
+        container_name: api-c-staging
+        # No ports. container will listen on 8081, but it's only accessible via the proxy
+        restart: unless-stopped
+        volumes:
+            - /home/devel/surge/data:/surgedata
+            - /var/log/wntt-staging:/var/log/wntt
