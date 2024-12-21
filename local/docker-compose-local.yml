@@ -9,7 +9,7 @@ services:
             - 3001:3001
         restart: unless-stopped
         volumes:
-            - /Users/gshannon/dev/work/docker/swmp/wnttapp/src:/app/src
+            - /Users/gshannon/dev/work/docker/wntt/wnttapp/src:/app/src
 
     api:
         container_name: api-c

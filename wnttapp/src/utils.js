@@ -21,15 +21,12 @@ export const Page = Object.freeze({
     About: 5,
 })
 
-// Provide a consistent string format of a date. E.g DatePicker
-// gives us padded '09/03/2024' while Date.toLocaleDateString() returns '9/3/2024'.
-// This avoids having to compare strings by converting to Date, then back to string.
+// Provide a consistent string version of a date MM/DD/YYYY for convenience.
 export const stringify = (date) => {
-    return date.toLocaleDateString('en-US', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric',
-    })
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${month}/${day}/${year}`
 }
 
 // Give a Date or a string.  Days may be negative. Returns Date.
