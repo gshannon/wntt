@@ -21,7 +21,7 @@ export const Page = Object.freeze({
     About: 5,
 })
 
-// Provide a consistent string version of a date MM/DD/YYYY for convenience.
+// Provide a consistent string version of a date as MM/DD/YYYY for convenience.
 export const stringify = (date) => {
     const year = date.getUTCFullYear()
     const month = String(date.getUTCMonth() + 1).padStart(2, '0')
@@ -40,15 +40,15 @@ export const addDays = (date, days) => {
 export const dateDiff = (date1, date2) => {
     const d1 = new Date(date1)
     const d2 = new Date(date2)
-    const oneDay = 24 * 60 * 60 * 1000 // millis in a day
+    const oneDay = 24 * 60 * 60 * 1000 // millis in a normal day
     return Math.round(Math.abs((d2 - d1) / oneDay)) // round to account for DST change
 }
 
 // Pass a Date or string. Returns same, within min/max settings.
 export const limitDate = (date) => {
-    let copy = new Date(date)
-    copy = new Date(Math.max(copy, MinDate))
-    return new Date(Math.min(copy, MaxDate))
+    const d1 = new Date(date)
+    const d2 = new Date(Math.max(d1, MinDate))
+    return new Date(Math.min(d2, MaxDate))
 }
 
 // change this when necessary after changes to prevent reading old values
@@ -56,12 +56,12 @@ const _local_storage_version = '001'
 const _local_storage_prefix = 'wntt'
 
 // If daily is true, we store an object with "day" and "value" keys, with the day
-// set to today's date.
-export const setLocalStorage = (key, value, daily) => {
+// set to today's date. The date param is for testing only.
+export const setLocalStorage = (key, value, daily = false, date = new Date()) => {
     const lsKey = `${_local_storage_prefix}-${key}-${_local_storage_version}`
     try {
         if (daily) {
-            const dateKey = stringify(new Date())
+            const dateKey = stringify(date)
             const json = JSON.stringify({ day: dateKey, value: value })
             window.localStorage.setItem(lsKey, json)
         } else {
@@ -73,15 +73,16 @@ export const setLocalStorage = (key, value, daily) => {
 }
 
 // If daily is true, we expect an object with "day" and "value" keys, and
-// return the value only if the day matches the current date.
-export const getLocalStorage = (key, daily) => {
+// return the value only if the day matches the current date. The date param
+// is for testing only.
+export const getLocalStorage = (key, daily = false, date = new Date()) => {
     const lsKey = `${_local_storage_prefix}-${key}-${_local_storage_version}`
     try {
         const data = window.localStorage.getItem(lsKey)
         if (data) {
             if (daily) {
                 // The value will be an object with "day" and "value"
-                const dateKey = stringify(new Date())
+                const dateKey = stringify(date)
                 const { day, value } = JSON.parse(data)
                 if (day === dateKey) {
                     return value
