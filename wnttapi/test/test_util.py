@@ -12,8 +12,8 @@ class TestGraphUtil(TestCase):
         start_date = end_date = date(2024, 3, 1)
         timeline = util.build_timeline(start_date, end_date, tz.eastern)
         self.assertEqual(len(timeline), normal_count)
-        self.assertEqual(timeline[0], tz.eastern.localize(datetime(2024, 3, 1, 0)))
-        self.assertEqual(timeline[normal_count-1], tz.eastern.localize(datetime(2024, 3, 2, 0)))
+        self.assertEqual(timeline[0], datetime(2024, 3, 1, 0, tzinfo=tz.eastern))
+        self.assertEqual(timeline[normal_count-1], datetime(2024, 3, 2, 0, tzinfo=tz.eastern))
 
         # Start of DST, skips 2AM (4 elements)
         start_date = end_date = date(2024, 3, 10)
@@ -53,7 +53,7 @@ class TestGraphUtil(TestCase):
         dt = datetime(2023, 12, 31, 23, 52, tzinfo=tz.eastern)
         self.assertEqual(util.round_to_quarter(dt), datetime(2023, 12, 31, 23, 45, tzinfo=tz.eastern))
         dt = datetime(2023, 12, 31, 23, 53, tzinfo=tz.eastern)
-        self.assertEqual(util.round_to_quarter(dt), datetime(2024, 1, 1, 0, 0, tzinfo=tz.eastern))
+        self.assertEqual(util.round_to_quarter(dt), datetime(2024, 1, 1, tzinfo=tz.eastern))
 
 
     def test_timeline_info(self):
@@ -62,18 +62,18 @@ class TestGraphUtil(TestCase):
         tzone = timeline[0].tzinfo
 
         # All in the future
-        (a, b) = util.get_timeline_info(timeline, tzone.localize(datetime(2024,6,1)))
+        (a, b) = util.get_timeline_info(timeline, datetime(2024,6,1,tzinfo=tzone))
         self.assertEqual((a,b), (-1, -1))
 
         # All in the past.
-        (a, b) = util.get_timeline_info(timeline, tzone.localize(datetime(2024,6,2)))
+        (a, b) = util.get_timeline_info(timeline, datetime(2024,6,2,tzinfo=tzone))
         self.assertEqual((a,b), (0,-1))
 
         # Mixed
         (a, b) = util.get_timeline_info(timeline,
-            tzone.localize(datetime(2024,6,1, 0, 1)))
+            datetime(2024,6,1, 0, 1, 0, tzinfo=tzone))
         self.assertEqual((a,b), (0, 1))
 
         (a, b) = util.get_timeline_info(timeline,
-            tzone.localize(datetime(2024,6,1, 23, 59)))
+            datetime(2024,6,1, 23, 59, 0, 0, tzinfo=tzone))
         self.assertEqual((a,b), (0, 96))

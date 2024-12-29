@@ -35,10 +35,10 @@ def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes
     if end_date < start_date:
         logger.error("end_date must be greater than start_date")
         raise APIException()
-    local_start = time_zone.localize(datetime.combine(start_date, time(0)))
+    local_start = datetime.combine(start_date, time(0)).replace(tzinfo=time_zone)
     # we'll go until the next day after the range, then consider removing the last entry later
     end_plus = end_date + timedelta(days=1)
-    local_end = time_zone.localize(datetime.combine(end_plus, time(0)))
+    local_end = datetime.combine(end_plus, time(0)).replace(tzinfo=time_zone)
     utc_end = local_end.astimezone(tz.utc)
     # timedelta is broken when crossing DST boundaries in tz's which honor DST, so we'll do all the time
     # math in UTC and convert the answers back to local.
@@ -84,10 +84,17 @@ def round_to_quarter(dt: datetime) -> datetime:
 def navd88_feet_to_mllw_feet(in_value: float) -> float:
     return in_value + cfg.get_mllw_conversion()
 
+def mllw_feet_to_navd88_feet(in_value: float) -> float:
+    return in_value - cfg.get_mllw_conversion()
 
-def meters_navd88_to_feet_mllw(in_value: float) -> float:
+
+def navd88_meters_to_mllw_feet(in_value: float) -> float:
     feet = round(in_value * 3.28084, 2)
     return navd88_feet_to_mllw_feet(feet)
+
+def mllw_feet_to_navd88_meters(in_value: float) -> float:
+    feet = mllw_feet_to_navd88_feet(in_value)
+    return round(feet / 3.28084, 2)
 
 
 def meters_per_second_to_mph(in_value: float) -> float:
