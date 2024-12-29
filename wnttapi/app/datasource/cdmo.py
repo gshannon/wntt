@@ -18,8 +18,8 @@ windspeed_param = 'Wspd'
 windgust_param = 'MaxWspd'
 winddir_param = 'Wdir'
 tide_param = 'Level'
-min_tide = -2.0  # any tide reading lower than this is considered bad data
-max_tide = 20.0  # any tide reading higher than this is considered bad data
+min_tide = -2.0  # any mllw/feet tide reading lower than this is considered bad data
+max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad data
 max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
 
 
@@ -189,7 +189,7 @@ def compute_cdmo_request_dates(requested_start_date: date, requested_end_date: d
     widen the range by a day, either by moving the start date back, or pushing the end date ahead, so we don't miss data.
     """
     naive_start_time = datetime.combine(requested_start_date, time(0))
-    local_start_time = tzone.localize(naive_start_time)
+    local_start_time = naive_start_time.replace(tzinfo=tzone)
     # Convert the start time we want into UTC.
     utc_required_start_time = local_start_time.astimezone(tz.utc)
     # Convert the start time we want into what CDMO would give us, in UTC.
@@ -203,7 +203,7 @@ def compute_cdmo_request_dates(requested_start_date: date, requested_end_date: d
 
     # So the start date is ok. Let's see if we have to move the end date ahead.
     naive_end_time = datetime.combine(requested_end_date, time(23, 45))
-    local_end_time = tzone.localize(naive_end_time)
+    local_end_time = naive_end_time.replace(tzinfo=tzone)
     # Convert the end time we want into UTC.
     utc_required_end_time = local_end_time.astimezone(tz.utc)
     # Convert the end time we want into what CDMO would give us, in UTC.
@@ -224,8 +224,8 @@ def handle_navd88_level(level_str: str, local_dt: datetime):
         return None
     try:
         read_level = float(level_str)
-        level = util.meters_navd88_to_feet_mllw(read_level)
-        if level < min_tide or read_level > max_tide:
+        level = util.navd88_meters_to_mllw_feet(read_level)
+        if level < min_tide or level > max_tide:
             logger.error(f'level out of range for {local_dt}: {level} (raw: {read_level})')
             level = None
     except ValueError:

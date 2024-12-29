@@ -137,7 +137,7 @@ def get_or_load_predicted_surge_file(after: datetime) -> dict:
                 if int(row[0]) % 100 != 0:
                     continue
                 # All file datetimes are UTC. Convert to requested tz.
-                in_utc = tz.utc.localize(datetime.strptime(row[0], "%Y%m%d%H%M"))
+                in_utc = datetime.strptime(row[0], "%Y%m%d%H%M").replace(tzinfo=tz.utc)
                 local_dt = in_utc.astimezone(after.tzinfo)
                 if local_dt <= after:  # don't bother loading surge data that will never be displayed
                     continue

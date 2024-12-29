@@ -13,25 +13,30 @@ class TestCdmo(TestCase):
         pass
 
     def test_handle_navd88(self):
-        self.assertTrue(cdmo.handle_navd88_level(None) is None)
-        self.assertTrue(cdmo.handle_windspeed('nONE') is None)
-        self.assertTrue(cdmo.handle_navd88_level('') is None)
-        self.assertTrue(cdmo.handle_navd88_level('13s') is None)
-        self.assertTrue(cdmo.handle_navd88_level('\n\t') is None)
-        self.assertTrue(cdmo.handle_navd88_level('21.0') is None)
-        self.assertTrue(cdmo.handle_navd88_level('-21.0') is None)
-        self.assertEqual(cdmo.handle_navd88_level('11.5'), util.meters_navd88_to_feet_mllw(11.5))
-        self.assertEqual(cdmo.handle_navd88_level('0'), util.meters_navd88_to_feet_mllw(0))
+        self.assertTrue(cdmo.handle_navd88_level(None,None) is None)
+        self.assertTrue(cdmo.handle_windspeed('nONE',None) is None)
+        self.assertTrue(cdmo.handle_navd88_level('',None) is None)
+        self.assertTrue(cdmo.handle_navd88_level('13s',None) is None)
+        self.assertTrue(cdmo.handle_navd88_level('\n\t',None) is None)
+
+        max_meters = util.mllw_feet_to_navd88_meters(cdmo.max_tide)
+        min_meters = util.mllw_feet_to_navd88_meters(cdmo.min_tide)        
+        self.assertTrue(cdmo.handle_navd88_level(f"{max_meters + 1.0}",None) is None)
+        self.assertTrue(cdmo.handle_navd88_level(f"{max_meters - 1.0}",None) is not None)
+        self.assertTrue(cdmo.handle_navd88_level(f"{min_meters - 1.0}",None) is None)
+        self.assertTrue(cdmo.handle_navd88_level(f"{min_meters + 1.0}",None) is not None)
+        self.assertEqual(cdmo.handle_navd88_level('1.5', None), util.navd88_meters_to_mllw_feet(1.5))
+
 
     def test_handle_windspeed(self):
-        self.assertTrue(cdmo.handle_windspeed(None) is None)
-        self.assertTrue(cdmo.handle_windspeed('nONe') is None)
-        self.assertTrue(cdmo.handle_windspeed('') is None)
-        self.assertTrue(cdmo.handle_windspeed('7..3') is None)
-        self.assertTrue(cdmo.handle_windspeed('\n\t') is None)
-        self.assertTrue(cdmo.handle_windspeed('-0.5') is None)
-        self.assertTrue(cdmo.handle_windspeed('121.0') is None)
-        self.assertEqual(cdmo.handle_windspeed('13.3'), util.meters_per_second_to_mph(13.3))
+        self.assertTrue(cdmo.handle_windspeed(None,None) is None)
+        self.assertTrue(cdmo.handle_windspeed('nONe',None) is None)
+        self.assertTrue(cdmo.handle_windspeed('',None) is None)
+        self.assertTrue(cdmo.handle_windspeed('7..3',None) is None)
+        self.assertTrue(cdmo.handle_windspeed('\n\t',None) is None)
+        self.assertTrue(cdmo.handle_windspeed('-0.5',None) is None)
+        self.assertTrue(cdmo.handle_windspeed('121.0',None) is None)
+        self.assertEqual(cdmo.handle_windspeed('13.3',None), util.meters_per_second_to_mph(13.3))
 
     def test_cdmo_dates_standard(self):
         """In standard time, all US time zones except Eastern are > 5 hours behind, so end date must be adjusted"""
@@ -52,7 +57,7 @@ class TestCdmo(TestCase):
         end_date = dst_start_date + timedelta(days=3)
         self.assertEqual(cdmo.compute_cdmo_request_dates(start_date, end_date, tzone), (start_date, end_date))
 
-    def test_cdmo_dates_eastern_daylight(self):
+    def test_cdmo_dates_daylight(self):
         start_date = date(2024, 6, 1)
         end_date = start_date
         adjustted_start_date = start_date - timedelta(days=1)

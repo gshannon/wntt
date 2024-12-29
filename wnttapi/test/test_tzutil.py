@@ -14,20 +14,20 @@ class TestTzUtil(TestCase):
         # Test a standard time, 1 hour before the clocks spring forward.
         naive_utc5 = datetime(spring_date.year, spring_date.month, spring_date.day, 1)
         # We expect this to be 5 hours behind UTC
-        expected_utc = tz.utc.localize(datetime(spring_date.year, spring_date.month, spring_date.day, 6))
+        expected_utc = datetime(spring_date.year, spring_date.month, spring_date.day, 6, tzinfo=tz.utc)
         self.assertEqual(tz.naive_utc5_to_utc(naive_utc5), expected_utc)
         # And back to Eastern standard time.
         dt = expected_utc.astimezone(tz.eastern)
-        expected_dt = tz.eastern.localize(datetime(dt.year, dt.month, dt.day, 1))
+        expected_dt = datetime(dt.year, dt.month, dt.day, 1, tzinfo=tz.eastern)
         self.assertEqual(expected_utc.astimezone(tz.eastern), expected_dt)
 
         # Test a daylight time, just after the jump.
         naive_utc5 = datetime(spring_date.year, spring_date.month, spring_date.day, 3)
         # Again, utc5 is 5 hours behind UTC
-        expected_utc = tz.utc.localize(datetime(spring_date.year, spring_date.month, spring_date.day, 8))
+        expected_utc = datetime(spring_date.year, spring_date.month, spring_date.day, 8, tzinfo=tz.utc)
         self.assertEqual(tz.naive_utc5_to_utc(naive_utc5), expected_utc)
         dt = expected_utc.astimezone(tz.eastern)
         # This time we wind up at 0400, correctly 1 hour past the UTC-5 time.
-        expected_dt = tz.eastern.localize(datetime(dt.year, dt.month, dt.day, 4))
+        expected_dt = datetime(dt.year, dt.month, dt.day, 4, tzinfo=tz.eastern) 
         self.assertEqual(expected_utc.astimezone(tz.eastern), expected_dt)
 

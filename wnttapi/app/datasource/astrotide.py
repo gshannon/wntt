@@ -59,7 +59,7 @@ def get_astro_tides(timeline: list) -> list:
         for pred in predictions:
             dts = pred['t']
             val = pred['v']
-            utc = tz.utc.localize(datetime.strptime(dts, "%Y-%m-%d %H:%M"))
+            utc = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=tz.utc)
             dt = utc.astimezone(timeline[0].tzinfo)
             preds[dt] = round(float(val), 2)
             found += 1
