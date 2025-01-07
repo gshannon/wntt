@@ -8,13 +8,23 @@ fi
 # User specific environment and startup programs
 set -o vi
 
-alias l='ls -F'
-alias la='ls -Fa'
-alias ll='ls -l'
+# These are the default aliases for Ubuntu:
+# alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+# alias egrep='egrep --color=auto'
+# alias fgrep='fgrep --color=auto'
+# alias grep='grep --color=auto'
+# alias l='ls -CF'
+# alias la='ls -A'
+# alias ll='ls -alF'
+# alias ls='ls --color=auto'
+
+
+# alias la='ls -Fa'
+# alias ll='ls -l'
 alias lla='ls -Fla'
 alias ltr='ls -Fltr'
 
-PATH=$PATH:/home/devel/bin
+PATH=$PATH:/home/tides/bin
 
 
 alias d="docker"

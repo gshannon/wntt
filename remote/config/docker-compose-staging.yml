@@ -14,7 +14,7 @@ services:
         volumes:
             - /var/log/wntt-staging:/var/log/nginx
         # Uncomment to allow quick debugging
-        #  - /home/devel/nginx:/etc/nginx/conf.d
+        #  - /home/tides/nginx:/etc/nginx/conf.d
 
     apistaging:
         image: gordo169/wnttapi-s:amd
@@ -32,5 +32,5 @@ services:
         # No ports. container will listen on 8081, but it's only accessible via the proxy
         restart: unless-stopped
         volumes:
-            - /home/devel/surge/data:/surgedata
+            - /home/tides/surge/data:/surgedata
             - /var/log/wntt-staging:/var/log/wntt
