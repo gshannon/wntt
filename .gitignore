@@ -9,6 +9,7 @@
 .env.*
 .vscode/
 !.vscode/extensions.json
+remote/setup
 node_modules/
 .ipyb_checkpoints/
 staticfiles/
