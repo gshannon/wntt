@@ -26,7 +26,7 @@ export default function App() {
     }, [])
 
     const gotoPage = (opt) => {
-        setLocalStorage('page', opt, true)
+        setLocalStorage('page', opt, false)
         setCurPage(opt)
     }
 
