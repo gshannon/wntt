@@ -10,6 +10,7 @@ services:
             NODE_ENV: production
         ports:
             - 80:8081
+            - 443:8081
         restart: unless-stopped
         volumes:
             # keep the logs out of the container so they persist between runs.
@@ -17,7 +18,7 @@ services:
             # The "docker logs" command will no longer show these. Use "tail -f /var/log/wntt/access.log" etc instead.
             - /var/log/wntt:/var/log/nginx
         # Uncomment to allow quick debugging on prod
-        #  - /home/devel/nginx:/etc/nginx/conf.d
+        #  - /home/tides/nginx:/etc/nginx/conf.d
 
     api:
         image: gordo169/wnttapi:amd
@@ -35,5 +36,5 @@ services:
         # No ports. container will listen on 8001, but it's only accessible via the proxy
         restart: unless-stopped
         volumes:
-            - /home/devel/surge/data:/surgedata
+            - /home/tides/surge/data:/surgedata
             - /var/log/wntt:/var/log/wntt

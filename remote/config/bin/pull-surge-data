@@ -9,6 +9,7 @@ DATADIR=$ROOT/data
 mkdir -p $TMPDIR $INCOMING $PORTLAND $DATADIR
 
 DOWNLOADED=$ROOT/downloaded
+touch $DOWNLOADED
 
 WELLS_STN=8419317
 PORTLAND_STN=8418150
@@ -33,6 +34,7 @@ fi
 FILE=etss.t${CYCLE}z.csv.tar.gz
 
 SAVEFILE=${FILEDATE}-${CYCLE}.csv
+touch $SAVEFILE
 
 # Do nothing if we already have this file
 if [ $(grep -c $SAVEFILE $DOWNLOADED) -gt 0 ]; then
