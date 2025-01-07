@@ -34,7 +34,6 @@ fi
 FILE=etss.t${CYCLE}z.csv.tar.gz
 
 SAVEFILE=${FILEDATE}-${CYCLE}.csv
-touch $SAVEFILE
 
 # Do nothing if we already have this file
 if [ $(grep -c $SAVEFILE $DOWNLOADED) -gt 0 ]; then
