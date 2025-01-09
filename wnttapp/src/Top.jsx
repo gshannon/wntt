@@ -7,6 +7,7 @@ import NavbarCollapse from 'react-bootstrap/NavbarCollapse'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
 import { Page } from './utils'
+import Logo from './images/wr-logo.png'
 
 export default function Top(props) {
     let page = props.page
@@ -14,10 +15,10 @@ export default function Top(props) {
 
     return (
         <>
-            <Navbar className='my-0' expand='sm' bg='dark' data-bs-theme='dark'>
+            <Navbar className='my-0' expand='sm'>
                 <Container>
                     <NavbarBrand onClick={() => gotoPage(Page.Home)}>
-                        <h4>WellsNERR Tide Tracker</h4>
+                        <h4>Wells Reserve Tide Tracker</h4>
                     </NavbarBrand>
                     <NavbarToggle />
                     <NavbarCollapse>
@@ -47,6 +48,14 @@ export default function Top(props) {
                             </NavLink>
                         </Nav>
                     </NavbarCollapse>
+                    <NavbarBrand>
+                        <a
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://wellsreserve.org'>
+                            <img src={Logo} width={165} height={55} alt='Wells Reserve Logo' />
+                        </a>
+                    </NavbarBrand>
                 </Container>
             </Navbar>
         </>

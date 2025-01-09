@@ -1,8 +1,23 @@
 /* Top nav bar */
+
+.navbar {
+    background-color: var(--platinum);
+}
+
 .navbar-brand,
 .navbar-brand:hover {
-    color: #f72c58;
+    color: var(--deep-blue);
     cursor: pointer;
+}
+
+.nav-link,
+.nav-link.show {
+    color: var(--deep-blue);
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--deep-blue);
+    font-weight: bolder;
 }
 
 .exp {

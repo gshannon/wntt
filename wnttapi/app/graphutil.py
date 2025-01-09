@@ -34,7 +34,7 @@ past_surge_title = 'Storm Surge'
 future_surge_title = 'Predicted Storm Surge'
 future_tide_title = 'Predicted Storm Tide'
 tide_graph_title = 'Wells Harbor Recorded Tides vs Predicted Tides'
-wind_graph_title = 'Wells NERR Wind Speed and Direction'
+wind_graph_title = 'Wells Reserve Wind Speed and Direction'
 
 # For now this is all we support, for Wells.  But someday if we support multiple reserves in multiple zones,
 # there will be others to support.
