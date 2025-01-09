@@ -3,7 +3,8 @@
 }
 
 .accordion-button:not(.collapsed) {
-    background-color: var(--powder-blue-orig);
+    color: white;
+    background-color: var(--med-blue);
     font-weight: bold;
 }
 
