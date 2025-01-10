@@ -358,7 +358,13 @@ export default function Graph() {
                 endCtl={endCtl}
                 setEndCtl={setEndCtl}
             />
-            <Row className='justify-content-center align-items-center'>
+            {/*
+            Note we are not using Container because it sets left & right margin to auto, and this
+            doesn't allow enough horizontal space to be used when in between 2 breakpoints.
+            For the Row, we must undo the negative margin it carries as compensation for the Container's.
+            Otherwise it pushes the Row right and causes a horizontal scrollbar.
+            */}
+            <Row className='justify-content-center align-items-center me-0'>
                 <JumpDates
                     id='id-prev'
                     hoverText={`Previous ${numDaysText}`}
