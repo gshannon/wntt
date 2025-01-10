@@ -28,22 +28,29 @@ export default function GetDates(props) {
         appContext.setDateRange(stringify(startCtl.start), stringify(endCtl.end))
     }
 
+    const setApplyButton = (newStart, newEnd) => {
+        // Enable the Apply button if the date range is different from the current range.
+        enableApplyButton.current =
+            stringify(newStart) !== appContext.startDate || stringify(newEnd) !== appContext.endDate
+    }
+
     const handleStartChange = (formatted) => {
         // When they change start date, we automatically change end date also, to match the previously
         // selected number of days shown, if possible.
         // Datepicker won't call this if date is invalid or outside min/max, but it calls it if
         // they empty it out or click Today when date is already today, so we will ignore those.
         if (formatted && formatted !== stringify(startCtl.start)) {
-            const newStart = new Date(formatted)
             const daysShown = dateDiff(startCtl.start, endCtl.end) + 1
+            const newStart = new Date(formatted)
+            const newEnd = limitDate(addDays(newStart, daysShown - 1))
             setStartCtl({ ...startCtl, start: newStart })
             setEndCtl({
                 min: newStart,
                 // Set the end date to honor the numDays from previous settings, limited by overall max.
-                end: limitDate(addDays(newStart, daysShown - 1)),
+                end: newEnd,
                 max: limitDate(addDays(newStart, MaxNumDays - 1)),
             })
-            enableApplyButton.current = true
+            setApplyButton(newStart, newEnd)
         }
     }
 
@@ -52,8 +59,9 @@ export default function GetDates(props) {
         // won't allow a date out of range, we can skip range checking here.
         // Note we must do nothing if the date did not change, as that would cause no re-rendering.
         if (formatted && formatted !== stringify(endCtl.end)) {
-            setEndCtl({ ...endCtl, end: new Date(formatted) })
-            enableApplyButton.current = true
+            const newEnd = new Date(formatted)
+            setEndCtl({ ...endCtl, end: newEnd })
+            setApplyButton(startCtl.start, newEnd)
         }
     }
 
@@ -93,7 +101,7 @@ export default function GetDates(props) {
                                     value={stringify(endCtl.end)}
                                     minDate={stringify(endCtl.min)}
                                     maxDate={stringify(endCtl.max)}
-                                    onChange={(v, f) => handleEndChange(f)}
+                                    onChange={(_, f) => handleEndChange(f)}
                                 />
                                 <FormText muted>Maximum {MaxNumDays} day range</FormText>
                             </Col>

@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
-    const [curPage, setCurPage] = useState(getLocalStorage('page', true) ?? Page.Home)
+    const [curPage, setCurPage] = useState(getLocalStorage('page', false) ?? Page.Home)
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_BUILD_NUM}`)
