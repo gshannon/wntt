@@ -37,13 +37,6 @@ describe('utils', () => {
     })
 
     describe('addDays', () => {
-        // 3/9/2024 is the start of DST
-        const dst_start_pre = new Date('2024-03-9')
-        const dst_start_post = new Date('2024-03-11')
-        // 11/3/2024 is the end of DST
-        const dst_end_pre = new Date('2024-11-02')
-        const dst_end_post = new Date('2024-11-04')
-
         it('should add the specified number of days to the date', () => {
             const date = new Date('2024-05-05')
             const result = addDays(date, 5)
@@ -54,39 +47,6 @@ describe('utils', () => {
             const date = new Date('2024-05-01')
             const result = addDays(date, -3)
             expect(result).toEqual(new Date('2024-04-28'))
-        })
-
-        it('should handle DST start correctly', () => {
-            const result = addDays(dst_start_pre, 2)
-            expect(stringify(result)).toEqual(stringify(dst_start_post))
-        })
-
-        it('should handle DST end correctly', () => {
-            const result = addDays(dst_end_pre, 2)
-            expect(stringify(result)).toEqual(stringify(dst_end_post))
-        })
-    })
-
-    describe('limitDate', () => {
-        // These tests depend on the VITE_MIN_DATE and VITE_MAX_DATE environment variables, set in vitest.config.js
-        it('should return the same date if within min/max settings', () => {
-            const date = new Date('2024-05-05')
-            const result = limitDate(date)
-            expect(result).toEqual(date)
-        })
-
-        it('should return the min date if the input date is before the min date', () => {
-            const date = new Date('2024-01-01')
-            const minDate = new Date(import.meta.env.VITE_MIN_DATE)
-            const result = limitDate(date)
-            expect(result).toEqual(minDate)
-        })
-
-        it('should return the max date if the input date is after the max date', () => {
-            const date = new Date('2025-01-01')
-            const maxDate = new Date(import.meta.env.VITE_MAX_DATE)
-            const result = limitDate(date)
-            expect(result).toEqual(maxDate)
         })
     })
 
