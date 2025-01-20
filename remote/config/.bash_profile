@@ -29,10 +29,12 @@ PATH=$PATH:/home/tides/bin
 
 alias d="docker"
 alias di="docker images"
-alias up="docker compose up -d"
-alias down="docker compose down"
+alias up="docker compose  -f ~/.docker-compose.yml up -d"
+alias down="docker compose  -f ~/.docker-compose.yml down"
+alias startapp="docker compose -f ~/.docker-compose.yml start app"
+alias stopapp="docker compose -f ~/.docker-compose.yml stop app"
 # tail logs
-alias logui="docker logs -f app-c"
+alias logapp="docker logs -f app-c"
 alias logapi="docker logs -f api-c"
 
 alias doagent="docker run -d -v /proc:/host/proc:ro -v /sys:/host/sys:ro digitalocean/do-agent:stable"

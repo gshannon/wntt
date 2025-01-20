@@ -1,6 +1,7 @@
 /var/log/wntt*/*.log
 {
     daily
+    size 2M
     minsize 1M
     missingok
     rotate 50
