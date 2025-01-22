@@ -12,8 +12,8 @@ export default function useLatestData() {
             })
             return res.data
         },
-        staleTime: 60_000 * 15, // keep it fresh for 15 minutes
-        gcTime: 60_000 * 15,
+        staleTime: 60_000 * 5, // keep it fresh for 5 minutes
+        gcTime: 60_000 * 5, // gcTime should be >= staleTime in case they move off the page and return
     })
     return { data, error }
 }

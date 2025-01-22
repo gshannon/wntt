@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 import logging
 from app.datasource import cdmo
 from app import util
@@ -18,32 +18,40 @@ def get_latest_info():
     timeline = util.build_timeline(yesterday, today, time_zone)
 
     wind_speeds, wind_gusts, wind_dir, _ = cdmo.get_recorded_wind_data(timeline)
+    hist_tides = cdmo.get_recorded_tides(timeline)
+    temps = cdmo.get_recorded_temps(timeline)
+
+    timeline.reverse()
     wind_speeds.reverse()
     wind_dir.reverse()
     wind_gusts.reverse()
-    for (wind_speed, wind_gust, wind_dir) in zip(wind_speeds, wind_gusts, wind_dir):
+    hist_tides.reverse()
+    temps.reverse()
+
+
+    for (wind_speed, wind_gust, wind_dir, wind_time) in zip(wind_speeds, wind_gusts, wind_dir, timeline):
         if wind_speed is not None:
             break
 
-    hist_tides = cdmo.get_recorded_tides(timeline)
-    hist_tides.reverse()
-    for tide in hist_tides:
+    for (tide, tide_time) in zip(hist_tides, timeline):
         if tide is not None:
             break
 
-    temps = cdmo.get_recorded_temps(timeline)
-    temps.reverse()
-    for temp in temps:
+    for (temp, temp_time) in zip(temps, timeline):
         if temp is not None:
             break
 
-    logger.debug(f"wind_speed: {wind_speed}, wind_gust: {wind_gust}, wind_dir: {wind_dir}, tide: {tide}")
-    wd = util.degrees_to_dir(wind_dir)
+    logger.debug(f"ws: {wind_speed} [{ftime(wind_time)}], tide: {tide} [{ftime(tide_time)}], temp: {temp} [{ftime(temp_time)}]")
     return {
         'wind_speed': wind_speed,
         'wind_gust': wind_gust,
-        'wind_dir': wd,
+        'wind_dir': util.degrees_to_dir(wind_dir),
         'tide': f'{tide:.2f}',
-        'temp': f'{util.centigrade_to_fahrenheit(temp):.1f}'
+        'temp': f'{util.centigrade_to_fahrenheit(temp):.1f}',
+        'wind_time': ftime(wind_time),
+        'tide_time': ftime(tide_time),
+        'temp_time': ftime(temp_time),
     }
 
+def ftime(dt):
+    return dt.strftime('%b %d %Y %I:%M %p')

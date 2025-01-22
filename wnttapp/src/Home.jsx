@@ -2,6 +2,8 @@ import './css/Home.css'
 import banner from './images/aerial-4.jpg'
 import { Page } from './utils'
 import { Col, Row, Stack } from 'react-bootstrap'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import ToolTip from 'react-bootstrap/Tooltip'
 import { useContext } from 'react'
 import { AppContext } from './AppContext'
 import useLatestData from './useLatestData'
@@ -14,6 +16,9 @@ export default function Home() {
     let windGustStr = noData
     let tideStr = noData
     let tempStr = noData
+    let windTime = ''
+    let tideTime = ''
+    let tempTime = ''
 
     const { data, error } = useLatestData()
 
@@ -24,6 +29,9 @@ export default function Home() {
         windGustStr = `${data.wind_gust} mph`
         tideStr = `${data.tide} ft MLLW`
         tempStr = `${data.temp}º F`
+        windTime = data.wind_time
+        tideTime = data.tide_time
+        tempTime = data.temp_time
     }
 
     return (
@@ -54,28 +62,36 @@ export default function Home() {
             <div className='latest'>
                 <Row className='align-items-center'>
                     <Col className='mx-1 px-1'>
-                        <Stack>
-                            <div className='label'>Wind Speed</div>
-                            <div className='data'>{windSpeedStr}</div>
-                        </Stack>
+                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
+                            <Stack>
+                                <div className='label'>Wind Speed</div>
+                                <div className='data'>{windSpeedStr}</div>
+                            </Stack>
+                        </OverlayTrigger>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <Stack>
-                            <div className='label'>Wind Gust</div>
-                            <div className='data'>{windGustStr}</div>
-                        </Stack>
+                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
+                            <Stack>
+                                <div className='label'>Wind Gust</div>
+                                <div className='data'>{windGustStr}</div>
+                            </Stack>
+                        </OverlayTrigger>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <Stack>
-                            <div className='label'>Tide Level</div>
-                            <div className='data'>{tideStr}</div>
-                        </Stack>
+                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {tideTime}</ToolTip>}>
+                            <Stack>
+                                <div className='label'>Tide Level</div>
+                                <div className='data'>{tideStr}</div>
+                            </Stack>
+                        </OverlayTrigger>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <Stack>
-                            <div className='label'>Water Temperature</div>
-                            <div className='data'>{tempStr}</div>
-                        </Stack>
+                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {tempTime}</ToolTip>}>
+                            <Stack>
+                                <div className='label'>Water Temperature</div>
+                                <div className='data'>{tempStr}</div>
+                            </Stack>
+                        </OverlayTrigger>
                     </Col>
                 </Row>
             </div>

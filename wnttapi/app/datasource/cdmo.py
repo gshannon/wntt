@@ -60,7 +60,7 @@ def get_recorded_wind_data(timeline: list) -> tuple[list, list, list, list]:
         return None, None, None, None
 
     # The graph gets very dense, so we'll reduce the granularity as the day range increases
-    days = (timeline[-1].date() - timeline[0].date()).days + 1
+    days = (timeline[-1].date() - timeline[0].date()).days
     if days > 5:
         minutes = [0]  # only show 1 point per hour
     elif days > 2:
