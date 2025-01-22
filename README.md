@@ -28,7 +28,8 @@ Here are the configuration files needed during the build/deploy process.
 
     Contains security and configuration values used by Vite/React for wnttapp. Vite use the correct file based on NODE_ENV environment setting in docker compose file: either "development" (default) or "production". It then exposes these values to the runtime environment. Format is KEY=VALUE with no quotes.
 
-    - VITE_API_URL : Url used by react app to contact wnttapi service. Initially http://localhost:8000
+    - VITE_API_GRAPH_URL : Url used by react app to get graph data from wnttapi service. Initially http://localhost:8000/graph/
+    - VITE_API_LATEST_URL : Url used by react app to get latest weather data from wnttapi service. Initially http://localhost:8000/latest/
     - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
     - VITE_MIN_DATE : Oldest date supported by graph. Should match setting in Django .env file.
     - VITE_MAX_DATE : Farthest date in future supported by graph. Should match setting in Django .env file.

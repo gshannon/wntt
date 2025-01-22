@@ -36,11 +36,7 @@ export default function App() {
                 <Top page={curPage} gotoPage={gotoPage} />
                 <Control page={curPage} gotoPage={gotoPage} />
             </div>
-            {/* <ReactQueryDevtools
-                initialIsOpen={false}
-                buttonPosition='bottom-left'
-                position='left'
-            /> */}
+            {/* <ReactQueryDevtools initialIsOpen={false} buttonPosition='top-right' position='right' /> */}
         </QueryClientProvider>
     )
 }

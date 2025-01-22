@@ -102,6 +102,8 @@ def meters_per_second_to_mph(in_value: float) -> float:
     miles_per_sec = in_value * 0.000621371
     return round(miles_per_sec * 3600, 1)
 
+def centigrade_to_fahrenheit(in_value: float) -> float:
+    return in_value * 9 / 5 + 32
 
 def degrees_to_dir(degrees) -> str:
     if degrees <= 11:  # 23
@@ -139,11 +141,6 @@ def degrees_to_dir(degrees) -> str:
     else:
         direction = 'N'
     return direction
-
-
-def format_float(value, precision=5, suffix='') -> str:
-    """Format a floating point value suitably for html displaying, with optional precision or suffex (e.g. ft)"""
-    return f"{value:.{precision}f} {suffix}" if value else ''
 
 
 def dump_xml(xml, filename):

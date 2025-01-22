@@ -1,6 +1,7 @@
 from django.urls import path
-from app.views import CreateGraphView
+from app.views import CreateGraphView, LatestInfoView
 
 urlpatterns = [
-    path('', CreateGraphView.as_view(), name="anywhere")
+    path('graph/', CreateGraphView.as_view()),
+    path('latest/', LatestInfoView.as_view()),
 ]

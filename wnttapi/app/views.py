@@ -1,11 +1,19 @@
 from rest_framework.views import APIView, Response
 from datetime import datetime
 from . import graphutil as gr
+from . import swmp
 import re
 import logging
 
 
 logger = logging.getLogger(__name__)
+
+class LatestInfoView(APIView):
+    
+    def post(self, request, format=None):
+        logger.info(request.data)
+        info = swmp.get_latest_info()
+        return Response(data=info)
 
 class CreateGraphView(APIView):
 
@@ -21,3 +29,4 @@ class CreateGraphView(APIView):
         # Gather all data needed for the graph and pass it back here
         graph_data = (gr.get_graph_data(start_date, end_date))
         return Response(data=graph_data)
+    

@@ -8,16 +8,25 @@
 .welcome {
     display: block;
     position: absolute;
-    width: 50%;
-    left: 25%;
+    width: 76%;
+    left: 12%;
     top: 5%;
     text-align: center;
     padding: 1em;
     border-radius: 20px;
-    /* color: white; */
+
     color: var(--platinum);
     background: var(--partial-gray);
-    font-size: 1.25rem;
+    font-size: 1rem;
+}
+
+/* For xl + screens, narrower width and larger font */
+@media (min-width: 1200px) {
+    .welcome {
+        width: 50%;
+        left: 25%;
+        font-size: 1.25rem;
+    }
 }
 
 .welcome a {
@@ -29,4 +38,36 @@
 
 .welcome a:hover {
     color: rgb(0, 13, 255);
+}
+
+.latest {
+    display: block;
+    position: absolute;
+    width: 76%;
+    left: 12%;
+    bottom: 10%;
+    text-align: center;
+    padding: 0.5em;
+    border-radius: 20px;
+    color: var(--platinum);
+    background: var(--med-blue);
+    font-size: 1rem;
+}
+
+/* For xl + screens, narrower width and larger font */
+@media (min-width: 1200px) {
+    .latest {
+        width: 60%;
+        left: 20%;
+        font-size: 1.25rem;
+    }
+}
+
+.latest .label {
+    font-size: 0.9rem;
+    color: white;
+}
+
+.latest .data {
+    font-weight: bold;
 }

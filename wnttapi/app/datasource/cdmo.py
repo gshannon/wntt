@@ -18,6 +18,7 @@ windspeed_param = 'Wspd'
 windgust_param = 'MaxWspd'
 winddir_param = 'Wdir'
 tide_param = 'Level'
+temp_param = 'Temp'
 min_tide = -2.0  # any mllw/feet tide reading lower than this is considered bad data
 max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad data
 max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
@@ -91,6 +92,31 @@ def get_recorded_wind_data(timeline: list) -> tuple[list, list, list, list]:
 
     return speed_data, gust_data, dir_data, dir_strs
 
+def get_recorded_temps(timeline: list) -> list:
+    """
+    For the given list of timezone-aware datetimes, get a list of water temp readings from CDMO.
+    Returned data is corrected for daylight savings time as needed.
+    """
+    if timeline[0] > tz.now(timeline[0].tzinfo):
+        # Nothing to fetch, it's all in the future
+        return None
+
+    raw_levels, _ = get_cdmo(timeline, station=wells_station,
+                                      param=temp_param,
+                                      converter=handle_float, included_minutes=[0, 15, 30, 45])
+    return raw_levels
+
+def dump_all_codes():
+    """Utility function to dump all NERRS metadata to a file."""
+    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
+    try:
+        xml = soap_client.service.exportStationCodesXMLNew()
+        util.dump_xml(xml, '/surgedata/StationCodes.xml')
+    except Exception as e:
+        logger.error(f"Error getting all codes from CDMO", exc_info=e)
+        raise APIException()
+    root = ElTree.fromstring(xml)  # ElementTree.Element
+    return root
 
 def get_cdmo(timeline: list, station: str, param: str, converter, included_minutes: list, noval=None) -> tuple[list, int]:
     """
@@ -216,6 +242,18 @@ def compute_cdmo_request_dates(requested_start_date: date, requested_end_date: d
         return requested_start_date, requested_end_date + timedelta(days=1)
 
     return requested_start_date, requested_end_date
+
+
+def handle_float(data_str: str, local_dt: datetime):
+    """Convert string to float. Returns None if bad data."""
+    if data_str is None or len(data_str.strip()) == 0:
+        return None
+    try:
+        value = float(data_str)
+    except ValueError:
+        logger.error(f'Invalid float for {local_dt}: \'{data_str}\'')
+        value = None
+    return value
 
 
 def handle_navd88_level(level_str: str, local_dt: datetime):

@@ -55,7 +55,7 @@ export default function useGraphData(startDate, endDate) {
         retry: false,
         queryKey: ['graph', startDate + ':' + endDate],
         queryFn: async () => {
-            const res = await axios.post(import.meta.env.VITE_API_URL, {
+            const res = await axios.post(import.meta.env.VITE_API_GRAPH_URL, {
                 start_date: startDate,
                 end_date: endDate,
                 ip: clientIp ?? 'unknown',
