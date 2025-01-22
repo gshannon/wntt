@@ -125,7 +125,8 @@ export default function Graph() {
             modebar: {
                 remove: ['select2d', 'lasso2d', 'autoscale2d', 'zoomIn2d', 'zoomOut2d'],
             },
-            xaxis: { gridcolor: 'black' },
+            // Override default date format to more readable, with 12-hour clock.
+            xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
             xaxis2: { gridcolor: 'black' },
             yaxis: {
                 title: {
