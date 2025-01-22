@@ -50,6 +50,29 @@ describe('utils', () => {
         })
     })
 
+    describe('limitDate', () => {
+        // These tests depend on the VITE_MIN_DATE and VITE_MAX_DATE environment variables, set in vitest.config.js
+        it('should return the same date if within min/max settings', () => {
+            const date = new Date('2024-05-05')
+            const result = limitDate(date)
+            expect(result).toEqual(date)
+        })
+
+        it('should return the min date if the input date is before the min date', () => {
+            const date = new Date('2024-01-01')
+            const minDate = new Date(import.meta.env.VITE_MIN_DATE)
+            const result = limitDate(date)
+            expect(result).toEqual(minDate)
+        })
+
+        it('should return the max date if the input date is after the max date', () => {
+            const date = new Date('2025-01-01')
+            const maxDate = new Date(import.meta.env.VITE_MAX_DATE)
+            const result = limitDate(date)
+            expect(result).toEqual(maxDate)
+        })
+    })
+
     describe('localStorage', () => {
         it('should store a scalar value in localStorage', () => {
             setLocalStorage('test', 'value')
