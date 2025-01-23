@@ -238,7 +238,7 @@ export default function Graph() {
                 mode: 'lines',
                 line: { color: '#0b7dcc' },
                 name: 'Predicted Tide',
-                hovertemplate: '%{y} ft',
+                hovertemplate: data.astro_hover,
             },
             ...(data.past_surge !== null
                 ? [

@@ -47,7 +47,7 @@ def get_graph_data(start_date, end_date):
     mhw = cfg.get_mean_high_water()
     validate_dates(start_date, end_date)
     timeline = util.build_timeline(start_date, end_date, time_zone)
-    astro_tides = astro.get_astro_tides(timeline)
+    astro_tides, astro_hover = astro.get_astro_tides(timeline)
     hist_tides = cdmo.get_recorded_tides(timeline)
     past_surge, future_surge, future_tide = sg.get_surge_data(timeline, astro_tides, hist_tides)
     wind_speeds, wind_gusts, wind_dir, wind_dir_hover = cdmo.get_recorded_wind_data(timeline)
@@ -58,8 +58,9 @@ def get_graph_data(start_date, end_date):
     (past_tl_index, future_tl_index) = util.get_timeline_info(timeline)
     start_date_str = timeline[0].strftime("%m/%d/%Y")
     end_date_str = timeline[-2].strftime("%m/%d/%Y")
-    return {"timeline": timeline, "hist_tides": hist_tides,
-            "astro_tides": astro_tides, "wind_speeds": wind_speeds, "wind_gusts": wind_gusts, "wind_dir": wind_dir,
+    return {"timeline": timeline, "hist_tides": hist_tides, 
+            "astro_tides": astro_tides, "astro_hover": astro_hover,
+            "wind_speeds": wind_speeds, "wind_gusts": wind_gusts, "wind_dir": wind_dir,
             "wind_dir_hover": wind_dir_hover,  "record_tide": record_tide,
             "record_tide_title": f'{record_tide_title} ({cfg.get_record_tide():.2f})',
             "mean_high_water": mean_high_water,
@@ -72,7 +73,9 @@ def get_graph_data(start_date, end_date):
 
 
 def get_annual_astro_high(timeline) -> list:
-    """Build data for the highest annual predicted tide plot. It could cross a year boundary.
+    """
+    Build data for the highest annual predicted tide plot, using the configuration data. 
+    If it crosses a year boundary, we'll switch to that value at the appropriate time.
     """
     time_count = len(timeline)
     high1 = cfg.get_astro_high_tide(timeline[0].year)
