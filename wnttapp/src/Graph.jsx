@@ -103,7 +103,7 @@ export default function Graph() {
         const layout = {
             height: 500,
             template: 'plotly',
-            plot_bgcolor: '#e7e7e7',
+            plot_bgcolor: '#f3f2f2',
             title: {
                 text: title + data.start_date + ' - ' + data.end_date,
                 font: { size: 20 },
