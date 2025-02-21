@@ -1,28 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { ClientIpUrl } from './utils'
+import { useClientIp } from './useClientIp'
 import axios from 'axios'
 
 // Using useQuery here so we can have dependent queries.
 
 export default function useGraphData(startDate, endDate) {
     const ourVersion = import.meta.env.VITE_BUILD_NUM
-    const oneHour = 60_000 * 60
+    const oneMinute = 60_000
+    const oneHour = oneMinute * 60
 
-    const { data: clientIp, error: ipError } = useQuery({
-        queryKey: ['clientip'],
-        queryFn: async () => {
-            const resp = await fetch(ClientIpUrl)
-            const data = await resp.json()
-            return data.ip
-        },
-        // We don't need this to run very often -- it's just informational for now.
-        staleTime: oneHour,
-        gcTime: oneHour,
-    })
-
-    if (ipError) {
-        console.error(ipError)
-    }
+    const { clientIp, ipError } = useClientIp()
 
     // Compare our version to the version on the server and force a reload if they don't match.
     // This prevents clients from becoming stale.
@@ -65,14 +52,14 @@ export default function useGraphData(startDate, endDate) {
             return res.data
         },
         // Query is dependent, so if reload is forced it happens before this fetch, and we always have the IP
-        // Neither IP nor version is critical to continue if either fail.
-        enabled: (!!version || !!verError) && (!!clientIp || !!ipError),
+        // IP is not critical to proceed, but we do want to wait until both queries have returned.
+        enabled: !!version && (!!clientIp || !!ipError),
         // I want to avoid memory building with lots of old queries lying around, so setting gcTime low.
-        // But allow longish fresh period. As long as they spend less than gcTime on other pages between
+        // But allow longer fresh period. As long as they spend less than gcTime on other pages between
         // hitting the graph page, no refetch is needed, as gc timer is reset when you return to graph
         // and stale timer is still running.
-        staleTime: 60_000 * 5,
-        gcTime: 30_000,
+        staleTime: oneMinute * 5,
+        gcTime: oneMinute,
     })
 
     return { isPending, data, error }

@@ -4,24 +4,25 @@ from . import graphutil as gr
 from . import swmp
 import re
 import logging
+import hashlib
 
 
 logger = logging.getLogger(__name__)
+pattern = r"^\d+\.\d+\.(\d+.\d+)$"
 
 class LatestInfoView(APIView):
     
     def post(self, request, format=None):
-        logger.info(request.data)
+        logger.info(f'LatestInfoView: {obfuscate(request.data)}')
         info = swmp.get_latest_info()
         return Response(data=info)
+
 
 class CreateGraphView(APIView):
 
     def post(self, request, format=None):
         # FYI, use the form request.META["HTTP_HOST"] to look at header fields.
-        # Obfuscate the IP address by replacing 1st 2 octets with ***
-        pattern = r"(.*?\')(\d+\.\d+)(\.\d+.\d+\'.*)"
-        logger.info(f'params: {re.sub(pattern, r'\1***.***\3', str(request.data))}')
+        logger.info(f'CreateGraphView: {obfuscate(request.data)}')
 
         start_date = datetime.strptime(request.data['start_date'], "%m/%d/%Y").date()
         end_date = datetime.strptime(request.data['end_date'], "%m/%d/%Y").date()
@@ -30,3 +31,11 @@ class CreateGraphView(APIView):
         graph_data = (gr.get_graph_data(start_date, end_date))
         return Response(data=graph_data)
     
+
+def obfuscate(params):
+    # Obfuscate the IP address with 1-way hash
+    def hash(ip):
+        return hashlib.sha256(ip.encode()).hexdigest()
+
+    return dict(map(lambda tup: (tup[0], hash(tup[1]) if tup[0] == 'ip' else tup[1]), params.items()))
+
