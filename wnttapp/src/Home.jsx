@@ -61,7 +61,7 @@ export default function Home() {
             </div>
             <div className='latest'>
                 <Row className='align-items-center'>
-                    <Col className='mx-1 px-1'>
+                    <Col className='mx-2 px-1'>
                         <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
                             <Stack>
                                 <div className='label'>Wind Speed</div>
