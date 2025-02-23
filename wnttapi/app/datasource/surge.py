@@ -3,25 +3,26 @@ import os
 import os.path
 import csv
 import logging
-from app import cache
 from app import tzutil as tz
+from django.core.cache import cache
+from django.conf import settings
 from rest_framework.exceptions import APIException
 
 # /surgedata is a mount defined in docker-compose.yml
 surge_file_path = "/surgedata/surge-data.csv"
-cache_file_name = 'predicted_surge.bin'
 max_surge = 20
 min_surge = -20
 logger = logging.getLogger(__name__)
 
 
 def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
-    """ Get surge data that corresponds to the timeline. Surge data comprises 1 or 2 parts:
+    """ Get surge data that corresponds to the timeline. Surge data comprises past and/or future:
     1. Past surge, for datetimes prior to current clock time. These are computed as the difference between
     actual tide and predicted astronomical tide.
     2. Future surge, for datetimes later than current clock time. These are extracted from a csv file
     obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov) for the Wells, ME station.
-    Returns 3 lists, all of which correspond to the full timeline. Each list will populate a separate line in the graph.
+
+    Returns 3 lists, all of which correspond to the full timeline. Each list will populate a separate plot in the graph.
     - past surges, with None for any corresponding future datetime, or if incomplete past data
     - future surges, with None for any corresponding past datetime, or if missing future data. Entire list
         is returned as None if all values are None, and the plot will be skipped.
@@ -94,7 +95,7 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
 def get_or_load_predicted_surge_file(after: datetime) -> dict:
 
     """The csv file containing the predicted surge data is updated on the NOAA site every 6 hours,
-    and is downloaded by a cron job. Once loaded, its contents are put into a pickle cache for performance.
+    and is downloaded by a cron job. Once loaded, its contents are cached for performance.
     So here, we have to determine if the disk file has been replaced since we last processed it. Therefore,
     if surge data file exists and has not been replaced by a newer download file, read the cache.
     Otherwise, read the download file, throwing out all but xx:00 and xx:30 (since the data is in 6-minute intervals
@@ -106,28 +107,35 @@ def get_or_load_predicted_surge_file(after: datetime) -> dict:
 
     Returns dict : the data, key = datetime, value = float surge value
     """
-    if cache.file_exists(cache_file_name):
-        cached_marker, data = cache.read_from_cache(cache_file_name)
-        # We'll use the cached data, unless the file has been updated since the cache was written.
-        # Use something unique about the surge file that will be different if replaced with a new version.
-        if os.path.isfile(surge_file_path) and os.access(surge_file_path, os.R_OK):
-            cur_marker = os.path.getmtime(surge_file_path)
-            if cur_marker == cached_marker:
-                return data
-        else:
-            logger.error(f"No {surge_file_path} file found, will use cache for now!")
-            return data
-        logger.debug(f"will re-cache surge file: cached marker = {cached_marker}, new marker = {cur_marker}")
 
-    elif not os.path.isfile(surge_file_path) or not os.access(surge_file_path, os.R_OK):
-        logger.error(f"{surge_file_path} is not found, and there is no cached surge data.")
-        return {}
-        # TODO: handle this better
-        # raise FileNotFoundError(f"{surge_file_path} is not found")
+    # Since this is a small cache (< 1Kb), we'll use the process ID as the cache key, so each worker can have its own copy.  
+    # This should avoid any multi-threading issues when setting the cache with multiple workers.
+    pid = os.getpid()
+    # The cached data is a dict with keys 'id' and 'data'.  'id' is the file's mtime, 'data' is the surge data.
+    cached = cache.get(pid)
+    logger.debug(f"found surge cache for process {pid}? {cached is not None}")
+    if cached is not None:
+        logger.debug(f"cached id: {cached['id']}")
+    
+    file_id = os.path.getmtime(surge_file_path) if os.path.isfile(surge_file_path) and os.access(surge_file_path, os.R_OK) else None
+    logger.debug(f"current file id: {file_id}")
+    if file_id is None:
+        if cached is None:
+            logger.error(f"{surge_file_path} is not found, and there is no cached surge data.")
+            return {}
+        else:
+            logger.error(f"Can't read {surge_file_path} file, will use cache for now!")
+            return cached['data']
+
+    # So now we know the file exists and is readable.  If we have cached data, check if the file has been updated.
+    if cached is not None and file_id == cached['id']:
+        logger.debug(f"id from cache matches file id: {file_id}")
+        return cached['data'] # return the cached data
+    
+    logger.debug(f"will cache/re-cache surge data, file id = {file_id}")
 
     surge_data = {}  # key=datetime, value=surge
     logger.debug(f'Reading {surge_file_path}')
-    new_marker = os.path.getmtime(surge_file_path)
     try:
         with open(surge_file_path) as surge_file:
             reader = csv.reader(surge_file, skipinitialspace=True)
@@ -153,5 +161,6 @@ def get_or_load_predicted_surge_file(after: datetime) -> dict:
         logger.error(f'Prediction file not found: {surge_file_path}')
         raise APIException()
 
-    cache.write_to_cache(cache_file_name, (new_marker, surge_data))
+    cache.set(pid, {'id': file_id, 'data': surge_data}, timeout = 60 * 60 * 6)  # 6 hour TTL
+    logger.debug(f"Cached for worker {pid}, {len(surge_data)} values from {surge_file_path}")
     return surge_data
