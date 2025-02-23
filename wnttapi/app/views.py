@@ -37,5 +37,8 @@ def obfuscate(params):
     def hash(ip):
         return hashlib.sha256(ip.encode()).hexdigest()
 
-    return dict(map(lambda tup: (tup[0], hash(tup[1]) if tup[0] == 'ip' else tup[1]), params.items()))
+    # Disabling this for now, as it does not seem necessary. We're doing nothing nefarious with the IPs, it's just
+    # for counting distinct users.
+    # return dict(map(lambda tup: (tup[0], hash(tup[1]) if tup[0] == 'ip' else tup[1]), params.items()))
+    return params
 

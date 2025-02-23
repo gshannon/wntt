@@ -28,7 +28,7 @@ COPY . .
 RUN mkdir -p /wnttapi/cache
 
 # Run the application.
-CMD ["gunicorn", "--bind=0.0.0.0:8001", "project.wsgi"]
+CMD ["gunicorn", "--bind=0.0.0.0:8001", "-w 2", "project.wsgi"]
 ARG GITBRANCH=?
 ARG GITSHA=?
 LABEL gitbranch=$GITBRANCH gitsha=$GITSHA

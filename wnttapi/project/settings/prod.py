@@ -44,7 +44,7 @@ LOGGING = {
     },
     'formatters': {
         'my-format': {
-            'format': '{asctime} {levelname} {module} {funcName} {message}',
+            'format': '{asctime} {levelname} {process:d} {module} {funcName} {message}',
             'style': '{',
         },
     },
