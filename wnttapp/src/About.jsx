@@ -63,7 +63,7 @@ export default function About() {
                             This application solves the problem by aggregating and presenting
                             graphical tide data alongside an optional user-configured elevation
                             based on a map location. It includes wind data, observed tide levels,
-                            astronomical tide predictions, and the predicted storm surge for four
+                            astronomical tide predictions, and the projected storm surge for four
                             days into the future. All data is presented using the same vertical
                             datum (point of reference), so that observations, predictions,
                             estimations and elevations may be displayed on a single graph for
