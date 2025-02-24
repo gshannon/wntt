@@ -137,11 +137,22 @@ def get_or_load_predicted_surge_file(after: datetime) -> dict:
     surge_data = {}  # key=datetime, value=surge
     logger.debug(f'Reading {surge_file_path}')
     try:
+        """Sample data:
+                TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
+        202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
+        202502181206,   2.119,9999.000,9999.000,9999.000,9999.000
+        202502181212,   1.970,9999.000,9999.000,9999.000,9999.000
+        202502181218,   1.829,9999.000,9999.000,9999.000,9999.000
+        202502181224,   1.695,9999.000,9999.000,9999.000,9999.000
+        202502181230,   1.570,9999.000,9999.000,9999.000,9999.000
+        ...
+        """
         with open(surge_file_path) as surge_file:
             reader = csv.reader(surge_file, skipinitialspace=True)
             next(reader)  # skip header row
             for row in reader:
-                # Surge values for Wells data is on the hour only, but the data file has a useless row for every 6 min.
+                # Surge values for Wells data is on the hour only, but the data file has a row for every 6 min.
+                # Only the times that are multiples of 100 have actual surge data.
                 if int(row[0]) % 100 != 0:
                     continue
                 # All file datetimes are UTC. Convert to requested tz.
