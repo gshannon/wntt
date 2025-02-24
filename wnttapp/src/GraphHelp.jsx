@@ -33,7 +33,7 @@ export default function GraphHelp(props) {
                         see a new colored line on the graph with the label <b>Custom Elevation. </b>
                         If you set your date range to include today and the next several days,{' '}
                         <b>
-                            you will be able to see whether the predicted tide comes close to or
+                            you will be able to see whether the projected tide comes close to or
                             exceeds this elevation.
                         </b>
                     </Accordion.Body>
@@ -47,9 +47,9 @@ export default function GraphHelp(props) {
                         speed/direction, along with the predicted astronomical tides. For several
                         days in the future, in addition to predicted astronomical tides, (which do
                         not account for the effects of weather), there is the experimental{' '}
-                        <b>Predicted Storm Surge</b> data, which does consider weather (wind
+                        <b>Projected Storm Surge</b> data, which does consider weather (wind
                         speed/direction). This, added to the astronomical tide, adds up to the
-                        overall Predicted Storm Tide or water levels. This value is meant to be the
+                        overall Projected Storm Tide water levels. This value is meant to be the
                         best available estimate, and, since it is updated every 6 hours, may become
                         more accurate as the tide in question approaches. There are no wind
                         forecasts shown here, but users should bear in mind that high winds,

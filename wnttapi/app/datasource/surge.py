@@ -40,7 +40,7 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
     past_surge_data = []
     future_surge_data = []
     future_storm_tide = []
-    predicted_found = False
+    projected_found = False
     future_storm_tide_found = False
 
     # Past Surge
@@ -58,7 +58,7 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
                 break
 
     if includes_future:
-        surge_dict = get_or_load_predicted_surge_file(now)
+        surge_dict = get_or_load_projected_surge_file(now)
         last_surge_value = None
         last_surge_value_used_count = 0
         for (dt, astro) in zip(timeline[ii:], astro_levels[ii:]):
@@ -77,7 +77,7 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
 
             if surge_value is not None:
                 future_surge_data.append(surge_value)
-                predicted_found = True
+                projected_found = True
                 if astro is not None:
                     future_storm_tide.append(astro + surge_value)
                     future_storm_tide_found = True
@@ -88,13 +88,13 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
                 future_storm_tide.append(None)
 
     return (past_surge_data if includes_past else None,
-            future_surge_data if predicted_found else None,
+            future_surge_data if projected_found else None,
             future_storm_tide if future_storm_tide_found else None)
 
 
-def get_or_load_predicted_surge_file(after: datetime) -> dict:
+def get_or_load_projected_surge_file(after: datetime) -> dict:
 
-    """The csv file containing the predicted surge data is updated on the NOAA site every 6 hours,
+    """The csv file containing the projected surge data is updated on the NOAA site every 6 hours,
     and is downloaded by a cron job. Once loaded, its contents are cached for performance.
     So here, we have to determine if the disk file has been replaced since we last processed it. Therefore,
     if surge data file exists and has not been replaced by a newer download file, read the cache.

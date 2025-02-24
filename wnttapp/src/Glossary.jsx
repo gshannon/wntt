@@ -166,7 +166,19 @@ export default function Glossary() {
                 </Row>
                 <Row>
                     <Col sm={2} className='border-end border-2'>
-                        <b>Predicted Storm Surge</b>
+                        <b>Recorded Storm Surge</b>
+                    </Col>
+                    <Col>
+                        The difference between the Observed Tide and the Predicted Tide. This
+                        generally represents the effects of wind, rain and other meteorological
+                        factors such as storms. For example, if the Predicted Tide was 11.5 feet and
+                        the Observed Tide was 12 feet, the Recorded Storm Surge would be 0.5 feet
+                        for that observation time.
+                    </Col>
+                </Row>
+                <Row>
+                    <Col sm={2} className='border-end border-2'>
+                        <b>Projected Storm Surge</b>
                     </Col>
                     <Col>
                         A computer model-generated estimate of adjustments to Predicted Tide levels
@@ -193,21 +205,9 @@ export default function Glossary() {
                 </Row>
                 <Row>
                     <Col sm={2} className='border-end border-2'>
-                        <b>Recorded Storm Surge</b>
+                        <b>Projected Storm Tide</b>
                     </Col>
-                    <Col>
-                        The difference between the Observed Tide and the Predicted Tide. This
-                        generally represents the effects of wind, rain and other meteorological
-                        factors such as storms. For example, if the Predicted Tide was 11.5 feet and
-                        the Observed Tide was 12 feet, the Recorded Storm Surge would be 0.5 feet
-                        for that observation time.
-                    </Col>
-                </Row>
-                <Row>
-                    <Col sm={2} className='border-end border-2'>
-                        <b>Predicted Storm Tide</b>
-                    </Col>
-                    <Col>The sum of Predicted Tide and Predicted Storm Surge.</Col>
+                    <Col>The sum of Predicted Tide and Projected Storm Surge.</Col>
                 </Row>
                 <Row>
                     <Col sm={2} className='border-end border-2'>

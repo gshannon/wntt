@@ -90,13 +90,11 @@ export const getData = () => {
             render: () => {
                 return (
                     <span>
-                        For several days in the the future, you will see the Predicted Storm Tide
+                        For several days in the the future, you will see the Projected Storm Tide
                         value, which is the sum of the Predicted Tide (astronomical) and the
-                        Predicted Storm Surge. This surge value comes from an experimental project
+                        Projected Storm Surge. This surge value comes from an experimental project
                         by NOAA, and is the best known estimate for the Wells harbor, updated every
-                        6 hours. While there are no wind estimates included here, bear in mind that
-                        high winds, particularly when coming from the east, can drive waves higher
-                        than the tide levels.
+                        6 hours.
                     </span>
                 )
             },
