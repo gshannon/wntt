@@ -8,8 +8,8 @@
 .welcome {
     display: block;
     position: absolute;
-    width: 76%;
-    left: 12%;
+    width: 90%;
+    left: 5%;
     top: 5%;
     text-align: center;
     padding: 1em;
@@ -45,7 +45,7 @@
     position: absolute;
     width: 76%;
     left: 12%;
-    bottom: 10%;
+    top: 50%;
     text-align: center;
     padding: 0.5em;
     border-radius: 20px;
