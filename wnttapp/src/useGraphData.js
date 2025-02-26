@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useClientIp } from './useClientIp'
+import { buildCacheKey } from './utils'
 import axios from 'axios'
 
-// Using useQuery here so we can have dependent queries.
-
 export default function useGraphData(startDate, endDate) {
+    // Using useQuery here so we can have dependent queries.
     const ourVersion = import.meta.env.VITE_BUILD_NUM
     const oneMinute = 60_000
     const oneHour = oneMinute * 60
@@ -40,7 +40,7 @@ export default function useGraphData(startDate, endDate) {
     // The main graph data api call.
     const { isPending, data, error } = useQuery({
         retry: false,
-        queryKey: ['graph', startDate + ':' + endDate],
+        queryKey: buildCacheKey(startDate, endDate),
         queryFn: async () => {
             const res = await axios.post(import.meta.env.VITE_API_GRAPH_URL, {
                 start_date: startDate,

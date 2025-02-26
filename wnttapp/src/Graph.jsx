@@ -8,9 +8,9 @@ import Tooltip from 'react-bootstrap/Tooltip'
 import GetDates from './GetDates'
 import Plot from 'react-plotly.js'
 import useGraphData from './useGraphData'
-import { MaxCustomElevation } from './utils'
+import { MaxCustomElevation, getDefaultDateControls } from './utils'
 import { AppContext } from './AppContext'
-import { addDays, stringify, dateDiff, limitDate, MinDate, MaxDate, MaxNumDays } from './utils'
+import { addDays, stringify, dateDiff, limitDate, MaxNumDays } from './utils'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 
@@ -18,16 +18,9 @@ export default function Graph() {
     const appContext = useContext(AppContext)
     const customElevation = appContext.customElevation
     const showElevation = customElevation && customElevation <= MaxCustomElevation
-    const [startCtl, setStartCtl] = useState({
-        min: MinDate,
-        start: new Date(appContext.startDate),
-        max: MaxDate,
-    })
-    const [endCtl, setEndCtl] = useState({
-        min: new Date(appContext.startDate),
-        end: new Date(appContext.endDate),
-        max: addDays(new Date(appContext.startDate), MaxNumDays - 1),
-    })
+    const { defaultStartCtl, defaultEndCtl } = getDefaultDateControls()
+    const [startCtl, setStartCtl] = useState(defaultStartCtl)
+    const [endCtl, setEndCtl] = useState(defaultEndCtl)
 
     const {
         isPending: loading,

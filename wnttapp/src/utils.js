@@ -5,7 +5,7 @@ export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
 export const MaxCustomElevation = 25
-export const DefaultNumDays = 7
+export const DefaultNumDays = 4
 export const MapBounds = [
     [44.01, -70.73],
     [43.01, -69.8],
@@ -28,6 +28,10 @@ export const stringify = (date) => {
     const day = String(date.getUTCDate()).padStart(2, '0')
     return `${month}/${day}/${year}`
 }
+// Build the cache key to use for a given date range.
+export function buildCacheKey(startDate, endDate) {
+    return ['graph', startDate + ':' + endDate]
+}
 
 // Give a Date or a string.  Days may be negative. Returns Date.
 export const addDays = (date, days) => {
@@ -49,6 +53,25 @@ export const limitDate = (date) => {
     const d1 = new Date(date)
     const d2 = new Date(Math.max(d1, MinDate))
     return new Date(Math.min(d2, MaxDate))
+}
+
+// Build the data structures for the date range form controls, using the default range.
+// We recompute this as needed, in case the clock turns to a new day during the session.
+export const getDefaultDateControls = () => {
+    const defaultStart = stringify(new Date())
+    const defaultEnd = stringify(addDays(defaultStart, DefaultNumDays - 1))
+    return {
+        defaultStartCtl: {
+            min: MinDate,
+            start: new Date(defaultStart),
+            max: MaxDate,
+        },
+        defaultEndCtl: {
+            min: new Date(defaultStart),
+            end: new Date(defaultEnd),
+            max: addDays(new Date(defaultStart), MaxNumDays - 1),
+        },
+    }
 }
 
 // change this when necessary after changes to prevent reading old values

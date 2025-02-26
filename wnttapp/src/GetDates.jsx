@@ -1,12 +1,20 @@
 import './css/GetDates.css'
-import { useContext, useRef, useState } from 'react'
+import { useContext, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { Col, Form, FormLabel, FormText, Row } from 'react-bootstrap'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { DatePicker } from 'reactstrap-date-picker'
 import Container from 'react-bootstrap/Container'
-import { addDays, dateDiff, limitDate, stringify, MaxNumDays, Page } from './utils'
+import {
+    getDefaultDateControls,
+    addDays,
+    dateDiff,
+    limitDate,
+    stringify,
+    MaxNumDays,
+    Page,
+} from './utils'
 import Tutorial from './Tutorial'
 import { AppContext } from './AppContext'
 import { getData } from './tutorials/graph'
@@ -20,18 +28,22 @@ export default function GetDates(props) {
     const setEndCtl = props.setEndCtl
     const appContext = useContext(AppContext)
     const [showTut, setShowTut] = useState(false)
-    const enableApplyButton = useRef(false)
 
     const handleSubmit = (e) => {
+        // The form has 2 submit buttons -- refresh & reset, so handle them both here.
         e.preventDefault()
-        enableApplyButton.current = false
-        appContext.setDateRange(stringify(startCtl.start), stringify(endCtl.end))
-    }
+        const clickedButton = e.nativeEvent.submitter
 
-    const setApplyButton = (newStart, newEnd) => {
-        // Enable the Apply button if the date range is different from the current range.
-        enableApplyButton.current =
-            stringify(newStart) !== appContext.startDate || stringify(newEnd) !== appContext.endDate
+        if (clickedButton.name === 'refresh') {
+            // This will force a re-render even if the dates are the same as before
+            appContext.setDateRange(stringify(startCtl.start), stringify(endCtl.end))
+        } else if (clickedButton.name === 'reset') {
+            const { defaultStartCtl, defaultEndCtl } = getDefaultDateControls()
+            setStartCtl(defaultStartCtl)
+            setEndCtl(defaultEndCtl)
+            // Again, this will force a re-render even if the dates are the same as before
+            appContext.setDateRange(stringify(defaultStartCtl.start), stringify(defaultEndCtl.end))
+        }
     }
 
     const handleStartChange = (formatted) => {
@@ -50,7 +62,6 @@ export default function GetDates(props) {
                 end: newEnd,
                 max: limitDate(addDays(newStart, MaxNumDays - 1)),
             })
-            setApplyButton(newStart, newEnd)
         }
     }
 
@@ -61,7 +72,6 @@ export default function GetDates(props) {
         if (formatted && formatted !== stringify(endCtl.end)) {
             const newEnd = new Date(formatted)
             setEndCtl({ ...endCtl, end: newEnd })
-            setApplyButton(startCtl.start, newEnd)
         }
     }
 
@@ -111,16 +121,32 @@ export default function GetDates(props) {
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
                                             overlay={
-                                                <Tooltip id='id-set-button'>
-                                                    Redraw the graph with the selected date range.
+                                                <Tooltip id='id-refresh-button'>
+                                                    Redraw the graph with the latest data using the
+                                                    selected date range.
                                                 </Tooltip>
                                             }>
                                             <Button
                                                 variant='custom-primary'
-                                                className='px-2 my-1'
+                                                className='px-2 m-1'
                                                 type='submit'
-                                                disabled={!enableApplyButton.current}>
+                                                name='refresh'>
                                                 Refresh
+                                            </Button>
+                                        </OverlayTrigger>
+                                        <OverlayTrigger
+                                            overlay={
+                                                <Tooltip id='id-reset-button'>
+                                                    Return to the default date range and refresh the
+                                                    graph.
+                                                </Tooltip>
+                                            }>
+                                            <Button
+                                                variant='custom-primary'
+                                                className='px-2 m-1'
+                                                type='submit'
+                                                name='reset'>
+                                                Reset
                                             </Button>
                                         </OverlayTrigger>
                                     </Col>
