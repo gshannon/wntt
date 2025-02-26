@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import axios from 'axios'
 import Home from './Home'
 import Graph from './Graph'
@@ -13,11 +13,13 @@ import {
     stringify,
     getLocalStorage,
     setLocalStorage,
+    buildCacheKey,
     Page,
 } from './utils'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
 import { useCache } from './useCache'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function Control(props) {
     const page = props.page
@@ -40,9 +42,14 @@ export default function Control(props) {
     const [markerLocation, setMarkerLocation] = useState(mainStorage?.markerLocation)
     const [mapCenter, setMapCenter] = useState(mainStorage?.mapCenter || DefaultMapCenter)
     const [zoom, setZoom] = useState(mainStorage?.zoom ? mainStorage?.zoom : DefaultMapZoom)
+    // The user can refresh the graph using the same date range. but it seems React has no native support
+    // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
+    // eslint-disable-next-line no-unused-vars
+    const [dummy, forceGraphUpdate] = useReducer((x) => x + 1, 0)
+
+    const queryClient = useQueryClient()
 
     useCache(page) // make sure cache isn't getting too big
-
     const setDateStorage = (start, end) => {
         setLocalStorage(
             'dates',
@@ -76,6 +83,10 @@ export default function Control(props) {
     const setDateRange = (startDate, endDate) => {
         setStartDate(startDate)
         setEndDate(endDate)
+        // If this query's already in cache, remove it first, else it won't refetch even if stale.
+        const key = buildCacheKey(startDate, endDate)
+        queryClient.removeQueries({ queryKey: key, exact: true })
+        forceGraphUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
     }
 
     useEffect(() => {
