@@ -13,6 +13,8 @@ import {
     limitDate,
     stringify,
     MaxNumDays,
+    MinDate,
+    MaxDate,
     Page,
 } from './utils'
 import Tutorial from './Tutorial'
@@ -28,6 +30,23 @@ export default function GetDates(props) {
     const setEndCtl = props.setEndCtl
     const appContext = useContext(AppContext)
     const [showTut, setShowTut] = useState(false)
+
+    const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ]
+    const rangeMin = `${months[MinDate.getMonth()]} ${MinDate.getFullYear()}`
+    const rangeMax = `${months[MaxDate.getMonth()]} ${MaxDate.getFullYear()}`
 
     const handleSubmit = (e) => {
         // The form has 2 submit buttons -- refresh & reset, so handle them both here.
@@ -98,8 +117,7 @@ export default function GetDates(props) {
                                     onChange={(_, f) => handleStartChange(f)}
                                 />
                                 <FormText muted>
-                                    Between {import.meta.env.VITE_MIN_DATE} and{' '}
-                                    {import.meta.env.VITE_MAX_DATE}
+                                    Range: {rangeMin} - {rangeMax}
                                 </FormText>
                             </Col>
                             <Col sm={4} className='align-self-start'>

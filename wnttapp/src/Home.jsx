@@ -42,7 +42,7 @@ export default function Home() {
                     Welcome to the Wells National Estuarine Research Reserve Tide Tracker. Here you
                     can view historical tide and wind data, as well as predicted tides and storm
                     surge. You can also obtain the elevation of any location within our boundaries
-                    (Kennebunk to Ogunquit), and assess the flood risk at that location.
+                    (Kennebunk to Ogunquit), to assess the flood risk at that location.
                 </p>
                 <p>
                     To get started, open the{' '}
