@@ -27,7 +27,7 @@ export default function Home() {
     } else if (data) {
         windSpeedStr = `${data.wind_speed} mph from ${data.wind_dir}`
         windGustStr = `${data.wind_gust} mph`
-        tideStr = `${data.tide} ft MLLW`
+        tideStr = `${data.tide} ft MLLW ${data.tide_dir}`
         tempStr = `${data.temp}º F`
         windTime = data.wind_time
         tideTime = data.tide_time
