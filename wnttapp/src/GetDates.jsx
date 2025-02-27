@@ -170,6 +170,7 @@ export default function GetDates(props) {
                                     </Col>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
+                                            trigger='hover'
                                             overlay={
                                                 <Tooltip id='id-set-button'>
                                                     Open the Graph page tutorial in a popup window.

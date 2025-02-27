@@ -1,0 +1,18 @@
+.cond-header {
+    background: var(--federal-blue);
+    border-bottom-width: 0;
+}
+
+.cond-label {
+    text-decoration: underline;
+    color: black;
+}
+
+.cond-data {
+    font-weight: bold;
+}
+
+.cond-time {
+    font-size: 0.8rem;
+    font-style: italic;
+}

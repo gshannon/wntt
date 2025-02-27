@@ -25,3 +25,7 @@
     grid-template-columns: 1fr 1fr;
     grid-gap: 5px;
 }
+
+.logo {
+    max-width: 100%;
+}
