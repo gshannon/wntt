@@ -8,9 +8,16 @@ import Tooltip from 'react-bootstrap/Tooltip'
 import GetDates from './GetDates'
 import Plot from 'react-plotly.js'
 import useGraphData from './useGraphData'
-import { MaxCustomElevation, getDefaultDateControls } from './utils'
+import {
+    addDays,
+    stringify,
+    dateDiff,
+    limitDate,
+    MaxNumDays,
+    MaxCustomElevation,
+    getDefaultDateControls,
+} from './utils'
 import { AppContext } from './AppContext'
-import { addDays, stringify, dateDiff, limitDate, MaxNumDays } from './utils'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 

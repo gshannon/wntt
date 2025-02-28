@@ -9,6 +9,7 @@ services:
             - 3001:3001
         restart: unless-stopped
         volumes:
+            # For Hot Module Replacement (hmr), mount the src code.
             - /Users/gshannon/dev/work/docker/wntt/wnttapp/src:/app/src
 
     api:

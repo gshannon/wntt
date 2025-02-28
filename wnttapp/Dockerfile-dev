@@ -8,7 +8,8 @@ RUN npm install
 COPY index.html .eslintrc.cjs vite.config.js .env.development ./
 ARG BUILDNUM=?
 ENV VITE_BUILD_NUM=${BUILDNUM}
-COPY src ./src/
+# This is not necessary if we're mounting the src directory in the compose file, for hot module replacement (HMR)
+# COPY src ./src/
 COPY public ./public/
 
 # NOTE: if you use "npm run dev", it honors the port in vite.config.js
