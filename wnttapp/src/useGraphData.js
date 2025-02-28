@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useClientIp } from './useClientIp'
 import { buildCacheKey } from './utils'
+import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
 import axios from 'axios'
 
 export default function useGraphData(startDate, endDate) {
     // Using useQuery here so we can have dependent queries.
     const ourVersion = import.meta.env.VITE_BUILD_NUM
     const oneMinute = 60_000
-    const oneHour = oneMinute * 60
 
     const { clientIp, ipError } = useClientIp()
 
@@ -25,12 +25,14 @@ export default function useGraphData(startDate, endDate) {
                         json.version
                     }, ours: ${ourVersion}`
                 )
+                const daily = getDailyLocalStorage('misc-daily') ?? {}
+                setDailyLocalStorage('misc-daily', { ...daily, upgraded: true })
                 window.location.reload()
             }
             return json.version
         },
-        staleTime: oneHour,
-        gcTime: oneHour,
+        staleTime: oneMinute,
+        gcTime: oneMinute,
     })
 
     if (verError) {

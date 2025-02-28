@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { addDays, limitDate, stringify, setLocalStorage, getLocalStorage } from '../utils'
+import { addDays, limitDate, stringify } from '../utils'
+import {
+    setDailyLocalStorage,
+    setLocalStorage,
+    getDailyLocalStorage,
+    getLocalStorage,
+} from '../localStorage'
 
 describe('utils', () => {
     describe('limitDate', () => {
@@ -82,22 +88,22 @@ describe('utils', () => {
         it('should store an object in localStorage', () => {
             const obj = { name: 'Alice', age: 42 }
             setLocalStorage('test', obj)
-            expect(getLocalStorage('test', false)).toEqual(obj)
+            expect(getLocalStorage('test')).toEqual(obj)
         })
 
         it('should return a value from daily localStorage if day has not changed', () => {
             const obj = { name: 'Alice', age: 42 }
             const date = new Date()
-            setLocalStorage('test', obj, true, date)
-            expect(getLocalStorage('test', true, date)).toEqual(obj)
+            setDailyLocalStorage('test', obj, date)
+            expect(getDailyLocalStorage('test', date)).toEqual(obj)
         })
 
         it('should return undefined from daily localStorage if day has changed', () => {
             const obj = { name: 'Alice', age: 42 }
             const date1 = new Date()
             const date2 = addDays(date1, 1)
-            setLocalStorage('test', obj, true, date1)
-            expect(getLocalStorage('test', true, date2)).toBeUndefined
+            setDailyLocalStorage('test', obj, date1)
+            expect(getDailyLocalStorage('test', date2)).toBeUndefined
         })
     })
 })

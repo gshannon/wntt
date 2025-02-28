@@ -11,11 +11,15 @@ import {
     DefaultNumDays,
     EpqsUrl,
     stringify,
-    getLocalStorage,
-    setLocalStorage,
     buildCacheKey,
     Page,
 } from './utils'
+import {
+    getDailyLocalStorage,
+    getLocalStorage,
+    setDailyLocalStorage,
+    setLocalStorage,
+} from './localStorage'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
 import { useCache } from './useCache'
@@ -32,8 +36,8 @@ export default function Control(props) {
     */
     const defaultStart = stringify(new Date())
     const defaultEnd = stringify(addDays(defaultStart, DefaultNumDays - 1))
-    const datesStorage = getLocalStorage('dates', true)
-    const mainStorage = getLocalStorage('main', false)
+    const datesStorage = getDailyLocalStorage('dates')
+    const mainStorage = getLocalStorage('main')
     const [startDate, setStartDate] = useState(datesStorage?.start ?? defaultStart)
     const [endDate, setEndDate] = useState(datesStorage?.end ?? defaultEnd)
     const [markerElevation, setMarkerElevation] = useState(mainStorage?.markerElevation)
@@ -51,29 +55,21 @@ export default function Control(props) {
 
     useCache(page) // make sure cache isn't getting too big
     const setDateStorage = (start, end) => {
-        setLocalStorage(
-            'dates',
-            {
-                start: start,
-                end: end,
-            },
-            true
-        )
+        setDailyLocalStorage('dates', {
+            start: start,
+            end: end,
+        })
     }
 
     useEffect(() => {
-        setLocalStorage(
-            'main',
-            {
-                customElevation: customElevation,
-                markerLocation: markerLocation,
-                markerElevation: markerElevation,
-                mapCenter: mapCenter,
-                mapType: mapType,
-                zoom: zoom,
-            },
-            false
-        )
+        setLocalStorage('main', {
+            customElevation: customElevation,
+            markerLocation: markerLocation,
+            markerElevation: markerElevation,
+            mapCenter: mapCenter,
+            mapType: mapType,
+            zoom: zoom,
+        })
     }, [customElevation, markerLocation, markerElevation, mapCenter, mapType, zoom])
 
     useEffect(() => {
