@@ -5,14 +5,13 @@ import Graph from './Graph'
 import Map from './Map'
 import About from './About'
 import {
-    addDays,
     DefaultMapCenter,
     DefaultMapZoom,
-    DefaultNumDays,
     EpqsUrl,
-    stringify,
     buildCacheKey,
     Page,
+    getDefaultDates,
+    stringify,
 } from './utils'
 import {
     getDailyLocalStorage,
@@ -34,12 +33,11 @@ export default function Control(props) {
     Javascript new Date() returns a date/time in the local time zone, so users should get the 
     right date whatever timezone they're in. 
     */
-    const defaultStart = stringify(new Date())
-    const defaultEnd = stringify(addDays(defaultStart, DefaultNumDays - 1))
+    const { defaultStart, defaultEnd } = getDefaultDates()
     const datesStorage = getDailyLocalStorage('dates')
     const mainStorage = getLocalStorage('main')
-    const [startDate, setStartDate] = useState(datesStorage?.start ?? defaultStart)
-    const [endDate, setEndDate] = useState(datesStorage?.end ?? defaultEnd)
+    const [startDate, setStartDate] = useState(datesStorage?.start ?? stringify(defaultStart))
+    const [endDate, setEndDate] = useState(datesStorage?.end ?? stringify(defaultEnd))
     const [markerElevation, setMarkerElevation] = useState(mainStorage?.markerElevation)
     const [customElevation, setCustomElevation] = useState(mainStorage?.customElevation ?? null)
     const [mapType, setMapType] = useState(mainStorage?.mapType ? mainStorage?.mapType : 'basic')
@@ -113,8 +111,8 @@ export default function Control(props) {
         <AppContext.Provider
             value={{
                 gotoPage: gotoPage,
-                startDate: startDate,
-                endDate: endDate,
+                startDate: startDate, // Must be in string format: mm/dd/yyyy
+                endDate: endDate, // Must be in string format: mm/dd/yyyy
                 setDateRange: setDateRange,
                 customElevation: customElevation,
                 setCustomElevation: setCustomElevation,

@@ -10,12 +10,14 @@ import Plot from 'react-plotly.js'
 import useGraphData from './useGraphData'
 import {
     addDays,
+    getDefaultDates,
     stringify,
     dateDiff,
     limitDate,
     MaxNumDays,
     MaxCustomElevation,
-    getDefaultDateControls,
+    MinDate,
+    MaxDate,
 } from './utils'
 import { AppContext } from './AppContext'
 import prevButton from './images/util/previous.png'
@@ -25,9 +27,17 @@ export default function Graph() {
     const appContext = useContext(AppContext)
     const customElevation = appContext.customElevation
     const showElevation = customElevation && customElevation <= MaxCustomElevation
-    const { defaultStartCtl, defaultEndCtl } = getDefaultDateControls()
-    const [startCtl, setStartCtl] = useState(defaultStartCtl)
-    const [endCtl, setEndCtl] = useState(defaultEndCtl)
+
+    const [startCtl, setStartCtl] = useState({
+        min: MinDate,
+        start: new Date(appContext.startDate),
+        max: MaxDate,
+    })
+    const [endCtl, setEndCtl] = useState({
+        min: new Date(appContext.startDate),
+        end: new Date(appContext.endDate),
+        max: addDays(new Date(appContext.startDate), MaxNumDays - 1),
+    })
 
     const {
         isPending: loading,
@@ -47,6 +57,22 @@ export default function Graph() {
             max: limitDate(addDays(newStart, MaxNumDays - 1)),
         })
         appContext.setDateRange(stringify(newStart), stringify(newEnd))
+    }
+
+    // Reset the date controls to use the default range, as if entering app for the first time with no storage values.
+    const resetDateControls = () => {
+        const { defaultStart, defaultEnd } = getDefaultDates()
+        setStartCtl({
+            min: MinDate,
+            start: new Date(defaultStart),
+            max: MaxDate,
+        })
+        setEndCtl({
+            min: new Date(defaultStart),
+            end: new Date(defaultEnd),
+            max: addDays(new Date(defaultStart), MaxNumDays - 1),
+        })
+        appContext.setDateRange(stringify(defaultStart), stringify(defaultEnd))
     }
 
     const handlePreviousClick = (e) => {
@@ -358,6 +384,7 @@ export default function Graph() {
                 setStartCtl={setStartCtl}
                 endCtl={endCtl}
                 setEndCtl={setEndCtl}
+                resetDateControls={resetDateControls}
             />
             {/*
             Note we are not using Container because it sets left & right margin to auto, and this
