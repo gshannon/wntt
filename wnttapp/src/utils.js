@@ -55,21 +55,11 @@ export const limitDate = (date) => {
     return new Date(Math.min(d2, MaxDate))
 }
 
-// Build the data structures for the date range form controls, using the default range.
-// We recompute this as needed, in case the clock turns to a new day during the session.
-export const getDefaultDateControls = () => {
-    const defaultStart = stringify(new Date())
-    const defaultEnd = stringify(addDays(defaultStart, DefaultNumDays - 1))
+// Compute the default date range for the graph.
+export const getDefaultDates = () => {
+    const today = new Date()
     return {
-        defaultStartCtl: {
-            min: MinDate,
-            start: new Date(defaultStart),
-            max: MaxDate,
-        },
-        defaultEndCtl: {
-            min: new Date(defaultStart),
-            end: new Date(defaultEnd),
-            max: addDays(new Date(defaultStart), MaxNumDays - 1),
-        },
+        defaultStart: today,
+        defaultEnd: addDays(today, DefaultNumDays - 1),
     }
 }

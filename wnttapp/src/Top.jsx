@@ -60,7 +60,6 @@ export default function Top(props) {
                             </NavLink>
                             <OverlayTrigger
                                 placement='bottom'
-                                trigger='hover'
                                 overlay={
                                     <Tooltip id='id-cond-button'>
                                         Popup that shows current weather and tide data.

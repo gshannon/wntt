@@ -229,7 +229,6 @@ export default function Map() {
                                 </a>
                             </OverlayTrigger>
                             <OverlayTrigger
-                                trigger='hover'
                                 overlay={
                                     <Tooltip id='id-set-button'>
                                         Open the Map page tutorial in a popup window.

@@ -7,7 +7,6 @@ import Tooltip from 'react-bootstrap/Tooltip'
 import { DatePicker } from 'reactstrap-date-picker'
 import Container from 'react-bootstrap/Container'
 import {
-    getDefaultDateControls,
     addDays,
     dateDiff,
     limitDate,
@@ -57,11 +56,7 @@ export default function GetDates(props) {
             // This will force a re-render even if the dates are the same as before
             appContext.setDateRange(stringify(startCtl.start), stringify(endCtl.end))
         } else if (clickedButton.name === 'reset') {
-            const { defaultStartCtl, defaultEndCtl } = getDefaultDateControls()
-            setStartCtl(defaultStartCtl)
-            setEndCtl(defaultEndCtl)
-            // Again, this will force a re-render even if the dates are the same as before
-            appContext.setDateRange(stringify(defaultStartCtl.start), stringify(defaultEndCtl.end))
+            props.resetDateControls() // Let parent reset the date controls, and the appContext.
         }
     }
 
@@ -170,7 +165,6 @@ export default function GetDates(props) {
                                     </Col>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
-                                            trigger='hover'
                                             overlay={
                                                 <Tooltip id='id-set-button'>
                                                     Open the Graph page tutorial in a popup window.
