@@ -1,7 +1,7 @@
 import './css/Home.css'
 import banner from './images/aerial-4.jpg'
 import { Page } from './utils'
-import { Col, Row, Stack } from 'react-bootstrap'
+import { Container, Col, Row, Stack } from 'react-bootstrap'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import ToolTip from 'react-bootstrap/Tooltip'
 import { useContext } from 'react'
@@ -37,31 +37,34 @@ export default function Home() {
     return (
         <div className='home'>
             <img src={banner} alt='Aerial photo of Wells Harbor' />
-            <div className='welcome'>
-                <p>
-                    Welcome to the Wells National Estuarine Research Reserve Tide Tracker. Here you
-                    can view historical tide and wind data, as well as predicted tides and storm
-                    surge. You can also obtain the elevation of any location within our boundaries
-                    (Kennebunk to Ogunquit), to assess the flood risk at that location.
-                </p>
-                <p>
-                    To get started, open the{' '}
-                    <a href='#' onClick={() => appContext.gotoPage(Page.Graph)}>
-                        Graph
-                    </a>
-                    &nbsp;page and use the Graph Tutorial button, or watch this{' '}
-                    <a
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        href='https://www.youtube.com/embed/0RbrZBbK9B8?si=oUzyDw3XgZ59KZZw'>
-                        tutorial video
-                    </a>{' '}
-                    on Youtube.
-                </p>
-            </div>
-            <div className='latest'>
-                <Row className='align-items-center'>
-                    <Col className='mx-2 px-1'>
+            <Container className='banner'>
+                <Row>
+                    <Col xs={10} className='offset-1 welcome'>
+                        <p>
+                            Welcome to the Wells National Estuarine Research Reserve Tide Tracker.
+                            Here you can view historical tide and wind data, as well as predicted
+                            tides and storm surge. You can also obtain the elevation of any location
+                            within our boundaries (Kennebunk to Ogunquit), to assess the flood risk
+                            at that location.
+                        </p>
+                        <p>
+                            To get started, open the{' '}
+                            <a href='#' onClick={() => appContext.gotoPage(Page.Graph)}>
+                                Graph
+                            </a>
+                            &nbsp;page and use the Graph Tutorial button, or watch this{' '}
+                            <a
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                href='https://www.youtube.com/embed/0RbrZBbK9B8?si=oUzyDw3XgZ59KZZw'>
+                                tutorial video
+                            </a>{' '}
+                            on Youtube.
+                        </p>
+                    </Col>
+                </Row>
+                <Row className='conditions text-center mt-3'>
+                    <Col className='mx-2 px-1 offset-2'>
                         <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
                             <Stack>
                                 <div className='label'>Wind Speed</div>
@@ -94,7 +97,7 @@ export default function Home() {
                         </OverlayTrigger>
                     </Col>
                 </Row>
-            </div>
+            </Container>
         </div>
     )
 }

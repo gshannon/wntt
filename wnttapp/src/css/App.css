@@ -6,6 +6,7 @@
     --partial-gray: rgba(60, 60, 60, 0.7);
     --deep-blue: #003d79;
     --med-blue: #6183b1;
+    --link-blue: #000dff;
 }
 
 html {
@@ -26,7 +27,7 @@ a {
 }
 
 a:hover {
-    color: rgb(0, 13, 255);
+    color: var(--link-blue);
 }
 
 /* For Button variant, can say "variant=custom-primary" instead of using className... */
