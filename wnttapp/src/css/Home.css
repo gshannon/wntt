@@ -5,48 +5,35 @@
     position: relative;
 }
 
-.welcome {
+.banner {
     display: block;
     position: absolute;
     width: 90%;
     left: 5%;
     top: 5%;
+}
+
+.welcome {
     text-align: center;
     padding: 1em;
     border-radius: 20px;
-
     color: var(--platinum);
     background: var(--partial-gray);
     font-size: 1rem;
 }
 
-/* For xl + screens, narrower width and larger font */
-@media (min-width: 1200px) {
-    .welcome {
-        width: 50%;
-        left: 25%;
-        font-size: 1.25rem;
-    }
-}
-
 .welcome a {
-    /* color: var(--powder-blue); */
     color: white;
     text-decoration: none;
     font-weight: bold;
 }
 
 .welcome a:hover {
-    color: rgb(0, 13, 255);
+    /* Don't know why this isn't picked up from App.css */
+    color: var(--link-blue);
 }
 
-.latest {
-    display: block;
-    position: absolute;
-    width: 76%;
-    left: 12%;
-    top: 50%;
-    text-align: center;
+.conditions {
     padding: 0.5em;
     border-radius: 20px;
     color: var(--platinum);
@@ -54,20 +41,49 @@
     font-size: 1rem;
 }
 
-/* For xl + screens, narrower width and larger font */
-@media (min-width: 1200px) {
-    .latest {
-        width: 60%;
-        left: 20%;
-        font-size: 1.25rem;
-    }
-}
-
-.latest .label {
+.conditions .label {
     font-size: 0.9rem;
     color: white;
 }
 
-.latest .data {
+.conditions .data {
     font-weight: bold;
+}
+
+/* for xs & small, make it real wide */
+@media (max-width: 767px) {
+    .banner {
+        width: 96%;
+        left: 2%;
+    }
+    .welcome {
+        font-size: 0.9rem;
+    }
+    .conditions {
+        font-size: 0.9rem;
+        font-weight: 400;
+    }
+}
+
+/* For xl + screens, narrower width and larger font */
+@media (min-width: 1200px) {
+    .banner {
+        width: 50%;
+        left: 25%;
+    }
+    .welcome {
+        font-size: 1.25rem;
+    }
+    .conditions {
+        /* width: 60%;
+        left: 20%; */
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    /* this keeps the logo from getting squished */
+    .nav-link {
+        --bs-navbar-nav-link-padding-x: 6px;
+    }
 }
