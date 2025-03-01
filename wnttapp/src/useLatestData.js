@@ -3,7 +3,6 @@ import axios from 'axios'
 import { useClientIp } from './useClientIp'
 
 export default function useLatestData() {
-    const oneMinute = 60_000
     const { clientIp, ipError } = useClientIp()
 
     const { data, error } = useQuery({
@@ -18,8 +17,8 @@ export default function useLatestData() {
             return res.data
         },
         enabled: !!clientIp || !!ipError,
-        staleTime: oneMinute * 5,
-        gcTime: oneMinute * 5, // gcTime should be >= staleTime in case they move off the page and return
+        staleTime: 30_000, // 30 seconds. Allows for frequent checks without hammering the server.
+        gcTime: 30_000, // gcTime should be >= staleTime in case they move off the page and return
     })
     return { data, error }
 }
