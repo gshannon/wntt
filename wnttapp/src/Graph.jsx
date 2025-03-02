@@ -197,7 +197,7 @@ export default function Graph() {
                 type: 'scatter',
                 legendgroup: 'grp1',
                 legendgrouptitle: {
-                    text: '<b>Click below to toggle visibility.<br>See Glossary for details.</b>',
+                    text: '<b>Click below to toggle visibility.<br>See Help for details.</b>',
                 },
                 mode: 'lines',
                 line: { color: '#d62728' },

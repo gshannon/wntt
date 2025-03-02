@@ -19,7 +19,7 @@ import {
     setDailyLocalStorage,
     setLocalStorage,
 } from './localStorage'
-import Glossary from './Glossary'
+import Help from './Help'
 import { AppContext } from './AppContext'
 import { useCache } from './useCache'
 import { useQueryClient } from '@tanstack/react-query'
@@ -131,7 +131,7 @@ export default function Control(props) {
             {page === Page.Graph && <Graph />}
             {page === Page.Map && <Map />}
             {page === Page.About && <About />}
-            {page === Page.Glossary && <Glossary />}
+            {page === Page.Help && <Help />}
         </AppContext.Provider>
     )
 }
