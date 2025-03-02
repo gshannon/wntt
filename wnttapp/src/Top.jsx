@@ -71,7 +71,7 @@ export default function Top(props) {
                             }>
                             <NavLink className='px-3' onClick={() => setShowConditions(true)}>
                                 <img
-                                    className='conditions-menu'
+                                    className='conditions-menu object-fit-contain'
                                     src={Wave}
                                     width={40}
                                     height={25}
@@ -86,7 +86,7 @@ export default function Top(props) {
                             rel='noopener noreferrer'
                             href='https://wellsreserve.org'>
                             <img
-                                className='logo'
+                                className='object-fit-contain'
                                 src={Logo}
                                 width={165}
                                 height={55}
