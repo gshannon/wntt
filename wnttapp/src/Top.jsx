@@ -5,6 +5,7 @@ import Navbar from 'react-bootstrap/Navbar'
 import NavbarBrand from 'react-bootstrap/NavbarBrand'
 import NavbarToggle from 'react-bootstrap/NavbarToggle'
 import NavbarCollapse from 'react-bootstrap/NavbarCollapse'
+import NavDropdown from 'react-bootstrap/NavDropdown'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
@@ -12,6 +13,7 @@ import Tooltip from 'react-bootstrap/Tooltip'
 import { Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
+import HelpButton from './images/util/help.png'
 import Conditions from './Conditions'
 
 export default function Top(props) {
@@ -50,11 +52,6 @@ export default function Top(props) {
                                 Map
                             </NavLink>
                             <NavLink
-                                onClick={() => gotoPage(Page.Glossary)}
-                                active={page === Page.Glossary}>
-                                Glossary
-                            </NavLink>
-                            <NavLink
                                 onClick={() => gotoPage(Page.About)}
                                 active={page === Page.About}>
                                 About
@@ -69,17 +66,35 @@ export default function Top(props) {
                                     Popup that shows current weather and tide data.
                                 </Tooltip>
                             }>
-                            <NavLink className='px-3' onClick={() => setShowConditions(true)}>
+                            <NavLink
+                                className='px-sm-2 px-lg-4'
+                                onClick={() => setShowConditions(true)}>
                                 <img
                                     className='conditions-menu object-fit-contain'
                                     src={Wave}
-                                    width={40}
-                                    height={25}
+                                    width={50}
                                     alt='Current conditions'
                                 />
                             </NavLink>
                         </OverlayTrigger>
                     </NavbarBrand>
+                    <NavDropdown
+                        className='ps-sm-2 pe-sm-4'
+                        title={
+                            <img
+                                className='object-fit-contain'
+                                src={HelpButton}
+                                width={50}
+                                alt='Help'
+                            />
+                        }>
+                        <NavDropdown.Item onClick={() => gotoPage(Page.Glossary)}>
+                            Glossary
+                        </NavDropdown.Item>
+                        <NavDropdown.Item onClick={() => gotoPage(Page.Help)}>
+                            Help
+                        </NavDropdown.Item>
+                    </NavDropdown>
                     <NavbarBrand>
                         <a
                             target='_blank'
@@ -89,7 +104,6 @@ export default function Top(props) {
                                 className='object-fit-contain'
                                 src={Logo}
                                 width={165}
-                                height={55}
                                 alt='Wells Reserve Logo'
                             />
                         </a>
