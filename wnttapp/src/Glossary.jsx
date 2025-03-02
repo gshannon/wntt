@@ -1,19 +1,10 @@
 import { Col, Row, Stack } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 
-export default function Help() {
+export default function Glossary() {
     return (
         <Container>
             <Stack gap={3} className='py-3'>
-                <Row>
-                    <Col className='outred'>Watch this Youtube video!</Col>
-                    <Col className='outgreen'>
-                        <iframe
-                            width='420'
-                            height='315'
-                            src='https://www.youtube.com/embed/0RbrZBbK9B8?autoplay=0'></iframe>
-                    </Col>
-                </Row>
                 <Row>
                     <Col sm={2} className='border-end border-2'>
                         <b>Wells Reserve SWMP</b>

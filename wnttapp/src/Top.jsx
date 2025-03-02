@@ -50,9 +50,9 @@ export default function Top(props) {
                                 Map
                             </NavLink>
                             <NavLink
-                                onClick={() => gotoPage(Page.Help)}
-                                active={page === Page.Help}>
-                                Help
+                                onClick={() => gotoPage(Page.Glossary)}
+                                active={page === Page.Glossary}>
+                                Glossary
                             </NavLink>
                             <NavLink
                                 onClick={() => gotoPage(Page.About)}

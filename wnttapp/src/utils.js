@@ -17,7 +17,7 @@ export const Page = Object.freeze({
     Home: 1,
     Graph: 2,
     Map: 3,
-    Help: 4,
+    Glossary: 4,
     About: 5,
 })
 

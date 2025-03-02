@@ -20,7 +20,7 @@ export default function GraphHelp(props) {
                         shown for comparison purposes. This lets you see how close any high tide on
                         the curve comes to that record tide. You may change the start and end dates
                         at any time, then click Refresh to update the graph. All data shown in the
-                        graph is described in more detail on the <b>Help</b> tab.
+                        graph is described in more detail on the <b>Glossary</b> tab.
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey='1'>
