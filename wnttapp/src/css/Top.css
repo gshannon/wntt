@@ -26,11 +26,7 @@
     grid-gap: 5px;
 }
 
-.logo {
-    max-width: 100%;
-}
-
 .conditions-menu {
-    max-width: 100%;
     border: solid;
+    border-color: var(--ocean-blue);
 }
