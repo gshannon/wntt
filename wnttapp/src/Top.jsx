@@ -11,6 +11,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { Page } from './utils'
 import Logo from './images/wr-logo.png'
+import Wave from './images/util/wave.png'
 import Conditions from './Conditions'
 
 export default function Top(props) {
@@ -58,19 +59,27 @@ export default function Top(props) {
                                 active={page === Page.About}>
                                 About
                             </NavLink>
-                            <OverlayTrigger
-                                placement='bottom'
-                                overlay={
-                                    <Tooltip id='id-cond-button'>
-                                        Popup that shows current weather and tide data.
-                                    </Tooltip>
-                                }>
-                                <NavLink className='ps-4' onClick={() => setShowConditions(true)}>
-                                    Conditions
-                                </NavLink>
-                            </OverlayTrigger>
                         </Nav>
                     </NavbarCollapse>
+                    <NavbarBrand>
+                        <OverlayTrigger
+                            placement='bottom'
+                            overlay={
+                                <Tooltip id='id-cond-button'>
+                                    Popup that shows current weather and tide data.
+                                </Tooltip>
+                            }>
+                            <NavLink className='px-3' onClick={() => setShowConditions(true)}>
+                                <img
+                                    className='conditions-menu'
+                                    src={Wave}
+                                    width={40}
+                                    height={25}
+                                    alt='Current conditions'
+                                />
+                            </NavLink>
+                        </OverlayTrigger>
+                    </NavbarBrand>
                     <NavbarBrand>
                         <a
                             target='_blank'

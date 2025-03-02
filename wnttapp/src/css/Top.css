@@ -29,3 +29,8 @@
 .logo {
     max-width: 100%;
 }
+
+.conditions-menu {
+    max-width: 100%;
+    border: solid;
+}
