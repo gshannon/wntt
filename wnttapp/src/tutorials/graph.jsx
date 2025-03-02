@@ -58,7 +58,7 @@ export const getData = () => {
                 return (
                     <span>
                         Match the line colors to the key on the right to see what each line means.
-                        You can find full explanations on the <b>Glossary</b> page.
+                        You can find full explanations on the <b>Help</b> page.
                     </span>
                 )
             },
