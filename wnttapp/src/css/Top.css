@@ -20,12 +20,6 @@
     font-weight: bolder;
 }
 
-.exp {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 5px;
-}
-
 .conditions-menu {
     border: solid;
     border-color: var(--ocean-blue);

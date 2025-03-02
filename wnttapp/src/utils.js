@@ -19,6 +19,7 @@ export const Page = Object.freeze({
     Map: 3,
     Glossary: 4,
     About: 5,
+    Help: 6,
 })
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.

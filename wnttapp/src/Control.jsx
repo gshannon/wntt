@@ -4,6 +4,7 @@ import Home from './Home'
 import Graph from './Graph'
 import Map from './Map'
 import About from './About'
+import Help from './Help'
 import {
     DefaultMapCenter,
     DefaultMapZoom,
@@ -132,6 +133,7 @@ export default function Control(props) {
             {page === Page.Map && <Map />}
             {page === Page.About && <About />}
             {page === Page.Glossary && <Glossary />}
+            {page === Page.Help && <Help />}
         </AppContext.Provider>
     )
 }
