@@ -28,7 +28,7 @@ export default function Help() {
                         style={{ border: '1px solid black' }}
                         allow='fullscreen'
                         referrerPolicy='no-referrer'
-                        width='420'
+                        width='560'
                         height='315'
                         src='https://www.youtube.com/embed/0RbrZBbK9B8?autoplay=0'></iframe>
                 </Col>
