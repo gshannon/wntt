@@ -208,6 +208,7 @@ export default function Map() {
                     <Row>
                         <Col className='map-vertical-buttons'>
                             <OverlayTrigger
+                                trigger={['hover', 'hover']}
                                 overlay={
                                     <Tooltip id='id-set-button'>
                                         Find a location by entering a physical address.
@@ -229,6 +230,7 @@ export default function Map() {
                                 </a>
                             </OverlayTrigger>
                             <OverlayTrigger
+                                trigger={['hover', 'hover']}
                                 overlay={
                                     <Tooltip id='id-set-button'>
                                         Open the Map page tutorial in a popup window.

@@ -133,6 +133,7 @@ export default function GetDates(props) {
                                 <Row className='mx-1'>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
+                                            trigger={['hover', 'hover']}
                                             overlay={
                                                 <Tooltip id='id-refresh-button'>
                                                     Redraw the graph with the latest data using the
@@ -148,6 +149,7 @@ export default function GetDates(props) {
                                             </Button>
                                         </OverlayTrigger>
                                         <OverlayTrigger
+                                            trigger={['hover', 'hover']}
                                             overlay={
                                                 <Tooltip id='id-reset-button'>
                                                     Return to the default date range and refresh the
@@ -165,6 +167,7 @@ export default function GetDates(props) {
                                     </Col>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
+                                            trigger={['hover', 'hover']}
                                             overlay={
                                                 <Tooltip id='id-set-button'>
                                                     Open the Graph page tutorial in a popup window.
