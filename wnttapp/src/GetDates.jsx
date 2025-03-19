@@ -14,6 +14,7 @@ import {
     MaxNumDays,
     MinDate,
     MaxDate,
+    navd88ToMllw,
     Page,
 } from './utils'
 import Tutorial from './Tutorial'
@@ -191,8 +192,10 @@ export default function GetDates(props) {
                     <Row className='custom-elevation py-3 align-items-center'>
                         <Col sm={7} className='text-center flex-grow-1'>
                             Custom Elevation:{' '}
-                            {appContext.customElevation ? (
-                                <strong>{appContext.customElevation}&nbsp;ft</strong>
+                            {appContext.customElevationNav ? (
+                                <strong>
+                                    {navd88ToMllw(appContext.customElevationNav)}&nbsp;ft
+                                </strong>
                             ) : (
                                 '-'
                             )}

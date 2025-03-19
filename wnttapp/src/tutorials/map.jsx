@@ -7,7 +7,7 @@ import img05a from '../images/mtut05a.jpg'
 import img06 from '../images/mtut06.jpg'
 import img07 from '../images/mtut07.jpg'
 import img08 from '../images/mtut08.jpg'
-import { MaxCustomElevation } from '../utils'
+import { MaxCustomElevationMllw } from '../utils'
 
 export const getData = () => {
     return [
@@ -20,9 +20,9 @@ export const getData = () => {
                         Here you have the opportunity to add the elevation of your home, business,
                         or place of interest to the graph. You&apos;ll do this by either finding the
                         location on the map through navigation, or by searching for an address. If
-                        the elevation is less than {MaxCustomElevation} feet MLLW, you can choose to
-                        show it on the tide graph. (Higher elevations would lessen the usefulness of
-                        the graph.) Let&apos;s go through the steps...
+                        the elevation is less than {MaxCustomElevationMllw} feet MLLW, you can
+                        choose to show it on the tide graph. (Higher elevations would lessen the
+                        usefulness of the graph.) Let&apos;s go through the steps...
                     </span>
                 )
             },
@@ -82,8 +82,8 @@ export const getData = () => {
                         else, or you can drag the marker to a new location. Each time the marker
                         changes, the system will determine the latitude/longitude, then use that to
                         retrieve the elevation. When you are ready, if the elevation is less than{' '}
-                        {MaxCustomElevation} ft, you can click the <b>Add to Graph</b> button, and
-                        you will be returned to the graph.
+                        {MaxCustomElevationMllw} ft, you can click the <b>Add to Graph</b> button,
+                        and you will be returned to the graph.
                     </span>
                 )
             },

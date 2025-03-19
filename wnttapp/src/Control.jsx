@@ -12,6 +12,7 @@ import {
     buildCacheKey,
     Page,
     getDefaultDates,
+    mllwToNavd88,
     stringify,
 } from './utils'
 import {
@@ -39,8 +40,16 @@ export default function Control(props) {
     const mainStorage = getLocalStorage('main')
     const [startDate, setStartDate] = useState(datesStorage?.start ?? stringify(defaultStart))
     const [endDate, setEndDate] = useState(datesStorage?.end ?? stringify(defaultEnd))
-    const [markerElevation, setMarkerElevation] = useState(mainStorage?.markerElevation)
-    const [customElevation, setCustomElevation] = useState(mainStorage?.customElevation ?? null)
+    // During transition from storing elevations in MLLW to storing in NAVD88, we convert from the old mllw.
+    // TODO: remove the conversion in April or May 2025.
+    const [markerElevationNav, setMarkerElevationNav] = useState(
+        mainStorage.markerElevationNav ??
+            (mainStorage.markerElevation ? mllwToNavd88(mainStorage.markerElevation) : null)
+    )
+    const [customElevationNav, setCustomElevationNav] = useState(
+        mainStorage.customElevationNav ??
+            (mainStorage.customElevation ? mllwToNavd88(mainStorage.customElevation) : null)
+    )
     const [mapType, setMapType] = useState(mainStorage?.mapType ? mainStorage?.mapType : 'basic')
     const [markerLocation, setMarkerLocation] = useState(mainStorage?.markerLocation)
     const [mapCenter, setMapCenter] = useState(mainStorage?.mapCenter || DefaultMapCenter)
@@ -62,14 +71,14 @@ export default function Control(props) {
 
     useEffect(() => {
         setLocalStorage('main', {
-            customElevation: customElevation,
+            customElevationNav: customElevationNav,
             markerLocation: markerLocation,
-            markerElevation: markerElevation,
+            markerElevationNav: markerElevationNav,
             mapCenter: mapCenter,
             mapType: mapType,
             zoom: zoom,
         })
-    }, [customElevation, markerLocation, markerElevation, mapCenter, mapType, zoom])
+    }, [customElevationNav, markerLocation, markerElevationNav, mapCenter, mapType, zoom])
 
     useEffect(() => {
         setDateStorage(startDate, endDate)
@@ -85,28 +94,24 @@ export default function Control(props) {
     }
 
     useEffect(() => {
-        const convert = (navd88) => navd88 + parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION)
-        // We only fetch elevation if markerLocation is set and markerElevation is not set.
+        // We only fetch elevation if markerLocation is set and markerElevationNav is not set.
         // That avoids a superfluous lookup during mount, when both values are set from the previous
-        // session, which is the only time this code is executed when markerElevation is already known.
-        if (markerLocation && !markerElevation) {
+        // session, which is the only time this code is executed when markerElevationNav is already known.
+        if (markerLocation && !markerElevationNav) {
             // prettier-ignore
             const url = EpqsUrl + '?x=' + markerLocation.lng + '&y=' + markerLocation.lat + 
                 '&units=Feet&wkid=4326&includeDate=False'
             axios
                 .get(url)
                 .then((response) => {
-                    const navd88_feet = parseFloat(response.data.value)
-                    // We get the value in NAVD88 feet, so must convert to MLLW. Then
-                    // round it down to 1 digit of precision. Note calling toFixed turns it into a string!
-                    setMarkerElevation(Number(convert(navd88_feet).toFixed(1)))
+                    setMarkerElevationNav(parseFloat(response.data.value))
                 })
                 .catch((err) => {
                     //setError(err);
                     console.error(err)
                 })
         }
-    }, [markerLocation, markerElevation])
+    }, [markerLocation, markerElevationNav])
 
     return (
         <AppContext.Provider
@@ -115,16 +120,16 @@ export default function Control(props) {
                 startDate: startDate, // Must be in string format: mm/dd/yyyy
                 endDate: endDate, // Must be in string format: mm/dd/yyyy
                 setDateRange: setDateRange,
-                customElevation: customElevation,
-                setCustomElevation: setCustomElevation,
+                customElevationNav: customElevationNav,
+                setCustomElevationNav: setCustomElevationNav,
                 mapType: mapType,
                 setMapType: setMapType,
                 markerLocation: markerLocation,
                 setMarkerLocation: setMarkerLocation,
                 mapCenter: mapCenter,
                 setMapCenter: setMapCenter,
-                markerElevation: markerElevation,
-                setMarkerElevation: setMarkerElevation,
+                markerElevationNav: markerElevationNav,
+                setMarkerElevationNav: setMarkerElevationNav,
                 zoom: zoom,
                 setZoom: setZoom,
             }}>
