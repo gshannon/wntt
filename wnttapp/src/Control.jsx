@@ -13,6 +13,7 @@ import {
     Page,
     getDefaultDates,
     mllwToNavd88,
+    roundTo,
     stringify,
 } from './utils'
 import {
@@ -104,7 +105,7 @@ export default function Control(props) {
             axios
                 .get(url)
                 .then((response) => {
-                    setMarkerElevationNav(parseFloat(response.data.value))
+                    setMarkerElevationNav(roundTo(parseFloat(response.data.value), 2))
                 })
                 .catch((err) => {
                     //setError(err);

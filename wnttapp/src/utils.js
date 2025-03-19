@@ -22,22 +22,21 @@ export const Page = Object.freeze({
     Help: 6,
 })
 
+// Round a floating point value to n digits of precision
+export const roundTo = (value, digits) => Number(value.toFixed(digits))
+
 export const navd88ToMllw = (navd88) => {
     if (navd88 == null) {
         return null
     }
-    const mllw = navd88 + parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION)
-    // round it down to 1 digit of precision. Note calling toFixed turns it into a string.
-    return Number(mllw.toFixed(1))
+    return roundTo(navd88 + parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION), 2)
 }
 
 export const mllwToNavd88 = (mllw) => {
     if (mllw == null) {
         return null
     }
-    const navd88 = mllw - parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION)
-    // round it down to 1 digit of precision. Note calling toFixed turns it into a string.
-    return Number(navd88.toFixed(1))
+    return roundTo(mllw - parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION), 2)
 }
 
 export const maxCustomElevationNavd88 = () => mllwToNavd88(MaxCustomElevationMllw)
