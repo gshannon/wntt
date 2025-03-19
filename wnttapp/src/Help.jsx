@@ -30,7 +30,7 @@ export default function Help() {
                         referrerPolicy='no-referrer'
                         width='560'
                         height='315'
-                        src='https://www.youtube.com/embed/0RbrZBbK9B8?autoplay=0'></iframe>
+                        src='https://www.youtube.com/embed/wr2nfjE43Gg?autoplay=0'></iframe>
                 </Col>
             </Row>
             <Row className='mt-md-5'>

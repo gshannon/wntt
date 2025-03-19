@@ -56,7 +56,7 @@ export default function Home() {
                             <a
                                 target='_blank'
                                 rel='noopener noreferrer'
-                                href='https://www.youtube.com/embed/0RbrZBbK9B8?si=oUzyDw3XgZ59KZZw'>
+                                href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
                                 tutorial video
                             </a>{' '}
                             on Youtube.
