@@ -23,7 +23,6 @@ export const useCache = (page) => {
 
         const cnt = graphQueries.length
 
-        // console.log(`Graph queries with data: ${cnt}`)
         if (cnt > maxQueries) {
             console.log(`Max graph queries is ${maxQueries}. Found ${cnt}, removing them.`)
             queryClient.removeQueries({ queryKey: ['graph'], exact: false })

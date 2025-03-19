@@ -1,6 +1,6 @@
 import { Modal } from 'react-bootstrap'
 import Accordion from 'react-bootstrap/Accordion'
-import { MaxCustomElevation } from './utils'
+import { MaxCustomElevationMllw } from './utils'
 
 export default function GraphHelp(props) {
     return (
@@ -26,11 +26,12 @@ export default function GraphHelp(props) {
                 <Accordion.Item eventKey='1'>
                     <Accordion.Header>How does this help me assess my flood risk?</Accordion.Header>
                     <Accordion.Body>
-                        For elevations under {MaxCustomElevation} feet, you can add the elevation of
-                        your home, business or any location you choose as a <b>new</b> line on the
-                        graph! You do this on the Map tab. Follow the instructions there to find
-                        your desired location on the map, then return to the Graph. You will then
-                        see a new colored line on the graph with the label <b>Custom Elevation. </b>
+                        For elevations under {MaxCustomElevationMllw} feet MLLW, you can add the
+                        elevation of your home, business or any location you choose as a <b>new</b>{' '}
+                        line on the graph! You do this on the Map tab. Follow the instructions there
+                        to find your desired location on the map, then return to the Graph. You will
+                        then see a new colored line on the graph with the label{' '}
+                        <b>Custom Elevation. </b>
                         If you set your date range to include today and the next several days,{' '}
                         <b>
                             you will be able to see whether the projected tide comes close to or

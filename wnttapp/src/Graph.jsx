@@ -15,9 +15,10 @@ import {
     dateDiff,
     limitDate,
     MaxNumDays,
-    MaxCustomElevation,
+    maxCustomElevationNavd88,
     MinDate,
     MaxDate,
+    navd88ToMllw,
 } from './utils'
 import { AppContext } from './AppContext'
 import prevButton from './images/util/previous.png'
@@ -25,8 +26,9 @@ import nextButton from './images/util/next.png'
 
 export default function Graph() {
     const appContext = useContext(AppContext)
-    const customElevation = appContext.customElevation
-    const showElevation = customElevation && customElevation <= MaxCustomElevation
+    const customElevationNav = appContext.customElevationNav
+    const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
+    const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
 
     const [startCtl, setStartCtl] = useState({
         min: MinDate,
@@ -180,11 +182,11 @@ export default function Graph() {
                 ? [
                       {
                           x: data.timeline,
-                          y: Array(data.timeline.length).fill(customElevation),
+                          y: Array(data.timeline.length).fill(customElevationMllw),
                           legendgroup: 'grp1',
                           type: 'scatter',
-                          name: `Custom Elevation (${customElevation} ft)`,
-                          text: `Custom Elevation: ${customElevation} ft`,
+                          name: `Custom Elevation (${customElevationMllw} ft)`,
+                          text: `Custom Elevation: ${customElevationMllw} ft`,
                           hoverinfo: 'text', // tells it to use 'text' in hover
                           mode: 'Lines',
                           line: { color: '#17becf' },

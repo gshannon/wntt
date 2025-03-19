@@ -13,7 +13,7 @@ import reset from '../images/reset.jpg'
 import zoomMode from '../images/zoom-mode.jpg'
 import panning from '../images/panning.jpg'
 import set from '../images/set.jpg'
-import { MaxCustomElevation } from '../utils'
+import { MaxCustomElevationMllw } from '../utils'
 
 export const getData = () => {
     return [
@@ -121,8 +121,8 @@ export const getData = () => {
                         To add a custom elevation to the graph, navigate to the Map page with the
                         Set button, or the Map tab on the menu bar, and follow the instructions
                         there. This will allow you to compare the elevation of your home, business
-                        or other point of interest to the predicted tides. Only elevations of{' '}
-                        {MaxCustomElevation} feet or less are will be added to the graph, to avoid
+                        or other point of interest to the predicted tides. Only elevations less than{' '}
+                        {MaxCustomElevationMllw} feet MLLW may be added to the graph, to avoid
                         skewing the graph scale.
                     </span>
                 )

@@ -36,11 +36,11 @@ export const getLocalStorage = (key) => {
         if (data) {
             return JSON.parse(data)
         } else {
-            return undefined
+            return {}
         }
     } catch (error) {
         console.error(error)
-        return undefined
+        return {}
     }
 }
 
@@ -60,13 +60,13 @@ export const getDailyLocalStorage = (key, date = new Date()) => {
             } else {
                 // It's an old value, just remove it
                 window.localStorage.removeItem(lsKey)
-                return undefined
+                return {}
             }
         } else {
-            return undefined
+            return {}
         }
     } catch (error) {
         console.error(error)
-        return undefined
+        return {}
     }
 }

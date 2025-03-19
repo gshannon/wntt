@@ -13,7 +13,7 @@ import Tooltip from 'react-bootstrap/Tooltip'
 import { YellowPin, RedPin } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
-import { MapBounds, MaxCustomElevation, Page } from './utils'
+import { MapBounds, maxCustomElevationNavd88, navd88ToMllw, Page } from './utils'
 import { AppContext } from './AppContext'
 import Tutorial from './Tutorial'
 import { getData } from './tutorials/map'
@@ -34,7 +34,7 @@ export default function Map() {
     const markerRef = useRef(null)
 
     const addtoGraph = () => {
-        appContext.setCustomElevation(appContext.markerElevation)
+        appContext.setCustomElevationNav(appContext.markerElevationNav)
         appContext.gotoPage(Page.Graph) // start tracking elevation, goto graph
     }
 
@@ -50,13 +50,13 @@ export default function Map() {
 
     const setAddressMarker = (latlng) => {
         appContext.setMarkerLocation(latlng)
-        appContext.setMarkerElevation(null) // the old elevation is invalid now
+        appContext.setMarkerElevationNav(null) // the old elevation is invalid now
         appContext.setMapCenter(latlng)
     }
     const removeMarker = () => {
         appContext.setMarkerLocation(null)
-        appContext.setMarkerElevation(null)
-        appContext.setCustomElevation(null)
+        appContext.setMarkerElevationNav(null)
+        appContext.setCustomElevationNav(null)
     }
 
     const handleChange = (event) => {
@@ -69,7 +69,7 @@ export default function Map() {
                 const marker = markerRef.current
                 if (marker != null) {
                     appContext.setMarkerLocation(marker.getLatLng())
-                    appContext.setMarkerElevation(null) // the old elevation is invalid now
+                    appContext.setMarkerElevationNav(null) // the old elevation is invalid now
                 }
             },
         }),
@@ -80,7 +80,7 @@ export default function Map() {
         useMapEvents({
             click: (e) => {
                 appContext.setMarkerLocation(e.latlng)
-                appContext.setMarkerElevation(null)
+                appContext.setMarkerElevationNav(null)
             },
             zoomend: (e) => {
                 appContext.setZoom(e.target.getZoom())
@@ -128,8 +128,8 @@ export default function Map() {
                             <tr>
                                 <td>Elevation:</td>
                                 <td>
-                                    {appContext.markerElevation ? (
-                                        appContext.markerElevation + ' ft MLLW'
+                                    {appContext.markerElevationNav ? (
+                                        navd88ToMllw(appContext.markerElevationNav) + ' ft MLLW'
                                     ) : appContext.markerLocation ? (
                                         <BarLoader loading={true} color={'blue'} />
                                     ) : (
@@ -155,9 +155,10 @@ export default function Map() {
                                     className='m-2'
                                     onClick={() => addtoGraph()}
                                     disabled={
-                                        !appContext.markerElevation ||
-                                        appContext.markerElevation > MaxCustomElevation ||
-                                        appContext.markerElevation === appContext.customElevation
+                                        !appContext.markerElevationNav ||
+                                        appContext.markerElevationNav ===
+                                            appContext.customElevationNav ||
+                                        appContext.markerElevationNav > maxCustomElevationNavd88()
                                     }>
                                     Add to Graph
                                 </Button>
@@ -279,7 +280,7 @@ export default function Map() {
                                 opacity={0.75}
                                 direction={'right'}
                                 offset={[30, -27]}>
-                                Custom: {appContext.markerElevation}
+                                Elevation: {navd88ToMllw(appContext.markerElevationNav) ?? '-'}
                             </LeafletTooltip>
                         </Marker>
                     )}

@@ -33,7 +33,7 @@ Here are the configuration files needed during the build/deploy process.
     - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
     - VITE_MIN_DATE : Oldest date supported by graph. Should match setting in Django .env file.
     - VITE_MAX_DATE : Farthest date in future supported by graph. Should match setting in Django .env file.
-    - VITE_NAVD88_MLLW_CONVERSTION : Number to be added to NAVD88 elevations to get MLLW. Should match setting in Django .env file.
+    - VITE_NAVD88_MLLW_CONVERSION : Number to be added to NAVD88 elevations to get MLLW. Should match setting in Django .env file.
     - VITE_MAX_GRAPH_QUERIES_IN_CACHE : Max number of graph queries allowed to be held in query cache. Initially 3. Higher values will increase memory pressure on browser.
 
 ### wnttapp/public/signature.json

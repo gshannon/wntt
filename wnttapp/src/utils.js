@@ -4,7 +4,6 @@ export const MaxNumDays = 7 // This could be as high as 10, to support 10 full d
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
-export const MaxCustomElevation = 25
 export const DefaultNumDays = 4
 export const MapBounds = [
     [44.01, -70.73],
@@ -12,6 +11,7 @@ export const MapBounds = [
 ]
 export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
+export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
 
 export const Page = Object.freeze({
     Home: 1,
@@ -21,6 +21,26 @@ export const Page = Object.freeze({
     About: 5,
     Help: 6,
 })
+
+export const navd88ToMllw = (navd88) => {
+    if (navd88 == null) {
+        return null
+    }
+    const mllw = navd88 + parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION)
+    // round it down to 1 digit of precision. Note calling toFixed turns it into a string.
+    return Number(mllw.toFixed(1))
+}
+
+export const mllwToNavd88 = (mllw) => {
+    if (mllw == null) {
+        return null
+    }
+    const navd88 = mllw - parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION)
+    // round it down to 1 digit of precision. Note calling toFixed turns it into a string.
+    return Number(navd88.toFixed(1))
+}
+
+export const maxCustomElevationNavd88 = () => mllwToNavd88(MaxCustomElevationMllw)
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.
 export const stringify = (date) => {
