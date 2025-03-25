@@ -12,7 +12,7 @@ Utility data and functions for graph building.
 
 logger = logging.getLogger(__name__)
 cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
-wells_station = 'welinwq'
+wells_water_station = 'welinwq'
 wells_met_station = 'wellfmet'
 windspeed_param = 'Wspd'
 windgust_param = 'MaxWspd'
@@ -24,7 +24,7 @@ max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad
 max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
 
 
-def get_recorded_tides(timeline: list) -> list:
+def get_recorded_tides(timeline: list, station=wells_water_station, param=tide_param) -> list:
     """
     For the given timeline, get a list of tide water levels from CDMO in MLLW feet, corresponding toe the timeline.
     """
@@ -33,8 +33,7 @@ def get_recorded_tides(timeline: list) -> list:
         # Nothing to fetch, it's all in the future
         return None
 
-    raw_levels, data_count = get_cdmo(timeline, station=wells_station,
-                                      param=tide_param,
+    raw_levels, data_count = get_cdmo(timeline, station, param,
                                       converter=handle_navd88_level, included_minutes=[0, 15, 30, 45])
 
     # HACK. In case there are no data points at all (all levels are None), we have chosen to display an empty graph.
@@ -101,7 +100,7 @@ def get_recorded_temps(timeline: list) -> list:
         # Nothing to fetch, it's all in the future
         return None
 
-    raw_levels, _ = get_cdmo(timeline, station=wells_station,
+    raw_levels, _ = get_cdmo(timeline, station=wells_water_station,
                                       param=temp_param,
                                       converter=handle_float, included_minutes=[0, 15, 30, 45])
     return raw_levels
