@@ -8,7 +8,6 @@ import hashlib
 
 
 logger = logging.getLogger(__name__)
-pattern = r"^\d+\.\d+\.(\d+.\d+)$"
 
 class LatestInfoView(APIView):
     

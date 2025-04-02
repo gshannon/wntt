@@ -29,6 +29,8 @@ export default function Graph() {
     const customElevationNav = appContext.customElevationNav
     const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
     const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
+    const isTouchScreen =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
     const [startCtl, setStartCtl] = useState({
         min: MinDate,
@@ -175,6 +177,7 @@ export default function Graph() {
                 subplots: [['xy'], ['xy2']],
                 roworder: 'top to bottom',
             },
+            dragmode: isTouchScreen ? false : undefined,
         }
 
         const plotData = [
