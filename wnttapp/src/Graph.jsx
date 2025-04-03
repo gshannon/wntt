@@ -180,6 +180,20 @@ export default function Graph() {
             dragmode: isTouchScreen ? false : undefined,
         }
 
+        const astro_hover = data.timeline.map((dt) => {
+            const i = data.astro_hilo_dts.indexOf(dt)
+            if (i < 0) {
+                return '%{y} ft'
+            } else {
+                const val = data.astro_hilo_vals[i]
+                if (val == 'H') {
+                    return '%{y} ft (HIGH)'
+                } else {
+                    return '%{y} ft (LOW)'
+                }
+            }
+        })
+
         const plotData = [
             ...(showElevation
                 ? [
@@ -269,7 +283,7 @@ export default function Graph() {
                 mode: 'lines',
                 line: { color: '#0b7dcc' },
                 name: 'Predicted Tide',
-                hovertemplate: data.astro_hover,
+                hovertemplate: astro_hover,
             },
             ...(data.past_surge !== null
                 ? [

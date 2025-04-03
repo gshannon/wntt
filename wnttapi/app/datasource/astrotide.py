@@ -20,13 +20,20 @@ base_url = ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=p
 wells_station_id = "8419317"
 
 
-def get_astro_tides(timeline: list) -> tuple[list,list]:
+def get_astro_tides(timeline: list) -> tuple[list,list,list]:
     """
     Load tide level predictions for the desired datetime range.
     Returns
     =======
         list of 15-min predictions corresponding to the requested timeline.  Values should never be None.
-        list of hover text strings for the plotly graph. Done here so we can append HIGH or LOW to the appropriate values.
+        list of datetime objects corresponding to the high and low tide times.
+        list of 'H', 'L' or None corresponding to the high/low times list, indicating 'H' or 'L'.
+
+    The returned prediction times are in 15-min intervals, but the highest and lowest value for any given tide come 
+    from the high-low api call, which has 1-min granularity.  So we round the high-low data times to the closest 15-min 
+    interval so they can be used on the graph, and marked as HIGH or lOW. So if the graph says the HIGH was X at 13:45, that
+    means that X actually occurred between 13:38 and 13:52.  This is deemed preferable to simply showing the 15-min 
+    values precisely, and not showing the actual HIGH and LOW tides, which are likely what the user is most interested in.
 
     Parameters
     ==========
@@ -55,32 +62,36 @@ def get_astro_tides(timeline: list) -> tuple[list,list]:
         typ = pred['type']  # should be 'H' or 'L'
         utc = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=tz.utc)
         dt = utc.astimezone(timeline[0].tzinfo)
+        if typ not in ['H', 'L']:
+            logger.error(f"Unknown type {typ} for date {dts}")
+            raise APIException()
         # We round the actual high/low values to the closest 15-min interval so it aligns with our graph timeline
         hilo_preds_dict[util.round_to_quarter(dt)] = {'value': round(float(val), 2), 'type': typ}
 
-    reg_data = []
-    reg_hover = []
+    tide_values = []
+    hilo_times = []
+    hilo_values = []
 
     missing = 0
     for dt in timeline:
 
-        if dt not in hilo_preds_dict:
-            if dt not in reg_preds_dict:
-                reg_data.append(None)  # should never happen
-                missing += 1
-            else:
-                reg_data.append(reg_preds_dict[dt])
-                reg_hover.append('%{y} ft')
+        if dt in hilo_preds_dict:
+            stuff = hilo_preds_dict[dt]
+            tide_values.append(stuff['value'])
+            hilo_times.append(dt)
+            hilo_values.append(stuff['type'])  # 'H' or 'L'
 
         else:
-            stuff = hilo_preds_dict[dt]
-            reg_data.append(stuff['value'])
-            reg_hover.append('%{y} ft ' + ('(HIGH)' if stuff['type'] == 'H' else '(LOW)')) 
+            if dt not in reg_preds_dict:
+                tide_values.append(None)  # should never happen
+                missing += 1
+            else:
+                tide_values.append(reg_preds_dict[dt])
 
     if missing:
         logger.error(f"Missing tide predictions: {missing}")
 
-    return reg_data, reg_hover
+    return tide_values, hilo_times, hilo_values
 
 
 def pull_data(begin_date, end_date, url) -> dict:
