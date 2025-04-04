@@ -128,15 +128,25 @@ export default function Graph() {
         const graph2_max = 0.48
         const graph2_min = 0
 
-        const title =
-            'Wells Harbor Tides' + (data.wind_speeds !== null ? ' & Wind Data' : '') + ', '
+        /*
+        Width of iPhone 14 Pro is 844 in landscape mode. (Height 390)
+        Samsung Galaxy is 914 x 412.
+        */
+
         const layout = {
-            height: 500,
+            height: 420,
             template: 'plotly',
             plot_bgcolor: '#f3f2f2',
             title: {
-                text: title + data.start_date + ' - ' + data.end_date,
-                font: { size: 20 },
+                text:
+                    'Wells Harbor Tides' +
+                    (data.wind_speeds !== null ? ' & Wind Data' : '') +
+                    '<br>',
+                font: { size: 18 },
+                subtitle: {
+                    text: data.start_date + ' - ' + data.end_date,
+                    font: { size: 15 },
+                },
             },
             hovermode: 'x unified',
             /* hoverlabel must be extra wide due to issue created by hoverdistance (see below)
@@ -155,19 +165,20 @@ export default function Graph() {
             modebar: {
                 remove: ['select2d', 'lasso2d', 'autoscale2d', 'zoomIn2d', 'zoomOut2d'],
             },
+            margin: { t: 60, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
             // Override default date format to more readable, with 12-hour clock.
             xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
             xaxis2: { gridcolor: 'black' },
             yaxis: {
                 title: {
                     text: 'Tide feet (MLLW)',
-                    font: { color: 'black', size: 20 },
+                    font: { color: 'black', size: 15 },
                 },
                 domain: [graph1_min, graph1_max],
                 gridcolor: 'black',
             },
             yaxis2: {
-                title: { text: 'Wind MPH', font: { size: 20 } },
+                title: { text: 'Wind MPH', font: { size: 15 } },
                 domain: [graph2_min, graph2_max],
                 gridcolor: 'black',
             },
