@@ -211,7 +211,7 @@ export default function GetDates(props) {
                                     variant='custom-primary'
                                     className='py-0'
                                     onClick={() => appContext.gotoPage(Page.Map)}>
-                                    Set
+                                    Edit
                                 </Button>
                             </OverlayTrigger>
                         </Col>
