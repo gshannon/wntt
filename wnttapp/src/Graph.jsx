@@ -130,6 +130,8 @@ export default function Graph() {
 
         /*
         Width of iPhone 14 Pro is 844 in landscape mode. (Height 390)
+        iPhone 13 mini Safari.  Portrait is 375 x 628. Landscape is 712 x 292. 
+          Chrome landscape is 712 x 319.
         Samsung Galaxy is 914 x 412.
         */
 
