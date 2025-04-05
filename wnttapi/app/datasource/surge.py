@@ -79,7 +79,7 @@ def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
                 future_surge_data.append(surge_value)
                 projected_found = True
                 if astro is not None:
-                    future_storm_tide.append(astro + surge_value)
+                    future_storm_tide.append(round(astro + surge_value, 2))
                     future_storm_tide_found = True
                 else:
                     future_storm_tide.append(None)
