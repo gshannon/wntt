@@ -46,13 +46,13 @@ def get_graph_data(start_date, end_date):
 
     mhw = cfg.get_mean_high_water()
     validate_dates(start_date, end_date)
+
     timeline = util.build_timeline(start_date, end_date, time_zone)
     astro_tides, astro_hilo_dts, astro_hilo_vals = astro.get_astro_tides(timeline)
     hist_tides = cdmo.get_recorded_tides(timeline)
     past_surge, future_surge, future_tide = sg.get_surge_data(timeline, astro_tides, hist_tides)
     wind_speeds, wind_gusts, wind_dir, wind_dir_hover = cdmo.get_recorded_wind_data(timeline)
-    record_tide = [cfg.get_record_tide()] + ([None] * (len(timeline) - 2)) + [cfg.get_record_tide()]
-    mean_high_water = [mhw] + ([None] * (len(timeline) - 2)) + [mhw]
+    
     highest_annual_predictions = get_annual_astro_high(timeline)
 
     (past_tl_index, future_tl_index) = util.get_timeline_info(timeline)
@@ -61,10 +61,10 @@ def get_graph_data(start_date, end_date):
     return {"timeline": timeline, "hist_tides": hist_tides, 
             "astro_tides": astro_tides, "astro_hilo_dts": astro_hilo_dts, "astro_hilo_vals": astro_hilo_vals, 
             "wind_speeds": wind_speeds, "wind_gusts": wind_gusts, "wind_dir": wind_dir,
-            "wind_dir_hover": wind_dir_hover,  "record_tide": record_tide,
+            "wind_dir_hover": wind_dir_hover,  "record_tide": cfg.get_record_tide(),
             "record_tide_title": f'{record_tide_title} ({cfg.get_record_tide():.2f})',
-            "mean_high_water": mean_high_water,
-            "mean_high_water_title": f'{mean_high_water_title} ({mhw:.2f})',
+            "mean_high_water": cfg.get_mean_high_water(),
+            "mean_high_water_title": f'{mean_high_water_title} ({cfg.get_mean_high_water()})',
             "past_surge": past_surge, "future_surge": future_surge, "future_tide": future_tide,
             "highest_annual_predictions": highest_annual_predictions,
             "start_date": start_date_str, "end_date": end_date_str, "num_days": (end_date - start_date).days + 1,
