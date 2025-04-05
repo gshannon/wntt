@@ -89,6 +89,12 @@ export default function Graph() {
         setJumpDates(1)
     }
 
+    // For constants which do not appear on hover text, we only need the first and last value,
+    // but must have a value for every timeline point, so we put nulls in between.
+    const expandConstant = (value, count) => {
+        return [value].concat(Array(count - 2).fill(null)).concat(value)
+    }
+
     const MyPlot = () => {
         if (error) {
             console.error(error)
@@ -212,6 +218,7 @@ export default function Graph() {
                 ? [
                       {
                           x: data.timeline,
+                          // We need this one filled across cuz it appears on the hover text.
                           y: Array(data.timeline.length).fill(customElevationMllw),
                           legendgroup: 'grp1',
                           type: 'scatter',
@@ -225,7 +232,7 @@ export default function Graph() {
                 : []),
             {
                 x: data.timeline,
-                y: data.record_tide,
+                y: expandConstant(data.record_tide, data.timeline.length),
                 type: 'scatter',
                 legendgroup: 'grp1',
                 legendgrouptitle: {
@@ -250,7 +257,7 @@ export default function Graph() {
             },
             {
                 x: data.timeline,
-                y: data.mean_high_water,
+                y: expandConstant(data.mean_high_water, data.timeline.length),
                 type: 'scatter',
                 legendgroup: 'grp1',
                 mode: 'lines',
