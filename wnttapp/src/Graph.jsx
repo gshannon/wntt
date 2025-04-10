@@ -199,12 +199,28 @@ export default function Graph() {
             dragmode: isTouchScreen ? false : undefined,
         }
 
+        // Build hover format for future astro tides, to include High/Low labels.
         const astro_hover = data.timeline.map((dt) => {
             const i = data.astro_hilo_dts.indexOf(dt)
             if (i < 0) {
                 return '%{y} ft'
             } else {
                 const val = data.astro_hilo_vals[i]
+                if (val == 'H') {
+                    return '%{y} ft (HIGH)'
+                } else {
+                    return '%{y} ft (LOW)'
+                }
+            }
+        })
+
+        // Build hover format for recorded tides, to include High/Low labels.
+        const hist_hover = data.timeline.map((dt) => {
+            const i = data.hist_hilo_dts.indexOf(dt)
+            if (i < 0) {
+                return '%{y} ft'
+            } else {
+                const val = data.hist_hilo_vals[i]
                 if (val == 'H') {
                     return '%{y} ft (HIGH)'
                 } else {
@@ -263,7 +279,7 @@ export default function Graph() {
                 mode: 'lines',
                 visible: 'legendonly', // Initially not shown
                 line: { color: '#8c564b' },
-                name: data.mean_high_water_title,
+                name: `Mean High Water (${data.mean_high_water})`,
                 connectgaps: true,
                 hoverinfo: 'skip',
             },
@@ -291,7 +307,7 @@ export default function Graph() {
                           name: 'Observed Tide',
                           mode: 'lines',
                           line: { color: '#2ca02c' },
-                          hovertemplate: '%{y} ft',
+                          hovertemplate: hist_hover,
                       },
                   ]
                 : []),

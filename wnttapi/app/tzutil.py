@@ -36,10 +36,11 @@ FYI, some DST dates are:
 """
 
 logger = logging.getLogger(__name__)
-eastern = ZoneInfo('US/Eastern')
-central = ZoneInfo('US/Central')
-mountain = ZoneInfo('US/Mountain')
-pacific = ZoneInfo('US/Pacific')
+eastern = ZoneInfo('US/Eastern')  # UTC-5 (std), UTC-4 (DST)
+central = ZoneInfo('US/Central')  # UTC-6 (std), UTC-5 (DST)
+mountain = ZoneInfo('US/Mountain') # UTC-7 (std), UTC-6 (DST)
+pacific = ZoneInfo('US/Pacific') # UTC-8 (std), UTC-7 (DST)
+hawaii = ZoneInfo('US/Hawaii') # UTC-10 (std), no DST
 utc = ZoneInfo('UTC')
 
 
@@ -47,9 +48,9 @@ def now(tzone) -> datetime:
     """Return current datetime in given time zone"""
     return datetime.now(tzone)
 
-
-def naive_utc5_to_utc(dt: datetime) -> datetime:
-    """Converts a CDMO-style "UTC-5" datetime to UTC.  Make a UTC out of it, then roll
-    it forward 5 hours.  e.g. 2024-06-01 23:00 would become 2024-06-02 04:00 UTC
-    """
-    return dt.replace(tzinfo=utc) + timedelta(hours=5)
+def isDst(dt: datetime) -> bool:
+    """Returns whether the given datetime is in DST."""
+    dst = dt.dst()
+    if dst is None:
+        raise ValueError("isDst() requires an aware datetime")
+    return dst > timedelta(hours=0)
