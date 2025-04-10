@@ -43,9 +43,9 @@ export const maxCustomElevationNavd88 = () => mllwToNavd88(MaxCustomElevationMll
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.
 export const stringify = (date) => {
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     return `${month}/${day}/${year}`
 }
 
@@ -78,7 +78,6 @@ export const limitDate = (date) => {
 
 // Compute the default date range for the graph.
 export const getDefaultDates = () => {
-    // TODO: This is appearing as UTC (a day ahead after 8pm during DST)
     const today = new Date()
     return {
         defaultStart: today,
