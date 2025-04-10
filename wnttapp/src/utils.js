@@ -48,6 +48,7 @@ export const stringify = (date) => {
     const day = String(date.getUTCDate()).padStart(2, '0')
     return `${month}/${day}/${year}`
 }
+
 // Build the cache key to use for a given date range.
 export function buildCacheKey(startDate, endDate) {
     return ['graph', startDate + ':' + endDate]
@@ -77,6 +78,7 @@ export const limitDate = (date) => {
 
 // Compute the default date range for the graph.
 export const getDefaultDates = () => {
+    // TODO: This is appearing as UTC (a day ahead after 8pm during DST)
     const today = new Date()
     return {
         defaultStart: today,

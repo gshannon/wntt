@@ -12,12 +12,16 @@ logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
 
 
-def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes=15, extra=True) -> list:
-    """Build a datetime list using the given interval in requested timezone for a given date range. If extra is
-    requested, we add the 00:00 (midnight) of the following day past the range, so the graphs don't look truncated on
-    the right side. If a daylight savings time boundary is included, you will get:
+def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes=15, padded=True) -> list:
+    """
+    Build a datetime list using the given interval in requested timezone for a given date range. 
+    If padded is True, the timeline will include an extra element for midnight on the next day. This
+    is done because Plotly always adds that point to the graph, and it looks better if we fill it in.
+
+    If a daylight savings time boundary is included, you will get:
     - for spring forward, the 02:00 hour will be skipped
     - for fall back:
+      ...
       01:00 daylight time
       01:15 daylight time
       01:30 daylight time
@@ -28,36 +32,51 @@ def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes
       01:45 standard time
       02:00 standard time (etc)
 
-      interval_minutes param must be a whole number factor of 1,440 (minutes in a day)
+      Interval_minutes param must be a whole number factor of 1,440 (minutes in a day)
     """
     if (24 * 60) % interval_minutes != 0:
         raise APIException()
     if end_date < start_date:
         logger.error("end_date must be greater than start_date")
         raise APIException()
+    
     local_start = datetime.combine(start_date, time(0)).replace(tzinfo=time_zone)
-    # we'll go until the next day after the range, then consider removing the last entry later
-    end_plus = end_date + timedelta(days=1)
-    local_end = datetime.combine(end_plus, time(0)).replace(tzinfo=time_zone)
-    utc_end = local_end.astimezone(tz.utc)
+    # Add extra element to timeline, for the next day at midnight.
+    local_end_dt = datetime.combine(end_date + timedelta(days=1), time(0)).replace(tzinfo=time_zone)
+    utc_end = local_end_dt.astimezone(tz.utc)
     # timedelta is broken when crossing DST boundaries in tz's which honor DST, so we'll do all the time
     # math in UTC and convert the answers back to local.
-    data = []
+    timeline = []
     utc_cur = local_start.astimezone(tz.utc)
     while utc_cur <= utc_end:
-        data.append(utc_cur.astimezone(time_zone))
+        timeline.append(utc_cur.astimezone(time_zone))
         utc_cur += timedelta(minutes=interval_minutes)
 
-    # Remove the extra time if they didn't want it
-    if not extra:
-        data.pop()
+    if not padded:
+        # Remove the last point, which is always midnight on the next day
+        timeline.pop()  
 
-    return data
+    return timeline
 
 
-def get_timeline_info(timeline, asof=None) -> tuple[int, int]:
+def build_recent_data_timeline(start_dt: datetime, end_dt: datetime, interval_minutes=15) -> list:
+    """
+    This version of building a timeline is for arbitrary time ranges rather than complete days.
+    """
+    timeline = []
+    utc_end = end_dt.astimezone(tz.utc)
+    utc_cur = start_dt.astimezone(tz.utc)
+    while utc_cur <= utc_end:
+        timeline.append(utc_cur.astimezone(start_dt.tzinfo))
+        utc_cur += timedelta(minutes=interval_minutes)
+    return timeline
+
+
+def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:
     """Return (timeline index of 1st past point, or -1, and index of first point >= present, or -1"""
     cutoff = asof if asof is not None else tz.now(timeline[0].tzinfo)
+    if dbg:
+        print(f"timeline: {timeline}")
     if cutoff >= timeline[-1]:
         # All in the past. Note that even if the last time in the timeline matches the cutoff,
         # it makes no sense when graphing to call a single point at the end "future"
@@ -79,6 +98,12 @@ def round_to_quarter(dt: datetime) -> datetime:
         return floor
     else:
         return floor + m15
+
+
+def round_up_to_quarter(dt: datetime) -> datetime:
+    """round a datetime up to next quarter-hour"""
+    new_minute = (dt.minute // 15 * 15) + 15
+    return dt + timedelta(minutes=new_minute - dt.minute)
 
 
 def navd88_feet_to_mllw_feet(in_value: float) -> float:

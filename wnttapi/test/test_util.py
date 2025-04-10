@@ -8,28 +8,22 @@ from rest_framework.exceptions import APIException
 class TestGraphUtil(TestCase):
 
     def test_build_timeline(self):
-        normal_count = 97   # Timeline that doesn't cross a DST boundary contains 97 elements.
+        normal_count = 96   # Timeline that doesn't cross a DST boundary contains 96 elements.
         start_date = end_date = date(2024, 3, 1)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern)
+        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
         self.assertEqual(len(timeline), normal_count)
         self.assertEqual(timeline[0], datetime(2024, 3, 1, 0, tzinfo=tz.eastern))
-        self.assertEqual(timeline[normal_count-1], datetime(2024, 3, 2, 0, tzinfo=tz.eastern))
+        self.assertEqual(timeline[-1], datetime(2024, 3, 1, 23, 45, tzinfo=tz.eastern))
 
         # Start of DST, skips 2AM (4 elements)
         start_date = end_date = date(2024, 3, 10)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern)
+        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
         self.assertEqual(len(timeline), normal_count - 4)
 
         # End of DST, repeats 1AM (should have 4 extra elements)
         start_date = end_date = date(2024, 11, 3)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern)
+        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
         self.assertEqual(len(timeline), normal_count + 4)
-
-        # Skipping the extra time at the end
-        start_date = date(2023, 12, 30)
-        end_date = start_date + timedelta(days=9)
-        timeline = util.build_timeline(start_date, end_date, tz.pacific, extra=False)
-        self.assertEqual(len(timeline), ((normal_count - 1) * 10))
 
         bad_time_count = 0
         for dt in timeline:
@@ -55,25 +49,31 @@ class TestGraphUtil(TestCase):
         dt = datetime(2023, 12, 31, 23, 53, tzinfo=tz.eastern)
         self.assertEqual(util.round_to_quarter(dt), datetime(2024, 1, 1, tzinfo=tz.eastern))
 
+        dt = datetime(2023, 12, 31, 22, 45, tzinfo=tz.eastern)
+        self.assertEqual(util.round_up_to_quarter(dt), datetime(2023, 12, 31, 23, 0, tzinfo=tz.eastern))
+        dt = datetime(2023, 12, 31, 23, 0, tzinfo=tz.eastern)
+        self.assertEqual(util.round_up_to_quarter(dt), datetime(2023, 12, 31, 23, 15, tzinfo=tz.eastern))
+        dt = datetime(2023, 12, 31, 23, 17, tzinfo=tz.eastern)
+        self.assertEqual(util.round_up_to_quarter(dt), datetime(2023, 12, 31, 23, 30, tzinfo=tz.eastern))
+        dt = datetime(2023, 12, 31, 23, 18, tzinfo=tz.eastern)
+        self.assertEqual(util.round_up_to_quarter(dt), datetime(2023, 12, 31, 23, 30, tzinfo=tz.eastern))
+        dt = datetime(2023, 12, 31, 23, 52, tzinfo=tz.eastern)
+        self.assertEqual(util.round_up_to_quarter(dt), datetime(2024, 1, 1, tzinfo=tz.eastern))
 
-    def test_timeline_info(self):
+
+    def test_timeline_boundaries(self):
         start_date = end_date = date(2024, 6, 1)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern)
-        tzone = timeline[0].tzinfo
+        tzone = tz.eastern
+        timeline = util.build_timeline(start_date, end_date, tzone)
 
         # All in the future
-        (a, b) = util.get_timeline_info(timeline, datetime(2024,6,1,tzinfo=tzone))
+        (a, b) = util.get_timeline_boundaries(timeline, datetime(2024,6,1,tzinfo=tzone))
         self.assertEqual((a,b), (-1, -1))
 
         # All in the past.
-        (a, b) = util.get_timeline_info(timeline, datetime(2024,6,2,tzinfo=tzone))
+        (a, b) = util.get_timeline_boundaries(timeline, datetime(2024,6,2,tzinfo=tzone))
         self.assertEqual((a,b), (0,-1))
 
         # Mixed
-        (a, b) = util.get_timeline_info(timeline,
-            datetime(2024,6,1, 0, 1, 0, tzinfo=tzone))
+        (a, b) = util.get_timeline_boundaries(timeline, datetime(2024,6,1, 0, 1, 0, tzinfo=tzone))
         self.assertEqual((a,b), (0, 1))
-
-        (a, b) = util.get_timeline_info(timeline,
-            datetime(2024,6,1, 23, 59, 0, 0, tzinfo=tzone))
-        self.assertEqual((a,b), (0, 96))

@@ -11,57 +11,42 @@ logger = logging.getLogger(__name__)
 def get_latest_info():
     """
     Pull the most recent wind, tide & temp readings from CDMO.
+    We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
+    only 1 for the others.  Most of the time, this will result in only 1 day being requested from CDMO.
     """
 
-    today = date.today()
-    yesterday = today + timedelta(days=-1)
-    timeline = util.build_timeline(yesterday, today, time_zone)
+    end_dt = util.round_to_quarter(tz.now(time_zone))
+    start_dt = end_dt - timedelta(hours=4)
+    timeline = util.build_recent_data_timeline(start_dt, end_dt)
 
-    wind_speeds, wind_gusts, wind_dir, _ = cdmo.get_recorded_wind_data(timeline)
-    hist_tides = cdmo.get_recorded_tides(timeline)
-    temps = cdmo.get_recorded_temps(timeline)
+    wind_data_dict = cdmo.get_recorded_wind_data(timeline) # {dt: {speed, gust, dir, dir_str}}
+    hist_tide_dict = cdmo.get_recorded_tides(timeline,dump=True) # {dt: tide-in-feet-mllw}
+    temp_dict = cdmo.get_recorded_temps(timeline) # {dt: temp-in-celsius}
 
-    timeline.reverse()
-    wind_speeds.reverse()
-    wind_dir.reverse()
-    wind_gusts.reverse()
-    hist_tides.reverse()
-    temps.reverse()
+    # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
+    # we don't have to worry about missing data.  All dict keys are in chronological order.
+    latest_tide_dt = max(hist_tide_dict)
+    latest_tide_val = hist_tide_dict[latest_tide_dt]
+    del hist_tide_dict[latest_tide_dt]
+    prior_tide_dt = max(hist_tide_dict)
+    prior_tide_val = hist_tide_dict[prior_tide_dt]
+    direction = 'rising' if prior_tide_val < latest_tide_val else 'falling'
 
+    latest_wind_dt = max(wind_data_dict)
+    wind_data = wind_data_dict[latest_wind_dt]  # {speed, gust, dir, dir_str}
+    latest_temp_dt = max(temp_dict)
 
-    for (wind_speed, wind_gust, wind_dir, wind_time) in zip(wind_speeds, wind_gusts, wind_dir, timeline):
-        if wind_speed is not None:
-            break
-
-    for (temp, temp_time) in zip(temps, timeline):
-        if temp is not None:
-            break
-
-    # Tides are in reverse chronological order. Find the latest good value, and the the most recent value before that
-    # to determine if the tide is rising or falling.
-    tide = None
-    tide_time = None
-    direction = ''
-    for (t, tt) in zip(hist_tides, timeline):
-        if t is not None:
-            if tide is None:
-                tide = t
-                tide_time = tt
-            elif t != tide:
-                direction = 'rising' if t < tide else 'falling'
-                break
-            
-    logger.debug(f"ws: {wind_speed} [{ftime(wind_time)}], tide: {tide} [{ftime(tide_time)}], temp: {temp} [{ftime(temp_time)}]")
+    # logger.debug(f"ws: {wind_speed} [{ftime(wind_time)}], tide: {tide} [{ftime(tide_time)}], temp: {temp} [{ftime(temp_time)}]")
     return {
-        'wind_speed': wind_speed,
-        'wind_gust': wind_gust,
-        'wind_dir': util.degrees_to_dir(wind_dir),
-        'tide': f'{tide:.2f}',
+        'wind_speed': wind_data['speed'],
+        'wind_gust': wind_data['gust'],
+        'wind_dir': util.degrees_to_dir(wind_data['dir']),
+        'tide': f'{latest_tide_val:.2f}',
         'tide_dir': direction,
-        'temp': f'{util.centigrade_to_fahrenheit(temp):.1f}',
-        'wind_time': ftime(wind_time),
-        'tide_time': ftime(tide_time),
-        'temp_time': ftime(temp_time),
+        'temp': f'{util.centigrade_to_fahrenheit(temp_dict[latest_temp_dt]):.1f}',
+        'wind_time': ftime(latest_wind_dt),
+        'tide_time': ftime(latest_tide_dt),
+        'temp_time': ftime(latest_temp_dt),
     }
 
 def ftime(dt):

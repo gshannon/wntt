@@ -14,98 +14,48 @@ max_surge = 20
 min_surge = -20
 logger = logging.getLogger(__name__)
 
-
-def get_surge_data(timeline, astro_levels, observed) -> (list, list, list):
-    """ Get surge data that corresponds to the timeline. Surge data comprises past and/or future:
-    1. Past surge, for datetimes prior to current clock time. These are computed as the difference between
-    actual tide and predicted astronomical tide.
-    2. Future surge, for datetimes later than current clock time. These are extracted from a csv file
-    obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov) for the Wells, ME station.
-
-    Returns 3 lists, all of which correspond to the full timeline. Each list will populate a separate plot in the graph.
-    - past surges, with None for any corresponding future datetime, or if incomplete past data
-    - future surges, with None for any corresponding past datetime, or if missing future data. Entire list
-        is returned as None if all values are None, and the plot will be skipped.
-    - future storm tides -- predicted tide + storm surge for all future datetimes. None for past or missing data.
-        Entire list is returned as None if all values are None, and the plot will be skipped.
+def get_future_surge_data(timeline) -> dict:
+    """ Get a dense dict of future storm surge data for all possible datetimes in the timeline.  
+    These are extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).
     """
+    future_surge_dict = {}  # {dt: surge_value}
+
     now = tz.now(timeline[0].tzinfo)
-    includes_past = timeline[0] < now
-    includes_future = timeline[-1] >= now
+    if timeline[-1] < now:
+        return future_surge_dict
+    
+    return get_or_load_projected_surge_file(now)
 
-    if includes_past and observed is None:
-        logger.error("expected some observed levels, but got none")
-        raise APIException()
 
-    past_surge_data = []
-    future_surge_data = []
-    future_storm_tide = []
-    projected_found = False
-    future_storm_tide_found = False
+def calculate_past_storm_surge(timeline, astro_dict, obs_dict) -> dict:
+    """ Calculate the past storm surge, which is the difference between the observed tide and the
+    predicted astronomical tide.  This is done for all datetimes in the timeline, and returned as a dict.
+    The dict keys are the timeline datetimes, and the values are the calculated storm surge values.
+    """
+    past_surge = {} # {dt: surge_value}
+    now = tz.now(timeline[0].tzinfo)
+    if timeline[0] >= now:
+        return past_surge
 
-    # Past Surge
-    ii = 0
-    if includes_past:
-        for ii, (dt, astro, act) in enumerate(zip(timeline, astro_levels, observed)):
-            if dt < now:
-                future_surge_data.append(None)
-                future_storm_tide.append(None)
-                if astro is not None and act is not None:
-                    past_surge_data.append(act - astro)
-                else:
-                    past_surge_data.append(None)
-            else:
-                break
-
-    if includes_future:
-        surge_dict = get_or_load_projected_surge_file(now)
-        last_surge_value = None
-        last_surge_value_used_count = 0
-        for (dt, astro) in zip(timeline[ii:], astro_levels[ii:]):
-            past_surge_data.append(None)
-            # Since surge values are only hourly, we use the most recent seen when we don't have one for this time.
-            # If we just leave the surge data None, plotly will report nearby values in the hover, in parens,
-            # which messes up the math.
-            # However, we only do this 3 times, i.e. to fill in one hour.  After that, there's just no surge data.
-            surge_value = None
-            if dt in surge_dict:
-                surge_value = last_surge_value = surge_dict.get(dt)
-                last_surge_value_used_count = 0
-            elif last_surge_value_used_count < 3:
-                surge_value = last_surge_value
-                last_surge_value_used_count += 1
-
-            if surge_value is not None:
-                future_surge_data.append(surge_value)
-                projected_found = True
-                if astro is not None:
-                    future_storm_tide.append(round(astro + surge_value, 2))
-                    future_storm_tide_found = True
-                else:
-                    future_storm_tide.append(None)
-            else:
-                future_surge_data.append(None)
-                future_storm_tide.append(None)
-
-    return (past_surge_data if includes_past else None,
-            future_surge_data if projected_found else None,
-            future_storm_tide if future_storm_tide_found else None)
+    for dt in timeline:
+        if dt in obs_dict and dt in astro_dict:
+            past_surge[dt] = round(obs_dict[dt] - astro_dict[dt], 2)
+    return past_surge
 
 
 def get_or_load_projected_surge_file(after: datetime) -> dict:
-
     """The csv file containing the projected surge data is updated on the NOAA site every 6 hours,
-    and is downloaded by a cron job. Once loaded, its contents are cached for performance.
+    and is normally downloaded by a cron job. Once loaded, its contents are cached for performance.
     So here, we have to determine if the disk file has been replaced since we last processed it. Therefore,
-    if surge data file exists and has not been replaced by a newer download file, read the cache.
-    Otherwise, read the download file, throwing out all but xx:00 and xx:30 (since the data is in 6-minute intervals
-    and we show 15-min intervals and the others can't be displayed on the graph), and throwing out data older than
-    the 'after' parameter, since it can hereafter never be displayed. Then save that to cache and return it.  We
-    also skip any surge values >= 20, such as 9999.99.
+    if the data file exists and has not been replaced by a newer file, read the cache. Otherwise, read the 
+    download file, throwing out all but xx:00 and xx:30 (since the data is in 6-minute intervals
+    and we show 15-min intervals and the others can't be displayed on the graph), and throwing out data older 
+    than the 'after' parameter, since it can hereafter never be displayed. Then save that to cache and r
+    eturn it. 
 
-    All datetimes in the file are in UTC, and are converted as necessary to the timezone of the given datetime param.
+    All datetimes in the file are in UTC, and are converted as requested timezone.
 
-    Returns dict : the data, key = datetime, value = float surge value
+    Returns dict : { key = datetime, value = surge value }
     """
 
     # Since this is a small cache (< 1Kb), we'll use the process ID as the cache key, so each worker can have its own copy.  
@@ -175,3 +125,4 @@ def get_or_load_projected_surge_file(after: datetime) -> dict:
     cache.set(pid, {'id': file_id, 'data': surge_data}, timeout = 60 * 60 * 6)  # 6 hour TTL
     logger.debug(f"Cached for worker {pid}, {len(surge_data)} values from {surge_file_path}")
     return surge_data
+
