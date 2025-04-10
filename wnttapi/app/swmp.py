@@ -20,7 +20,7 @@ def get_latest_info():
     timeline = util.build_recent_data_timeline(start_dt, end_dt)
 
     wind_data_dict = cdmo.get_recorded_wind_data(timeline) # {dt: {speed, gust, dir, dir_str}}
-    hist_tide_dict = cdmo.get_recorded_tides(timeline,dump=True) # {dt: tide-in-feet-mllw}
+    hist_tide_dict = cdmo.get_recorded_tides(timeline) # {dt: tide-in-feet-mllw}
     temp_dict = cdmo.get_recorded_temps(timeline) # {dt: temp-in-celsius}
 
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
