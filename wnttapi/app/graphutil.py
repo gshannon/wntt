@@ -55,11 +55,13 @@ def get_graph_data(start_date, end_date):
     hist_hilo_dts = obs_hilo_dict.keys()
     hist_hilo_vals = obs_hilo_dict.values()
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(timeline, wind_dict)
-    new_timeline, astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_data(timeline, astro_15m_dict, astro_future_hilo_dict)
+    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_data(timeline, astro_15m_dict, astro_future_hilo_dict)
     past_surge_plot = list(map(lambda dt: past_surge_dict.get(dt, None), timeline))
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(timeline, future_surge_dict, astro_15m_dict, astro_future_hilo_dict)
     highest_annual_predictions = build_annual_astro_high_plot(timeline)
 
+    # build new version timeline to be used by the app, with future prediction times (probably every 15 min) replaced by the actual times.
+    new_timeline = [astro_future_hilo_dict[dt]['real_dt'] if dt in astro_future_hilo_dict else dt for dt in timeline]
     past_tl_index, future_tl_index = util.get_timeline_boundaries(new_timeline)
     start_date_str = timeline[0].strftime("%m/%d/%Y")
     end_date_str = timeline[-2].strftime("%m/%d/%Y")
@@ -122,19 +124,17 @@ def build_future_surge_plots(timeline, future_surge_dict, reg_preds_dict, future
     
 
 
-def build_astro_data(timeline, reg_preds_dict, future_hilo_dict) -> tuple[list,list,list,list]: 
+def build_astro_data(timeline, reg_preds_dict, future_hilo_dict) -> tuple[list,list,list]: 
     """
     Builds lists for the astronomical tide data. 
-    1. A new version timeline to be used by the app, with future prediction times (probably every 15 min) replaced by the actual times.
-    2. Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
-    3. List of just the datetimes of the high/low tides, for convenience of the app
-    4. List of the matching high/low tide values, for convenience of the app
+    1. Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
+    2. List of just the datetimes of the high/low tides, for convenience of the app
+    3. List of the matching high/low tide values, for convenience of the app
     Params:
         timeline: list of datetimes
         reg_preds_dict: {dt: value}
         future_hilo_dict: {dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
     """
-    new_timeline = []
     astro_tides_plot = []
     astro_hilo_dts = []
     astro_hilo_vals = []
@@ -142,15 +142,13 @@ def build_astro_data(timeline, reg_preds_dict, future_hilo_dict) -> tuple[list,l
     for dt in timeline:
         if dt in future_hilo_dict:
             item = future_hilo_dict[dt]
-            new_timeline.append(item['real_dt'])
             astro_tides_plot.append(item['value'])
             astro_hilo_dts.append(item['real_dt'])
             astro_hilo_vals.append(item['type'])
         else:
-            new_timeline.append(dt)
             astro_tides_plot.append(reg_preds_dict.get(dt, None))
 
-    return new_timeline, astro_tides_plot, astro_hilo_dts, astro_hilo_vals
+    return astro_tides_plot, astro_hilo_dts, astro_hilo_vals
 
 
 def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:

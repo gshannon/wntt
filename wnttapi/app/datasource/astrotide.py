@@ -39,9 +39,8 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
     begin_date = timeline[0].strftime("%Y%m%d")
     end_date = timeline[-1].strftime("%Y%m%d")
     url15min = f"{base_url}&interval=15&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
+    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]} url15min: {url15min}")
 
-    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]} astro_tides url15min: {url15min}")
     reg_preds_raw = pull_data(url15min)
     reg_preds_dict = {}  # {dt: value}
     for pred in reg_preds_raw:
@@ -52,14 +51,18 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
             val = pred['v']
             reg_preds_dict[dt] = round(float(val), 2)
 
-    hilo_preds_raw = pull_data(urlhilo)
+    # If timeline is all in the past, we're done.
     future_hilo_dict = {} # {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
-
-    # Unless timeline is all in the past, get future HIGH/LOW predictions.
     if timeline[-1] < tz.now(timeline[0].tzinfo):
         return reg_preds_dict, future_hilo_dict
     
+    # We only want to ask for data we'll use, so get anything past the last recorded data time.
     cutoff = util.round_up_to_quarter(last_recorded_dt) if last_recorded_dt is not None else timeline[0]
+    begin_date = cutoff.strftime("%Y%m%d")
+    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
+    logger.debug(f"url15min: {url15min}")
+
+    hilo_preds_raw = pull_data(urlhilo)
 
     for pred in hilo_preds_raw:
         dts = pred['t']
