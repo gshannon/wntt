@@ -56,8 +56,5 @@ def build_year_config():
         YEAR_DATA = {}
         for (year,tide) in zip(valid_years,astro_tides):
             YEAR_DATA[year] = tide
-        
-
     except Exception as e:
         raise RuntimeError("VALID_YEARS and ASTRONOMICAL_HIGH_TIDES missing or invalid", e)
-

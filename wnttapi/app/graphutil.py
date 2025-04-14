@@ -43,7 +43,7 @@ def get_graph_data(start_date, end_date):
     # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data, 
     # not None. They are keyed by the datetime that matches the timeline.
     obs_dict = cdmo.get_recorded_tides(timeline)
-    obs_hilo_dict = cdmo.find_hilos(obs_dict)  # {dt: 'H' or 'L'}
+    obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)  # {dt: 'H' or 'L'}
     wind_dict = cdmo.get_recorded_wind_data(timeline) # {dt: {speed, gust, dir, dir_str}}
     astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(timeline, max(obs_dict) if len(obs_dict) > 0 else None)
     past_surge_dict = sg.calculate_past_storm_surge(timeline, astro_15m_dict, obs_dict)
