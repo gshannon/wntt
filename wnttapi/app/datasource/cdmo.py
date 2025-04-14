@@ -136,7 +136,6 @@ def get_cdmo(timeline: list, station: str, param: str, converter, included_minut
     try:
         xml = soap_client.service.exportAllParamsDateRangeXMLNew(station, req_start_date, req_end_date, param)
         if dump:
-            print('dumping...')
             util.dump_xml(xml, '/surgedata/cdmo.xml')
     except Exception as e:
         logger.error(f"Error getting {param} data {req_start_date} to {req_end_date} from CDMO", exc_info=e)
@@ -238,37 +237,96 @@ def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
     return requested_start_date, requested_end_date
 
 
-def find_hilos(datadict):
-    """Given a dict of {datetime: level}, return a dict of {dt: 'H' or 'L'} indicating
-    which of the datetimes have a high or low tide value.
+def find_hilos(timeline, obs_dict) -> dict:
+    """Given a key-ordered timeline and dense dict of {datetime: level}, return a dict of {dt: 'H' or 'L'} 
+    indicating which of the datetimes correspond to a high or low tide. 
+    
+    In this function, an "arc" is a series of consecutive tide readings which may may contain a high or low 
+    tide. Values above the mid-tide level are a potential high tide arc, and below it, a low tide arc.
+    We take the max or min value from each arc to look for the high or low tide.  Mid-tide is defined 
+    as defined as the average of the highest and lowest value seen in the data, with a minimum allowable 
+    value in case of lots of missing data. Since we have to account for missing, and possibly spurious 
+    values, we take a somewhat conservative approach -- false negatives are fairly harmless, but 
+    false positives are to be avoided.  
+    
+    We are expecting a timeline with full days, at 96 per day, so minimally there should be 1 high and 1 low 
+    per day.  Missing data values (None) are tolerated, but peaks and troughs are identified by consecutive
+    values like [9.5, 10.1, 9.9] and [2.5, 2.1, 2.1, 2.3], and any Nones inserted into these would cause us to
+    ignore them, since they could be disguising the actual peak or trough.
     """
-    UP=1
-    DOWN=2
+
+    MIN_TIDAL_RANGE = 4  # In feet. If range is less than this, there's likely a lot of missing data.
+    (HIGH_ARC, LOW_ARC) = ('H', 'L')
     hilomap = {}  # {dt: 'H' or 'L'}
-    dir = None
-    prev_dt = None
-    prev_val = None
-    for dt, val in datadict.items():
-        if prev_dt is None:
-            prev_dt = dt
-            prev_val = val
-            continue
-        if val > prev_val:
-            if dir is None:
-                dir = UP
-            elif dir == DOWN:
-                hilomap[prev_dt] = 'L'
-                dir = UP
-        elif val < prev_val:
-            if dir is None:
-                dir = DOWN
-            elif dir == UP:
-                hilomap[prev_dt] = 'H'
-                dir = DOWN
-        else:
-            continue  # no change, ignore
-        prev_dt = dt
-        prev_val = val
+
+    highest = max(obs_dict.values())
+    lowest = min(obs_dict.values())
+    if highest - lowest < MIN_TIDAL_RANGE:
+        # This could happen if the equipment malfunctions for a long period of time.
+        logger.warning(f"Tidal range too small: {highest-lowest}, high={highest} low={lowest}")  
+        return hilomap
+    
+    midtide = round((highest + lowest) / 2, 1)
+    logger.debug(f"hi={highest} low={lowest} midtide={midtide} points={len(obs_dict)}")
+
+    # An arc is a half-cycle of the wave -- above the midline (high tide) or below (low tide).
+    # It is a dense, key-ordered dict of {datetime: waterlevel}
+    arcs = []  # [{position: H/L, datadict: {dt: value}}]
+
+    def process_arc(arc):
+        datadict = arc['datadict']
+        position = arc['position']
+        logger.debug(f"Arc pos={position} len={len(datadict)} width={max(datadict) - min(datadict)} ")
+        # The shortest possible peak or trough is 3 consecutive data points
+        if len(datadict) < 3:
+            return
+        
+        hilo_dt = max(datadict, key=datadict.get) if position == HIGH_ARC else min(datadict, key=datadict.get)
+        hilo_val = datadict.get(hilo_dt)
+
+        # We need to see a peak or trough with no None's breaking it up. E.g. [7,8,7] or [3,2,2,3] Not [7,8,None,7]
+        arc_timeline = list(filter(lambda dt: min(datadict) <= dt <= max(datadict), timeline))
+        sparce_vals = [datadict.get(dt,None) for dt in arc_timeline]
+        ndx = sparce_vals.index(hilo_val)
+        # The first and last values are not candidates for high or low tide, since there's no value on the other 
+        # side to prove it.
+        if ndx == 0 or ndx == len(sparce_vals) - 1:
+            logger.debug(f"hi/lo found at beginning or end of arc: index {ndx}")
+            return
+        
+        if sparce_vals[ndx - 1] is None:
+            logger.debug("hi/lo preceded by None")
+            return
+        
+        for val in sparce_vals[ndx+1:]:
+            if val is None:
+                logger.debug("hi/lo followed by None")
+                return
+            if val != hilo_val:
+                break
+
+        logger.debug(f"Accepted as {position}: {hilo_dt} - {hilo_val} ft")
+        hilomap[hilo_dt] = position
+
+    cur_arc = None
+    for dt in timeline:
+        val = obs_dict.get(dt,None)
+        if val is not None:
+            position = HIGH_ARC if val > midtide else LOW_ARC
+            if cur_arc is None:
+                cur_arc = {'position': position, 'datadict': {dt: val}}
+            else:
+                if cur_arc['position'] != position:
+                    # We've moved across the mid line. Save the arc we were working on.
+                    arcs.append(cur_arc)
+                    cur_arc = {'position': position, 'datadict': {dt: val}}
+                else:
+                    cur_arc['datadict'][dt] = val
+            
+    arcs.append(cur_arc)
+
+    for arc in arcs:
+        process_arc(arc)
 
     return hilomap
 

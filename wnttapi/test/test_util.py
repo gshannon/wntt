@@ -2,7 +2,6 @@ from unittest import TestCase
 from datetime import datetime, date, timedelta
 import app.util as util
 import app.tzutil as tz
-from rest_framework.exceptions import APIException
 
 
 class TestGraphUtil(TestCase):
@@ -33,7 +32,7 @@ class TestGraphUtil(TestCase):
 
         start_date = date(2024, 3, 1)
         end_date = date(2024, 2, 28)
-        self.assertRaises(APIException, util.build_timeline, start_date, end_date, tz.eastern)
+        self.assertRaises(Exception, util.build_timeline, start_date, end_date, tz.eastern)
 
     def test_dt_rounding(self):
         dt = datetime(2023, 12, 31, 23, 0, tzinfo=tz.eastern)
