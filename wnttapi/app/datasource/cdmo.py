@@ -259,6 +259,9 @@ def find_hilos(timeline, obs_dict) -> dict:
     (HIGH_ARC, LOW_ARC) = ('H', 'L')
     hilomap = {}  # {dt: 'H' or 'L'}
 
+    if len(obs_dict) == 0:
+        return hilomap      # nothing to do
+
     highest = max(obs_dict.values())
     lowest = min(obs_dict.values())
     if highest - lowest < MIN_TIDAL_RANGE:
