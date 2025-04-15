@@ -4,6 +4,7 @@ import os.path
 import csv
 import logging
 from app import tzutil as tz
+from app import util
 from django.core.cache import cache
 from django.conf import settings
 from rest_framework.exceptions import APIException
@@ -14,17 +15,19 @@ max_surge = 20
 min_surge = -20
 logger = logging.getLogger(__name__)
 
-def get_future_surge_data(timeline) -> dict:
+def get_future_surge_data(timeline, last_recorded_dt) -> dict:
     """ Get a dense dict of future storm surge data for all possible datetimes in the timeline.  
     These are extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).
     """
     future_surge_dict = {}  # {dt: surge_value}
 
-    now = tz.now(timeline[0].tzinfo)
-    if timeline[-1] < now:
+    # We want all data past the last recorded data time, or now if there was none.
+    cutoff = util.round_up_to_quarter(last_recorded_dt) if last_recorded_dt is not None else tz.now(timeline[0].tzinfo)
+
+    if timeline[-1] < cutoff:
         return future_surge_dict
     
-    return get_or_load_projected_surge_file(now)
+    return get_or_load_projected_surge_file(cutoff)
 
 
 def calculate_past_storm_surge(timeline, astro_dict, obs_dict) -> dict:

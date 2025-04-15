@@ -18,6 +18,12 @@ class TestCdmo(TestCase):
             datadict = {key: val for key, val in d.items() if val is not None} 
             return timeline, datadict
 
+        # Single data value
+        tides = [1,1,1,1,1,1,1,1,1,1]
+        timeline, _ = build_test_data(tides)
+        datadict = {datetime(2025,1,1): 8}
+        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
+
         # Minimal high only 
         tides = [None, 4, 3, 4, None, 10]
         timeline, datadict = build_test_data(tides)
@@ -46,14 +52,12 @@ class TestCdmo(TestCase):
         # Highs and lows are on the edge, no opposite direction detected
         tides = [3, 4, 5, 6, 7, 8, 9, 10]
         timeline, datadict = build_test_data(tides)
-        expected_hilos = {}
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
+        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
 
         # high and low both compromised by None
         tides = [8, 9, 10, 10, None, 9, 8, 7, 5, 4, 3, None, 2, 2, 3, 4]
         timeline, datadict = build_test_data(tides)
-        expected_hilos = {}
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
+        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
 
         # actual data from 3/1/2025
         tides = [9.8, 9.62, 9.371, 9.01, 8.58, 8.12, 7.57, 6.975, 6.31, 5.66, 4.975, 4.25, 3.524, 2.78, 2.09,
