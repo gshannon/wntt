@@ -107,15 +107,15 @@ def round_up_to_quarter(dt: datetime) -> datetime:
 
 
 def navd88_feet_to_mllw_feet(in_value: float) -> float:
-    return in_value + cfg.get_mllw_conversion()
+    return round(in_value + cfg.get_mllw_conversion(), 2)
 
 def mllw_feet_to_navd88_feet(in_value: float) -> float:
-    return in_value - cfg.get_mllw_conversion()
+    return round(in_value - cfg.get_mllw_conversion(), 2)
 
 
 def navd88_meters_to_mllw_feet(in_value: float) -> float:
     feet = round(in_value * 3.28084, 2)
-    return navd88_feet_to_mllw_feet(feet)
+    return round(navd88_feet_to_mllw_feet(feet), 2)
 
 def mllw_feet_to_navd88_meters(in_value: float) -> float:
     feet = mllw_feet_to_navd88_feet(in_value)
@@ -128,7 +128,7 @@ def meters_per_second_to_mph(in_value: float) -> float:
     return round(miles_per_sec * 3600, 1)
 
 def centigrade_to_fahrenheit(in_value: float) -> float:
-    return in_value * 9 / 5 + 32
+    return round(in_value * 9 / 5 + 32, 1)
 
 def degrees_to_dir(degrees) -> str:
     if degrees <= 11:  # 23

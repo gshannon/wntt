@@ -238,21 +238,21 @@ def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
 
 
 def find_hilos(timeline, obs_dict) -> dict:
-    """Given a key-ordered timeline and dense dict of {datetime: level}, return a dict of {dt: 'H' or 'L'} 
-    indicating which of the datetimes correspond to a high or low tide. 
+    """Given a key-ordered timeline and dense dict of tide readings {datetime: level}, return a dense dict of 
+    {dt: 'H' or 'L'} indicating which of the datetimes correspond to a high or low tide. 
     
     In this function, an "arc" is a series of consecutive tide readings which may may contain a high or low 
     tide. Values above the mid-tide level are a potential high tide arc, and below it, a low tide arc.
-    We take the max or min value from each arc to look for the high or low tide.  Mid-tide is defined 
+    We take the max/min value from each arc to look for the high/low tide.  Mid-tide is defined 
     as defined as the average of the highest and lowest value seen in the data, with a minimum allowable 
     value in case of lots of missing data. Since we have to account for missing, and possibly spurious 
-    values, we take a somewhat conservative approach -- false negatives are fairly harmless, but 
-    false positives are to be avoided.  
+    values, we take a somewhat conservative approach -- false negatives are preferable to false positives.
     
-    We are expecting a timeline with full days, at 96 per day, so minimally there should be 1 high and 1 low 
-    per day.  Missing data values (None) are tolerated, but peaks and troughs are identified by consecutive
-    values like [9.5, 10.1, 9.9] and [2.5, 2.1, 2.1, 2.3], and any Nones inserted into these would cause us to
-    ignore them, since they could be disguising the actual peak or trough.
+    We are expecting a timeline with full days, at 96 per day, so whether we are dealing with a diurnal 
+    or semidiurnal station, there should be at least 1 high and 1 low per day.  Missing data values (None) 
+    are tolerated, but peaks and troughs are identified by consecutive values like [9.5, 10.1, 9.9] and 
+    [2.5, 2.1, 2.1, 2.3], and any None embedded in these will cause us to ignore the arc, since they could 
+    be disguising the actual peak or trough.
     """
 
     MIN_TIDAL_RANGE = 4  # In feet. If range is less than this, there's likely a lot of missing data.
@@ -272,44 +272,9 @@ def find_hilos(timeline, obs_dict) -> dict:
     midtide = round((highest + lowest) / 2, 1)
     logger.debug(f"hi={highest} low={lowest} midtide={midtide} points={len(obs_dict)}")
 
-    # An arc is a half-cycle of the wave -- above the midline (high tide) or below (low tide).
-    # It is a dense, key-ordered dict of {datetime: waterlevel}
-    arcs = []  # [{position: H/L, datadict: {dt: value}}]
-
-    def process_arc(arc):
-        datadict = arc['datadict']
-        position = arc['position']
-        logger.debug(f"Arc pos={position} len={len(datadict)} width={max(datadict) - min(datadict)} ")
-        # The shortest possible peak or trough is 3 consecutive data points
-        if len(datadict) < 3:
-            return
-        
-        hilo_dt = max(datadict, key=datadict.get) if position == HIGH_ARC else min(datadict, key=datadict.get)
-        hilo_val = datadict.get(hilo_dt)
-
-        # We need to see a peak or trough with no None's breaking it up. E.g. [7,8,7] or [3,2,2,3] Not [7,8,None,7]
-        arc_timeline = list(filter(lambda dt: min(datadict) <= dt <= max(datadict), timeline))
-        sparce_vals = [datadict.get(dt,None) for dt in arc_timeline]
-        ndx = sparce_vals.index(hilo_val)
-        # The first and last values are not candidates for high or low tide, since there's no value on the other 
-        # side to prove it.
-        if ndx == 0 or ndx == len(sparce_vals) - 1:
-            logger.debug(f"hi/lo found at beginning or end of arc: index {ndx}")
-            return
-        
-        if sparce_vals[ndx - 1] is None:
-            logger.debug("hi/lo preceded by None")
-            return
-        
-        for val in sparce_vals[ndx+1:]:
-            if val is None:
-                logger.debug("hi/lo followed by None")
-                return
-            if val != hilo_val:
-                break
-
-        logger.debug(f"Accepted as {position}: {hilo_dt} - {hilo_val} ft")
-        hilomap[hilo_dt] = position
+    # Walk through the timeline and identify arcs.  An arc is a half-cycle of the wave -- above or below the 
+    # midline, each of which may contain a high or low tide. 
+    arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
 
     cur_arc = None
     for dt in timeline:
@@ -326,10 +291,45 @@ def find_hilos(timeline, obs_dict) -> dict:
                 else:
                     cur_arc['datadict'][dt] = val
             
-    arcs.append(cur_arc)
+    arcs.append(cur_arc)  # save the last one we were working on
 
     for arc in arcs:
-        process_arc(arc)
+        position = arc['position']
+        datadict = arc['datadict']
+        logger.debug(f"Arc pos={position} values={len(datadict)} timedelta={max(datadict) - min(datadict)} ")
+
+        # The shortest possible peak or trough is 3 consecutive data points, e.g. [8,9,8], with the rest Nones.
+        if len(datadict) < 3:
+            continue
+        
+        hilo_dt = max(datadict, key=datadict.get) if position == HIGH_ARC else min(datadict, key=datadict.get)
+        hilo_val = datadict.get(hilo_dt)
+
+        arc_timeline = list(filter(lambda dt: min(datadict) <= dt <= max(datadict), timeline))
+        sparce_vals = [datadict.get(dt,None) for dt in arc_timeline]
+        # The first and last values are not candidates for high or low tide, since there's no value on the other 
+        # side to prove it.
+        if sparce_vals[0] == hilo_val or sparce_vals[-1] == hilo_val:
+            logger.debug(f"hi/lo {hilo_val} found at beginning or end of arc beginning at {arc_timeline[0]}")
+            continue
+        # We need to see a peak or trough with no None's breaking it up. E.g. [7,8,7] or [3,2,2,3] Not [7,8,None,7]
+        ndx = sparce_vals.index(hilo_val)  # returns the 1st instance of the high/low.
+        if sparce_vals[ndx - 1] is None:
+            logger.debug(f"None found before hi/lo {hilo_val} in arc beginning at {arc_timeline[0]}")
+            continue
+        # Finally check the right side. Any number of repeats are allowed, but must end with a different value.
+        accepted = False
+        for val in sparce_vals[ndx+1:]:
+            if val is None:
+                logger.debug(f"None found after {hilo_val} in arc beginning at {arc_timeline[0]}")
+                break
+            if val != hilo_val:
+                accepted = True
+                break
+
+        if accepted:
+            logger.debug(f"Accepted as {position}: {hilo_dt} - {hilo_val} ft")
+            hilomap[hilo_dt] = position
 
     return hilomap
 

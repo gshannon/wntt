@@ -43,11 +43,12 @@ def get_graph_data(start_date, end_date):
     # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data, 
     # not None. They are keyed by the datetime that matches the timeline.
     obs_dict = cdmo.get_recorded_tides(timeline)
+    max_observed_dt = max(obs_dict) if len(obs_dict) > 0 else None
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)  # {dt: 'H' or 'L'}
     wind_dict = cdmo.get_recorded_wind_data(timeline) # {dt: {speed, gust, dir, dir_str}}
-    astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(timeline, max(obs_dict) if len(obs_dict) > 0 else None)
+    astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(timeline, max_observed_dt)
     past_surge_dict = sg.calculate_past_storm_surge(timeline, astro_15m_dict, obs_dict)
-    future_surge_dict = sg.get_future_surge_data(timeline) # {dt: surge_value}
+    future_surge_dict = sg.get_future_surge_data(timeline, max_observed_dt) # {dt: surge_value}
 
     # Now we have all the data we need. Build the lists required by the graph plots, which must be the
     # same length as the timeline. They are sparse, with None for any missing data. 
