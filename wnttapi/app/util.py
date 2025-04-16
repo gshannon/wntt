@@ -1,20 +1,22 @@
-from datetime import datetime, date, time, timedelta
-import pprint
 import copy
 import logging
-from django.conf import settings
-from . import tzutil as tz
-from . import config as cfg
+import pprint
+from datetime import date, datetime, time, timedelta
+
 from rest_framework.exceptions import APIException
 
+from . import config as cfg
+from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
 
 
-def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes=15, padded=True) -> list:
+def build_timeline(
+    start_date: date, end_date: date, time_zone, interval_minutes=15, padded=True
+) -> list:
     """
-    Build a datetime list using the given interval in requested timezone for a given date range. 
+    Build a datetime list using the given interval in requested timezone for a given date range.
     If padded is True, the timeline will include an extra element for midnight on the next day. This
     is done because Plotly always adds that point to the graph, and it looks better if we fill it in.
 
@@ -39,10 +41,12 @@ def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes
     if end_date < start_date:
         logger.error("end_date must be greater than start_date")
         raise APIException()
-    
+
     local_start = datetime.combine(start_date, time(0)).replace(tzinfo=time_zone)
     # Add extra element to timeline, for the next day at midnight.
-    local_end_dt = datetime.combine(end_date + timedelta(days=1), time(0)).replace(tzinfo=time_zone)
+    local_end_dt = datetime.combine(end_date + timedelta(days=1), time(0)).replace(
+        tzinfo=time_zone
+    )
     utc_end = local_end_dt.astimezone(tz.utc)
     # timedelta is broken when crossing DST boundaries in tz's which honor DST, so we'll do all the time
     # math in UTC and convert the answers back to local.
@@ -54,12 +58,14 @@ def build_timeline(start_date: date, end_date: date, time_zone, interval_minutes
 
     if not padded:
         # Remove the last point, which is always midnight on the next day
-        timeline.pop()  
+        timeline.pop()
 
     return timeline
 
 
-def build_recent_data_timeline(start_dt: datetime, end_dt: datetime, interval_minutes=15) -> list:
+def build_recent_data_timeline(
+    start_dt: datetime, end_dt: datetime, interval_minutes=15
+) -> list:
     """
     This version of building a timeline is for arbitrary time ranges rather than complete days.
     """
@@ -109,6 +115,7 @@ def round_up_to_quarter(dt: datetime) -> datetime:
 def navd88_feet_to_mllw_feet(in_value: float) -> float:
     return round(in_value + cfg.get_mllw_conversion(), 2)
 
+
 def mllw_feet_to_navd88_feet(in_value: float) -> float:
     return round(in_value - cfg.get_mllw_conversion(), 2)
 
@@ -116,6 +123,7 @@ def mllw_feet_to_navd88_feet(in_value: float) -> float:
 def navd88_meters_to_mllw_feet(in_value: float) -> float:
     feet = round(in_value * 3.28084, 2)
     return round(navd88_feet_to_mllw_feet(feet), 2)
+
 
 def mllw_feet_to_navd88_meters(in_value: float) -> float:
     feet = mllw_feet_to_navd88_feet(in_value)
@@ -127,50 +135,52 @@ def meters_per_second_to_mph(in_value: float) -> float:
     miles_per_sec = in_value * 0.000621371
     return round(miles_per_sec * 3600, 1)
 
+
 def centigrade_to_fahrenheit(in_value: float) -> float:
     return round(in_value * 9 / 5 + 32, 1)
 
+
 def degrees_to_dir(degrees) -> str:
     if degrees <= 11:  # 23
-        direction = 'N'
+        direction = "N"
     elif degrees <= 33:  # 22
-        direction = 'NNE'
+        direction = "NNE"
     elif degrees <= 56:
-        direction = 'NE'
+        direction = "NE"
     elif degrees <= 78:
-        direction = 'ENE'
+        direction = "ENE"
     elif degrees <= 101:
-        direction = 'E'
+        direction = "E"
     elif degrees <= 123:
-        direction = 'ESE'
+        direction = "ESE"
     elif degrees <= 146:
-        direction = 'SE'
+        direction = "SE"
     elif degrees <= 168:
-        direction = 'SSE'
+        direction = "SSE"
     elif degrees <= 191:
-        direction = 'S'
+        direction = "S"
     elif degrees <= 213:
-        direction = 'SSW'
+        direction = "SSW"
     elif degrees <= 236:
-        direction = 'SW'
+        direction = "SW"
     elif degrees <= 258:
-        direction = 'WSW'
+        direction = "WSW"
     elif degrees <= 281:
-        direction = 'W'
+        direction = "W"
     elif degrees <= 303:
-        direction = 'WNW'
+        direction = "WNW"
     elif degrees <= 326:
-        direction = 'NW'
+        direction = "NW"
     elif degrees <= 348:
-        direction = 'NNW'
+        direction = "NNW"
     else:
-        direction = 'N'
+        direction = "N"
     return direction
 
 
 def dump_xml(xml, filename):
     decoded = bytes.fromhex(xml.hex()).decode("ASCII")
-    f = open(filename, 'w')
+    f = open(filename, "w")
     f.write(decoded)
     f.close()
 
@@ -180,9 +190,9 @@ def pply(fig, data=False):
         # use copy to make sure we don't break the original figure dictionary
         po = copy.deepcopy(fig)
         for elem in po.data:
-            elem['text'] = ['...']
-            elem['x'] = ['...']
-            elem['y'] = ['...']
+            elem["text"] = ["..."]
+            elem["x"] = ["..."]
+            elem["y"] = ["..."]
         pp.pprint(po)
     else:
         pp.pprint(fig)

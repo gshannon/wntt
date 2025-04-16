@@ -1,7 +1,6 @@
+import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import logging
-
 
 """Provides some basic Timezone support. Isolating it here because timezone support in Python is confusing.
 
@@ -36,17 +35,18 @@ FYI, some DST dates are:
 """
 
 logger = logging.getLogger(__name__)
-eastern = ZoneInfo('US/Eastern')  # UTC-5 (std), UTC-4 (DST)
-central = ZoneInfo('US/Central')  # UTC-6 (std), UTC-5 (DST)
-mountain = ZoneInfo('US/Mountain') # UTC-7 (std), UTC-6 (DST)
-pacific = ZoneInfo('US/Pacific') # UTC-8 (std), UTC-7 (DST)
-hawaii = ZoneInfo('US/Hawaii') # UTC-10 (std), no DST
-utc = ZoneInfo('UTC')
+eastern = ZoneInfo("US/Eastern")  # UTC-5 (std), UTC-4 (DST)
+central = ZoneInfo("US/Central")  # UTC-6 (std), UTC-5 (DST)
+mountain = ZoneInfo("US/Mountain")  # UTC-7 (std), UTC-6 (DST)
+pacific = ZoneInfo("US/Pacific")  # UTC-8 (std), UTC-7 (DST)
+hawaii = ZoneInfo("US/Hawaii")  # UTC-10 (std), no DST
+utc = ZoneInfo("UTC")
 
 
 def now(tzone) -> datetime:
     """Return current datetime in given time zone"""
     return datetime.now(tzone)
+
 
 def isDst(dt: datetime) -> bool:
     """Returns whether the given datetime is in DST."""
