@@ -9,36 +9,36 @@ ALLOWED_HOSTS = [
 
 LOGGING = {
     # Use v1 of the logging config schema
-    'version': 1,
+    "version": 1,
     # Continue to use existing loggers
-    'disable_existing_loggers': False,
+    "disable_existing_loggers": False,
     # Create a log handler that prints logs to the terminal
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
         },
-        'app.datasource.cdmo': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "app.datasource.cdmo": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
-    'formatters': {
-        'verbose': {
-            'format': '{asctime} {levelname} {process:d} {module} {funcName} {message}',
-            'style': '{',
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {process:d} {module} {funcName} {message}",
+            "style": "{",
         },
     },
 }

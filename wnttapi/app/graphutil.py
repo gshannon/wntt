@@ -1,12 +1,15 @@
-from rest_framework.exceptions import ValidationError
-from rest_framework.exceptions import APIException
-from django.conf import settings
-from datetime import date, timedelta
 import logging
-from app.datasource import cdmo, astrotide as astro, surge as sg
+from datetime import date, timedelta
+
+from rest_framework.exceptions import APIException, ValidationError
+
 from app import util
-from . import tzutil as tz
+from app.datasource import astrotide as astro
+from app.datasource import cdmo
+from app.datasource import surge as sg
+
 from . import config as cfg
+from . import tzutil as tz
 
 """
 Utility functions for plotting. 
@@ -24,7 +27,7 @@ dictionaries of data keyed on datetime objects would entail a lot of bandwidth a
 """
 
 logger = logging.getLogger(__name__)
-record_tide_title = f'Record Tide, {cfg.get_record_tide_date().strftime("%b %d, %Y")}'
+record_tide_title = f"Record Tide, {cfg.get_record_tide_date().strftime('%b %d, %Y')}"
 
 # For now this is all we support, for Wells.  But someday if we support multiple reserves in multiple zones,
 # there will be others to support, so we'll probably pull this from the http client request.
@@ -40,46 +43,77 @@ def get_graph_data(start_date, end_date):
     # datetime at midnight of the following day to the end, so the graph looks tidy on the right side.
     timeline = util.build_timeline(start_date, end_date, time_zone, padded=True)
 
-    # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data, 
+    # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data,
     # not None. They are keyed by the datetime that matches the timeline.
     obs_dict = cdmo.get_recorded_tides(timeline)
     max_observed_dt = max(obs_dict) if len(obs_dict) > 0 else None
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)  # {dt: 'H' or 'L'}
-    wind_dict = cdmo.get_recorded_wind_data(timeline) # {dt: {speed, gust, dir, dir_str}}
-    astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(timeline, max_observed_dt)
+    wind_dict = cdmo.get_recorded_wind_data(
+        timeline
+    )  # {dt: {speed, gust, dir, dir_str}}
+    astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(
+        timeline, max_observed_dt
+    )
     past_surge_dict = sg.calculate_past_storm_surge(timeline, astro_15m_dict, obs_dict)
-    future_surge_dict = sg.get_future_surge_data(timeline, max_observed_dt) # {dt: surge_value}
+    future_surge_dict = sg.get_future_surge_data(
+        timeline, max_observed_dt
+    )  # {dt: surge_value}
 
     # Now we have all the data we need. Build the lists required by the graph plots, which must be the
-    # same length as the timeline. They are sparse, with None for any missing data. 
+    # same length as the timeline. They are sparse, with None for any missing data.
     hist_tides_plot = list(map(lambda dt: obs_dict.get(dt, None), timeline))
     hist_hilo_dts = obs_hilo_dict.keys()
     hist_hilo_vals = obs_hilo_dict.values()
-    wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(timeline, wind_dict)
-    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_data(timeline, astro_15m_dict, astro_future_hilo_dict)
+    wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
+        timeline, wind_dict
+    )
+    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_data(
+        timeline, astro_15m_dict, astro_future_hilo_dict
+    )
     past_surge_plot = list(map(lambda dt: past_surge_dict.get(dt, None), timeline))
-    future_surge_plot, future_storm_tide_plot = build_future_surge_plots(timeline, future_surge_dict, astro_15m_dict, astro_future_hilo_dict)
+    future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
+        timeline, future_surge_dict, astro_15m_dict, astro_future_hilo_dict
+    )
     highest_annual_predictions = build_annual_astro_high_plot(timeline)
 
     # build new version timeline to be used by the app, with future prediction times (probably every 15 min) replaced by the actual times.
-    new_timeline = [astro_future_hilo_dict[dt]['real_dt'] if dt in astro_future_hilo_dict else dt for dt in timeline]
+    new_timeline = [
+        astro_future_hilo_dict[dt]["real_dt"] if dt in astro_future_hilo_dict else dt
+        for dt in timeline
+    ]
     past_tl_index, future_tl_index = util.get_timeline_boundaries(new_timeline)
     start_date_str = timeline[0].strftime("%m/%d/%Y")
     end_date_str = timeline[-2].strftime("%m/%d/%Y")
-    return {"timeline": new_timeline, "hist_tides": hist_tides_plot, 
-            "hist_hilo_dts": hist_hilo_dts, "hist_hilo_vals": hist_hilo_vals,
-            "astro_tides": astro_tides_plot, "astro_hilo_dts": astro_hilo_dts, "astro_hilo_vals": astro_hilo_vals, 
-            "wind_speeds": wind_speed_plot, "wind_gusts": wind_gust_plot, "wind_dir": wind_dir_plot,
-            "wind_dir_hover": wind_dir_hover,  "record_tide": cfg.get_record_tide(),
-            "past_surge": past_surge_plot, "future_surge": future_surge_plot, "future_tide": future_storm_tide_plot,
-            "record_tide_title": f'{record_tide_title} ({cfg.get_record_tide():.2f})',
-            "mean_high_water": cfg.get_mean_high_water(),
-            "highest_annual_predictions": highest_annual_predictions,
-            "start_date": start_date_str, "end_date": end_date_str, "num_days": (end_date - start_date).days + 1,
-            "past_tl_index": past_tl_index, "future_tl_index": future_tl_index,
-            }
+    return {
+        "timeline": new_timeline,
+        "hist_tides": hist_tides_plot,
+        "hist_hilo_dts": hist_hilo_dts,
+        "hist_hilo_vals": hist_hilo_vals,
+        "astro_tides": astro_tides_plot,
+        "astro_hilo_dts": astro_hilo_dts,
+        "astro_hilo_vals": astro_hilo_vals,
+        "wind_speeds": wind_speed_plot,
+        "wind_gusts": wind_gust_plot,
+        "wind_dir": wind_dir_plot,
+        "wind_dir_hover": wind_dir_hover,
+        "record_tide": cfg.get_record_tide(),
+        "past_surge": past_surge_plot,
+        "future_surge": future_surge_plot,
+        "future_tide": future_storm_tide_plot,
+        "record_tide_title": f"{record_tide_title} ({cfg.get_record_tide():.2f})",
+        "mean_high_water": cfg.get_mean_high_water(),
+        "highest_annual_predictions": highest_annual_predictions,
+        "start_date": start_date_str,
+        "end_date": end_date_str,
+        "num_days": (end_date - start_date).days + 1,
+        "past_tl_index": past_tl_index,
+        "future_tl_index": future_tl_index,
+    }
 
-def build_future_surge_plots(timeline, future_surge_dict, reg_preds_dict, future_hilo_dict) -> tuple[list,list]:
+
+def build_future_surge_plots(
+    timeline, future_surge_dict, reg_preds_dict, future_hilo_dict
+) -> tuple[list, list]:
     """
     Build 2 plots for future surge data:
     1. Future surve values
@@ -99,7 +133,11 @@ def build_future_surge_plots(timeline, future_surge_dict, reg_preds_dict, future
     last_surge_val = None
     for dt in timeline:
         if dt >= first_dt:
-            future_pred = future_hilo_dict.get(dt)['value'] if dt in future_hilo_dict else reg_preds_dict.get(dt, None)
+            future_pred = (
+                future_hilo_dict.get(dt)["value"]
+                if dt in future_hilo_dict
+                else reg_preds_dict.get(dt, None)
+            )
             if future_pred is None:
                 logger.error(f"Missing future prediction for {dt}")
                 future_surge_plot.append(None)
@@ -109,7 +147,9 @@ def build_future_surge_plots(timeline, future_surge_dict, reg_preds_dict, future
                 if surge_val is not None:
                     last_surge_dt = dt
                     last_surge_val = surge_val
-                elif last_surge_dt is not None and dt - last_surge_dt < timedelta(hours=1):
+                elif last_surge_dt is not None and dt - last_surge_dt < timedelta(
+                    hours=1
+                ):
                     surge_val = last_surge_val
                 if surge_val is not None:
                     future_surge_plot.append(surge_val)
@@ -120,14 +160,15 @@ def build_future_surge_plots(timeline, future_surge_dict, reg_preds_dict, future
         else:
             future_surge_plot.append(None)
             future_storm_tide_plot.append(None)
-    
+
     return future_surge_plot, future_storm_tide_plot
-    
 
 
-def build_astro_data(timeline, reg_preds_dict, future_hilo_dict) -> tuple[list,list,list]: 
+def build_astro_data(
+    timeline, reg_preds_dict, future_hilo_dict
+) -> tuple[list, list, list]:
     """
-    Builds lists for the astronomical tide data. 
+    Builds lists for the astronomical tide data.
     1. Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
     2. List of just the datetimes of the high/low tides, for convenience of the app
     3. List of the matching high/low tide values, for convenience of the app
@@ -143,9 +184,9 @@ def build_astro_data(timeline, reg_preds_dict, future_hilo_dict) -> tuple[list,l
     for dt in timeline:
         if dt in future_hilo_dict:
             item = future_hilo_dict[dt]
-            astro_tides_plot.append(item['value'])
-            astro_hilo_dts.append(item['real_dt'])
-            astro_hilo_vals.append(item['type'])
+            astro_tides_plot.append(item["value"])
+            astro_hilo_dts.append(item["real_dt"])
+            astro_hilo_vals.append(item["type"])
         else:
             astro_tides_plot.append(reg_preds_dict.get(dt, None))
 
@@ -171,10 +212,10 @@ def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:
     for dt in timeline:
         if dt in wind_dict:
             wind_data = wind_dict[dt]
-            wind_speed_plot.append(wind_data['speed'])
-            wind_gust_plot.append(wind_data['gust'])
-            wind_dir_plot.append(wind_data['dir'])
-            wind_dir_hover.append(wind_data['dir_str'])
+            wind_speed_plot.append(wind_data["speed"])
+            wind_gust_plot.append(wind_data["gust"])
+            wind_dir_plot.append(wind_data["dir"])
+            wind_dir_hover.append(wind_data["dir_str"])
         else:
             wind_speed_plot.append(None)
             wind_gust_plot.append(None)
@@ -186,7 +227,7 @@ def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:
 
 def build_annual_astro_high_plot(timeline) -> list:
     """
-    Build plot list for the highest annual predicted tide plot, using the configured settings. 
+    Build plot list for the highest annual predicted tide plot, using the configured settings.
     If it crosses a year boundary, we'll switch to that value at the appropriate time.
     We only need to have an initial and final value, with None's in between.
     """
@@ -205,7 +246,13 @@ def build_annual_astro_high_plot(timeline) -> list:
         for ii, edt in enumerate(timeline):
             if edt.year == year2:
                 break
-        highs = [high1] + [None] * (ii - 2) + [high1, high2] + [None] * (time_count - ii - 2) + [high2]
+        highs = (
+            [high1]
+            + [None] * (ii - 2)
+            + [high1, high2]
+            + [None] * (time_count - ii - 2)
+            + [high2]
+        )
 
     if len(highs) != time_count:
         raise APIException()
@@ -215,10 +262,19 @@ def build_annual_astro_high_plot(timeline) -> list:
 def validate_dates(start, end):
     earliest_date = date(cfg.get_supported_years()[0], 1, 1)
     latest_date = date(cfg.get_supported_years()[-1], 12, 31)
-    if start > latest_date or start < earliest_date or end > latest_date or end < earliest_date:
-        logger.error(f"Invalidate range: {start} - {end} is not between {earliest_date} - {latest_date}")
+    if (
+        start > latest_date
+        or start < earliest_date
+        or end > latest_date
+        or end < earliest_date
+    ):
+        logger.error(
+            f"Invalidate range: {start} - {end} is not between {earliest_date} - {latest_date}"
+        )
         # This will return a code 400
-        raise ValidationError(detail="Invalid date range")  # Override the default 'Invalid input'
+        raise ValidationError(
+            detail="Invalid date range"
+        )  # Override the default 'Invalid input'
     if end < start:
         logger.error(f"end_date {end} cannot be earlier than start_date {start}")
         raise ValidationError(detail="end date less than start date")

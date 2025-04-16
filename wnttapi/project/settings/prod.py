@@ -14,38 +14,38 @@ TODO: consider these
 DEBUG = False  # ERROR and higher go to the console
 
 ALLOWED_HOSTS = [
-     os.environ.get('API_ALLOWED_HOST'),
+    os.environ.get("API_ALLOWED_HOST"),
 ]
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'my-format',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "my-format",
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/wntt/django.log',
-            'formatter': 'my-format',
-        },
-    },
-    'root': {
-        'handlers': ['file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
-            'propagate': False,
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "/var/log/wntt/django.log",
+            "formatter": "my-format",
         },
     },
-    'formatters': {
-        'my-format': {
-            'format': '{asctime} {levelname} {process:d} {module} {funcName} {message}',
-            'style': '{',
+    "root": {
+        "handlers": ["file"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
+            "propagate": False,
+        },
+    },
+    "formatters": {
+        "my-format": {
+            "format": "{asctime} {levelname} {process:d} {module} {funcName} {message}",
+            "style": "{",
         },
     },
 }
