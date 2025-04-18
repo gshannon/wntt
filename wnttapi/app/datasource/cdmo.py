@@ -37,7 +37,7 @@ def get_recorded_tides(
         # Nothing to fetch, it's all in the future
         return {}
 
-    return get_cdmo(timeline, station, param, converter=handle_navd88_level, dump=True)
+    return get_cdmo(timeline, station, param, converter=handle_navd88_level)
 
 
 def get_recorded_wind_data(timeline: list) -> dict:
