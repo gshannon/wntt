@@ -37,7 +37,7 @@ def get_recorded_tides(
         # Nothing to fetch, it's all in the future
         return {}
 
-    return get_cdmo(timeline, station, param, converter=handle_navd88_level, dump=dump)
+    return get_cdmo(timeline, station, param, converter=handle_navd88_level, dump=True)
 
 
 def get_recorded_wind_data(timeline: list) -> dict:
@@ -127,7 +127,7 @@ def dump_all_codes():
         xml = soap_client.service.exportStationCodesXMLNew()
         util.dump_xml(xml, "/surgedata/StationCodes.xml")
     except Exception as e:
-        logger.error(f"Error getting all codes from CDMO", exc_info=e)
+        logger.error("Error getting all codes from CDMO", exc_info=e)
         raise APIException()
     root = ElTree.fromstring(xml)  # ElementTree.Element
     return root
@@ -142,7 +142,7 @@ def get_cdmo(
     dump=False,
 ) -> dict:
     """
-    Get XML data from CDMO, parse it, convert timestsamps to requested timezone.
+    Get XML data from CDMO, parse it, convert to requested timezone.
     Returns a dense dict of tide levels, key = dt, value = level
 
     Parameters:
@@ -160,7 +160,27 @@ def get_cdmo(
 
     CDMO returns dates in LST (local standard time), which is not sensitive to DST.
     """
-    # Because CDMO returns data in whole dates of LST, we may need to adjust the dates we request.
+    logger.debug(f"station={station}, param={param} dump={dump}")
+    xml = get_cdmo_xml(timeline, station, param, dump)
+    data = get_cdmo_data(timeline, xml, param, converter, included_minutes)
+    return data
+
+
+def get_cdmo_xml(
+    timeline: list,
+    station: str,
+    param: str,
+    dump=False,
+) -> dict:
+    """
+    Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
+    Params:
+    - timeline: list of datetime representing what will be displayed on the graph
+    - station: the CDMO station code
+    - param: the CDMO param code
+    - dump: for debugging
+    """
+    # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     req_start_date, req_end_date = compute_cdmo_request_dates(timeline)
     soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
 
@@ -169,7 +189,7 @@ def get_cdmo(
             station, req_start_date, req_end_date, param
         )
         if dump:
-            util.dump_xml(xml, "/surgedata/cdmo.xml")
+            util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
     except Exception as e:
         logger.error(
             f"Error getting {param} data {req_start_date} to {req_end_date} from CDMO",
@@ -177,12 +197,34 @@ def get_cdmo(
         )
         raise APIException()
 
-    root = ElTree.fromstring(xml)  # ElementTree.Element
+    return xml
 
+
+def get_cdmo_data(
+    timeline: list,
+    xml: str,
+    param: str,
+    converter,
+    included_minutes: list = [0, 15, 30, 45],
+) -> dict:
+    """
+    Parse the data returned from CDMO for the requested timeline. Returns a dense, key-ordered
+    dict of {dt: value} where dt=datetime matching an element of the timeline and value = the data value.
+    Params:
+    - timeline: list of datetime representing what will be displayed on the graph
+    - xml: string with the contents in XML format
+    - param: the CDMO param code
+    - converter: func to convert raw data to desired display value
+    - minutes of each hour to include. XML will contain an entry for every 15 minutes
+    """
     # Build a dict with key=datetime of the xml data, and val=the read value
     datadict = {}  # {dt: value}
+    if xml is None or len(xml) == 0:
+        return datadict
+
+    root = ElTree.fromstring(xml)  # ElementTree.Element
+    text_error_check(root.find(".//data"))
     records = skipped = skipmin = nodata = 0
-    text_check(root.find(".//data"))
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use the utc stamp, not the DateTimeStamp because it is a local time that is not sensitive to DST.
@@ -200,8 +242,6 @@ def get_cdmo(
             # Since we query more data than we need, only save the data that is in the requested timeline.
             if dt_in_local not in timeline:
                 skipped += 1
-                # if param == tide_param:
-                # logger.debug(f"Skipping {in_utc} utc ({dt_in_local} local) not in timeline")
                 continue
             data_str = reading.find(f"./{param}").text
             try:
@@ -215,23 +255,20 @@ def get_cdmo(
         else:
             skipmin += 1
 
-    logger.debug(
-        f"{param} data from {req_start_date} to {req_end_date}: "
-        f"read={records} skipped={skipped} nodata={nodata} skipmin={skipmin}"
-    )
+    logger.debug(f"read={records} skipped={skipped} nodata={nodata} skipmin={skipmin}")
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
 
 
-def text_check(non_text_node):
+def text_error_check(non_text_node):
     """If a node is not supposed to have text, return that text, else None
     This is how CDMO returns an error e.g. Invalid IP address.
     """
     try:
         message = non_text_node.text.strip()
         if len(message) > 0:
-            logger.error(f"Got unexpected message from CDMO: {message}")
+            logger.error(f"Received unexpected message from CDMO: {message}")
             raise APIException(message)
     except AttributeError:
         pass

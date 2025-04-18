@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <soapenv:Body>
+  <ns1:exportAllParamsDateRangeXMLNewResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://webservices2">
+   <exportAllParamsDateRangeXMLNewReturn xsi:type="ns2:Document" xmlns:ns2="http://xml.apache.org/xml-soap">
+    <returnData>
+    		    <data>Invalid ip 73.100.16.176</data>
+
+    	</returnData>
+   </exportAllParamsDateRangeXMLNewReturn>
+  </ns1:exportAllParamsDateRangeXMLNewResponse>
+ </soapenv:Body>
+</soapenv:Envelope>
