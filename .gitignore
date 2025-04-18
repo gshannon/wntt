@@ -14,8 +14,8 @@ node_modules/
 .ipyb_checkpoints/
 staticfiles/
 coverage/
-data/
 scripts/
+surge-data/
 .DS_Store
 .idea/
 .venv/

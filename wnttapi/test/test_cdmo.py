@@ -1,5 +1,8 @@
+import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
+
+from rest_framework.exceptions import APIException
 
 import app.datasource.cdmo as cdmo
 import app.tzutil as tz
@@ -79,6 +82,35 @@ class TestCdmo(TestCase):
             datetime(2025, 3, 1, 18, 0): "L",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
+
+    def test_cdmo_invalid_ip(self):
+        path = os.path.dirname(os.path.abspath(__file__))
+        with open(f"{path}/data/cdmo-invalid-ip.xml") as file:
+            xml = file.read()
+        with self.assertRaisesRegex(APIException, "^Invalid ip"):
+            cdmo.get_cdmo_data([], xml, "whatever", None)
+
+    def test_parse_level_data(self):
+        path = os.path.dirname(os.path.abspath(__file__))
+        with open(f"{path}/data/cdmo-level.xml") as file:
+            xml = file.read()
+        timeline = util.build_timeline(date(2025, 3, 31), date(2025, 3, 31), tz.eastern)
+        actual = cdmo.get_cdmo_data(
+            timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
+        )
+        self.assertEqual(len(actual), len(timeline))
+        self.assertEqual(
+            actual.get(datetime(2025, 3, 31, tzinfo=tz.eastern)),
+            cdmo.handle_navd88_level(
+                "1.67", None
+            ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp>"
+        )
+        self.assertEqual(
+            actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=tz.eastern)),
+            cdmo.handle_navd88_level(
+                "1.12", None
+            ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp>"
+        )
 
     def test_handle_navd88(self):
         self.assertTrue(cdmo.handle_navd88_level(None, None) is None)
