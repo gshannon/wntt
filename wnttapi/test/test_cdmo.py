@@ -13,7 +13,9 @@ dst_end_date = date(2024, 11, 3)
 
 
 class TestCdmo(TestCase):
-    def test_calculate_hilos(self):
+    def test_calculate_hilos_simple(self):
+        """High/Low detection works properly with small data sets"""
+
         def build_test_data(tides, start_dt=datetime(2025, 1, 1)):
             timeline = [
                 start_dt + timedelta(minutes=(x * 15)) for x in range(0, (len(tides)))
@@ -83,33 +85,49 @@ class TestCdmo(TestCase):
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
+    def test_calculate_hilos_full(self):
+        """High/Low detetion works properly with complete day of data"""
+        xml = self.load_xml("cdmo-level.xml")
+        timeline = util.build_graph_timeline(
+            date(2025, 3, 31), date(2025, 3, 31), tz.eastern
+        )
+        datadict = cdmo.get_cdmo_data(
+            timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
+        )
+        expected = {
+            datetime(2025, 3, 31, 0, 45, tzinfo=tz.eastern): "H",
+            datetime(2025, 3, 31, 7, 0, tzinfo=tz.eastern): "L",
+            datetime(2025, 3, 31, 13, 15, tzinfo=tz.eastern): "H",
+            datetime(2025, 3, 31, 19, 0, tzinfo=tz.eastern): "L",
+        }
+        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
+
     def test_cdmo_invalid_ip(self):
-        path = os.path.dirname(os.path.abspath(__file__))
-        with open(f"{path}/data/cdmo-invalid-ip.xml") as file:
-            xml = file.read()
+        xml = self.load_xml("cdmo-invalid-ip.xml")
         with self.assertRaisesRegex(APIException, "^Invalid ip"):
             cdmo.get_cdmo_data([], xml, "whatever", None)
 
     def test_parse_level_data(self):
-        path = os.path.dirname(os.path.abspath(__file__))
-        with open(f"{path}/data/cdmo-level.xml") as file:
-            xml = file.read()
-        timeline = util.build_timeline(date(2025, 3, 31), date(2025, 3, 31), tz.eastern)
+        xml = self.load_xml("cdmo-level.xml")
+        timeline = util.build_graph_timeline(
+            date(2025, 3, 31), date(2025, 3, 31), tz.eastern
+        )
         actual = cdmo.get_cdmo_data(
             timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
         )
-        self.assertEqual(len(actual), len(timeline))
+        # 3 of the data points have invalid or missing values
+        self.assertEqual(len(actual), len(timeline) - 3)
         self.assertEqual(
             actual.get(datetime(2025, 3, 31, tzinfo=tz.eastern)),
             cdmo.handle_navd88_level(
                 "1.67", None
-            ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp>"
+            ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp> or 03/31/2025 00:00 EDT"
         )
         self.assertEqual(
             actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=tz.eastern)),
             cdmo.handle_navd88_level(
                 "1.12", None
-            ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp>"
+            ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp> or 03/31/2025 23:45 EDT"
         )
 
     def test_handle_navd88(self):
@@ -145,62 +163,78 @@ class TestCdmo(TestCase):
             cdmo.handle_windspeed("13.3", None), util.meters_per_second_to_mph(13.3)
         )
 
-    def test_cdmo_dates_standard(self):
-        """In standard time, with non-padded timeline, no changes are needed for any time zone."""
-        # January is in Standard time
+    def test_cdmo_dates_graph_standard(self):
+        """In standard time, no changes are needed for any time zone."""
+        # January is in Standard time. Graph timelines have 00:00 of next full day added.
         start_date = date(2024, 1, 10)
         end_date = date(2024, 1, 12)
         for tzone in [tz.central, tz.mountain, tz.pacific]:
-            timeline = util.build_timeline(start_date, end_date, tzone, padded=False)
-            self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline), (start_date, end_date)
-            )
-
-        """In standard time, with normal padded timeline, end date is moved forward 1 day."""
-        start_date = date(2024, 1, 10)
-        end_date = date(2024, 1, 12)
-        expected_end_date = end_date + timedelta(days=1)
-        for tzone in [tz.central, tz.mountain, tz.pacific]:
-            timeline = util.build_timeline(start_date, end_date, tzone, padded=True)
+            timeline = util.build_graph_timeline(start_date, end_date, tzone)
             self.assertEqual(
                 cdmo.compute_cdmo_request_dates(timeline),
-                (start_date, expected_end_date),
+                (start_date, end_date + timedelta(days=1)),
             )
 
+    def test_cdmo_dates_spring_forward(self):
+        """If timeline starts in standard but ends in DST, handle all scenarios"""
+        # start date doesn't change, end date is bumped back if < 01:00
+        start_dt = datetime(2025, 3, 9, 0, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 3, 10, 0, tzinfo=tz.eastern)
+        timeline = util.build_timeline(start_dt, end_dt)
+        self.assertEqual(
+            cdmo.compute_cdmo_request_dates(timeline),
+            (start_dt.date(), end_dt.date() - timedelta(days=1)),
+        )
+
+        # start date doesn't change, neither does end date if >= 01:00
+        start_dt = datetime(2025, 3, 9, 0, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 3, 10, 1, tzinfo=tz.eastern)
+        timeline = util.build_timeline(start_dt, end_dt)
+        self.assertEqual(
+            cdmo.compute_cdmo_request_dates(timeline),
+            (start_dt.date(), end_dt.date()),
+        )
+
+    def test_cdmo_dates_fall_back(self):
+        """If timeline starts in DST but ends in standard, handle all scenarios"""
+        # start time with hour < 0 is bumped back a day, end date is unchanged
+        start_dt = datetime(2025, 10, 2, 0, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=tz.eastern)
+        timeline = util.build_timeline(start_dt, end_dt)
+        self.assertEqual(
+            cdmo.compute_cdmo_request_dates(timeline),
+            (start_dt.date() - timedelta(days=1), end_dt.date()),
+        )
+
+        # start time with hour > 0 is left alone, end date is unchanged
+        start_dt = datetime(2025, 10, 2, 1, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=tz.eastern)
+        timeline = util.build_timeline(start_dt, end_dt)
+        self.assertEqual(
+            cdmo.compute_cdmo_request_dates(timeline),
+            (start_dt.date(), end_dt.date()),
+        )
+
     def test_cdmo_dates_daylight_savings_for_graph(self):
-        """In DST, if first datetime is at midnight, start date is moved back one day regardless of padding or zone."""
+        """In DST, if first datetime is at midnight, start date is moved back one day regardless of zone."""
         # July is in DST
         start_date = date(2024, 7, 10)
         end_date = date(2024, 7, 10)
         expected_start_date = start_date - timedelta(days=1)
         for tzone in [tz.central, tz.mountain, tz.pacific]:
-            timeline = util.build_timeline(start_date, end_date, tzone, padded=False)
+            timeline = util.build_graph_timeline(start_date, end_date, tzone)
             self.assertEqual(
                 cdmo.compute_cdmo_request_dates(timeline),
                 (expected_start_date, end_date),
             )
-            timeline = util.build_timeline(start_date, end_date, tzone, padded=True)
+            timeline = util.build_graph_timeline(start_date, end_date, tzone)
             self.assertEqual(
                 cdmo.compute_cdmo_request_dates(timeline),
                 (expected_start_date, end_date),
             )
 
-    def test_cdmo_dates_daylight_savings_for_recent(self):
-        """In DST, for getting recent data, if first datetime is not midnight, dates are computed correctly."""
-        # July is in DST
-        start_dt = datetime(2024, 7, 10, 1, 0, tzinfo=tz.eastern)
-        end_dt = datetime(2024, 7, 10, 4, 0, tzinfo=tz.eastern)
-        timeline = util.build_recent_data_timeline(start_dt, end_dt)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (start_dt.date(), start_dt.date()),
-        )
-
-        start_dt = datetime(2024, 7, 10, 0, 0, tzinfo=tz.eastern)
-        end_dt = datetime(2024, 7, 10, 23, 45, tzinfo=tz.eastern)
-        timeline = util.build_recent_data_timeline(start_dt, end_dt)
-        expected_start_date = start_dt.date() - timedelta(days=1)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (expected_start_date, start_dt.date()),
-        )
+    def load_xml(self, filename):
+        path = os.path.dirname(os.path.abspath(__file__))
+        with open(f"{path}/data/{filename}") as file:
+            xml = file.read()
+        return xml

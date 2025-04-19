@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
 
 
-def build_timeline(
-    start_date: date, end_date: date, time_zone, interval_minutes=15, padded=True
+def build_graph_timeline(
+    start_date: date, end_date: date, time_zone, interval_minutes=15
 ) -> list:
     """
     Build a datetime list using the given interval in requested timezone for a given date range.
-    If padded is True, the timeline will include an extra element for midnight on the next day. This
+    The timeline will always include an extra element for midnight on the next day. This
     is done because Plotly always adds that point to the graph, and it looks better if we fill it in.
 
     If a daylight savings time boundary is included, you will get:
@@ -56,20 +56,19 @@ def build_timeline(
         timeline.append(utc_cur.astimezone(time_zone))
         utc_cur += timedelta(minutes=interval_minutes)
 
-    if not padded:
-        # Remove the last point, which is always midnight on the next day
-        timeline.pop()
-
     return timeline
 
 
-def build_recent_data_timeline(
-    start_dt: datetime, end_dt: datetime, interval_minutes=15
-) -> list:
+def build_timeline(start_dt: datetime, end_dt: datetime, interval_minutes=15) -> list:
     """
     This version of building a timeline is for arbitrary time ranges rather than complete days.
     """
     timeline = []
+    if start_dt.tzinfo != end_dt.tzinfo:
+        logger.error(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
+        raise ValueError
+
+    # Must do all datetime arithmetic in UTC in modern Python.
     utc_end = end_dt.astimezone(tz.utc)
     utc_cur = start_dt.astimezone(tz.utc)
     while utc_cur <= utc_end:
