@@ -8,22 +8,22 @@ import app.util as util
 class TestGraphUtil(TestCase):
     def test_build_timeline(self):
         normal_count = (
-            96  # Timeline that doesn't cross a DST boundary contains 96 elements.
+            97  # Graph timeline that doesn't cross a DST boundary contains 97 elements.
         )
         start_date = end_date = date(2024, 3, 1)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
+        timeline = util.build_graph_timeline(start_date, end_date, tz.eastern)
         self.assertEqual(len(timeline), normal_count)
         self.assertEqual(timeline[0], datetime(2024, 3, 1, 0, tzinfo=tz.eastern))
-        self.assertEqual(timeline[-1], datetime(2024, 3, 1, 23, 45, tzinfo=tz.eastern))
+        self.assertEqual(timeline[-1], datetime(2024, 3, 2, 0, tzinfo=tz.eastern))
 
         # Start of DST, skips 2AM (4 elements)
         start_date = end_date = date(2024, 3, 10)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
+        timeline = util.build_graph_timeline(start_date, end_date, tz.eastern)
         self.assertEqual(len(timeline), normal_count - 4)
 
         # End of DST, repeats 1AM (should have 4 extra elements)
         start_date = end_date = date(2024, 11, 3)
-        timeline = util.build_timeline(start_date, end_date, tz.eastern, padded=False)
+        timeline = util.build_graph_timeline(start_date, end_date, tz.eastern)
         self.assertEqual(len(timeline), normal_count + 4)
 
         bad_time_count = 0
@@ -35,7 +35,7 @@ class TestGraphUtil(TestCase):
         start_date = date(2024, 3, 1)
         end_date = date(2024, 2, 28)
         self.assertRaises(
-            Exception, util.build_timeline, start_date, end_date, tz.eastern
+            Exception, util.build_graph_timeline, start_date, end_date, tz.eastern
         )
 
     def test_dt_rounding(self):
@@ -90,7 +90,7 @@ class TestGraphUtil(TestCase):
     def test_timeline_boundaries(self):
         start_date = end_date = date(2024, 6, 1)
         tzone = tz.eastern
-        timeline = util.build_timeline(start_date, end_date, tzone)
+        timeline = util.build_graph_timeline(start_date, end_date, tzone)
 
         # All in the future
         (a, b) = util.get_timeline_boundaries(

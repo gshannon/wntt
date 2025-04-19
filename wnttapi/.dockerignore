@@ -9,6 +9,7 @@
 **/.env-prod
 **/.env-dev
 **/scripts/
+**/test/
 README.md
 README.Docker.md
 .idea

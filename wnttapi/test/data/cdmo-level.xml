@@ -801,7 +801,7 @@
           <DateTimeStamp>03/31/2025 07:15</DateTimeStamp>
 
       
-          <Level>-1.67</Level>
+          <Level>N/A</Level>
 
       
           <utcStamp>03/31/2025 12:15</utcStamp>
@@ -1041,7 +1041,7 @@
           <DateTimeStamp>03/31/2025 02:15</DateTimeStamp>
 
       
-          <Level>0.67</Level>
+          <Level></Level>
 
       
           <utcStamp>03/31/2025 07:15</utcStamp>
@@ -1113,7 +1113,7 @@
           <DateTimeStamp>03/31/2025 00:45</DateTimeStamp>
 
       
-          <Level>1.67</Level>
+          <Level>xxx</Level>
 
       
           <utcStamp>03/31/2025 05:45</utcStamp>

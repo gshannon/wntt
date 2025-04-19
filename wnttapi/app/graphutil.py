@@ -39,13 +39,13 @@ def get_graph_data(start_date, end_date):
 
     validate_dates(start_date, end_date)
 
-    # In the timeline, we will build data for entire dates between start and end, inclusive. We add a single
-    # datetime at midnight of the following day to the end, so the graph looks tidy on the right side.
-    timeline = util.build_timeline(start_date, end_date, time_zone, padded=True)
+    # In the timeline, we will build data for entire dates between start and end, inclusive. This adds a single
+    # datetime at midnight of the following day, so the graph looks tidy on the right side.
+    timeline = util.build_graph_timeline(start_date, end_date, time_zone)
 
     # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data,
     # not None. They are keyed by the datetime that matches the timeline.
-    obs_dict = cdmo.get_recorded_tides(timeline, dump=True)
+    obs_dict = cdmo.get_recorded_tides(timeline)
     max_observed_dt = max(obs_dict) if len(obs_dict) > 0 else None
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)  # {dt: 'H' or 'L'}
     wind_dict = cdmo.get_recorded_wind_data(

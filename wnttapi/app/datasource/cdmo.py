@@ -27,7 +27,7 @@ max_wind_speed = 120  # any wind speed reading higher than this is considered ba
 
 
 def get_recorded_tides(
-    timeline: list, station=wells_water_station, param=tide_param, dump=False
+    timeline: list, station=wells_water_station, param=tide_param
 ) -> dict:
     """
     For the given timeline, get a dense dict of tide water levels from CDMO in MLLW feet.
@@ -37,6 +37,7 @@ def get_recorded_tides(
         # Nothing to fetch, it's all in the future
         return {}
 
+    # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
     return get_cdmo(timeline, station, param, converter=handle_navd88_level)
 
 
@@ -45,11 +46,11 @@ def get_recorded_wind_data(timeline: list) -> dict:
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
     """
 
-    datadict = {}  # {dt: {speed, gust, dir, dir_str}}
+    wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
 
     # If this is for the future, don't bother.
     if timeline[0].date() > tz.now(timeline[0].tzinfo).date():
-        return datadict
+        return wind_dict
 
     # For readability, thin out the data points, as it gets pretty dense and hard to read.
     days = (timeline[-1].date() - timeline[0].date()).days
@@ -63,18 +64,19 @@ def get_recorded_wind_data(timeline: list) -> dict:
     speed_dict = get_cdmo(
         timeline, wells_met_station, windspeed_param, handle_windspeed, minutes
     )
-    # HACK. In the unlikely case there are no speed data points at all (all None), we have chosen to display
+    # HACK. In the unlikely case there are no speed data points at all, we have chosen to display
     # an empty graph. However, there's a quirk in plotly express where it crashes if all data points are None.
     # So we cheat and add a single all-zero entry.
     if len(speed_dict) == 0:
-        datadict[timeline[0]] = {
+        wind_dict[timeline[0]] = {
             "speed": 0,
             "gust": 0,
             "dir": 0,
             "dir_str": util.degrees_to_dir(0),
         }
-        return datadict
+        return wind_dict
 
+    # CDMO returns wind speed in meters per second, so convert to mph.
     gust_dict = get_cdmo(
         timeline, wells_met_station, windgust_param, handle_windspeed, minutes
     )
@@ -82,31 +84,23 @@ def get_recorded_wind_data(timeline: list) -> dict:
         timeline, wells_met_station, winddir_param, lambda d, dt: int(d), minutes
     )
 
-    # Plotly can't handle a None in the wind direction data, so if there are any, we must set the speed
-    # values to None also so plotly just skips the data point.
-    for key, val in dir_dict.items():
-        if val is None:
-            logger.error(f"Found None wind dir for {key}")
-            speed_dict[key] = gust_dict[key] = None
-
     # Assemble all the data.
     # The graph will display compass point names, so translate the direction into strings for dir_str.
-    for key, val in speed_dict.items():
-        if key not in gust_dict or key not in dir_dict:
-            logger.error(f"Missing gust and/or direction wind data for {key}")
+    for dt, speed in speed_dict.items():
+        # Make sure we have all values, or none.
+        if dt not in gust_dict or dt not in dir_dict:
+            logger.error(f"Missing gust and/or direction wind data for {dt}")
             continue
-        datadict[key] = {
-            "speed": val,
-            "gust": gust_dict[key],
-            "dir": dir_dict[key],
+        wind_dict[dt] = {
+            "speed": speed,
+            "gust": gust_dict[dt],
+            "dir": dir_dict[dt],
             "dir_str": (
-                util.degrees_to_dir(dir_dict[key])
-                if dir_dict[key] is not None
-                else None
+                util.degrees_to_dir(dir_dict[dt]) if dir_dict[dt] is not None else None
             ),
         }
 
-    return datadict
+    return wind_dict
 
 
 def get_recorded_temps(timeline: list, station=wells_water_station) -> dict:
@@ -117,20 +111,8 @@ def get_recorded_temps(timeline: list, station=wells_water_station) -> dict:
         # Nothing to fetch, it's all in the future
         return None
 
+    # Use a converter to convert from string to formatted number.
     return get_cdmo(timeline, station=station, param=temp_param, converter=handle_float)
-
-
-def dump_all_codes():
-    """Utility function to dump all NERRS metadata to a file."""
-    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
-    try:
-        xml = soap_client.service.exportStationCodesXMLNew()
-        util.dump_xml(xml, "/surgedata/StationCodes.xml")
-    except Exception as e:
-        logger.error("Error getting all codes from CDMO", exc_info=e)
-        raise APIException()
-    root = ElTree.fromstring(xml)  # ElementTree.Element
-    return root
 
 
 def get_cdmo(
@@ -139,7 +121,6 @@ def get_cdmo(
     param: str,
     converter,
     included_minutes=[0, 15, 30, 45],
-    dump=False,
 ) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
@@ -160,25 +141,18 @@ def get_cdmo(
 
     CDMO returns dates in LST (local standard time), which is not sensitive to DST.
     """
-    logger.debug(f"station={station}, param={param} dump={dump}")
-    xml = get_cdmo_xml(timeline, station, param, dump)
+    xml = get_cdmo_xml(timeline, station, param)
     data = get_cdmo_data(timeline, xml, param, converter, included_minutes)
     return data
 
 
-def get_cdmo_xml(
-    timeline: list,
-    station: str,
-    param: str,
-    dump=False,
-) -> dict:
+def get_cdmo_xml(timeline: list, station: str, param: str) -> dict:
     """
     Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
     Params:
     - timeline: list of datetime representing what will be displayed on the graph
     - station: the CDMO station code
     - param: the CDMO param code
-    - dump: for debugging
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     req_start_date, req_end_date = compute_cdmo_request_dates(timeline)
@@ -188,8 +162,7 @@ def get_cdmo_xml(
         xml = soap_client.service.exportAllParamsDateRangeXMLNew(
             station, req_start_date, req_end_date, param
         )
-        if dump:
-            util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
+        # util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
     except Exception as e:
         logger.error(
             f"Error getting {param} data {req_start_date} to {req_end_date} from CDMO",
@@ -217,7 +190,6 @@ def get_cdmo_data(
     - converter: func to convert raw data to desired display value
     - minutes of each hour to include. XML will contain an entry for every 15 minutes
     """
-    # Build a dict with key=datetime of the xml data, and val=the read value
     datadict = {}  # {dt: value}
     if xml is None or len(xml) == 0:
         return datadict
@@ -227,7 +199,7 @@ def get_cdmo_data(
     records = skipped = skipmin = nodata = 0
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
-        # we use the utc stamp, not the DateTimeStamp because it is a local time that is not sensitive to DST.
+        # we use the utc stamp, not the DateTimeStamp because the latter is in LST, sensitive to DST.
         date_str = reading.find("./utcStamp").text
         try:
             naive_utc = datetime.strptime(date_str, "%m/%d/%Y %H:%M")
@@ -277,37 +249,31 @@ def text_error_check(non_text_node):
 def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
     """
     CDMO will give us only full days of data, using LST of the time zone of the requesting station. It
-    does not honor DST. So if the start date at 00:00 is not in DST, then there's no problem. Otherwise, since all
-    US timezones are behind UTC, we need to ask for the previous day as well, so we get what CDMO thinks is the
-    last hour of the previous day, which is actually the first hour of the requested start date.
+    does not honor DST. So we may have to adjust the start date and/or the end date, to avoid missing data
+    or getting too much data. We depend on the timeline being chronologically ordered. Here is the logic:
 
-    Additionally, if we're in DST, and the last time in the timeline is "padding" (hour==0), then we don't need to
-    bother asking for that date, as by definition we'll always receive an extra hour of data from the previous
-    day's returned data.
+    - Start date: If timeline starts in standard time, no change.  Else if timeline starts in DST and
+    asks for anything before 01:00, we must ask for the previous day, else we'll miss that hour.
+
+    - End date: If timeline ends in standard time, no change.  Else if timeline ends in DST and asks for
+    only data in the first hour, we won't need that date since it will be included in data for the previous
+    day, so we bump back the end date. (Note that this can never push it back before the requested
+    start date. In the extreme case of asking for a single datapoint, the start date would have also been pushed
+    back.
     """
-    if not tz.isDst(timeline[0]):
-        logger.debug(
-            f"No DST changes to request dates {timeline[0].date().strftime('%Y-%m-%d')} - {timeline[-1].date().strftime('%Y-%m-%d')}"
-        )
-        return timeline[0].date(), timeline[-1].date()
 
-    # If they want data for the first hour of the day, we need to ask for the previous day to get that data.
-    if timeline[0].hour == 0:
-        requested_start_date = timeline[0].date() - timedelta(days=1)
-    else:
-        requested_start_date = timeline[0].date()
+    requested_start_date = timeline[0].date()
+    requested_end_date = timeline[-1].date()
 
-    if timeline[-1].date() != timeline[0].date() and timeline[-1].time() == time(0):
-        # The timeline was "padded" with an extra time for midnight the following day.
-        # Since we have that hour included, we don't need to ask for it.
-        requested_end_date = timeline[-1].date() - timedelta(days=1)
-    else:
-        # The timeline was not padded, so always ask for the last date. We just won't use the last hour of data.
-        requested_end_date = timeline[-1].date()
+    if tz.isDst(timeline[0]) and timeline[0].hour < 1:
+        requested_start_date -= timedelta(days=1)
+
+    if tz.isDst(timeline[-1]) and timeline[-1].hour < 1:
+        requested_end_date -= timedelta(days=1)
 
     logger.debug(
-        f"Timeline: {timeline[0].date().strftime('%Y-%m-%d')} "
-        f"- {timeline[-1].date().strftime('%Y-%m-%d')}, "
+        f"Timeline: {timeline[0].date().strftime('%Y-%m-%d %H:%M')} "
+        f"- {timeline[-1].date().strftime('%Y-%m-%d %H:%M')}, "
         "Requesting CDMO dates: "
         f"{requested_start_date.strftime('%Y-%m-%d')} - "
         f"{requested_end_date.strftime('%Y-%m-%d')}"
@@ -477,3 +443,16 @@ def handle_windspeed(wspd_str: str, local_dt: datetime):
         logger.error(f"invalid windspeed: [{wspd_str}]")
         mph = None
     return mph
+
+
+def dump_all_codes():
+    """Utility function to dump all NERRS metadata to a file."""
+    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
+    try:
+        xml = soap_client.service.exportStationCodesXMLNew()
+        util.dump_xml(xml, "/surgedata/StationCodes.xml")
+    except Exception as e:
+        logger.error("Error getting all codes from CDMO", exc_info=e)
+        raise APIException()
+    root = ElTree.fromstring(xml)  # ElementTree.Element
+    return root
