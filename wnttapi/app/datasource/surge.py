@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_future_surge_data(timeline, last_recorded_dt) -> dict:
-    """Get a dense dict of future storm surge data for all possible datetimes in the timeline.
-    These are extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).
+    """Get a dense dict of future storm surge data for all possible timeline datetimes which are past the
+    last_recorded_dt param, if given, else the current system time. These are extracted from a csv file
+    obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).
     """
     future_surge_dict = {}  # {dt: surge_value}
 
