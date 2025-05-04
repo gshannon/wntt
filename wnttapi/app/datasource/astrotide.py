@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: use datum=NAVD and convert here.  Else app will be out of sync with NOAA temporarily when the site
 # starts using the new NTDE.
+# TODO: use GMT instead of LST/LDT, which only works if the station is in the same time zone as the server!!
 base_url = (
     "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL"
     "&datum=MLLW&time_zone=lst_ldt&units=english&format=json"
@@ -43,7 +44,7 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
     begin_date = timeline[0].strftime("%Y%m%d")
     end_date = timeline[-1].strftime("%Y%m%d")
     url15min = f"{base_url}&interval=15&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]} url15min: {url15min}")
+    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, url15min: {url15min}")
 
     reg_preds_raw = pull_data(url15min)
     reg_preds_dict = {}  # {dt: value}
@@ -66,9 +67,10 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
         if last_recorded_dt is not None
         else timeline[0]
     )
+
     begin_date = cutoff.strftime("%Y%m%d")
     urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"url15min: {url15min}")
+    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, urlhilo: {urlhilo}")
 
     hilo_preds_raw = pull_data(urlhilo)
 
@@ -90,6 +92,29 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
             }
 
     return reg_preds_dict, future_hilo_dict
+
+
+def get_astro_highest(year) -> float:
+    """Calls the external API for all hilo tides for a year, and returns the highest found."""
+    begin_date = f"{year}0101"
+    end_date = f"{year}1231"
+    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
+    logger.debug(f"for {year}, urlhilo: {urlhilo}")
+
+    hilo_preds_raw = pull_data(urlhilo)
+    highest = None
+
+    for pred in hilo_preds_raw:
+        dts = pred["t"]
+        val = round(float(pred["v"]), 2)
+        typ = pred["type"]  # should be 'H' or 'L'
+        if typ not in ["H", "L"]:
+            logger.error(f"Unknown type {typ} for date {dts}")
+            raise APIException()
+        if typ == "H" and (highest is None or val > highest):
+            highest = val
+
+    return highest
 
 
 def pull_data(url) -> dict:

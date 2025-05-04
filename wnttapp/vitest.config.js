@@ -18,8 +18,5 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
     },
-    define: {
-        'process.env.VITE_MIN_DATE': JSON.stringify('5/1/2024'),
-        'process.env.VITE_MAX_DATE': JSON.stringify('5/31/2024'),
-    },
+    define: {},
 })
