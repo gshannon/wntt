@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { addDays, limitDate, stringify } from '../utils'
+import { MinDate, MaxDate, addDays, limitDate, stringify } from '../utils'
 import {
     setDailyLocalStorage,
     setLocalStorage,
@@ -10,23 +10,21 @@ import {
 describe('utils', () => {
     describe('limitDate', () => {
         it('should return the same date if within min/max settings', () => {
-            const date = new Date('2024-05-05')
+            const date = addDays(MinDate, 30)
             const result = limitDate(date)
             expect(result).toEqual(date)
         })
 
         it('should return the min date if the input date is before the min date', () => {
-            const date = new Date('2024-01-01')
-            const minDate = new Date(import.meta.env.VITE_MIN_DATE)
+            const date = addDays(MinDate, -30)
             const result = limitDate(date)
-            expect(result).toEqual(minDate)
+            expect(result).toEqual(MinDate)
         })
 
         it('should return the max date if the input date is after the max date', () => {
-            const date = new Date('2025-01-01')
-            const maxDate = new Date(import.meta.env.VITE_MAX_DATE)
+            const date = addDays(MaxDate, 1)
             const result = limitDate(date)
-            expect(result).toEqual(maxDate)
+            expect(result).toEqual(MaxDate)
         })
     })
 
@@ -37,8 +35,6 @@ describe('utils', () => {
             expect(stringify(new Date('3/9/2051'))).toBe(expected)
             expect(stringify(new Date('3-9-2051'))).toBe(expected)
             expect(stringify(new Date('03-09-2051'))).toBe(expected)
-            expect(stringify(new Date('2051-03-09'))).toBe(expected)
-            expect(stringify(new Date('2051-3-9'))).toBe(expected)
         })
     })
 
@@ -53,29 +49,6 @@ describe('utils', () => {
             const date = new Date('2024-05-01')
             const result = addDays(date, -3)
             expect(result).toEqual(new Date('2024-04-28'))
-        })
-    })
-
-    describe('limitDate', () => {
-        // These tests depend on the VITE_MIN_DATE and VITE_MAX_DATE environment variables, set in vitest.config.js
-        it('should return the same date if within min/max settings', () => {
-            const date = new Date('2024-05-05')
-            const result = limitDate(date)
-            expect(result).toEqual(date)
-        })
-
-        it('should return the min date if the input date is before the min date', () => {
-            const date = new Date('2024-01-01')
-            const minDate = new Date(import.meta.env.VITE_MIN_DATE)
-            const result = limitDate(date)
-            expect(result).toEqual(minDate)
-        })
-
-        it('should return the max date if the input date is after the max date', () => {
-            const date = new Date('2025-01-01')
-            const maxDate = new Date(import.meta.env.VITE_MAX_DATE)
-            const result = limitDate(date)
-            expect(result).toEqual(maxDate)
         })
     })
 

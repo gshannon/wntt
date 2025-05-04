@@ -1,5 +1,3 @@
-export const MinDate = new Date(import.meta.env.VITE_MIN_DATE)
-export const MaxDate = new Date(import.meta.env.VITE_MAX_DATE)
 export const MaxNumDays = 7 // This could be as high as 10, to support 10 full days of CDMO 15-min data.
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
@@ -12,6 +10,12 @@ export const MapBounds = [
 export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
 export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
+
+// We compute the min/max dates based on current year, rather than hardcoding them.
+const _year = new Date().getFullYear()
+export const MinDate = new Date(`1/1/${_year - 2}`)
+export const MaxDate = new Date(`12/31/${_year + 2}`)
+console.log(`MinDate: ${MinDate}, MaxDate: ${MaxDate}`)
 
 export const Page = Object.freeze({
     Home: 1,

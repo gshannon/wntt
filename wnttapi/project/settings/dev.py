@@ -29,7 +29,7 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
-        "app.datasource.cdmo": {
+        "app.datasource.astrotide": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
