@@ -12,7 +12,6 @@ import {
     buildCacheKey,
     Page,
     getDefaultDates,
-    mllwToNavd88,
     roundTo,
     stringify,
 } from './utils'
@@ -39,22 +38,14 @@ export default function Control(props) {
     const { defaultStart, defaultEnd } = getDefaultDates()
     const datesStorage = getDailyLocalStorage('dates')
     const mainStorage = getLocalStorage('main')
-    const [startDate, setStartDate] = useState(datesStorage?.start ?? stringify(defaultStart))
-    const [endDate, setEndDate] = useState(datesStorage?.end ?? stringify(defaultEnd))
-    // During transition from storing elevations in MLLW to storing in NAVD88, we convert from the old mllw.
-    // TODO: remove the conversion in April or May 2025.
-    const [markerElevationNav, setMarkerElevationNav] = useState(
-        mainStorage.markerElevationNav ??
-            (mainStorage.markerElevation ? mllwToNavd88(mainStorage.markerElevation) : null)
-    )
-    const [customElevationNav, setCustomElevationNav] = useState(
-        mainStorage.customElevationNav ??
-            (mainStorage.customElevation ? mllwToNavd88(mainStorage.customElevation) : null)
-    )
-    const [mapType, setMapType] = useState(mainStorage?.mapType ? mainStorage?.mapType : 'basic')
-    const [markerLocation, setMarkerLocation] = useState(mainStorage?.markerLocation)
-    const [mapCenter, setMapCenter] = useState(mainStorage?.mapCenter || DefaultMapCenter)
-    const [zoom, setZoom] = useState(mainStorage?.zoom ? mainStorage?.zoom : DefaultMapZoom)
+    const [startDate, setStartDate] = useState(datesStorage.start ?? stringify(defaultStart))
+    const [endDate, setEndDate] = useState(datesStorage.end ?? stringify(defaultEnd))
+    const [markerElevationNav, setMarkerElevationNav] = useState(mainStorage.markerElevationNav)
+    const [customElevationNav, setCustomElevationNav] = useState(mainStorage.customElevationNav)
+    const [mapType, setMapType] = useState(mainStorage.mapType ? mainStorage.mapType : 'basic')
+    const [markerLocation, setMarkerLocation] = useState(mainStorage.markerLocation)
+    const [mapCenter, setMapCenter] = useState(mainStorage.mapCenter || DefaultMapCenter)
+    const [zoom, setZoom] = useState(mainStorage.zoom ? mainStorage.zoom : DefaultMapZoom)
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     // eslint-disable-next-line no-unused-vars
