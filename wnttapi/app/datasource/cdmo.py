@@ -1,6 +1,6 @@
 import logging
 import xml.etree.ElementTree as ElTree
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 
 from rest_framework.exceptions import APIException
 from suds.client import Client
