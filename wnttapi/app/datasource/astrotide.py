@@ -15,12 +15,10 @@ logger = logging.getLogger(__name__)
         https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
 """
 
-# TODO: use datum=NAVD and convert here.  Else app will be out of sync with NOAA temporarily when the site
-# starts using the new NTDE.
 # TODO: use GMT instead of LST/LDT, which only works if the station is in the same time zone as the server!!
 base_url = (
     "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL"
-    "&datum=MLLW&time_zone=lst_ldt&units=english&format=json"
+    "&datum=NAVD&time_zone=lst_ldt&units=english&format=json"
 )
 
 wells_station_id = "8419317"
@@ -32,7 +30,7 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
     We get the data in 15-minute intervals, in lst_ldt (local time of station, adjusted for DST).
 
     Returns:
-        - {dt: val} predicted tides, using the 15-min interval API call
+        - {dt: val} predicted MLLW tides, using the 15-min interval API call
         - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but only for highs and lows only,
             and only after the last recorded dt, if any, using the high-low API call. The "real_dt" is the actual
             datetime of the high/low, likely not on a 15-min boundary.
@@ -54,7 +52,7 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
         # Only save data that's in the requested timeline
         if dt in timeline:
             val = pred["v"]
-            reg_preds_dict[dt] = round(float(val), 2)
+            reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(float(val))
 
     # If timeline is all in the past, we're done.
     future_hilo_dict = {}  # {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
@@ -87,7 +85,7 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
             # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
             future_hilo_dict[util.round_to_quarter(dt)] = {
                 "real_dt": dt,
-                "value": round(float(val), 2),
+                "value": util.navd88_feet_to_mllw_feet(float(val)),
                 "type": typ,
             }
 
@@ -106,7 +104,7 @@ def get_astro_highest(year) -> float:
 
     for pred in hilo_preds_raw:
         dts = pred["t"]
-        val = round(float(pred["v"]), 2)
+        val = util.navd88_feet_to_mllw_feet(float(pred["v"]))
         typ = pred["type"]  # should be 'H' or 'L'
         if typ not in ["H", "L"]:
             logger.error(f"Unknown type {typ} for date {dts}")
