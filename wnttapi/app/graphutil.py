@@ -43,7 +43,7 @@ def get_graph_data(start_date, end_date):
     # datetime at midnight of the following day, so the graph looks tidy on the right side.
     timeline = util.build_graph_timeline(start_date, end_date, time_zone)
 
-    # Retrieve all data from external sources. All these dicts are dense -- they only entries for actual data,
+    # Retrieve all data from external sources. All these dicts are dense -- they only have entries for actual data,
     # not None. They are keyed by the datetime that matches the timeline.
     obs_dict = cdmo.get_recorded_tides(timeline)
     max_observed_dt = max(obs_dict) if len(obs_dict) > 0 else None
@@ -60,7 +60,7 @@ def get_graph_data(start_date, end_date):
     )  # {dt: surge_value}
 
     # Now we have all the data we need. Build the lists required by the graph plots, which must be the
-    # same length as the timeline. They are sparse, with None for any missing data.
+    # same length as the timeline so the front end can graph them. They are sparse -- with None for any missing data.
     hist_tides_plot = list(map(lambda dt: obs_dict.get(dt, None), timeline))
     hist_hilo_dts = obs_hilo_dict.keys()
     hist_hilo_vals = obs_hilo_dict.values()
@@ -76,16 +76,18 @@ def get_graph_data(start_date, end_date):
     )
     highest_annual_predictions = build_annual_astro_high_plot(timeline)
 
-    # build new version timeline to be used by the app, with future prediction times (probably every 15 min) replaced by the actual times.
-    new_timeline = [
+    # If the timeline includes any future times, we want to replace the times of the high/low tides with the
+    # actual times of those highs and lows, rather than the nearest 15 minute interval. This gives the users
+    # the most accurate information possible.
+    best_timeline = [
         astro_future_hilo_dict[dt]["real_dt"] if dt in astro_future_hilo_dict else dt
         for dt in timeline
     ]
-    past_tl_index, future_tl_index = util.get_timeline_boundaries(new_timeline)
+    past_tl_index, future_tl_index = util.get_timeline_boundaries(best_timeline)
     start_date_str = timeline[0].strftime("%m/%d/%Y")
     end_date_str = timeline[-2].strftime("%m/%d/%Y")
     return {
-        "timeline": new_timeline,
+        "timeline": best_timeline,
         "hist_tides": hist_tides_plot,
         "hist_hilo_dts": hist_hilo_dts,
         "hist_hilo_vals": hist_hilo_vals,
@@ -119,6 +121,7 @@ def build_future_surge_plots(
     1. Future surve values
     2. Future storm tide values, which is the sum of the future surge and the predicted tide.
     Params:
+        timeline: list of datetimes
         future_surge_dict: {dt: surge_value}
         reg_preds_dict: {dt: value}
         future_hilo_dict: {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
@@ -229,7 +232,9 @@ def build_annual_astro_high_plot(timeline) -> list:
     """
     Build plot list for the highest annual predicted tide plot, using the configured settings.
     If it crosses a year boundary, we'll switch to that value at the appropriate time.
-    We only need to have an initial and final value, with None's in between.
+    Since these will be shown as static, connected points, and not included in the hover text, we only need
+    to supply the initial and final values, with None's in between.
+    TODO: Just supply the values and offsets, and let the front end fill in the rest.
     """
     time_count = len(timeline)
     high1 = cfg.get_astro_high_tide(timeline[0].year)
@@ -243,14 +248,14 @@ def build_annual_astro_high_plot(timeline) -> list:
         year2 = timeline[-1].year
         high2 = cfg.get_astro_high_tide(year2)
         # Figure out where in the index year 2 starts
-        for ii, edt in enumerate(timeline):
-            if edt.year == year2:
+        for offset, dt in enumerate(timeline):
+            if dt.year == year2:
                 break
         highs = (
             [high1]
-            + [None] * (ii - 2)
+            + [None] * (offset - 2)
             + [high1, high2]
-            + [None] * (time_count - ii - 2)
+            + [None] * (time_count - offset - 2)
             + [high2]
         )
 
