@@ -11,11 +11,9 @@ from app import util
 logger = logging.getLogger(__name__)
 
 """
-    API interface for astronomical tide predictions in MLLW as provided by NWS here for the Wells station:
+    API interface for astronomical tide predictions in MLLW as provided by NWS. For Wells, see
         https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
 """
-
-# TODO: use GMT instead of LST/LDT, which only works if the station is in the same time zone as the server!!
 base_url = (
     "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL"
     "&datum=NAVD&time_zone=lst_ldt&units=english&format=json"
@@ -27,13 +25,19 @@ wells_station_id = "8419317"
 def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, dict]:
     """
     Fetch astronomical tide level predictions for the desired timeline.
-    We get the data in 15-minute intervals, in lst_ldt (local time of station, adjusted for DST).
 
     Returns:
         - {dt: val} predicted MLLW tides, using the 15-min interval API call
-        - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but only for highs and lows only,
+        - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but for highs and lows only,
             and only after the last recorded dt, if any, using the high-low API call. The "real_dt" is the actual
             datetime of the high/low, likely not on a 15-min boundary.
+
+    When we call the API, we use:
+        - time_zone=lst-ldt, which means Local Standard Time, adjusted for daylight savings time. The timezone
+            of the requested station will be used, and that should always match the timezone in the timeline,
+            though there's no way to enforce that since the api call doesn't return the timezone.
+        - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
+            MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
 
     The graph will be labeling recorded (past) tide data as high or low, so we don't include hi/low entries for past
     predictions. These dicts are dense -- only datetimes with data are included, and both dicts are keyed in
