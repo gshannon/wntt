@@ -363,24 +363,24 @@ def find_hilos(timeline, obs_dict) -> dict:
         arc_timeline = list(
             filter(lambda dt: min(datadict) <= dt <= max(datadict), timeline)
         )
-        sparce_vals = [datadict.get(dt, None) for dt in arc_timeline]
+        sparse_vals = [datadict.get(dt, None) for dt in arc_timeline]
         # The first and last values are not candidates for high or low tide, since there's no value on the other
         # side to prove it.
-        if sparce_vals[0] == hilo_val or sparce_vals[-1] == hilo_val:
+        if sparse_vals[0] == hilo_val or sparse_vals[-1] == hilo_val:
             logger.debug(
                 f"hi/lo {hilo_val} found at beginning or end of arc beginning at {arc_timeline[0]}"
             )
             continue
         # We need to see a peak or trough with no None's breaking it up. E.g. [7,8,7] or [3,2,2,3] Not [7,8,None,7]
-        ndx = sparce_vals.index(hilo_val)  # returns the 1st instance of the high/low.
-        if sparce_vals[ndx - 1] is None:
+        ndx = sparse_vals.index(hilo_val)  # returns the 1st instance of the high/low.
+        if sparse_vals[ndx - 1] is None:
             logger.debug(
                 f"None found before hi/lo {hilo_val} in arc beginning at {arc_timeline[0]}"
             )
             continue
         # Finally check the right side. Any number of repeats are allowed, but must end with a different value.
         accepted = False
-        for val in sparce_vals[ndx + 1 :]:
+        for val in sparse_vals[ndx + 1 :]:
             if val is None:
                 logger.debug(
                     f"None found after {hilo_val} in arc beginning at {arc_timeline[0]}"
