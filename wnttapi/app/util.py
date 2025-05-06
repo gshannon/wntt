@@ -177,6 +177,12 @@ def degrees_to_dir(degrees) -> str:
     return direction
 
 
+def read_file(filepath):
+    with open(filepath) as file:
+        contents = file.read()
+    return contents
+
+
 def dump_xml(xml, filename):
     decoded = bytes.fromhex(xml.hex()).decode("ASCII")
     f = open(filename, "w")

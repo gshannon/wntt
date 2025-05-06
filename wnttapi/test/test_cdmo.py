@@ -235,6 +235,4 @@ class TestCdmo(TestCase):
 
     def load_xml(self, filename):
         path = os.path.dirname(os.path.abspath(__file__))
-        with open(f"{path}/data/{filename}") as file:
-            xml = file.read()
-        return xml
+        return util.read_file(f"{path}/data/{filename}")

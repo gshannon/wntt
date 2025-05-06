@@ -1,0 +1,92 @@
+import os.path
+from datetime import datetime
+from unittest import TestCase
+
+import app.datasource.astrotide as astrotide
+import app.tzutil as tz
+import app.util as util
+
+path = os.path.dirname(os.path.abspath(__file__))
+
+
+class TestAstro(TestCase):
+    def test_find_highest(self):
+        """Able to get the highest tide from a json list of hi/lo values from API call."""
+
+        raw = util.read_file(f"{path}/data/astro_hilo_2027.json")
+        contents = astrotide.extract_json(raw)
+        highest = astrotide.find_highest(contents)
+        returned_high_navd88 = 6.019
+        expected_high_mllw = util.navd88_feet_to_mllw_feet(returned_high_navd88)
+        self.assertEqual(highest, expected_high_mllw)
+
+    def test_parse_15m_predictions(self):
+        """Able to parse 15m predictions from a json list of predictions from API call."""
+        raw = util.read_file(f"{path}/data/astro_15m.json")
+        contents = astrotide.extract_json(raw)
+        # file has entire day of data, but we'll extract just 1 hour
+        start_dt = datetime(2025, 5, 6, 1, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=tz.eastern)
+        timeline = util.build_timeline(start_dt, end_dt)
+        preds = astrotide.find_regular(contents, timeline)
+        self.assertEqual(len(preds), 4)
+        self.assertEqual(preds[timeline[0]], util.navd88_feet_to_mllw_feet(-3.624))
+        self.assertEqual(preds[timeline[1]], util.navd88_feet_to_mllw_feet(-3.621))
+        self.assertEqual(preds[timeline[2]], util.navd88_feet_to_mllw_feet(-3.564))
+        self.assertEqual(preds[timeline[3]], util.navd88_feet_to_mllw_feet(-3.452))
+
+    def test_parse_hilo_predictions(self):
+        """Able to parse certain hi/lo predictions from a json list of predictions from API call."""
+        raw = util.read_file(f"{path}/data/astro_hilo_3days.json")
+        contents = astrotide.extract_json(raw)
+        # file has 3 days of hilos, 5/6/25 - 5/8/25. If we ask for the entire timeline, but
+        # set the cutoff for 5/7 19:00, we should just get the 4 values from 5/8.
+        zone = tz.eastern
+        start_dt = datetime(2025, 5, 6, tzinfo=zone)
+        end_dt = datetime(2025, 5, 8, 23, 45, tzinfo=zone)
+        cutoff_dt = datetime(2025, 5, 7, 19, tzinfo=zone)
+        timeline = util.build_timeline(start_dt, end_dt)
+        preds = astrotide.find_future(contents, timeline, cutoff_dt)
+        self.assertEqual(len(preds), 4)
+        self.assertEqual(
+            preds[datetime(2025, 5, 8, 1, tzinfo=zone)],
+            {
+                "real_dt": datetime(2025, 5, 8, 0, 58, tzinfo=zone),
+                "value": util.navd88_feet_to_mllw_feet(3.554),
+                "type": "H",
+            },
+        )
+        self.assertEqual(
+            preds[datetime(2025, 5, 8, 7, tzinfo=zone)],
+            {
+                "real_dt": datetime(2025, 5, 8, 7, 6, tzinfo=zone),
+                "value": util.navd88_feet_to_mllw_feet(-4.084),
+                "type": "L",
+            },
+        )
+        self.assertEqual(
+            preds[datetime(2025, 5, 8, 13, 15, tzinfo=zone)],
+            {
+                "real_dt": datetime(2025, 5, 8, 13, 21, tzinfo=zone),
+                "value": util.navd88_feet_to_mllw_feet(3.294),
+                "type": "H",
+            },
+        )
+        self.assertEqual(
+            preds[datetime(2025, 5, 8, 19, 30, tzinfo=zone)],
+            {
+                "real_dt": datetime(2025, 5, 8, 19, 23, tzinfo=zone),
+                "value": util.navd88_feet_to_mllw_feet(-4.093),
+                "type": "L",
+            },
+        )
+
+    def test_api_error(self):
+        """Able to handle API error."""
+        raw = util.read_file(f"{path}/data/astro_error.json")
+        self.assertRaisesRegex(
+            ValueError,
+            "No Predictions data was found. Please make sure the Datum input is valid",
+            astrotide.extract_json,
+            raw,
+        )
