@@ -55,13 +55,13 @@ def calculate_past_storm_surge(timeline, astro_dict, obs_dict) -> dict:
 
 def get_or_load_projected_surge_file(after: datetime) -> dict:
     """The csv file containing the projected surge data is updated on the NOAA site every 6 hours,
-    and is normally downloaded by a cron job. Once loaded, its contents are cached for performance.
+    and is normally downloaded by a cron job. Once loaded, its contents are cached in Django for performance.
     So here, we have to determine if the disk file has been replaced since we last processed it. Therefore,
     if the data file exists and has not been replaced by a newer file, read the cache. Otherwise, read the
-    download file, throwing out all but xx:00 and xx:30 (since the data is in 6-minute intervals
-    and we show 15-min intervals and the others can't be displayed on the graph), and throwing out data older
-    than the 'after' parameter, since it can hereafter never be displayed. Then save that to cache and r
-    eturn it.
+    download file, throwing out all but xx:00 and xx:30 -- since the data is in 6-minute intervals
+    and we show 15-min intervals and the others can't be displayed on the graph -- and throwing out data older
+    than the 'after' parameter, since it can hereafter never be displayed. Then save that to cache and
+    return it.
 
     All datetimes in the file are in UTC, and are converted as requested timezone.
 
@@ -86,11 +86,11 @@ def get_or_load_projected_surge_file(after: datetime) -> dict:
     if file_id is None:
         if cached is None:
             logger.error(
-                f"{surge_file_path} is not found, and there is no cached surge data."
+                f"{surge_file_path} is not found, and there is no cached surge data!"
             )
             return {}
         else:
-            logger.error(f"Can't read {surge_file_path} file, will use cache for now!")
+            logger.error(f"Can't read {surge_file_path} file, will use cache for now.")
             return cached["data"]
 
     # So now we know the file exists and is readable.  If we have cached data, check if the file has been updated.
@@ -103,7 +103,8 @@ def get_or_load_projected_surge_file(after: datetime) -> dict:
     surge_data = {}  # key=datetime, value=surge
     logger.debug(f"Reading {surge_file_path}")
     try:
-        """Sample data:
+        """
+        Sample data:
                 TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
         202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
         202502181206,   2.119,9999.000,9999.000,9999.000,9999.000

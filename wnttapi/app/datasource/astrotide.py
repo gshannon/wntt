@@ -107,11 +107,10 @@ def get_astro_highest(year) -> float:
     highest = None
 
     for pred in hilo_preds_raw:
-        dts = pred["t"]
         val = util.navd88_feet_to_mllw_feet(float(pred["v"]))
         typ = pred["type"]  # should be 'H' or 'L'
         if typ not in ["H", "L"]:
-            logger.error(f"Unknown type {typ} for date {dts}")
+            logger.error(f"Unknown type {typ}: {pred}")
             raise APIException()
         if typ == "H" and (highest is None or val > highest):
             highest = val
