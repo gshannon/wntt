@@ -48,22 +48,14 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
     url15min = f"{base_url}&interval=15&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
     logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, url15min: {url15min}")
 
-    reg_preds_raw = pull_data(url15min)
-    reg_preds_dict = {}  # {dt: value}
-    for pred in reg_preds_raw:
-        dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
-        # Only save data that's in the requested timeline
-        if dt in timeline:
-            val = pred["v"]
-            reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(float(val))
+    reg_pred_list = pull_data(url15min)
+    reg_preds_dict = find_regular(reg_pred_list, timeline)
 
     # If timeline is all in the past, we're done.
-    future_hilo_dict = {}  # {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
     if timeline[-1] < tz.now(timeline[0].tzinfo):
-        return reg_preds_dict, future_hilo_dict
+        return reg_preds_dict, {}
 
-    # We only want to ask for data we'll use, so get anything past the last recorded data time.
+    # We only want to ask for data the app will display, so get anything past the last recorded data time.
     cutoff = (
         util.round_up_to_quarter(last_recorded_dt)
         if last_recorded_dt is not None
@@ -74,12 +66,50 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
     urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
     logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, urlhilo: {urlhilo}")
 
-    hilo_preds_raw = pull_data(urlhilo)
+    future_hilo_list = pull_data(urlhilo)
+    future_hilo_dict = find_future(future_hilo_list, timeline, cutoff)
 
-    for pred in hilo_preds_raw:
+    return reg_preds_dict, future_hilo_dict
+
+
+def get_astro_highest(year) -> float:
+    """Calls the external API for all hilo tides for a year, and returns the highest found."""
+    begin_date = f"{year}0101"
+    end_date = f"{year}1231"
+    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
+    logger.debug(f"for {year}, urlhilo: {urlhilo}")
+
+    hilo_json_dict = pull_data(urlhilo)
+    return find_highest(hilo_json_dict)
+
+
+def find_regular(pred_list: list, timeline: list) -> dict:
+    """
+    Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
+    sparse dict of {dt: value} for all values that exist in the requested timeline. Converts NAVD88 to MLLW.
+    """
+    reg_preds_dict = {}  # {dt: value}
+    for pred in pred_list:
         dts = pred["t"]
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
-        # Only save data that's in the future AND in the requested timeline
+        if dt in timeline:
+            val = pred["v"]
+            reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(float(val))
+    return reg_preds_dict
+
+
+def find_future(hilo_list: list, timeline: list, cutoff: datetime) -> dict:
+    """
+    Given a list of high/low predictions like {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}, return
+    a sparse dict of {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} for all values that
+    exist in the requested timeline and are greater or equal to the given cutoff time. Converts NAVD88 to MLLW.
+    """
+    future_hilo_dict = {}
+    for pred in hilo_list:
+        dts = pred["t"]
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
+        # Only save data that's >= the cuttoff time and in the requested timeline. Remember hi/lo prediction
+        # dates are exact minutes, not aligned with 15-min intervals.
         if dt >= cutoff and timeline[0] <= dt <= timeline[-1]:
             val = pred["v"]
             typ = pred["type"]  # should be 'H' or 'L'
@@ -93,20 +123,14 @@ def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, d
                 "type": typ,
             }
 
-    return reg_preds_dict, future_hilo_dict
+    return future_hilo_dict
 
 
-def get_astro_highest(year) -> float:
-    """Calls the external API for all hilo tides for a year, and returns the highest found."""
-    begin_date = f"{year}0101"
-    end_date = f"{year}1231"
-    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"for {year}, urlhilo: {urlhilo}")
-
-    hilo_preds_raw = pull_data(urlhilo)
+def find_highest(hilo_json_dict) -> float:
+    """Searches through the json and returns the highest high tide value found. Converts NAVD88 to MLLW."""
     highest = None
 
-    for pred in hilo_preds_raw:
+    for pred in hilo_json_dict:
         val = util.navd88_feet_to_mllw_feet(float(pred["v"]))
         typ = pred["type"]  # should be 'H' or 'L'
         if typ not in ["H", "L"]:
@@ -118,7 +142,8 @@ def get_astro_highest(year) -> float:
     return highest
 
 
-def pull_data(url) -> dict:
+def pull_data(url) -> list:
+    """Call the API and return the predictions as a json list."""
     try:
         response = requests.get(url)
     except Exception as e:
@@ -129,11 +154,20 @@ def pull_data(url) -> dict:
         logger.error(f"status {response.status_code} calling {url}")
         raise APIException()
 
-    content = json.loads(response.text)
-    # This is what content may look like if there's an error.  logger.info(content)
-    #  {"error": {"message":"No Predictions data was found. Please make sure the Datum input is valid."}}
-    if "error" in content:
-        logger.error(f"error: {content.get('error', 'n/a')} calling [{url}]")
-        raise APIException()
+    try:
+        return extract_json(response.text)
+    except ValueError as e:
+        logger.error(f"Error calling {url}: {e}")
+        raise APIException(e)
 
-    return content["predictions"]
+
+def extract_json(raw) -> list:
+    """Call the API and return the predictions as a json list."""
+
+    json_dict = json.loads(raw)
+    # This is what content may look like if it's an invalid request.
+    #  {"error": {"message":"No Predictions data was found. Please make sure the Datum input is valid."}}
+    if "error" in json_dict:
+        raise ValueError(json_dict)
+
+    return json_dict["predictions"]
