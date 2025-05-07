@@ -12,6 +12,7 @@ import {
     buildCacheKey,
     Page,
     getDefaultDates,
+    minGraphDate,
     roundTo,
     stringify,
 } from './utils'
@@ -38,7 +39,11 @@ export default function Control(props) {
     const { defaultStart, defaultEnd } = getDefaultDates()
     const datesStorage = getDailyLocalStorage('dates')
     const mainStorage = getLocalStorage('main')
-    const [startDate, setStartDate] = useState(datesStorage.start ?? stringify(defaultStart))
+    // In the corner case where the year just changed, force the start date to be legal here.
+    const _start = datesStorage.start
+        ? new Date(Math.max(new Date(datesStorage.start), minGraphDate()))
+        : defaultStart
+    const [startDate, setStartDate] = useState(stringify(_start))
     const [endDate, setEndDate] = useState(datesStorage.end ?? stringify(defaultEnd))
     const [markerElevationNav, setMarkerElevationNav] = useState(mainStorage.markerElevationNav)
     const [customElevationNav, setCustomElevationNav] = useState(mainStorage.customElevationNav)

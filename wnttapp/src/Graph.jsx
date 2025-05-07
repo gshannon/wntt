@@ -16,8 +16,8 @@ import {
     limitDate,
     MaxNumDays,
     maxCustomElevationNavd88,
-    MinDate,
-    MaxDate,
+    minGraphDate,
+    maxGraphDate,
     navd88ToMllw,
 } from './utils'
 import { AppContext } from './AppContext'
@@ -33,9 +33,9 @@ export default function Graph() {
         'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
     const [startCtl, setStartCtl] = useState({
-        min: MinDate,
+        min: minGraphDate(),
         start: new Date(appContext.startDate),
-        max: MaxDate,
+        max: maxGraphDate(),
     })
     const [endCtl, setEndCtl] = useState({
         min: new Date(appContext.startDate),
@@ -67,9 +67,9 @@ export default function Graph() {
     const resetDateControls = () => {
         const { defaultStart, defaultEnd } = getDefaultDates()
         setStartCtl({
-            min: MinDate,
+            min: minGraphDate(),
             start: new Date(defaultStart),
-            max: MaxDate,
+            max: maxGraphDate(),
         })
         setEndCtl({
             min: new Date(defaultStart),

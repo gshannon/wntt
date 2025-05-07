@@ -29,11 +29,11 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
-        "app.datasource.astrotide": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
+        # "app.datasource.astrotide": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",
+        #     "propagate": False,
+        # },
     },
     "formatters": {
         "verbose": {
