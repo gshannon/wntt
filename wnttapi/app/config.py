@@ -1,8 +1,8 @@
-import os
-from datetime import datetime, date
 import logging
-from app.datasource import astro_annual, astrotide
+import os
+from datetime import date, datetime
 
+from app.datasource import astrotide
 
 """
 Wrapper for environment settings used by the app.  We do this here instead of base.py so we 
@@ -11,14 +11,17 @@ can raise configuration exceptions, which should not be done in base.py.
 
 logger = logging.getLogger(__name__)
 
-# key = year, value = highest predicted tide
-YEAR_DATA = None
+# This is a cache of the highest predicted tide for each year. It is populated as needed.
+# Worker processes will not share the cache, but this is acceptable because the the processes should be
+# long-lived, and loading should only happen the first time the year is requested for any worker.
+# key = year, value = highest predicted tide in feet relative to MLLW
+_annual_highest = {}
 
 
 def get_supported_years() -> list:
     """
     Get the years the API supports, in order. We only support the last 2 years, the current year, and the
-    next 2 years.
+    next 2 years. Note that the APP has the same logic, so they should be kept in sync.
     """
     year = date.today().year
     return [y for y in range(year - 2, year + 3)]
@@ -53,15 +56,16 @@ def get_record_tide_date() -> str:
 
 
 def get_astro_high_tide(year) -> float:
-    global YEAR_DATA
+    global _annual_highest
 
-    if YEAR_DATA is None:
-        YEAR_DATA = astro_annual.read_highest_predicted()
-    high = YEAR_DATA.get(year, None)
-    if high is None:
-        # Load the data, persist it, and refresh memory cache.
-        logger.warning(f"Tide was not found for year {year}, pulling from API.")
+    if year not in get_supported_years():
+        # This should never happen since it would have been caught long before this point.
+        raise RuntimeError(f"Year {year} is not supported")
+
+    if year not in _annual_highest:
+        # Load the data & save it to cache.
+        logger.info(f"Tide was not found for year {year}, pulling from API.")
         high = astrotide.get_astro_highest(year)
-        astro_annual.write_highest_predicted(year, high)
-        YEAR_DATA = astro_annual.read_highest_predicted()
-    return high
+        _annual_highest[year] = high
+
+    return _annual_highest[year]

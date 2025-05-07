@@ -12,8 +12,8 @@ import {
     limitDate,
     stringify,
     MaxNumDays,
-    MinDate,
-    MaxDate,
+    minGraphDate,
+    maxGraphDate,
     navd88ToMllw,
     Page,
 } from './utils'
@@ -45,8 +45,10 @@ export default function GetDates(props) {
         'Nov',
         'Dec',
     ]
-    const rangeMin = `${months[MinDate.getMonth()]} ${MinDate.getFullYear()}`
-    const rangeMax = `${months[MaxDate.getMonth()]} ${MaxDate.getFullYear()}`
+    const minDate = minGraphDate()
+    const maxDate = maxGraphDate()
+    const rangeMin = `${months[minDate.getMonth()]} ${minDate.getFullYear()}`
+    const rangeMax = `${months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
 
     const handleSubmit = (e) => {
         // The form has 2 submit buttons -- refresh & reset, so handle them both here.

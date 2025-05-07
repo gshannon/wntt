@@ -11,11 +11,17 @@ export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
 export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
 
-// We compute the min/max dates based on current year, rather than hardcoding them.
-const _year = new Date().getFullYear()
-export const MinDate = new Date(`1/1/${_year - 2}`)
-export const MaxDate = new Date(`12/31/${_year + 2}`)
-console.log(`MinDate: ${MinDate}, MaxDate: ${MaxDate}`)
+// We compute the min/max dates based on current year, rather than hardcoding them. We must
+// compute them every time they are requested, in case the year changes while the app is running.
+// Note that the graph API has the same limits, so these should be kept in sync.
+export const minGraphDate = () => {
+    const year = new Date().getFullYear()
+    return new Date(`1/1/${year - 2}`)
+}
+export const maxGraphDate = () => {
+    const year = new Date().getFullYear()
+    return new Date(`12/31/${year + 2}`)
+}
 
 export const Page = Object.freeze({
     Home: 1,
@@ -76,8 +82,8 @@ export const dateDiff = (date1, date2) => {
 // Pass a Date or string. Returns same, within min/max settings.
 export const limitDate = (date) => {
     const d1 = new Date(date)
-    const d2 = new Date(Math.max(d1, MinDate))
-    return new Date(Math.min(d2, MaxDate))
+    const d2 = new Date(Math.max(d1, minGraphDate()))
+    return new Date(Math.min(d2, maxGraphDate()))
 }
 
 // Compute the default date range for the graph.
