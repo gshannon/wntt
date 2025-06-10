@@ -106,7 +106,8 @@ def round_to_quarter(dt: datetime) -> datetime:
 
 
 def round_up_to_quarter(dt: datetime) -> datetime:
-    """round a datetime up to next quarter-hour"""
+    """Return the next higher 00/15/30/45 time relative to a datetime.
+    01:14 becomes 01:15. 01:15 becomes 01:30."""
     new_minute = (dt.minute // 15 * 15) + 15
     return dt + timedelta(minutes=new_minute - dt.minute)
 

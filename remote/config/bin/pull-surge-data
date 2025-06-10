@@ -2,21 +2,18 @@
 
 CWD=$(pwd)
 ROOT=$HOME/surge
-TMPDIR=$ROOT/tmp
-INCOMING=$ROOT/incoming
-PORTLAND=$ROOT/portland
+WORKDIR=$ROOT/tmp
+ARCHIVE=$ROOT/archive
 DATADIR=$ROOT/data
-mkdir -p $TMPDIR $INCOMING $PORTLAND $DATADIR
+mkdir -p $WORKDIR $ARCHIVE $DATADIR
 
 DOWNLOADED=$ROOT/downloaded
 touch $DOWNLOADED
 
 WELLS_STN=8419317
-PORTLAND_STN=8418150
 # NOTE: Everything is in GMT here.
 FILEDATE=$(date +%Y%m%d)  # e.g. 20240321
 HOUR=$(date +%H)
-NOW=$(date +%Y%m%d%H%M%S)
 if [ $HOUR -ge 23 ]; then
     CYCLE='18'
 elif [ $HOUR -ge 17 ]; then
@@ -30,33 +27,53 @@ else
     FILEDATE=$(date -d '-1 day' +%Y%m%d)
     CYCLE='18'
 fi
-# This is the file we believe is the latest
-FILE=etss.t${CYCLE}z.csv.tar.gz
 
+# This is the file we believe is the latest. It has data for many stations, and we'll extract what we want.
+RAWFILE=etss.t${CYCLE}z.csv.tar.gz
+DATAFILE=etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv
 SAVEFILE=${FILEDATE}-${CYCLE}.csv
 
-# Do nothing if we already have this file
+# Do nothing if we previously downloaded this file
 if [ $(grep -c $SAVEFILE $DOWNLOADED) -gt 0 ]; then
-  echo "$FILE has been processed already, exiting..."
+  echo "$RAWFILE ($SAVEFILE) has been processed already, exiting..."
   exit 0
 fi
 
-URL="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${FILEDATE}/${FILE}"
-echo $URL
-cd $TMPDIR
-curl --no-progress-meter -o $FILE $URL
-tar zxf $FILE
-# move a nicely named copy to where the webapp can read it
-cp etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv $DATADIR/surge-data.csv
-# move it to where the consumer job can save it to the db and delete it
-mv etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv $INCOMING/$SAVEFILE
-# remember it so we don't download it again. keep the last 10 files downlaoded
+cd $WORKDIR
+rm -rf *  # clean up files from previous run 
+URL="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${FILEDATE}/${RAWFILE}"
+curl --no-progress-meter --fail-with-body -o $RAWFILE $URL || {
+  echo "Failed to download $URL"
+  exit 1
+}
+tar zxf $RAWFILE || {
+  echo "Failed to extract $RAWFILE"
+  exit 1
+}
+
+# At this point we should a bunch of files, including the one we want: $DATAFILE.
+if [ ! -f $DATAFILE ]; then
+  echo "Expected file $DATAFILE not found after extraction."
+  exit 1
+fi
+
+###################################
+# UNCOMMENT TO STOP ARCHIVING FILES
+# Rename and move it to where the webapp can read it.
+#mv $DATAFILE $DATADIR/surge-data.csv
+###################################
+
+###################################
+# REMOVE THIS SECTION TO STOP ARCHIVING FILES
+cp $DATAFILE $DATADIR/surge-data.csv
+# Move it to the archive area. 
+mv $DATAFILE $ARCHIVE/$SAVEFILE
+###################################
+
+# Remember the last 10 downloaded files so we can avoid double-downloads. 
 tail -9 $DOWNLOADED > /tmp/_downloaded
 echo $SAVEFILE >> /tmp/_downloaded
 mv /tmp/_downloaded $DOWNLOADED
-
-# also grab Portland data!
-cp etss.$FILEDATE/t${CYCLE}z_csv/${PORTLAND_STN}.csv $PORTLAND/$SAVEFILE
 
 echo "$(date) downloaded: $SAVEFILE" >> $ROOT/log
 rm -rf *
