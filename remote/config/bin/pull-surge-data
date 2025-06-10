@@ -28,7 +28,7 @@ else
     CYCLE='18'
 fi
 
-# This is the file we believe is the latest. It has data for many stations, and we'll extract what we want.
+# This is the file we believe is the latest. 
 RAWFILE=etss.t${CYCLE}z.csv.tar.gz
 DATAFILE=etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv
 SAVEFILE=${FILEDATE}-${CYCLE}.csv
@@ -51,7 +51,7 @@ tar zxf $RAWFILE || {
   exit 1
 }
 
-# At this point we should a bunch of files, including the one we want: $DATAFILE.
+# At this point we should have several hundred files, including the one we want: $DATAFILE.
 if [ ! -f $DATAFILE ]; then
   echo "Expected file $DATAFILE not found after extraction."
   exit 1
@@ -76,6 +76,5 @@ echo $SAVEFILE >> /tmp/_downloaded
 mv /tmp/_downloaded $DOWNLOADED
 
 echo "$(date) downloaded: $SAVEFILE" >> $ROOT/log
-rm -rf *
 cd $CWD
 exit 0
