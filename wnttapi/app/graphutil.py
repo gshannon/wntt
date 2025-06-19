@@ -86,6 +86,7 @@ def get_graph_data(start_date, end_date):
     past_tl_index, future_tl_index = util.get_timeline_boundaries(best_timeline)
     start_date_str = timeline[0].strftime("%m/%d/%Y")
     end_date_str = timeline[-2].strftime("%m/%d/%Y")
+    record_tide_mllw = util.navd88_feet_to_mllw_feet(cfg.get_record_tide_navd88())
     return {
         "timeline": best_timeline,
         "hist_tides": hist_tides_plot,
@@ -98,12 +99,12 @@ def get_graph_data(start_date, end_date):
         "wind_gusts": wind_gust_plot,
         "wind_dir": wind_dir_plot,
         "wind_dir_hover": wind_dir_hover,
-        "record_tide": cfg.get_record_tide(),
+        "record_tide": record_tide_mllw,
         "past_surge": past_surge_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
-        "record_tide_title": f"{record_tide_title} ({cfg.get_record_tide():.2f})",
-        "mean_high_water": cfg.get_mean_high_water(),
+        "record_tide_title": f"{record_tide_title} ({record_tide_mllw})",
+        "mean_high_water": cfg.get_mean_high_water_mllw(),
         "highest_annual_predictions": highest_annual_predictions,
         "start_date": start_date_str,
         "end_date": end_date_str,
@@ -237,7 +238,7 @@ def build_annual_astro_high_plot(timeline) -> list:
     TODO: Just supply the values and offsets, and let the front end fill in the rest.
     """
     time_count = len(timeline)
-    high1 = cfg.get_astro_high_tide(timeline[0].year)
+    high1 = cfg.get_astro_high_tide_mllw(timeline[0].year)
 
     # To determine the year of the last data point, we will ignore the extra midnight time added to the timeline,
     # so it's timeline[-2] not timeline[-1]
@@ -246,7 +247,7 @@ def build_annual_astro_high_plot(timeline) -> list:
     else:
         # We're crossing a year boundary. Get the 2nd year's high.
         year2 = timeline[-1].year
-        high2 = cfg.get_astro_high_tide(year2)
+        high2 = cfg.get_astro_high_tide_mllw(year2)
         # Figure out where in the index year 2 starts
         for offset, dt in enumerate(timeline):
             if dt.year == year2:

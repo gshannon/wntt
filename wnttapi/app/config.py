@@ -34,18 +34,18 @@ def get_mllw_conversion() -> float:
         raise RuntimeError("NAVD88_MLLW_CONVERSION missing or invalid", e)
 
 
-def get_mean_high_water() -> float:
+def get_mean_high_water_mllw() -> float:
     try:
-        return float(os.environ.get("MEAN_HIGH_WATER"))
+        return float(os.environ.get("MEAN_HIGH_WATER_MLLW"))
     except Exception as e:
-        raise RuntimeError("MEAN_HIGH_WATER missing or invalid", e)
+        raise RuntimeError("MEAN_HIGH_WATER_MLLW missing or invalid", e)
 
 
-def get_record_tide() -> float:
+def get_record_tide_navd88() -> float:
     try:
-        return float(os.environ.get("RECORD_TIDE"))
+        return float(os.environ.get("RECORD_TIDE_NAVD88"))
     except Exception as e:
-        raise RuntimeError("RECORD_TIDE missing or invalid", e)
+        raise RuntimeError("RECORD_TIDE_NAVD88 missing or invalid", e)
 
 
 def get_record_tide_date() -> str:
@@ -55,7 +55,7 @@ def get_record_tide_date() -> str:
         raise RuntimeError("RECORD_TIDE_DATE missing or invalid", e)
 
 
-def get_astro_high_tide(year) -> float:
+def get_astro_high_tide_mllw(year) -> float:
     global _annual_highest
 
     if year not in get_supported_years():

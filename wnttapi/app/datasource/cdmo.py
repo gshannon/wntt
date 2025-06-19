@@ -284,20 +284,24 @@ def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
 
 def find_hilos(timeline, obs_dict) -> dict:
     """Given a key-ordered timeline and dense dict of tide readings {datetime: level}, return a dense dict of
-    {dt: 'H' or 'L'} indicating which of the datetimes correspond to a high or low tide.
+    {dt: 'H' or 'L'} indicating which of the datetimes correspond to a high or low tide. We only return
+    datetimes that are definitively high or low tides, and do not include any that are ambiguous.
 
     In this function, an "arc" is a series of consecutive tide readings which may may contain a high or low
     tide. Values above the mid-tide level are a potential high tide arc, and below it, a low tide arc.
     We take the max/min value from each arc to look for the high/low tide.  Mid-tide is defined
-    as defined as the average of the highest and lowest value seen in the data, with a minimum allowable
-    value in case of lots of missing data. Since we have to account for missing, and possibly spurious
-    values, we take a somewhat conservative approach -- false negatives are preferable to false positives.
+    as the average of the highest and lowest value seen in the data, with a minimum allowable
+    value in case of lots of missing data. Since we may have missing data for some datetimes, in which
+    case the value will be None, we take a conservative approach and prefer false negatives (not
+    identifying a high or low tide) to false positives (identifying a high or low tide that is not
+    necessarily one).
 
     We are expecting a timeline with full days, at 96 per day, so whether we are dealing with a diurnal
     or semidiurnal station, there should be at least 1 high and 1 low per day.  Missing data values (None)
     are tolerated, but peaks and troughs are identified by consecutive values like [9.5, 10.1, 9.9] and
     [2.5, 2.1, 2.1, 2.3], and any None embedded in these will cause us to ignore the arc, since they could
-    be disguising the actual peak or trough.
+    be disguising the actual peak or trough. E.g. if we see [9.5, 10.1, None, 9.9], it may look like high
+    tide was 10.1, but the None could be hiding an even higher value that was not recorded.
     """
 
     MIN_TIDAL_RANGE = (

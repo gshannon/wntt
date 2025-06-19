@@ -30,7 +30,7 @@ class TestCdmo(TestCase):
         datadict = {datetime(2025, 1, 1): 8}
         self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
 
-        # Minimal high only
+        # Minimal Low only
         tides = [None, 4, 3, 4, None, 10]
         timeline, datadict = build_test_data(tides)
         expected_hilos = {
@@ -38,11 +38,11 @@ class TestCdmo(TestCase):
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
-        # Minimal high only
-        tides = [None, 4, 3, 4, None, 10]
+        # Minimal High only
+        tides = [None, 9, 10, 9, None, 3]
         timeline, datadict = build_test_data(tides)
         expected_hilos = {
-            datetime(2025, 1, 1, 0, 30): "L",
+            datetime(2025, 1, 1, 0, 30): "H",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
@@ -105,7 +105,7 @@ class TestCdmo(TestCase):
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         with self.assertRaisesRegex(APIException, "^Invalid ip"):
-            cdmo.get_cdmo_data([], xml, "whatever", None)
+            cdmo.get_cdmo_data([], xml, "anyparam", None)
 
     def test_parse_level_data(self):
         xml = self.load_xml("cdmo-level.xml")
@@ -178,42 +178,46 @@ class TestCdmo(TestCase):
     def test_cdmo_dates_spring_forward(self):
         """If timeline starts in standard but ends in DST, handle all scenarios"""
         # start date doesn't change, end date is bumped back if < 01:00
-        start_dt = datetime(2025, 3, 9, 0, tzinfo=tz.eastern)
-        end_dt = datetime(2025, 3, 10, 0, tzinfo=tz.eastern)
-        timeline = util.build_timeline(start_dt, end_dt)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (start_dt.date(), end_dt.date() - timedelta(days=1)),
-        )
+        for zone in [tz.central, tz.mountain, tz.pacific]:
+            start_dt = datetime(2025, 3, 9, 0, tzinfo=zone)
+            end_dt = datetime(2025, 3, 10, 0, tzinfo=zone)
+            timeline = util.build_timeline(start_dt, end_dt)
+            self.assertEqual(
+                cdmo.compute_cdmo_request_dates(timeline),
+                (start_dt.date(), end_dt.date() - timedelta(days=1)),
+            )
 
         # start date doesn't change, neither does end date if >= 01:00
-        start_dt = datetime(2025, 3, 9, 0, tzinfo=tz.eastern)
-        end_dt = datetime(2025, 3, 10, 1, tzinfo=tz.eastern)
-        timeline = util.build_timeline(start_dt, end_dt)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (start_dt.date(), end_dt.date()),
-        )
+        for zone in [tz.central, tz.mountain, tz.pacific]:
+            start_dt = datetime(2025, 3, 9, 0, tzinfo=zone)
+            end_dt = datetime(2025, 3, 10, 1, tzinfo=zone)
+            timeline = util.build_timeline(start_dt, end_dt)
+            self.assertEqual(
+                cdmo.compute_cdmo_request_dates(timeline),
+                (start_dt.date(), end_dt.date()),
+            )
 
     def test_cdmo_dates_fall_back(self):
         """If timeline starts in DST but ends in standard, handle all scenarios"""
         # start time with hour < 0 is bumped back a day, end date is unchanged
-        start_dt = datetime(2025, 10, 2, 0, tzinfo=tz.eastern)
-        end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=tz.eastern)
-        timeline = util.build_timeline(start_dt, end_dt)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (start_dt.date() - timedelta(days=1), end_dt.date()),
-        )
+        for zone in [tz.central, tz.mountain, tz.pacific]:
+            start_dt = datetime(2025, 10, 2, 0, tzinfo=zone)
+            end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
+            timeline = util.build_timeline(start_dt, end_dt)
+            self.assertEqual(
+                cdmo.compute_cdmo_request_dates(timeline),
+                (start_dt.date() - timedelta(days=1), end_dt.date()),
+            )
 
         # start time with hour > 0 is left alone, end date is unchanged
-        start_dt = datetime(2025, 10, 2, 1, tzinfo=tz.eastern)
-        end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=tz.eastern)
-        timeline = util.build_timeline(start_dt, end_dt)
-        self.assertEqual(
-            cdmo.compute_cdmo_request_dates(timeline),
-            (start_dt.date(), end_dt.date()),
-        )
+        for zone in [tz.central, tz.mountain, tz.pacific]:
+            start_dt = datetime(2025, 10, 2, 1, tzinfo=zone)
+            end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
+            timeline = util.build_timeline(start_dt, end_dt)
+            self.assertEqual(
+                cdmo.compute_cdmo_request_dates(timeline),
+                (start_dt.date(), end_dt.date()),
+            )
 
     def test_cdmo_dates_daylight_savings_for_graph(self):
         """In DST, if first datetime is at midnight, start date is moved back one day regardless of zone."""

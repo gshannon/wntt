@@ -86,6 +86,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
+# TODO: Try removing this and see what happens.
 TIME_ZONE = "US/Eastern"
 
 USE_I18N = True
