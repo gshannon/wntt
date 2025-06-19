@@ -20,9 +20,9 @@ Here are the configuration files needed during the build/deploy process.
 
 -   DJANGO_KEY : A unique key used by Django.
 -   NAVD88_MLLW_CONVERSION : Floating point number with 2 digits of precision, which will be added to NAVD88 elevations to get MLLW. Should be updated when new National Tidal Datum Epoch is published.
--   MEAN_HIGH_WATER : Floating point number with 2 digits of precision, to indicate MHW value for the current epoch. Should be updated when new National Tidal Datum Epoch is published.
--   RECORD_TIDE : Floating point number with 2 digits of precision representing the highest tide to date, e.g. 13.44. Update when needed.
--   RECORD_TIDE_DATE : Date of highest tide to date, e.g. 1/13/2024
+-   MEAN_HIGH_WATER_MLLW : Floating point number with 2 digits of precision, to indicate MHW value for the current epoch, relative to MLLW. Should be updated when new National Tidal Datum Epoch is published.
+-   RECORD_TIDE_NAVD88 : Floating point number with 2 digits of precision representing the highest tide to date, e.g. 13.44, relative to NAVD88. Update as needed.
+-   RECORD_TIDE_DATE : Date of RECORD_TIDE_NAVD88, e.g. 1/13/2024
 
 ### wnttapp/.env.development, wnttapp/.env.production
 

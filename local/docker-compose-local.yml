@@ -19,8 +19,8 @@ services:
             DJANGO_SETTINGS_MODULE: project.settings.dev
             SECRET_KEY: ${DJANGO_KEY}
             NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
-            MEAN_HIGH_WATER: ${MEAN_HIGH_WATER}
-            RECORD_TIDE: ${RECORD_TIDE}
+            MEAN_HIGH_WATER_MLLW: ${MEAN_HIGH_WATER_MLLW}
+            RECORD_TIDE_NAVD88: ${RECORD_TIDE_NAVD88}
             RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
         ports:
             - 8000:8001
