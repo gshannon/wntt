@@ -86,12 +86,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-# TODO: Try removing this and see what happens.
-TIME_ZONE = "US/Eastern"
+# We do not need this because we do all date/time logic based on the time zone of the request.
+# TIME_ZONE = "US/Eastern"
+
+# This is not useful with the way we handle datetimes, so we don't use it.
+# USE_TZ = True
 
 USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
