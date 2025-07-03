@@ -1,5 +1,6 @@
 import logging
 import xml.etree.ElementTree as ElTree
+import os
 from datetime import date, datetime, timedelta
 
 from rest_framework.exceptions import APIException
@@ -7,6 +8,7 @@ from suds.client import Client
 
 from app import tzutil as tz
 from app import util
+from app.datasource.custom_transport import CustomTransport
 
 """
 Utility data and functions for graph building. 
@@ -156,7 +158,13 @@ def get_cdmo_xml(timeline: list, station: str, param: str) -> dict:
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     req_start_date, req_end_date = compute_cdmo_request_dates(timeline)
-    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
+
+    user_name = os.environ.get("CDMO_USER")
+    password = os.environ.get("CDMO_PASSWORD")
+    transport = CustomTransport(user_name, password)
+    soap_client = Client(
+        cdmo_wsdl, timeout=90, retxml=True, transport=transport
+    )  # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
 
     try:
         xml = soap_client.service.exportAllParamsDateRangeXMLNew(

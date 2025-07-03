@@ -21,6 +21,8 @@ services:
         environment:
             DJANGO_SETTINGS_MODULE: project.settings.prod
             SECRET_KEY: ${DJANGO_KEY}
+            CDMO_USER: ${CDMO_USER}
+            CDMO_PASSWORD: ${CDMO_PASSWORD}
             API_ALLOWED_HOST: api-c-staging
             NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
             MEAN_HIGH_WATER_MLLW: ${MEAN_HIGH_WATER_MLLW}

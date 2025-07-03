@@ -19,6 +19,8 @@ Here are the configuration files needed during the build/deploy process.
     Contains security and configuration values used by wnttapi. Docker compose will read these and add them to the Django runtime environment.  Format is KEY=VALUE with no quotes.
 
 -   DJANGO_KEY : A unique key used by Django.
+-   CDMO_USER : Username for CDMO API access
+-   CDMO_PASSWORD : Password for CDMO API access
 -   NAVD88_MLLW_CONVERSION : Floating point number with 2 digits of precision, which will be added to NAVD88 elevations to get MLLW. Should be updated when new National Tidal Datum Epoch is published.
 -   MEAN_HIGH_WATER_MLLW : Floating point number with 2 digits of precision, to indicate MHW value for the current epoch, relative to MLLW. Should be updated when new National Tidal Datum Epoch is published.
 -   RECORD_TIDE_NAVD88 : Floating point number with 2 digits of precision representing the highest tide to date, e.g. 13.44, relative to NAVD88. Update as needed.
