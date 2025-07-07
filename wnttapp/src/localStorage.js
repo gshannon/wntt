@@ -6,8 +6,7 @@ const _local_storage_prefix = 'wntt'
 
 const storageKey = (name) => `${_local_storage_prefix}-${name}-${_local_storage_version}`
 
-// If daily is true, we store an object with "day" and "value" keys, with the day
-// set to today's date.
+// Store an object in localStorage.
 export const setLocalStorage = (key, value) => {
     try {
         window.localStorage.setItem(storageKey(key), JSON.stringify(value))
@@ -16,8 +15,11 @@ export const setLocalStorage = (key, value) => {
     }
 }
 
-// If daily is true, we store an object with "day" and "value" keys, with the day
-// set to today's date. The date param is for testing only.
+// Store an object with "day" and "value" keys, with the day set to today's date.
+// This is used for values that should only be valid for today. Value should be
+// retrieved with getDailyLocalStorage, which will return the value only if
+// the stored date matches today's date.
+// The date param is for testing only, so it can be set to any date.
 export const setDailyLocalStorage = (key, value, date = new Date()) => {
     try {
         const dateKey = stringify(date)
@@ -28,8 +30,8 @@ export const setDailyLocalStorage = (key, value, date = new Date()) => {
     }
 }
 
-// If daily is true, we expect an object with "day" and "value" keys, and
-// return the value only if the day matches the current date.
+// Retrieve an object from localStorage, which was stored with setLocalStorage. Returns
+// an empty object if the key does not exist.
 export const getLocalStorage = (key) => {
     try {
         const data = window.localStorage.getItem(storageKey(key))
@@ -44,9 +46,9 @@ export const getLocalStorage = (key) => {
     }
 }
 
-// If daily is true, we expect an object with "day" and "value" keys, and
-// return the value only if the day matches the current date. The date param
-// is for testing only.
+// Retrieve an object from localStorage, which was stored with setDailyLocalStorage.
+// If the key does not exist, returns an empty object.  If key exists but the stored date does not
+// match today's date, it will delete the object with that key and return an empty object.
 export const getDailyLocalStorage = (key, date = new Date()) => {
     const lsKey = storageKey(key)
     try {

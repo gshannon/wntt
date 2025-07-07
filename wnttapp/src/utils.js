@@ -86,11 +86,11 @@ export const limitDate = (date) => {
     return new Date(Math.min(d2, maxGraphDate()))
 }
 
-// Compute the default date range for the graph.
-export const getDefaultDates = () => {
+// Compute the default date range for the graph. Returns mm/dd/yyyy strings.
+export const getDefaultDateStrings = () => {
     const today = new Date()
     return {
-        defaultStart: today,
-        defaultEnd: addDays(today, DefaultNumDays - 1),
+        defaultStartStr: stringify(today),
+        defaultEndStr: stringify(addDays(today, DefaultNumDays - 1)),
     }
 }

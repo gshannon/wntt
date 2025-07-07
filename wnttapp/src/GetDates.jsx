@@ -29,6 +29,7 @@ export default function GetDates(props) {
     const endCtl = props.endCtl
     const setEndCtl = props.setEndCtl
     const appContext = useContext(AppContext)
+    const setDateRangeStrings = props.setDateRangeStrings
     const [showTut, setShowTut] = useState(false)
 
     const months = [
@@ -57,7 +58,7 @@ export default function GetDates(props) {
 
         if (clickedButton.name === 'refresh') {
             // This will force a re-render even if the dates are the same as before
-            appContext.setDateRange(stringify(startCtl.start), stringify(endCtl.end))
+            setDateRangeStrings(stringify(startCtl.start), stringify(endCtl.end))
         } else if (clickedButton.name === 'reset') {
             props.resetDateControls() // Let parent reset the date controls, and the appContext.
         }
