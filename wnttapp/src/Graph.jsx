@@ -1,5 +1,5 @@
 import './css/Graph.css'
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useReducer, useState } from 'react'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
 import { Col, Row } from 'react-bootstrap'
@@ -10,7 +10,8 @@ import Plot from 'react-plotly.js'
 import useGraphData from './useGraphData'
 import {
     addDays,
-    getDefaultDates,
+    buildCacheKey,
+    getDefaultDateStrings,
     stringify,
     dateDiff,
     limitDate,
@@ -20,9 +21,11 @@ import {
     maxGraphDate,
     navd88ToMllw,
 } from './utils'
+import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
 import { AppContext } from './AppContext'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function Graph() {
     const appContext = useContext(AppContext)
@@ -31,28 +34,57 @@ export default function Graph() {
     const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
     const isTouchScreen =
         'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+    /* 
+    Start & end dates are strings in format mm/dd/yyyy with 0-padding.  See utils.stringify.
+    Javascript new Date() returns a date/time in the local time zone, so users should get the 
+    right date whatever timezone they're in. 
+    */
+    const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
+    const datesStorage = getDailyLocalStorage('dates')
+    const [startDateStr, setStartDateStr] = useState(datesStorage.start ?? defaultStartStr)
+    const [endDateStr, setEndDateStr] = useState(datesStorage.end ?? defaultEndStr)
+    // The user can refresh the graph using the same date range. but it seems React has no native support
+    // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
+    // eslint-disable-next-line no-unused-vars
+    const [dummy, forceGraphUpdate] = useReducer((x) => x + 1, 0)
 
     const [startCtl, setStartCtl] = useState({
         min: minGraphDate(),
-        start: new Date(appContext.startDate),
+        start: new Date(startDateStr),
         max: maxGraphDate(),
     })
+
     const [endCtl, setEndCtl] = useState({
-        min: new Date(appContext.startDate),
-        end: new Date(appContext.endDate),
-        max: addDays(new Date(appContext.startDate), MaxNumDays - 1),
+        min: new Date(startDateStr),
+        end: new Date(endDateStr),
+        max: addDays(new Date(startDateStr), MaxNumDays - 1),
     })
 
-    const {
-        isPending: loading,
-        data,
-        error,
-    } = useGraphData(appContext.startDate, appContext.endDate)
+    const setDateStorage = (start, end) => {
+        setDailyLocalStorage('dates', {
+            start: start,
+            end: end,
+        })
+    }
 
-    const daysShown = dateDiff(appContext.startDate, appContext.endDate) + 1
+    useEffect(() => {
+        setDateStorage(startDateStr, endDateStr)
+    }, [startDateStr, endDateStr])
+
+    const queryClient = useQueryClient()
+    const daysShown = dateDiff(startDateStr, endDateStr) + 1
+
+    const setDateRangeStrings = (startDateStr, endDateStr) => {
+        setStartDateStr(startDateStr)
+        setEndDateStr(endDateStr)
+        // If this query's already in cache, remove it first, else it won't refetch even if stale.
+        const key = buildCacheKey(startDateStr, endDateStr)
+        queryClient.removeQueries({ queryKey: key, exact: true })
+        forceGraphUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
+    }
 
     const setJumpDates = (directionFactor) => {
-        const newStart = limitDate(addDays(appContext.startDate, daysShown * directionFactor))
+        const newStart = limitDate(addDays(startDateStr, daysShown * directionFactor))
         const newEnd = limitDate(addDays(newStart, daysShown - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
@@ -60,23 +92,23 @@ export default function Graph() {
             end: newEnd,
             max: limitDate(addDays(newStart, MaxNumDays - 1)),
         })
-        appContext.setDateRange(stringify(newStart), stringify(newEnd))
+        setDateRangeStrings(stringify(newStart), stringify(newEnd))
     }
 
     // Reset the date controls to use the default range, as if entering app for the first time with no storage values.
     const resetDateControls = () => {
-        const { defaultStart, defaultEnd } = getDefaultDates()
+        const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
         setStartCtl({
             min: minGraphDate(),
-            start: new Date(defaultStart),
+            start: new Date(defaultStartStr),
             max: maxGraphDate(),
         })
         setEndCtl({
-            min: new Date(defaultStart),
-            end: new Date(defaultEnd),
-            max: addDays(new Date(defaultStart), MaxNumDays - 1),
+            min: new Date(defaultStartStr),
+            end: new Date(defaultEndStr),
+            max: addDays(new Date(defaultStartStr), MaxNumDays - 1),
         })
-        appContext.setDateRange(stringify(defaultStart), stringify(defaultEnd))
+        setDateRangeStrings(defaultStartStr, defaultEndStr)
     }
 
     const handlePreviousClick = (e) => {
@@ -94,6 +126,23 @@ export default function Graph() {
     const expandConstant = (value, count) => {
         return [value].concat(Array(count - 2).fill(null)).concat(value)
     }
+
+    // There is one scenario when we don't want to use the dates in React's state: when the user has
+    // left the browser tab open with the graph showing from 1 or more days prior. In this case, we
+    // want to ignore state and reset to the default date range. We detect this by checking dateStorage,
+    // which is only empty on the very first run, after local storage has been cleared, or when the
+    // current date does not match the local storage date. (See utils.getDailyLocalStorage.)
+    if (
+        datesStorage.start == undefined &&
+        (startDateStr, endDateStr) != (defaultStartStr, defaultEndStr)
+    ) {
+        console.log(
+            `DatesStorage is empty, resetting range from ${startDateStr}=${endDateStr} to default.`
+        )
+        resetDateControls()
+    }
+
+    const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr)
 
     const MyPlot = () => {
         if (error) {
@@ -439,6 +488,7 @@ export default function Graph() {
                 setStartCtl={setStartCtl}
                 endCtl={endCtl}
                 setEndCtl={setEndCtl}
+                setDateRangeStrings={setDateRangeStrings}
                 resetDateControls={resetDateControls}
             />
             {/*
