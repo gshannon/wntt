@@ -191,8 +191,9 @@ export default function Graph() {
             )
         }
 
+        const includingWindData = data.wind_speeds !== null
         const graph1_max = 1
-        const graph1_min = 0.52
+        const graph1_min = includingWindData ? 0.52 : 0.1
         const graph2_max = 0.48
         const graph2_min = 0
 
@@ -411,7 +412,7 @@ export default function Graph() {
                       },
                   ]
                 : []),
-            ...(data.wind_gusts !== null
+            ...(includingWindData
                 ? [
                       {
                           x: data.timeline,
@@ -432,7 +433,7 @@ export default function Graph() {
                       },
                   ]
                 : []),
-            ...(data.wind_speeds !== null
+            ...(includingWindData
                 ? [
                       {
                           x: data.timeline,
