@@ -11,6 +11,9 @@ export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
 export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
 
+// Returns whether or not the current screen is xs (extra small) size, per Bootstrap
+export const isSmallScreen = () => window.matchMedia('(max-width: 575px)').matches
+
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
 // compute them every time they are requested, in case the year changes while the app is running.
 // Note that the graph API has the same limits, so these should be kept in sync.
@@ -89,8 +92,9 @@ export const limitDate = (date) => {
 // Compute the default date range for the graph. Returns mm/dd/yyyy strings.
 export const getDefaultDateStrings = () => {
     const today = new Date()
+    const numDays = isSmallScreen() ? 1 : DefaultNumDays // Only show one day on small screens
     return {
         defaultStartStr: stringify(today),
-        defaultEndStr: stringify(addDays(today, DefaultNumDays - 1)),
+        defaultEndStr: stringify(addDays(today, numDays - 1)),
     }
 }

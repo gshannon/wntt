@@ -103,7 +103,7 @@ export default function GetDates(props) {
                 <Col sm={9}>
                     <Form onSubmit={handleSubmit}>
                         <Row className='align-items-center'>
-                            <Col sm={4} className='align-self-start'>
+                            <Col className='col-4 align-self-start'>
                                 <FormLabel>Start Date: </FormLabel>
                                 <DatePicker
                                     id='start-datepicker'
@@ -119,7 +119,7 @@ export default function GetDates(props) {
                                     Range: {rangeMin} - {rangeMax}
                                 </FormText>
                             </Col>
-                            <Col sm={4} className='align-self-start'>
+                            <Col className='col-4 align-self-start'>
                                 <FormLabel>End Date: </FormLabel>
                                 <DatePicker
                                     id='end-datepicker'
@@ -133,7 +133,7 @@ export default function GetDates(props) {
                                 <FormText muted>Maximum {MaxNumDays} day range</FormText>
                             </Col>
 
-                            <Col sm={4}>
+                            <Col className='col-4'>
                                 <Row className='mx-1'>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <OverlayTrigger
@@ -192,8 +192,8 @@ export default function GetDates(props) {
                     </Form>
                 </Col>
                 <Col sm={3}>
-                    <Row className='custom-elevation py-3 align-items-center'>
-                        <Col sm={7} className='text-center flex-grow-1'>
+                    <Row className='custom-elevation mx-0 py-3 align-items-center'>
+                        <Col xs={7} className='text-center flex-grow-1'>
                             Custom Elevation:{' '}
                             {appContext.customElevationNav ? (
                                 <strong>

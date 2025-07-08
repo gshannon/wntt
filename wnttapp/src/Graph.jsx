@@ -14,6 +14,7 @@ import {
     getDefaultDateStrings,
     stringify,
     dateDiff,
+    isSmallScreen,
     limitDate,
     MaxNumDays,
     maxCustomElevationNavd88,
@@ -205,6 +206,7 @@ export default function Graph() {
         */
 
         const layout = {
+            showlegend: !isSmallScreen(), // Don't show the legend on phones
             height: 420,
             template: 'plotly',
             plot_bgcolor: PlotBgColor,
@@ -233,9 +235,6 @@ export default function Graph() {
             hoverdistance: 1, // minimizing the problem, at the cost of flashing popups at high resolution
             hoversubplots: 'axis', // to include wind hovers in upper graph
             legend: { groupclick: 'toggleitem' },
-            modebar: {
-                remove: ['select2d', 'lasso2d', 'autoscale2d', 'zoomIn2d', 'zoomOut2d'],
-            },
             margin: { t: 60, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
             // Override default date format to more readable, with 12-hour clock.
             xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
@@ -464,9 +463,18 @@ export default function Graph() {
                     useResizeHandler={true}
                     style={{ width: '100%', height: '100%' }}
                     config={{
-                        responsive: true, // accept clicks
-                        scrollZoom: true, // allow zooming via scroll wheel
-                        displayModeBar: true, // always show button menu
+                        // staticPlot: isSmallScreen(), // this also removes hover text, so not useful
+                        responsive: !isSmallScreen(), // don't accept clicks on phones
+                        scrollZoom: !isSmallScreen(), // no zooming on phones
+                        modeBarButtonsToRemove: [
+                            'select2d',
+                            'lasso2d',
+                            'autoscale2d',
+                            'zoomIn2d',
+                            'zoomOut2d',
+                        ],
+
+                        displayModeBar: !isSmallScreen(), // don't show mode bar on small screens
                         displaylogo: false, // hide the plotly link in the menu bar
                     }}
                 />
