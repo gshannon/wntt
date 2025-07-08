@@ -208,6 +208,11 @@ def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:
         timeline: list of datetimes for the graph
         wind_dict: {dt: {speed, gust, dir, dir_str}}
     """
+
+    if len(wind_dict) == 0:
+        # No wind data, so return empty lists for all plots.
+        return None, None, None, None
+
     # {dt: {speed, gust, dir, dir_str}}
     wind_speed_plot = []
     wind_gust_plot = []
