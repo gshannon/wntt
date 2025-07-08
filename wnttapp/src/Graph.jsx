@@ -27,6 +27,19 @@ import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 import { useQueryClient } from '@tanstack/react-query'
 
+const PlotBgColor = '#f3f2f2'
+const CustomElevationColor = '#17becf'
+const RecordTideColor = '#d62728'
+const HighestAnnualPredictionColor = '#ff7f0e'
+const MeanHighWaterColor = '#8c564b'
+const ProjectedStormTideColor = '#e377c2'
+const ObservedTideColor = '#2ca02c'
+const PredictedTideColor = '#0b7dcc'
+const RecordedStormSurgeColor = '#bcbd22'
+const ProjectedStormSurgeColor = '#9467bd'
+const WindGustColor = '#0b7dcc'
+const WindSpeedColor = '#17becf'
+
 export default function Graph() {
     const appContext = useContext(AppContext)
     const customElevationNav = appContext.customElevationNav
@@ -193,7 +206,7 @@ export default function Graph() {
         const layout = {
             height: 420,
             template: 'plotly',
-            plot_bgcolor: '#f3f2f2',
+            plot_bgcolor: PlotBgColor,
             title: {
                 text:
                     'Wells Harbor Tides' +
@@ -291,7 +304,7 @@ export default function Graph() {
                           text: `Custom Elevation: ${customElevationMllw} ft`,
                           hoverinfo: 'text', // tells it to use 'text' in hover
                           mode: 'Lines',
-                          line: { color: '#17becf' },
+                          line: { color: CustomElevationColor },
                       },
                   ]
                 : []),
@@ -304,7 +317,7 @@ export default function Graph() {
                     text: '<b>Click below to toggle visibility.<br>See Help for details.</b>',
                 },
                 mode: 'lines',
-                line: { color: '#d62728' },
+                line: { color: RecordTideColor },
                 name: data.record_tide_title,
                 connectgaps: true,
                 hoverinfo: 'skip',
@@ -316,7 +329,7 @@ export default function Graph() {
                 legendgroup: 'grp1',
                 name: 'Highest Annual Predicted (' + data.highest_annual_predictions[0] + ')',
                 mode: 'Lines',
-                line: { color: '#ff7f0e' },
+                line: { color: HighestAnnualPredictionColor },
                 connectgaps: true,
                 hoverinfo: 'skip',
             },
@@ -327,7 +340,7 @@ export default function Graph() {
                 legendgroup: 'grp1',
                 mode: 'lines',
                 visible: 'legendonly', // Initially not shown
-                line: { color: '#8c564b' },
+                line: { color: MeanHighWaterColor },
                 name: `Mean High Water (${data.mean_high_water})`,
                 connectgaps: true,
                 hoverinfo: 'skip',
@@ -341,7 +354,7 @@ export default function Graph() {
                           legendgroup: 'grp1',
                           name: 'Projected Storm Tide',
                           mode: 'lines',
-                          line: { dash: 'dash', color: '#e377c2' },
+                          line: { dash: 'dash', color: ProjectedStormTideColor },
                           hovertemplate: '%{y} ft',
                       },
                   ]
@@ -355,7 +368,7 @@ export default function Graph() {
                           legendgroup: 'grp1',
                           name: 'Observed Tide',
                           mode: 'lines',
-                          line: { color: '#2ca02c' },
+                          line: { color: ObservedTideColor },
                           hovertemplate: hist_hover,
                       },
                   ]
@@ -366,7 +379,7 @@ export default function Graph() {
                 legendgroup: 'grp1',
                 type: 'scatter',
                 mode: 'lines',
-                line: { color: '#0b7dcc' },
+                line: { color: PredictedTideColor },
                 name: 'Predicted Tide',
                 hovertemplate: astro_hover,
             },
@@ -379,7 +392,7 @@ export default function Graph() {
                           type: 'scatter',
                           name: 'Recorded Storm Surge',
                           mode: 'lines',
-                          line: { color: '#bcbd22' },
+                          line: { color: RecordedStormSurgeColor },
                           hovertemplate: '%{y} ft',
                       },
                   ]
@@ -393,7 +406,7 @@ export default function Graph() {
                           type: 'scatter',
                           name: 'Projected Storm Surge',
                           mode: 'lines',
-                          line: { dash: 'dash', color: '#9467bd' },
+                          line: { dash: 'dash', color: ProjectedStormSurgeColor },
                           hovertemplate: '%{y} ft',
                       },
                   ]
@@ -407,7 +420,7 @@ export default function Graph() {
                           legendgroup: 'grp1',
                           mode: 'markers',
                           marker: {
-                              color: '#0b7dcc',
+                              color: WindGustColor,
                               size: 10,
                               symbol: 'arrow',
                               angle: data.wind_dir,
@@ -428,7 +441,7 @@ export default function Graph() {
                           legendgroup: 'grp1',
                           mode: 'markers',
                           marker: {
-                              color: '#17becf',
+                              color: WindSpeedColor,
                               size: 10,
                               symbol: 'arrow',
                               angle: data.wind_dir,
