@@ -209,11 +209,10 @@ def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:
         wind_dict: {dt: {speed, gust, dir, dir_str}}
     """
 
-    if len(wind_dict) == 0:
-        # No wind data, so return empty lists for all plots.
+    if timeline[0] > tz.now(timeline[0].tzinfo):
+        # There are no wind predictions, return None for all lists.
         return None, None, None, None
 
-    # {dt: {speed, gust, dir, dir_str}}
     wind_speed_plot = []
     wind_gust_plot = []
     wind_dir_plot = []
