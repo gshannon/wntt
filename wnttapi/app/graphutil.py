@@ -27,7 +27,6 @@ dictionaries of data keyed on datetime objects would entail a lot of bandwidth a
 """
 
 logger = logging.getLogger(__name__)
-record_tide_title = f"Record Tide, {cfg.get_record_tide_date().strftime('%b %d, %Y')}"
 
 # For now this is all we support, for Wells.  But someday if we support multiple reserves in multiple zones,
 # there will be others to support, so we'll probably pull this from the http client request.
@@ -100,10 +99,10 @@ def get_graph_data(start_date, end_date):
         "wind_dir": wind_dir_plot,
         "wind_dir_hover": wind_dir_hover,
         "record_tide": record_tide_mllw,
+        "record_tide_date": cfg.get_record_tide_date().strftime("%b %d, %Y"),
         "past_surge": past_surge_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
-        "record_tide_title": f"{record_tide_title} ({record_tide_mllw})",
         "mean_high_water": cfg.get_mean_high_water_mllw(),
         "highest_annual_predictions": highest_annual_predictions,
         "start_date": start_date_str,
@@ -237,9 +236,7 @@ def build_annual_astro_high_plot(timeline) -> list:
     """
     Build plot list for the highest annual predicted tide plot, using the configured settings.
     If it crosses a year boundary, we'll switch to that value at the appropriate time.
-    Since these will be shown as static, connected points, and not included in the hover text, we only need
-    to supply the initial and final values, with None's in between.
-    TODO: Just supply the values and offsets, and let the front end fill in the rest.
+    Since these may be shown in the hover text, we must repeat the values for each time in the timeline.
     """
     time_count = len(timeline)
     high1 = cfg.get_astro_high_tide_mllw(timeline[0].year)
@@ -247,7 +244,7 @@ def build_annual_astro_high_plot(timeline) -> list:
     # To determine the year of the last data point, we will ignore the extra midnight time added to the timeline,
     # so it's timeline[-2] not timeline[-1]
     if timeline[0].year == timeline[-2].year:
-        highs = [high1] + [None] * (time_count - 2) + [high1]
+        highs = [high1] * len(timeline)
     else:
         # We're crossing a year boundary. Get the 2nd year's high.
         year2 = timeline[-1].year
@@ -256,13 +253,7 @@ def build_annual_astro_high_plot(timeline) -> list:
         for offset, dt in enumerate(timeline):
             if dt.year == year2:
                 break
-        highs = (
-            [high1]
-            + [None] * (offset - 2)
-            + [high1, high2]
-            + [None] * (time_count - offset - 2)
-            + [high2]
-        )
+        highs = [high1] * offset + [high2] * (time_count - offset)
 
     if len(highs) != time_count:
         raise APIException()
