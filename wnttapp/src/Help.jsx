@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container'
 import { getData as getGraphData } from './tutorials/graph'
 import { getData as getMapData } from './tutorials/map'
 import Tutorial from './Tutorial'
+import { widthLessThan, SmallBase } from './utils'
 
 export default function Help() {
     const [showGraphTut, setShowGraphTut] = useState(false)
@@ -14,6 +15,9 @@ export default function Help() {
         setShowGraphTut(false)
         setShowMapTut(false)
     }
+
+    const videoWidth = widthLessThan(SmallBase) ? `${window.innerWidth}px` : '560px'
+    const videoHeight = widthLessThan(SmallBase) ? `${(window.innerWidth * 9) / 16}px` : '315px'
 
     return (
         <Container>
@@ -28,8 +32,8 @@ export default function Help() {
                         style={{ border: '1px solid black' }}
                         allow='fullscreen'
                         referrerPolicy='no-referrer'
-                        width='560'
-                        height='315'
+                        width={videoWidth}
+                        height={videoHeight}
                         src='https://www.youtube.com/embed/wr2nfjE43Gg?autoplay=0'></iframe>
                 </Col>
             </Row>
