@@ -106,14 +106,18 @@ export default function Map() {
     return (
         <Container>
             <Row className='py-2'>
-                <Col xs={4} className='d-flex justify-content-center align-items-center'>
+                <Col
+                    xs={12}
+                    sm={5}
+                    md={4}
+                    className='d-flex justify-content-center align-items-center'>
                     <Table>
                         <tbody>
                             <tr>
                                 <td>Latitude:</td>
                                 <td>
                                     {appContext.markerLocation
-                                        ? appContext.markerLocation.lat.toFixed(5) + ' º'
+                                        ? appContext.markerLocation.lat.toFixed(3) + ' º'
                                         : '-'}
                                 </td>
                             </tr>
@@ -121,7 +125,7 @@ export default function Map() {
                                 <td>Longitude:</td>
                                 <td>
                                     {appContext.markerLocation
-                                        ? appContext.markerLocation.lng.toFixed(5) + ' º'
+                                        ? appContext.markerLocation.lng.toFixed(3) + ' º'
                                         : '-'}
                                 </td>
                             </tr>
@@ -140,9 +144,9 @@ export default function Map() {
                         </tbody>
                     </Table>
                 </Col>
-                <Col xs={4} className='align-self-center'>
+                <Col xs={12} sm={4} className='align-self-center'>
                     <Row>
-                        <Col className='text-center'>
+                        <Col className='col-12 text-center'>
                             <OverlayTrigger
                                 overlay={
                                     <Tooltip id='id-set-button'>
@@ -183,7 +187,7 @@ export default function Map() {
                         <Col className='text-center fw-bold'>Map Style</Col>
                     </Row>
                     <Row>
-                        <Col xs={4} className='offset-2'>
+                        <Col className='col-6 text-end'>
                             <Form.Check
                                 inline
                                 type='radio'
@@ -193,7 +197,7 @@ export default function Map() {
                                 onChange={handleChange}
                             />
                         </Col>
-                        <Col xs={4}>
+                        <Col className='col-6'>
                             <Form.Check
                                 inline
                                 type='radio'
@@ -205,7 +209,11 @@ export default function Map() {
                         </Col>
                     </Row>
                 </Col>
-                <Col xs={4} className='d-flex justify-content-center align-items-center'>
+                <Col
+                    xs={12}
+                    sm={3}
+                    md={4}
+                    className='d-flex justify-content-center align-items-center'>
                     <Row>
                         <Col className='map-vertical-buttons'>
                             <OverlayTrigger
