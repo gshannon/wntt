@@ -4,3 +4,9 @@
         width: 75%;
     }
 }
+
+/* TODO: Here is how to disable the legend toggle! */
+/* .legendtoggle {
+    cursor: default;
+    pointer-events: none;
+} */

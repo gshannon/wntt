@@ -12,11 +12,12 @@ import {
     addDays,
     buildCacheKey,
     getDefaultDateStrings,
+    MediumBase,
     stringify,
     dateDiff,
-    isSmallScreen,
+    widthGreaterOrEqual,
     limitDate,
-    MaxNumDays,
+    getMaxNumDays,
     maxCustomElevationNavd88,
     minGraphDate,
     maxGraphDate,
@@ -46,6 +47,9 @@ export default function Graph() {
     const customElevationNav = appContext.customElevationNav
     const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
     const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
+    // If display isn't wide enough, we won't show the legend or the mode bar, and disallow zoom/pan.
+    const isWideEnough = widthGreaterOrEqual(MediumBase)
+    // Never allow touchscreen zoom/pan, because it causes problems with the hover text.
     const isTouchScreen =
         'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
     /* 
@@ -71,7 +75,7 @@ export default function Graph() {
     const [endCtl, setEndCtl] = useState({
         min: new Date(startDateStr),
         end: new Date(endDateStr),
-        max: addDays(new Date(startDateStr), MaxNumDays - 1),
+        max: addDays(new Date(startDateStr), getMaxNumDays() - 1),
     })
 
     const setDateStorage = (start, end) => {
@@ -98,13 +102,14 @@ export default function Graph() {
     }
 
     const setJumpDates = (directionFactor) => {
-        const newStart = limitDate(addDays(startDateStr, daysShown * directionFactor))
-        const newEnd = limitDate(addDays(newStart, daysShown - 1))
+        const daysToShow = Math.min(daysShown, getMaxNumDays())
+        const newStart = limitDate(addDays(startDateStr, daysToShow * directionFactor))
+        const newEnd = limitDate(addDays(newStart, daysToShow - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
             min: newStart,
             end: newEnd,
-            max: limitDate(addDays(newStart, MaxNumDays - 1)),
+            max: limitDate(addDays(newStart, getMaxNumDays() - 1)),
         })
         setDateRangeStrings(stringify(newStart), stringify(newEnd))
     }
@@ -120,7 +125,7 @@ export default function Graph() {
         setEndCtl({
             min: new Date(defaultStartStr),
             end: new Date(defaultEndStr),
-            max: addDays(new Date(defaultStartStr), MaxNumDays - 1),
+            max: addDays(new Date(defaultStartStr), getMaxNumDays() - 1),
         })
         setDateRangeStrings(defaultStartStr, defaultEndStr)
     }
@@ -198,15 +203,8 @@ export default function Graph() {
         const graph2_max = 0.48
         const graph2_min = 0
 
-        /*
-        Width of iPhone 14 Pro is 844 in landscape mode. (Height 390)
-        iPhone 13 mini Safari.  Portrait is 375 x 628. Landscape is 712 x 292. 
-          Chrome landscape is 712 x 319.
-        Samsung Galaxy is 914 x 412.
-        */
-
         const layout = {
-            showlegend: !isSmallScreen(), // Don't show the legend on phones
+            showlegend: isWideEnough,
             height: 420,
             template: 'plotly',
             plot_bgcolor: PlotBgColor,
@@ -222,19 +220,25 @@ export default function Graph() {
                 },
             },
             hovermode: 'x unified',
-            /* hoverlabel must be extra wide due to issue created by hoverdistance (see below)
-            hoverdistance controls how many pixels to the left or right of the cursor it will look for data when
-            trying to show hover text for a plot that has a None for the time the cursor is over. I'd like to
-            have this be a high number (default is 20), because swiping around is smoother (no flashing), but then
-            when we're on the border between past and future, where there's a data gap, it brings in data from
-            left or right-adjacent times, which is not what we want (because it's wrong). So here we make this
-            as low a number as we can get away with to compromise, tho even 1 is too high for small displays and 7 days.
-            This is a serious shortcoming, IMO. */
+            // hoverlabel must be extra wide due to issue created by hoverdistance (see below)
             hoverlabel: { namelength: 22 },
-            // hoverdistance: 8 - data.num_days,
-            hoverdistance: 1, // minimizing the problem, at the cost of flashing popups at high resolution
+            /* hoverdistance controls how many pixels to the left or right of the cursor it will look for data when
+            trying to show hover text for a plot that has a None for the time the cursor is over. While this is
+            an essential feature, since otherwise you'd have to hover exactly over a data point to see the
+            hover text, it has a serious drawback: with "x unified" hovermode, it will perform this logic on each plot 
+            independently. This means that if the closest non-null data for some plots are to the left, and others are
+            to the right, it will identify the x axis (time) based on on (probably the first it finds), and then 
+            show data from a different time for other plots, with the actual datetime in parens. This makes the display
+            much wider.  What I want is for it to skip those plots that have no data for the time displayed on the hover, 
+            but that seems to be impossible. */
+            hoverdistance: 1,
             hoversubplots: 'axis', // to include wind hovers in upper graph
-            legend: { groupclick: 'toggleitem' },
+            legend: {
+                groupclick: 'toggleitem',
+                title: {
+                    text: '<b>Click lines below to toggle visibility.<br>See Help for details.</b>',
+                },
+            },
             margin: { t: 60, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
             // Override default date format to more readable, with 12-hour clock.
             xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
@@ -258,20 +262,20 @@ export default function Graph() {
                 subplots: [['xy'], ['xy2']],
                 roworder: 'top to bottom',
             },
-            dragmode: isTouchScreen ? false : undefined,
+            dragmode: isWideEnough && !isTouchScreen ? 'zoom' : false,
         }
 
         // Build hover format for future astro tides, to include High/Low labels.
         const astro_hover = data.timeline.map((dt) => {
             const i = data.astro_hilo_dts.indexOf(dt)
             if (i < 0) {
-                return '%{y} ft'
+                return '%{y}'
             } else {
                 const val = data.astro_hilo_vals[i]
                 if (val == 'H') {
-                    return '%{y} ft (HIGH)'
+                    return '%{y} (HIGH)'
                 } else {
-                    return '%{y} ft (LOW)'
+                    return '%{y} (LOW)'
                 }
             }
         })
@@ -280,17 +284,18 @@ export default function Graph() {
         const hist_hover = data.timeline.map((dt) => {
             const i = data.hist_hilo_dts.indexOf(dt)
             if (i < 0) {
-                return '%{y} ft'
+                return '%{y}'
             } else {
                 const val = data.hist_hilo_vals[i]
                 if (val == 'H') {
-                    return '%{y} ft (HIGH)'
+                    return '%{y} (HIGH)'
                 } else {
-                    return '%{y} ft (LOW)'
+                    return '%{y} (LOW)'
                 }
             }
         })
 
+        // TODO: Order 1st 2 items by level desc
         const plotData = [
             ...(showElevation
                 ? [
@@ -300,8 +305,8 @@ export default function Graph() {
                           y: Array(data.timeline.length).fill(customElevationMllw),
                           legendgroup: 'grp1',
                           type: 'scatter',
-                          name: `Custom Elevation (${customElevationMllw} ft)`,
-                          text: `Custom Elevation: ${customElevationMllw} ft`,
+                          name: `Custom Elevation (${customElevationMllw})`,
+                          text: `Custom Elevation: ${customElevationMllw}`,
                           hoverinfo: 'text', // tells it to use 'text' in hover
                           mode: 'Lines',
                           line: { color: CustomElevationColor },
@@ -310,17 +315,19 @@ export default function Graph() {
                 : []),
             {
                 x: data.timeline,
-                y: expandConstant(data.record_tide, data.timeline.length),
+                y: Array(data.timeline.length).fill(data.record_tide),
                 type: 'scatter',
                 legendgroup: 'grp1',
-                legendgrouptitle: {
-                    text: '<b>Click below to toggle visibility.<br>See Help for details.</b>',
-                },
+                name: `Record Tide, ${data.record_tide_date} (${data.record_tide})`,
                 mode: 'lines',
                 line: { color: RecordTideColor },
-                name: data.record_tide_title,
-                connectgaps: true,
-                hoverinfo: 'skip',
+                // We want hover text only for small screens, otherwise it clutters the hover.
+                hoverinfo: isWideEnough ? 'skip' : 'all',
+                // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
+                // Otherwise must override default template of "{name} : %{y}".
+                hovertemplate: isWideEnough
+                    ? ''
+                    : `Record (${data.record_tide_date}) : %{y}<extra></extra>`,
             },
             {
                 x: data.timeline,
@@ -330,8 +337,9 @@ export default function Graph() {
                 name: 'Highest Annual Predicted (' + data.highest_annual_predictions[0] + ')',
                 mode: 'Lines',
                 line: { color: HighestAnnualPredictionColor },
-                connectgaps: true,
-                hoverinfo: 'skip',
+                // Again, hover text only on small screens
+                hoverinfo: isWideEnough ? 'skip' : 'all',
+                hovertemplate: isWideEnough ? '' : `Highest Annual Predicted: %{y}<extra></extra>`,
             },
             {
                 x: data.timeline,
@@ -355,7 +363,6 @@ export default function Graph() {
                           name: 'Projected Storm Tide',
                           mode: 'lines',
                           line: { dash: 'dash', color: ProjectedStormTideColor },
-                          hovertemplate: '%{y} ft',
                       },
                   ]
                 : []),
@@ -393,7 +400,6 @@ export default function Graph() {
                           name: 'Recorded Storm Surge',
                           mode: 'lines',
                           line: { color: RecordedStormSurgeColor },
-                          hovertemplate: '%{y} ft',
                       },
                   ]
                 : []),
@@ -407,7 +413,6 @@ export default function Graph() {
                           name: 'Projected Storm Surge',
                           mode: 'lines',
                           line: { dash: 'dash', color: ProjectedStormSurgeColor },
-                          hovertemplate: '%{y} ft',
                       },
                   ]
                 : []),
@@ -454,7 +459,6 @@ export default function Graph() {
                   ]
                 : []),
         ]
-
         return (
             <>
                 <Plot
@@ -463,9 +467,9 @@ export default function Graph() {
                     useResizeHandler={true}
                     style={{ width: '100%', height: '100%' }}
                     config={{
-                        // staticPlot: isSmallScreen(), // this also removes hover text, so not useful
-                        responsive: !isSmallScreen(), // don't accept clicks on phones
-                        scrollZoom: !isSmallScreen(), // no zooming on phones
+                        responsive: isWideEnough, // accept clicks?
+                        scrollZoom: isWideEnough, // zoom with mouse wheel?
+                        displayModeBar: isWideEnough, // show mode bar at all?
                         modeBarButtonsToRemove: [
                             'select2d',
                             'lasso2d',
@@ -473,9 +477,7 @@ export default function Graph() {
                             'zoomIn2d',
                             'zoomOut2d',
                         ],
-
-                        displayModeBar: !isSmallScreen(), // don't show mode bar on small screens
-                        displaylogo: false, // hide the plotly link in the menu bar
+                        displaylogo: false, // hide the plotly link in the mode bar
                     }}
                 />
                 <p style={{ fontSize: '.95em', textAlign: 'center' }}>

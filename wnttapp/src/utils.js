@@ -1,8 +1,6 @@
-export const MaxNumDays = 7 // This could be as high as 10, to support 10 full days of CDMO 15-min data.
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
-export const DefaultNumDays = 4
 export const MapBounds = [
     [44.01, -70.73],
     [43.01, -69.8],
@@ -10,9 +8,47 @@ export const MapBounds = [
 export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
 export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
+export const SmallBase = 576
+export const MediumBase = 768
+export const LargeBase = 992
+export const XLBase = 1200
+// XXLBase = 1400
 
-// Returns whether or not the current screen is xs (extra small) size, per Bootstrap
-export const isSmallScreen = () => window.matchMedia('(max-width: 575px)').matches
+// Do a media query to for displyable screen width
+export const widthGreaterOrEqual = (base) => window.matchMedia(`(min-width: ${base}px)`).matches
+export const widthLessThan = (base) => window.matchMedia(`(max-width: ${base - 1}px)`).matches
+
+// Returns the maximnum number of days to allow on the graph. We limit this based on screen width, so that
+// there are at least as many pixels in the graph as data points (96 per day). If not, some data points would
+// be skipped.
+export const getMaxNumDays = () => {
+    const width = window.innerWidth
+    if (width >= XLBase) {
+        return 7
+    }
+    if (width >= LargeBase) {
+        return 6
+    }
+    if (width >= MediumBase) {
+        return 4
+    }
+    if (width >= SmallBase) {
+        return 3
+    }
+    return 2
+}
+
+// Returns the default number of days to show on the graph.
+export const getDefaultNumDays = () => {
+    const width = window.innerWidth
+    if (width >= MediumBase) {
+        return 4
+    }
+    return 1
+}
+
+// Returns whether or not the current screen is small or extraxs (extra small) size, per Bootstrap
+// export const isSmallScreen = () => window.innerWidth < MediumBase
 
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
 // compute them every time they are requested, in case the year changes while the app is running.
@@ -92,9 +128,8 @@ export const limitDate = (date) => {
 // Compute the default date range for the graph. Returns mm/dd/yyyy strings.
 export const getDefaultDateStrings = () => {
     const today = new Date()
-    const numDays = isSmallScreen() ? 1 : DefaultNumDays // Only show one day on small screens
     return {
         defaultStartStr: stringify(today),
-        defaultEndStr: stringify(addDays(today, numDays - 1)),
+        defaultEndStr: stringify(addDays(today, getDefaultNumDays() - 1)),
     }
 }

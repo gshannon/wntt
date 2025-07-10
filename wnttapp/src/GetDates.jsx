@@ -11,7 +11,7 @@ import {
     dateDiff,
     limitDate,
     stringify,
-    MaxNumDays,
+    getMaxNumDays,
     minGraphDate,
     maxGraphDate,
     navd88ToMllw,
@@ -78,7 +78,7 @@ export default function GetDates(props) {
                 min: newStart,
                 // Set the end date to honor the numDays from previous settings, limited by overall max.
                 end: newEnd,
-                max: limitDate(addDays(newStart, MaxNumDays - 1)),
+                max: limitDate(addDays(newStart, getMaxNumDays() - 1)),
             })
         }
     }
@@ -130,7 +130,7 @@ export default function GetDates(props) {
                                     maxDate={stringify(endCtl.max)}
                                     onChange={(_, f) => handleEndChange(f)}
                                 />
-                                <FormText muted>Maximum {MaxNumDays} day range</FormText>
+                                <FormText muted>Maximum {getMaxNumDays()} day range</FormText>
                             </Col>
 
                             <Col className='col-4'>
