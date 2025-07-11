@@ -295,26 +295,15 @@ export default function Graph() {
             }
         })
 
-        // TODO: Order 1st 2 items by level desc
+        // Building the plot data, we are aware that the order in the array determines the display order
+        // in the legend and the hover text. We start with record tide, followed by highest annual prediction, which
+        // should be the highest 2 values. If there's a custom elevation, that will be inserted in the proper place
+        // so the 1st 3 are in descending order. After that, the precise order could vary by time, so we just make our
+        // best guess here.
         const plotData = [
-            ...(showElevation
-                ? [
-                      {
-                          x: data.timeline,
-                          // We need this one filled across cuz it appears on the hover text.
-                          y: Array(data.timeline.length).fill(customElevationMllw),
-                          legendgroup: 'grp1',
-                          type: 'scatter',
-                          name: `Custom Elevation (${customElevationMllw})`,
-                          text: `Custom Elevation: ${customElevationMllw}`,
-                          hoverinfo: 'text', // tells it to use 'text' in hover
-                          mode: 'Lines',
-                          line: { color: CustomElevationColor },
-                      },
-                  ]
-                : []),
             {
                 x: data.timeline,
+                // We need this one filled across cuz it may appear on the hover text.
                 y: Array(data.timeline.length).fill(data.record_tide),
                 type: 'scatter',
                 legendgroup: 'grp1',
@@ -459,6 +448,30 @@ export default function Graph() {
                   ]
                 : []),
         ]
+
+        if (showElevation) {
+            // If they are showing a custom elevation, insert it into the plot data, so that the
+            // 1st 3 items are in descending order.
+            const index =
+                customElevationMllw >= data.record_tide
+                    ? 0
+                    : customElevationMllw >= data.highest_annual_predictions[0]
+                    ? 1
+                    : 2
+            plotData.splice(index, 0, {
+                x: data.timeline,
+                // We need this one filled across cuz it may appear on the hover text.
+                y: Array(data.timeline.length).fill(customElevationMllw),
+                legendgroup: 'grp1',
+                type: 'scatter',
+                name: `Custom Elevation (${customElevationMllw})`,
+                text: `Custom Elevation: ${customElevationMllw}`,
+                hoverinfo: 'text', // tells it to use the 'text' field in hover
+                mode: 'Lines',
+                line: { color: CustomElevationColor },
+            })
+        }
+
         return (
             <>
                 <Plot
