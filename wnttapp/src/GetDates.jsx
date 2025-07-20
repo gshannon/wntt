@@ -23,13 +23,15 @@ import { getData } from './tutorials/graph'
 
 // Allow users to set start/end date range for the graph.
 
-export default function GetDates(props) {
-    const startCtl = props.startCtl
-    const setStartCtl = props.setStartCtl
-    const endCtl = props.endCtl
-    const setEndCtl = props.setEndCtl
+export default function GetDates({
+    startCtl,
+    setStartCtl,
+    endCtl,
+    setEndCtl,
+    setDateRangeStrings,
+    resetDateControls,
+}) {
     const appContext = useContext(AppContext)
-    const setDateRangeStrings = props.setDateRangeStrings
     const [showTut, setShowTut] = useState(false)
 
     const months = [
@@ -60,7 +62,7 @@ export default function GetDates(props) {
             // This will force a re-render even if the dates are the same as before
             setDateRangeStrings(stringify(startCtl.start), stringify(endCtl.end))
         } else if (clickedButton.name === 'reset') {
-            props.resetDateControls() // Let parent reset the date controls, and the appContext.
+            resetDateControls() // Let parent reset the date controls, and the appContext.
         }
     }
 

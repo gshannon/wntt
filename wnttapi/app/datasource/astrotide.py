@@ -1,12 +1,12 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from rest_framework.exceptions import APIException
 
-from app import tzutil as tz
 from app import util
+from app.timeline import Timeline
 
 logger = logging.getLogger(__name__)
 
@@ -22,54 +22,66 @@ base_url = (
 wells_station_id = "8419317"
 
 
-def get_astro_tides(timeline: list, last_recorded_dt: datetime) -> tuple[dict, dict]:
+def get_astro_tides(timeline: Timeline, max_observed_dt: datetime) -> tuple[dict, dict]:
     """
-    Fetch astronomical tide level predictions for the desired timeline.
-
-    Returns:
-        - {dt: val} predicted MLLW tides, using the 15-min interval API call
-        - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but for highs and lows only,
-            and only after the last recorded dt, if any, using the high-low API call. The "real_dt" is the actual
-            datetime of the high/low, likely not on a 15-min boundary.
-
-    When we call the API, we use:
+    Fetch astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the
+    tides & currents API, we use:
         - time_zone=lst-ldt, which means Local Standard Time, adjusted for daylight savings time. The timezone
             of the requested station will be used, and that should always match the timezone in the timeline,
             though there's no way to enforce that since the api call doesn't return the timezone.
         - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
             MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
 
-    The graph will be labeling recorded (past) tide data as high or low, so we don't include hi/low entries for past
-    predictions. These dicts are dense -- only datetimes with data are included, and both dicts are keyed in
-    chronological order.
+    We don't include hi/low entries for predictions that map to recorded tide data, since they would be used only for
+    labelling, and recorded tides always take precedence over predicted tides for "high" and "low" labelling.
+    These dicts are dense -- only datetimes with data are included, and both dicts are keyed in chronological order.
+
+    Args:
+        timeline (Timeline): the timeline
+        max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines
+
+    Returns:
+        tuple[dict, dict]:
+        - dict of 15-min interval predictions for the past portion of the timeline. {dt: val}.
+        - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but for highs and lows only,
+            which will be only for "later" times in the timeline, meaning after the last recorded tide time,
+            or the timeline start time if there is no past recorded data.  The "real_dt" is the actual datetime
+            of the high/low, likely not on a 15-min boundary.
     """
-    begin_date = timeline[0].strftime("%Y%m%d")
-    end_date = timeline[-1].strftime("%Y%m%d")
+
+    preds15_dict = {}
+    preds_hilo_dict = {}
+
+    # Part 1: pull 15-min predictions for the entire timeline. Even if we have a HiloTimeline for all future, where we show only
+    begin_date = timeline.start_dt.strftime("%Y%m%d")
+    end_date = timeline.end_dt.strftime("%Y%m%d")
     url15min = f"{base_url}&interval=15&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, url15min: {url15min}")
-
-    reg_pred_list = pull_data(url15min)
-    reg_preds_dict = find_regular(reg_pred_list, timeline)
-
-    # If timeline is all in the past, we're done.
-    if timeline[-1] < tz.now(timeline[0].tzinfo):
-        return reg_preds_dict, {}
-
-    # We only want to ask for data the app will display, so get anything past the last recorded data time.
-    cutoff = (
-        util.round_up_to_quarter(last_recorded_dt)
-        if last_recorded_dt is not None
-        else timeline[0]
+    logger.debug(
+        f"for timeline: {timeline.start_dt}-{timeline.end_dt}, url15min: {url15min}"
     )
+    pred_json = pull_data(url15min)
+    preds15_dict = pred15_json_to_dict(pred_json, timeline)
+    # logger.debug("preds15_dict:")
+    # logger.debug(util.pp.pprint(preds15_dict))
 
-    begin_date = cutoff.strftime("%Y%m%d")
-    urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"for timeline: {timeline[0]}-{timeline[-1]}, urlhilo: {urlhilo}")
+    # Part 2: For the the more precise High/Low values, we'll use a different API call.
+    if max_observed_dt is not None:
+        hilo_start_dt = max_observed_dt + timedelta(minutes=15)
+    else:
+        hilo_start_dt = timeline.start_dt
+    logger.debug(f"hilo_start_dt: {hilo_start_dt}")
 
-    future_hilo_list = pull_data(urlhilo)
-    future_hilo_dict = find_future(future_hilo_list, timeline, cutoff)
+    if hilo_start_dt <= timeline.end_dt:
+        start_date = hilo_start_dt.strftime("%Y%m%d")
+        end_date = timeline.end_dt.strftime("%Y%m%d")
 
-    return reg_preds_dict, future_hilo_dict
+        urlhilo = f"{base_url}&interval=hilo&station={wells_station_id}&begin_date={start_date}&end_date={end_date}"
+        logger.debug(f"for timeline: {start_date}-{end_date}, urlhilo: {urlhilo}")
+
+        future_preds_json = pull_data(urlhilo)
+        preds_hilo_dict = hilo_json_to_dict(future_preds_json, timeline, hilo_start_dt)
+
+    return preds15_dict, preds_hilo_dict
 
 
 def get_astro_highest(year) -> float:
@@ -83,34 +95,85 @@ def get_astro_highest(year) -> float:
     return find_highest(hilo_json_dict)
 
 
-def find_regular(pred_list: list, timeline: list) -> dict:
+def extract_past_hilos(hilo_list: list, timeline: list, cutoff: datetime) -> dict:
+    """Given a list of dictionaries, create a sparse dict of {dt: {val: type: ''H' or 'L'}} for all values
+    where the actual hi/lo datetime, rounded to closest 15-min, exists in the requested timeline.
+    """
+    past_hilos = {}
+    for pred in hilo_list:
+        dts = pred["t"]
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
+        # Only save data that's < the cuttoff time and in the requested timeline. Remember hi/lo prediction
+        # dates are exact minutes, not aligned with 15-min intervals.
+        if timeline[0] <= dt <= cutoff:
+            val = pred["v"]
+            typ = pred["type"]
+            rounded_dt = util.round_to_quarter(dt)
+            if rounded_dt in timeline:
+                if typ not in ["H", "L"]:
+                    logger.error(f"Unknown type {typ} for date {dts}")
+                    raise APIException()
+                past_hilos[rounded_dt] = {
+                    "value": util.navd88_feet_to_mllw_feet(float(val)),
+                    "type": typ,
+                }
+            else:
+                logger.error(
+                    f"Rounded date {rounded_dt} not in timeline {timeline}. Skipping."
+                )
+    return past_hilos
+
+
+def pred15_json_to_dict(pred_json: list, timeline: Timeline) -> dict:
     """
     Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
     sparse dict of {dt: value} for all values that exist in the requested timeline. Converts NAVD88 to MLLW.
     """
     reg_preds_dict = {}  # {dt: value}
-    for pred in pred_list:
+    for pred in pred_json:
         dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
-        if dt in timeline:
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
+        if timeline.contains(dt):
             val = pred["v"]
             reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(float(val))
     return reg_preds_dict
 
 
-def find_future(hilo_list: list, timeline: list, cutoff: datetime) -> dict:
+def hilo_json_to_dict(
+    hilo_json: list, timeline: Timeline, hilo_start_dt: datetime
+) -> dict:
     """
+    Convert json returned from the api call into a dict of high or low data values.
+    Args:
+        hilo_json (string): json content
+        timeline (Timeline): the requested timeline. Could be GraphTimeline or HiloTimeline.
+        hilo_start_dt: Meant to be 15 min past the latest observed tide, or None if that doesn't
+          exit. Data from times before this are ignored, even if part of timeline.
+
+    Returns:
+        dict: The key is the closest datetime that appears in the raw timeline, and the
+        value is a dict describing the actual high or low values.
+        Inner dict elements are "real_dt" (actual time), "value" (pred) and "type" ('H' or 'L').
+
+    Raises:
+        APIException: Invalid data from API
+
+    """
+    """
+    Params:
+
     Given a list of high/low predictions like {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}, return
     a sparse dict of {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} for all values that
-    exist in the requested timeline and are greater or equal to the given cutoff time. Converts NAVD88 to MLLW.
+    exist in the requested timeline and are greater than the last observed tide time. Converts NAVD88 to MLLW.
     """
     future_hilo_dict = {}
-    for pred in hilo_list:
+    for pred in hilo_json:
         dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline[0].tzinfo)
-        # Only save data that's >= the cuttoff time and in the requested timeline. Remember hi/lo prediction
-        # dates are exact minutes, not aligned with 15-min intervals.
-        if dt >= cutoff and timeline[0] <= dt <= timeline[-1]:
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
+        # If we know the time of the last observation, use that as the cutoff instead of current time, since
+        # there's a ~1 hour latency for observed data, and it's better to show the most accurate predictions
+        # when we can. Remember hi/lo prediction dates are exact minutes, not aligned with 15-min intervals.
+        if hilo_start_dt <= dt <= timeline.end_dt:
             val = pred["v"]
             typ = pred["type"]  # should be 'H' or 'L'
             if typ not in ["H", "L"]:
@@ -143,7 +206,9 @@ def find_highest(hilo_json_dict) -> float:
 
 
 def pull_data(url) -> list:
-    """Call the API and return the predictions as a json list."""
+    """Call the API and return the predictions as a json list of dictionaries in the form
+    { "t": "2025-05-06 05:07", "v": "-3.630", "type": "L" },
+    """
     try:
         response = requests.get(url)
     except Exception as e:

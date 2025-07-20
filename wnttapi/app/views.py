@@ -24,9 +24,10 @@ class CreateGraphView(APIView):
 
         start_date = datetime.strptime(request.data["start_date"], "%m/%d/%Y").date()
         end_date = datetime.strptime(request.data["end_date"], "%m/%d/%Y").date()
+        hilo_mode = request.data["hilo_mode"]
 
         # Gather all data needed for the graph and pass it back here
-        graph_data = gr.get_graph_data(start_date, end_date)
+        graph_data = gr.get_graph_data(start_date, end_date, hilo_mode)
         return Response(data=graph_data)
 
 

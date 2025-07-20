@@ -2,7 +2,7 @@
 from .base import *
 
 """
-TODO: consider these
+Might want to consider these some day
 - EMAIL_BACKEND
 - DEFAULT_FROM_EMAIL
 - SERVER_EMAIL

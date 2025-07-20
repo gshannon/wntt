@@ -207,8 +207,9 @@ export default function About() {
                 </Accordion.Item>
             </Accordion>
 
-            <div className='p-3' style={{ float: 'right' }}>
-                <i>Build {import.meta.env.VITE_BUILD_NUM ?? '?'}</i>
+            <div className='p-3' style={{ fontSize: '.8em', float: 'right' }}>
+                Build {import.meta.env.VITE_BUILD_NUM ?? '?'}, IW={window.innerWidth} OW=
+                {window.outerWidth} DPR={window.devicePixelRatio}
             </div>
         </Container>
     )
