@@ -1,12 +1,13 @@
 import logging
 from datetime import date, timedelta
 
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 
 from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo
 from app.datasource import surge as sg
+from app.timeline import GraphTimeline, HiloTimeline
 
 from . import config as cfg
 from . import tzutil as tz
@@ -33,64 +34,83 @@ logger = logging.getLogger(__name__)
 time_zone = tz.eastern
 
 
-def get_graph_data(start_date, end_date):
-    """Takes a start date and end date and returns rendered html containing the line graph"""
+def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
+    """Generate plot data.
+
+    Args:
+        start_date (date): First day of data
+        end_date (date): Last day of data (may be same as first). 00:00 of following day will be added automatically.
+        hilo_mode (bool): If true, data will include only high and low tide data points.
+
+    Returns:
+        dict: All data required for graph, suitable for json
+    """
 
     validate_dates(start_date, end_date)
 
-    # In the timeline, we will build data for entire dates between start and end, inclusive. This adds a single
-    # datetime at midnight of the following day, so the graph looks tidy on the right side.
-    timeline = util.build_graph_timeline(start_date, end_date, time_zone)
+    if hilo_mode:
+        timeline = HiloTimeline(start_date, end_date, time_zone)
+    else:
+        timeline = GraphTimeline(start_date, end_date, time_zone)
 
-    # Retrieve all data from external sources. All these dicts are dense -- they only have entries for actual data,
-    # not None. They are keyed by the datetime that matches the timeline.
+    # Phase 1: Retrieve all data from external sources. All these dicts are dense -- they
+    # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
+
+    # Start with the observed tide data, which will be useful in gathering other data.
     obs_dict = cdmo.get_recorded_tides(timeline)
-    max_observed_dt = max(obs_dict) if len(obs_dict) > 0 else None
-    obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)  # {dt: 'H' or 'L'}
-    wind_dict = cdmo.get_recorded_wind_data(
-        timeline
-    )  # {dt: {speed, gust, dir, dir_str}}
-    astro_15m_dict, astro_future_hilo_dict = astro.get_astro_tides(
-        timeline, max_observed_dt
-    )
-    past_surge_dict = sg.calculate_past_storm_surge(timeline, astro_15m_dict, obs_dict)
-    future_surge_dict = sg.get_future_surge_data(
-        timeline, max_observed_dt
-    )  # {dt: surge_value}
+    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
 
-    # Now we have all the data we need. Build the lists required by the graph plots, which must be the
-    # same length as the timeline so the front end can graph them. They are sparse -- with None for any missing data.
-    hist_tides_plot = list(map(lambda dt: obs_dict.get(dt, None), timeline))
-    hist_hilo_dts = obs_hilo_dict.keys()
-    hist_hilo_vals = obs_hilo_dict.values()
+    # Determine highs and lows from observed data.
+    obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
+
+    wind_dict = cdmo.get_recorded_wind_data(timeline)
+
+    astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
+        timeline, last_recorded_dt
+    )
+    if hilo_mode:
+        # The HiloTimeline needs to keep track of these for later processing.
+        timeline.register_hilo_times(
+            past_hilo_dts=list(obs_hilo_dict.keys()),
+            later_hilo_dts=list(astro_later_hilo_dict.keys()),
+        )
+
+    past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
+    future_surge_dict = sg.get_future_surge_data(timeline, last_recorded_dt)
+
+    # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
+    # by the graph plots, which must be the same length as the timeline so the front end can graph them.
+    # They are sparse rather than dense -- they have None for any missing data.
+    hist_tides_plot = timeline.build_plot(lambda dt: obs_dict.get(dt, None))
+
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
         timeline, wind_dict
     )
-    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_data(
-        timeline, astro_15m_dict, astro_future_hilo_dict
+    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_plot(
+        timeline, astro_preds15_dict, astro_later_hilo_dict
     )
-    past_surge_plot = list(map(lambda dt: past_surge_dict.get(dt, None), timeline))
+
+    past_surge_plot = timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
-        timeline, future_surge_dict, astro_15m_dict, astro_future_hilo_dict
+        timeline, future_surge_dict, astro_preds15_dict, astro_later_hilo_dict
     )
-    highest_annual_predictions = build_annual_astro_high_plot(timeline)
 
     # If the timeline includes any future times, we want to replace the times of the high/low tides with the
     # actual times of those highs and lows, rather than the nearest 15 minute interval. This gives the users
-    # the most accurate information possible.
-    best_timeline = [
-        astro_future_hilo_dict[dt]["real_dt"] if dt in astro_future_hilo_dict else dt
-        for dt in timeline
-    ]
-    past_tl_index, future_tl_index = util.get_timeline_boundaries(best_timeline)
-    start_date_str = timeline[0].strftime("%m/%d/%Y")
-    end_date_str = timeline[-2].strftime("%m/%d/%Y")
+    # the most accurate information possible. Since the timeline is just a list of datetimes and the plots
+    # are a list of data values or None, all we have to do is alter the timeline and provide minor adjustments
+    # to the original 00/15/30/45 minute specs as appropriate. This is the version of the timeline we'll
+    # return to the caller.
+    final_timeline = timeline.get_final_times(astro_later_hilo_dict)
+    past_tl_index, future_tl_index = util.get_timeline_boundaries(final_timeline)
+    start_date_str = timeline.start_date.strftime("%m/%d/%Y")
+    end_date_str = timeline.end_date.strftime("%m/%d/%Y")
     record_tide_mllw = util.navd88_feet_to_mllw_feet(cfg.get_record_tide_navd88())
     return {
-        "timeline": best_timeline,
+        "timeline": final_timeline,
         "hist_tides": hist_tides_plot,
-        "hist_hilo_dts": hist_hilo_dts,
-        "hist_hilo_vals": hist_hilo_vals,
+        "hist_hilo_dts": list(obs_hilo_dict.keys()),
+        "hist_hilo_vals": obs_hilo_dict.values(),
         "astro_tides": astro_tides_plot,
         "astro_hilo_dts": astro_hilo_dts,
         "astro_hilo_vals": astro_hilo_vals,
@@ -104,7 +124,7 @@ def get_graph_data(start_date, end_date):
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
         "mean_high_water": cfg.get_mean_high_water_mllw(),
-        "highest_annual_predictions": highest_annual_predictions,
+        "highest_annual_prediction": cfg.get_astro_high_tide_mllw(start_date.year),
         "start_date": start_date_str,
         "end_date": end_date_str,
         "num_days": (end_date - start_date).days + 1,
@@ -114,153 +134,181 @@ def get_graph_data(start_date, end_date):
 
 
 def build_future_surge_plots(
-    timeline, future_surge_dict, reg_preds_dict, future_hilo_dict
+    timeline: GraphTimeline,
+    future_surge_dict: dict,
+    reg_preds_dict: dict,
+    astro_hilo_dict: dict,
 ) -> tuple[list, list]:
     """
-    Build 2 plots for future surge data:
-    1. Future surve values
-    2. Future storm tide values, which is the sum of the future surge and the predicted tide.
-    Params:
+    Build 2 plots for future surge data. For each timeline datetime, we'll use the most accurate prediction we have
+    (future_hilo_dict if present), then add that to the surge value to produce predicted storm tide.
+
+    Args:
         timeline: list of datetimes
         future_surge_dict: {dt: surge_value}
         reg_preds_dict: {dt: value}
         future_hilo_dict: {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
     """
-    future_surge_plot = []
-    future_storm_tide_plot = []
     if len(future_surge_dict) == 0:
         # No future surge data, so return None for both plots.
         return None, None
-    first_dt = min(future_surge_dict)
-    last_surge_dt = None
-    last_surge_val = None
-    for dt in timeline:
-        if dt >= first_dt:
-            future_pred = (
-                future_hilo_dict.get(dt)["value"]
-                if dt in future_hilo_dict
-                else reg_preds_dict.get(dt, None)
-            )
-            if future_pred is None:
-                logger.error(f"Missing future prediction for {dt}")
-                future_surge_plot.append(None)
-                future_storm_tide_plot.append(None)
-            else:
-                surge_val = future_surge_dict.get(dt, None)
-                if surge_val is not None:
-                    last_surge_dt = dt
-                    last_surge_val = surge_val
-                elif last_surge_dt is not None and dt - last_surge_dt < timedelta(
-                    hours=1
-                ):
-                    surge_val = last_surge_val
-                if surge_val is not None:
-                    future_surge_plot.append(surge_val)
-                    future_storm_tide_plot.append(round(surge_val + future_pred, 2))
-                else:
-                    future_surge_plot.append(None)
-                    future_storm_tide_plot.append(None)
-        else:
-            future_surge_plot.append(None)
-            future_storm_tide_plot.append(None)
+
+    # If a dt doesn't have a surge value, we can use one up to 45 minutes older, since surge values
+    # are on the hour.
+    def find_nearby_surge(dt):
+        surge = None
+        try_dt = dt
+        while True:
+            surge = future_surge_dict.get(try_dt, None)
+            if surge is not None:
+                break
+            try_dt -= timedelta(minutes=15)
+            if try_dt < dt - timedelta(minutes=45):
+                break
+        return surge
+
+    def get_surge_and_hilo_prediction(dt):
+        surge_val = find_nearby_surge(dt)
+        if surge_val is None:
+            return None, None
+        hilo_pred = (
+            astro_hilo_dict.get(dt)["value"]
+            if dt in astro_hilo_dict
+            else reg_preds_dict.get(dt, None)
+        )
+        if surge_val is not None and hilo_pred is None:
+            logger.error(f"Missing future prediction for {dt}")
+            return None, None
+        return surge_val, hilo_pred
+
+    def handle_surge_pred(dt):
+        surge_val, _ = get_surge_and_hilo_prediction(dt)
+        return surge_val
+
+    def handle_storm_surge(dt):
+        surge_val, hilo_pred = get_surge_and_hilo_prediction(dt)
+        return round(surge_val + hilo_pred, 2) if surge_val and hilo_pred else None
+
+    future_surge_plot = timeline.build_plot(handle_surge_pred)
+    future_storm_tide_plot = timeline.build_plot(handle_storm_surge)
+
+    if len(future_surge_plot) != len(future_storm_tide_plot):
+        logger.error(f"{len(future_surge_plot)} != {len(future_storm_tide_plot)}")
+        raise ValidationError()
 
     return future_surge_plot, future_storm_tide_plot
 
 
-def build_astro_data(
-    timeline, reg_preds_dict, future_hilo_dict
+def build_astro_plot(
+    timeline: GraphTimeline, reg_preds_dict: dict, later_hilo_dict: dict
 ) -> tuple[list, list, list]:
     """
-    Builds lists for the astronomical tide data.
-    1. Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
-    2. List of just the datetimes of the high/low tides, for convenience of the app
-    3. List of the matching high/low tide values, for convenience of the app
-    Params:
-        timeline: list of datetimes
-        reg_preds_dict: {dt: value}
-        future_hilo_dict: {dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
-    """
-    astro_tides_plot = []
-    astro_hilo_dts = []
-    astro_hilo_vals = []
+    Builds plots for the astronomical tide data. We essentially merge the regular 15-min predictions and the
+    hilo data, preferring the hilo value if present, which is more accurate.
 
-    for dt in timeline:
-        if dt in future_hilo_dict:
-            item = future_hilo_dict[dt]
-            astro_tides_plot.append(item["value"])
-            astro_hilo_dts.append(item["real_dt"])
-            astro_hilo_vals.append(item["type"])
+    Args:
+        timeline (GraphTimeline): the time line
+        reg_preds_dict (dict): {dt: value} for 15-min predictions over entire timeline
+        later_hilo_dict (dict): {dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} High/Low predictions after last observed.
+
+    Returns:
+        tuple[list, list, list]:
+        - Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
+        - List of just the datetimes of the high/low tides, for convenience of the app
+        - List of the matching high/low tide labels ('H' or 'L'), for convenience of the app
+    """
+
+    def check_later(dt, key):
+        if dt in later_hilo_dict:
+            return later_hilo_dict[dt].get(key, None)
         else:
-            astro_tides_plot.append(reg_preds_dict.get(dt, None))
+            return None
 
-    return astro_tides_plot, astro_hilo_dts, astro_hilo_vals
+    def check_value(dt):
+        val = check_later(dt, "value")
+        return val or reg_preds_dict.get(dt, None)
 
+    def check_real_dt(dt):
+        return check_later(dt, "real_dt")
 
-def build_wind_plots(timeline, wind_dict) -> tuple[list, list, list, list]:
+    def check_type(dt):
+        return check_later(dt, "type")
+
+    astro_tides_plot = timeline.build_plot(check_value)
+    astro_hilo_dts = timeline.build_plot(check_real_dt)
     """
-    Convert wind data dict to sparse plot lists.
-    1. Wind speed
-    2. Wind gust
-    3. Wind direction
-    4. Wind direction string
-    Params:
-        timeline: list of datetimes for the graph
-        wind_dict: {dt: {speed, gust, dir, dir_str}}
-    """
+    TODO: There's a small window where a High or Low does not appear on hover text, which is a result of using observed
+    levels for discovering what's high and low rather than just using predicted values (since actual
+    seems better than predicted).
 
-    if timeline[0] > tz.now(timeline[0].tzinfo):
+    Example: 
+    - observed low is at 12:30
+    - last available observed data is from 12:30, e.g. 12:00=1.7, 12:15=1.1, 12:30=0.9. This means the last dt 12:30 will NOT
+    -   be labeled as 'Low' because there's no rising data point afterwards for it to know that.
+    - the hilo "later" prediction data only starts at {last observed time} + {15 min}, or 12:45. (See astrotide, hilo_start_dt)
+    This means the 15-min data will display at 12:30, as it's still part of the past, and will not be labeled.
+    Ergo, no low tide is labelled, even though there's obviously one there by looking at the lines.
+    """
+    astro_hilo_labels = timeline.build_plot(check_type)
+
+    return astro_tides_plot, astro_hilo_dts, astro_hilo_labels
+
+
+def build_wind_plots(
+    timeline: GraphTimeline, wind_dict: dict
+) -> tuple[list, list, list, list]:
+    """Convert the recorded wind data to 4 plots for Plotly scatter plots.
+
+    Args:
+        timeline (GraphTimeline): timeline
+        wind_dict (dict):     )  dict of the form {dt: {speed, gust, dir, dir_str}}
+
+    Returns:
+        1. Wind speed
+        2. Wind gust
+        3. Wind direction (0-360, to drive marker angle)
+        4. Wind direction string (for hover text display)
+    """
+    if len(wind_dict) == 0:
         # There are no wind predictions, return None for all lists.
         return None, None, None, None
 
-    wind_speed_plot = []
-    wind_gust_plot = []
-    wind_dir_plot = []
-    wind_dir_hover = []
-    for dt in timeline:
+    def check_item(dt, key):
         if dt in wind_dict:
-            wind_data = wind_dict[dt]
-            wind_speed_plot.append(wind_data["speed"])
-            wind_gust_plot.append(wind_data["gust"])
-            wind_dir_plot.append(wind_data["dir"])
-            wind_dir_hover.append(wind_data["dir_str"])
+            return wind_dict[dt].get(key, None)
         else:
-            wind_speed_plot.append(None)
-            wind_gust_plot.append(None)
-            wind_dir_plot.append(None)
-            wind_dir_hover.append(None)
+            return None
+
+    def check_speed(dt):
+        return check_item(dt, "speed")
+
+    def check_gust(dt):
+        return check_item(dt, "gust")
+
+    def check_dir(dt):
+        return check_item(dt, "dir")
+
+    def check_dir_str(dt):
+        return check_item(dt, "dir_str")
+
+    wind_speed_plot = timeline.build_plot(check_speed)
+    wind_gust_plot = timeline.build_plot(check_gust)
+    wind_dir_plot = timeline.build_plot(check_dir)
+    wind_dir_hover = timeline.build_plot(check_dir_str)
 
     return wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover
 
 
-def build_annual_astro_high_plot(timeline) -> list:
+def validate_dates(start: date, end: date):
+    """Verify the requested start and end dates are legal.
+
+    Args:
+        start (date): First full date to display
+        end (date): Last full day to display
+
+    Raises:
+        ValidationError: If date range is too big, or end < start.
     """
-    Build plot list for the highest annual predicted tide plot, using the configured settings.
-    If it crosses a year boundary, we'll switch to that value at the appropriate time.
-    Since these may be shown in the hover text, we must repeat the values for each time in the timeline.
-    """
-    time_count = len(timeline)
-    high1 = cfg.get_astro_high_tide_mllw(timeline[0].year)
-
-    # To determine the year of the last data point, we will ignore the extra midnight time added to the timeline,
-    # so it's timeline[-2] not timeline[-1]
-    if timeline[0].year == timeline[-2].year:
-        highs = [high1] * len(timeline)
-    else:
-        # We're crossing a year boundary. Get the 2nd year's high.
-        year2 = timeline[-1].year
-        high2 = cfg.get_astro_high_tide_mllw(year2)
-        # Figure out where in the index year 2 starts
-        for offset, dt in enumerate(timeline):
-            if dt.year == year2:
-                break
-        highs = [high1] * offset + [high2] * (time_count - offset)
-
-    if len(highs) != time_count:
-        raise APIException()
-    return highs
-
-
-def validate_dates(start, end):
     earliest_date = date(cfg.get_supported_years()[0], 1, 1)
     latest_date = date(cfg.get_supported_years()[-1], 12, 31)
     if (

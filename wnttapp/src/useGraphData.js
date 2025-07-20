@@ -4,7 +4,7 @@ import { buildCacheKey } from './utils'
 import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
 import axios from 'axios'
 
-export default function useGraphData(startDate, endDate) {
+export default function useGraphData(startDate, endDate, hiloMode) {
     // Using useQuery here so we can have dependent queries.
     const ourVersion = import.meta.env.VITE_BUILD_NUM
     const oneMinute = 60_000
@@ -47,6 +47,7 @@ export default function useGraphData(startDate, endDate) {
             const res = await axios.post(import.meta.env.VITE_API_GRAPH_URL, {
                 start_date: startDate,
                 end_date: endDate,
+                hilo_mode: hiloMode,
                 ip: clientIp ?? 'unknown',
                 time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 app_version: import.meta.env.VITE_BUILD_NUM,
@@ -60,8 +61,8 @@ export default function useGraphData(startDate, endDate) {
         // But allow longer fresh period. As long as they spend less than gcTime on other pages between
         // hitting the graph page, no refetch is needed, as gc timer is reset when you return to graph
         // and stale timer is still running.
-        staleTime: oneMinute * 5,
-        gcTime: oneMinute,
+        staleTime: 10_000,
+        gcTime: 1_000,
     })
 
     return { isPending, data, error }

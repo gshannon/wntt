@@ -5,6 +5,7 @@ from unittest import TestCase
 import app.datasource.astrotide as astrotide
 import app.tzutil as tz
 import app.util as util
+from app.timeline import Timeline
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,18 +23,27 @@ class TestAstro(TestCase):
 
     def test_parse_15m_predictions(self):
         """Able to parse 15m predictions from a json list of predictions from API call."""
+        zone = tz.eastern
         raw = util.read_file(f"{path}/data/astro_15m.json")
         contents = astrotide.extract_json(raw)
         # file has entire day of data, but we'll extract just 1 hour
-        start_dt = datetime(2025, 5, 6, 1, tzinfo=tz.eastern)
-        end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=tz.eastern)
-        timeline = util.build_timeline(start_dt, end_dt)
-        preds = astrotide.find_regular(contents, timeline)
-        self.assertEqual(len(preds), 4)
-        self.assertEqual(preds[timeline[0]], util.navd88_feet_to_mllw_feet(-3.624))
-        self.assertEqual(preds[timeline[1]], util.navd88_feet_to_mllw_feet(-3.621))
-        self.assertEqual(preds[timeline[2]], util.navd88_feet_to_mllw_feet(-3.564))
-        self.assertEqual(preds[timeline[3]], util.navd88_feet_to_mllw_feet(-3.452))
+        start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
+        end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=zone)
+        tline = Timeline(start_dt, end_dt)
+        preds_dict = astrotide.pred15_json_to_dict(contents, tline)
+        self.assertEqual(len(preds_dict), 4)
+        self.assertEqual(
+            preds_dict[tline._raw_times[0]], util.navd88_feet_to_mllw_feet(-3.624)
+        )
+        self.assertEqual(
+            preds_dict[tline._raw_times[1]], util.navd88_feet_to_mllw_feet(-3.621)
+        )
+        self.assertEqual(
+            preds_dict[tline._raw_times[2]], util.navd88_feet_to_mllw_feet(-3.564)
+        )
+        self.assertEqual(
+            preds_dict[tline._raw_times[3]], util.navd88_feet_to_mllw_feet(-3.452)
+        )
 
     def test_parse_hilo_predictions(self):
         """Able to parse certain hi/lo predictions from a json list of predictions from API call."""
@@ -44,9 +54,9 @@ class TestAstro(TestCase):
         zone = tz.eastern
         start_dt = datetime(2025, 5, 6, tzinfo=zone)
         end_dt = datetime(2025, 5, 8, 23, 45, tzinfo=zone)
-        cutoff_dt = datetime(2025, 5, 7, 19, tzinfo=zone)
-        timeline = util.build_timeline(start_dt, end_dt)
-        preds = astrotide.find_future(contents, timeline, cutoff_dt)
+        hilo_start_dt = datetime(2025, 5, 7, 19, tzinfo=zone)
+        timeline = Timeline(start_dt, end_dt)
+        preds = astrotide.hilo_json_to_dict(contents, timeline, hilo_start_dt)
         self.assertEqual(len(preds), 4)
         self.assertEqual(
             preds[datetime(2025, 5, 8, 1, tzinfo=zone)],

@@ -1,6 +1,6 @@
 import logging
-import xml.etree.ElementTree as ElTree
 import os
+import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 
 from rest_framework.exceptions import APIException
@@ -9,6 +9,7 @@ from suds.client import Client
 from app import tzutil as tz
 from app import util
 from app.datasource.custom_transport import CustomTransport
+from app.timeline import Timeline
 
 """
 Utility data and functions for graph building. 
@@ -29,33 +30,33 @@ max_wind_speed = 120  # any wind speed reading higher than this is considered ba
 
 
 def get_recorded_tides(
-    timeline: list, station=wells_water_station, param=tide_param
+    timeline: Timeline, station=wells_water_station, param=tide_param
 ) -> dict:
     """
     For the given timeline, get a dense dict of tide water levels from CDMO in MLLW feet.
     """
 
-    if timeline[0] > tz.now(timeline[0].tzinfo):
-        # Nothing to fetch, it's all in the future
+    if timeline.length() == 0 or timeline.is_all_future():
+        # Nothing to fetch
         return {}
 
     # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
     return get_cdmo(timeline, station, param, converter=handle_navd88_level)
 
 
-def get_recorded_wind_data(timeline: list) -> dict:
+def get_recorded_wind_data(timeline: Timeline) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
     """
 
     wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
 
-    # If this is for the future, don't bother.
-    if timeline[0].date() > tz.now(timeline[0].tzinfo).date():
+    # If timeline is all in the future, don't bother.
+    if timeline.length() == 0 or timeline.is_all_future():
         return wind_dict
 
     # For readability, thin out the data points, as it gets pretty dense and hard to read.
-    days = (timeline[-1].date() - timeline[0].date()).days
+    days = (timeline.end_dt.date() - timeline.start_dt.date()).days
     if days > 5:
         minutes = [0]  # only show 1 point per hour
     elif days > 2:
@@ -66,16 +67,8 @@ def get_recorded_wind_data(timeline: list) -> dict:
     speed_dict = get_cdmo(
         timeline, wells_met_station, windspeed_param, handle_windspeed, minutes
     )
-    # HACK. In the unlikely case there are no speed data points at all, we have chosen to display
-    # an empty graph. However, there's a quirk in plotly express where it crashes if all data points are None.
-    # So we cheat and add a single all-zero entry.
+
     if len(speed_dict) == 0:
-        wind_dict[timeline[0]] = {
-            "speed": 0,
-            "gust": 0,
-            "dir": 0,
-            "dir_str": util.degrees_to_dir(0),
-        }
         return wind_dict
 
     # CDMO returns wind speed in meters per second, so convert to mph.
@@ -105,11 +98,11 @@ def get_recorded_wind_data(timeline: list) -> dict:
     return wind_dict
 
 
-def get_recorded_temps(timeline: list, station=wells_water_station) -> dict:
+def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of water temp readings from CDMO.
     """
-    if timeline[0] > tz.now(timeline[0].tzinfo):
+    if timeline.length() == 0 or timeline.is_all_future():
         # Nothing to fetch, it's all in the future
         return None
 
@@ -118,7 +111,7 @@ def get_recorded_temps(timeline: list, station=wells_water_station) -> dict:
 
 
 def get_cdmo(
-    timeline: list,
+    timeline: Timeline,
     station: str,
     param: str,
     converter,
@@ -148,7 +141,7 @@ def get_cdmo(
     return data
 
 
-def get_cdmo_xml(timeline: list, station: str, param: str) -> dict:
+def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
     """
     Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
     Params:
@@ -157,7 +150,9 @@ def get_cdmo_xml(timeline: list, station: str, param: str) -> dict:
     - param: the CDMO param code
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
-    req_start_date, req_end_date = compute_cdmo_request_dates(timeline)
+    req_start_date, req_end_date = compute_cdmo_request_dates(
+        timeline.start_dt, timeline.end_dt
+    )
 
     user_name = os.environ.get("CDMO_USER")
     password = os.environ.get("CDMO_PASSWORD")
@@ -182,7 +177,7 @@ def get_cdmo_xml(timeline: list, station: str, param: str) -> dict:
 
 
 def get_cdmo_data(
-    timeline: list,
+    timeline: Timeline,
     xml: str,
     param: str,
     converter,
@@ -218,9 +213,9 @@ def get_cdmo_data(
             # We need this local time. First promote to UTC.
             in_utc = naive_utc.replace(tzinfo=tz.utc)
             # Now convert to requested tzone, so DST is handled properly
-            dt_in_local = in_utc.astimezone(timeline[0].tzinfo)
+            dt_in_local = in_utc.astimezone(timeline.time_zone)
             # Since we query more data than we need, only save the data that is in the requested timeline.
-            if dt_in_local not in timeline:
+            if dt_in_local not in timeline.get_all_past():
                 skipped += 1
                 continue
             data_str = reading.find(f"./{param}").text
@@ -254,7 +249,9 @@ def text_error_check(non_text_node):
         pass
 
 
-def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
+def compute_cdmo_request_dates(
+    start_time: datetime, end_time: datetime
+) -> tuple[date, date]:
     """
     CDMO will give us only full days of data, using LST of the time zone of the requesting station. It
     does not honor DST. So we may have to adjust the start date and/or the end date, to avoid missing data
@@ -270,18 +267,18 @@ def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
     back.
     """
 
-    requested_start_date = timeline[0].date()
-    requested_end_date = timeline[-1].date()
+    requested_start_date = start_time.date()
+    requested_end_date = end_time.date()
 
-    if tz.isDst(timeline[0]) and timeline[0].hour < 1:
+    if tz.isDst(start_time) and start_time.hour < 1:
         requested_start_date -= timedelta(days=1)
 
-    if tz.isDst(timeline[-1]) and timeline[-1].hour < 1:
+    if tz.isDst(end_time) and end_time.hour < 1:
         requested_end_date -= timedelta(days=1)
 
     logger.debug(
-        f"Timeline: {timeline[0].date().strftime('%Y-%m-%d %H:%M')} "
-        f"- {timeline[-1].date().strftime('%Y-%m-%d %H:%M')}, "
+        f"Timeline: {start_time.date().strftime('%Y-%m-%d %H:%M')} "
+        f"- {end_time.date().strftime('%Y-%m-%d %H:%M')}, "
         "Requesting CDMO dates: "
         f"{requested_start_date.strftime('%Y-%m-%d')} - "
         f"{requested_end_date.strftime('%Y-%m-%d')}"
@@ -290,7 +287,7 @@ def compute_cdmo_request_dates(timeline: list) -> tuple[date, date]:
     return requested_start_date, requested_end_date
 
 
-def find_hilos(timeline, obs_dict) -> dict:
+def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     """Given a key-ordered timeline and dense dict of tide readings {datetime: level}, return a dense dict of
     {dt: 'H' or 'L'} indicating which of the datetimes correspond to a high or low tide. We only return
     datetimes that are definitively high or low tides, and do not include any that are ambiguous.
@@ -338,7 +335,7 @@ def find_hilos(timeline, obs_dict) -> dict:
     arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
 
     cur_arc = None
-    for dt in timeline:
+    for dt in timeline.get_all_past():
         val = obs_dict.get(dt, None)
         if val is not None:
             position = HIGH_ARC if val > midtide else LOW_ARC
@@ -373,7 +370,9 @@ def find_hilos(timeline, obs_dict) -> dict:
         hilo_val = datadict.get(hilo_dt)
 
         arc_timeline = list(
-            filter(lambda dt: min(datadict) <= dt <= max(datadict), timeline)
+            filter(
+                lambda dt: min(datadict) <= dt <= max(datadict), timeline.get_all_past()
+            )
         )
         sparse_vals = [datadict.get(dt, None) for dt in arc_timeline]
         # The first and last values are not candidates for high or low tide, since there's no value on the other

@@ -7,20 +7,22 @@ from rest_framework.exceptions import APIException
 import app.datasource.cdmo as cdmo
 import app.tzutil as tz
 import app.util as util
+from app.timeline import GraphTimeline, Timeline
 
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
 
 
 class TestCdmo(TestCase):
+    tzone = tz.eastern  # Do not change, tests use hard-coded times
+
     def test_calculate_hilos_simple(self):
         """High/Low detection works properly with small data sets"""
 
-        def build_test_data(tides, start_dt=datetime(2025, 1, 1)):
-            timeline = [
-                start_dt + timedelta(minutes=(x * 15)) for x in range(0, (len(tides)))
-            ]
-            d = dict(zip(timeline, tides))  # no None's in datadict
+        def build_test_data(tides, start_date=date(2025, 1, 1)):
+            end_date = start_date + timedelta(days=(int(len(tides) / 96)))
+            timeline = GraphTimeline(start_date, end_date, self.tzone)
+            d = dict(zip(timeline._raw_times, tides))  # no None's in datadict
             datadict = {key: val for key, val in d.items() if val is not None}
             return timeline, datadict
 
@@ -34,7 +36,7 @@ class TestCdmo(TestCase):
         tides = [None, 4, 3, 4, None, 10]
         timeline, datadict = build_test_data(tides)
         expected_hilos = {
-            datetime(2025, 1, 1, 0, 30): "L",
+            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "L",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
@@ -42,7 +44,7 @@ class TestCdmo(TestCase):
         tides = [None, 9, 10, 9, None, 3]
         timeline, datadict = build_test_data(tides)
         expected_hilos = {
-            datetime(2025, 1, 1, 0, 30): "H",
+            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "H",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
@@ -50,8 +52,8 @@ class TestCdmo(TestCase):
         tides = [None, 4, 3, 4, None, 9, 10, 9, None]
         timeline, datadict = build_test_data(tides)
         expected_hilos = {
-            datetime(2025, 1, 1, 0, 30): "L",
-            datetime(2025, 1, 1, 1, 30): "H",
+            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "L",
+            datetime(2025, 1, 1, 1, 30, tzinfo=self.tzone): "H",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
@@ -77,28 +79,26 @@ class TestCdmo(TestCase):
             6.35, 7.03, 7.725, 8.26, 8.71, 9.14, 9.41, 9.7, 9.86, 9.93
         ]
         # fmt: on
-        timeline, datadict = build_test_data(tides, datetime(2025, 3, 1))
+        timeline, datadict = build_test_data(tides, date(2025, 3, 1))
         expected_hilos = {
-            datetime(2025, 3, 1, 5, 45): "L",
-            datetime(2025, 3, 1, 12, 0): "H",
-            datetime(2025, 3, 1, 18, 0): "L",
+            datetime(2025, 3, 1, 5, 45, tzinfo=self.tzone): "L",
+            datetime(2025, 3, 1, 12, 0, tzinfo=self.tzone): "H",
+            datetime(2025, 3, 1, 18, 0, tzinfo=self.tzone): "L",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
 
     def test_calculate_hilos_full(self):
         """High/Low detetion works properly with complete day of data"""
         xml = self.load_xml("cdmo-level.xml")
-        timeline = util.build_graph_timeline(
-            date(2025, 3, 31), date(2025, 3, 31), tz.eastern
-        )
+        timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         datadict = cdmo.get_cdmo_data(
             timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
         )
         expected = {
-            datetime(2025, 3, 31, 0, 45, tzinfo=tz.eastern): "H",
-            datetime(2025, 3, 31, 7, 0, tzinfo=tz.eastern): "L",
-            datetime(2025, 3, 31, 13, 15, tzinfo=tz.eastern): "H",
-            datetime(2025, 3, 31, 19, 0, tzinfo=tz.eastern): "L",
+            datetime(2025, 3, 31, 0, 45, tzinfo=self.tzone): "H",
+            datetime(2025, 3, 31, 7, 0, tzinfo=self.tzone): "L",
+            datetime(2025, 3, 31, 13, 15, tzinfo=self.tzone): "H",
+            datetime(2025, 3, 31, 19, 0, tzinfo=self.tzone): "L",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
 
@@ -109,22 +109,20 @@ class TestCdmo(TestCase):
 
     def test_parse_level_data(self):
         xml = self.load_xml("cdmo-level.xml")
-        timeline = util.build_graph_timeline(
-            date(2025, 3, 31), date(2025, 3, 31), tz.eastern
-        )
+        timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         actual = cdmo.get_cdmo_data(
             timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
         )
         # 3 of the data points have invalid or missing values
-        self.assertEqual(len(actual), len(timeline) - 3)
+        self.assertEqual(len(actual), len(timeline._raw_times) - 3)
         self.assertEqual(
-            actual.get(datetime(2025, 3, 31, tzinfo=tz.eastern)),
+            actual.get(datetime(2025, 3, 31, tzinfo=self.tzone)),
             cdmo.handle_navd88_level(
                 "1.67", None
             ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp> or 03/31/2025 00:00 EDT"
         )
         self.assertEqual(
-            actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=tz.eastern)),
+            actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=self.tzone)),
             cdmo.handle_navd88_level(
                 "1.12", None
             ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp> or 03/31/2025 23:45 EDT"
@@ -169,9 +167,9 @@ class TestCdmo(TestCase):
         start_date = date(2024, 1, 10)
         end_date = date(2024, 1, 12)
         for tzone in [tz.central, tz.mountain, tz.pacific]:
-            timeline = util.build_graph_timeline(start_date, end_date, tzone)
+            timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (start_date, end_date + timedelta(days=1)),
             )
 
@@ -181,9 +179,9 @@ class TestCdmo(TestCase):
         for zone in [tz.central, tz.mountain, tz.pacific]:
             start_dt = datetime(2025, 3, 9, 0, tzinfo=zone)
             end_dt = datetime(2025, 3, 10, 0, tzinfo=zone)
-            timeline = util.build_timeline(start_dt, end_dt)
+            timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (start_dt.date(), end_dt.date() - timedelta(days=1)),
             )
 
@@ -191,9 +189,9 @@ class TestCdmo(TestCase):
         for zone in [tz.central, tz.mountain, tz.pacific]:
             start_dt = datetime(2025, 3, 9, 0, tzinfo=zone)
             end_dt = datetime(2025, 3, 10, 1, tzinfo=zone)
-            timeline = util.build_timeline(start_dt, end_dt)
+            timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (start_dt.date(), end_dt.date()),
             )
 
@@ -203,9 +201,9 @@ class TestCdmo(TestCase):
         for zone in [tz.central, tz.mountain, tz.pacific]:
             start_dt = datetime(2025, 10, 2, 0, tzinfo=zone)
             end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
-            timeline = util.build_timeline(start_dt, end_dt)
+            timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (start_dt.date() - timedelta(days=1), end_dt.date()),
             )
 
@@ -213,9 +211,9 @@ class TestCdmo(TestCase):
         for zone in [tz.central, tz.mountain, tz.pacific]:
             start_dt = datetime(2025, 10, 2, 1, tzinfo=zone)
             end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
-            timeline = util.build_timeline(start_dt, end_dt)
+            timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (start_dt.date(), end_dt.date()),
             )
 
@@ -226,14 +224,14 @@ class TestCdmo(TestCase):
         end_date = date(2024, 7, 10)
         expected_start_date = start_date - timedelta(days=1)
         for tzone in [tz.central, tz.mountain, tz.pacific]:
-            timeline = util.build_graph_timeline(start_date, end_date, tzone)
+            timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (expected_start_date, end_date),
             )
-            timeline = util.build_graph_timeline(start_date, end_date, tzone)
+            timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline),
+                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
                 (expected_start_date, end_date),
             )
 

@@ -34,6 +34,11 @@ LOGGING = {
         #     "level": "DEBUG",
         #     "propagate": False,
         # },
+        # "app.graphutil": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",
+        #     "propagate": False,
+        # },
     },
     "formatters": {
         "verbose": {

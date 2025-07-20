@@ -9,7 +9,6 @@ import { DefaultMapCenter, DefaultMapZoom, EpqsUrl, Page, roundTo } from './util
 import { getLocalStorage, setLocalStorage } from './localStorage'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
-import { useCache } from './useCache'
 
 export default function Control(props) {
     const page = props.page
@@ -22,8 +21,6 @@ export default function Control(props) {
     const [markerLocation, setMarkerLocation] = useState(mainStorage.markerLocation)
     const [mapCenter, setMapCenter] = useState(mainStorage.mapCenter || DefaultMapCenter)
     const [zoom, setZoom] = useState(mainStorage.zoom ? mainStorage.zoom : DefaultMapZoom)
-
-    useCache(page) // make sure cache isn't getting too big
 
     useEffect(() => {
         setLocalStorage('main', {

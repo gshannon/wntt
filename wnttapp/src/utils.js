@@ -8,17 +8,20 @@ export const MapBounds = [
 export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
 export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
+
+// CSS Pixel (Logical Pixel) width of Bootstrap's responsive width breakpoints.  Note this is different
+// from Device Pixels (Physical) Pixels, which are usually 2 or 3 times as bigger. See DPR (Device Pixel Ratio).
 export const SmallBase = 576
 export const MediumBase = 768
 export const LargeBase = 992
 export const XLBase = 1200
-// XXLBase = 1400
+export const XXLBase = 1400
 
-// Do a media query to for displyable screen width
+// Do a media query for the available viewport width. Note this is *device*
 export const widthGreaterOrEqual = (base) => window.matchMedia(`(min-width: ${base}px)`).matches
 export const widthLessThan = (base) => window.matchMedia(`(max-width: ${base - 1}px)`).matches
 
-// Returns the maximnum number of days to allow on the graph. We limit this based on screen width, so that
+// Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would
 // be skipped.
 export const getMaxNumDays = () => {
@@ -46,9 +49,6 @@ export const getDefaultNumDays = () => {
     }
     return 1
 }
-
-// Returns whether or not the current screen is small or extraxs (extra small) size, per Bootstrap
-// export const isSmallScreen = () => window.innerWidth < MediumBase
 
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
 // compute them every time they are requested, in case the year changes while the app is running.

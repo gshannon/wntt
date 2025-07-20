@@ -1,80 +1,13 @@
 import copy
 import logging
 import pprint
-from datetime import date, datetime, time, timedelta
-
-from rest_framework.exceptions import APIException
+from datetime import datetime, timedelta
 
 from . import config as cfg
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
-
-
-def build_graph_timeline(
-    start_date: date, end_date: date, time_zone, interval_minutes=15
-) -> list:
-    """
-    Build a datetime list using the given interval in requested timezone for a given date range.
-    The timeline will always include an extra element for midnight on the next day. This
-    is done because Plotly always adds that point to the graph, and it looks better if we fill it in.
-
-    If a daylight savings time boundary is included, you will get:
-    - for spring forward, the 02:00 hour will be skipped
-    - for fall back:
-      ...
-      01:00 daylight time
-      01:15 daylight time
-      01:30 daylight time
-      01:45 daylight time
-      01:00 standard time
-      01:15 standard time
-      01:30 standard time
-      01:45 standard time
-      02:00 standard time (etc)
-
-      Interval_minutes param must be a whole number factor of 1,440 (minutes in a day)
-    """
-    if (24 * 60) % interval_minutes != 0:
-        raise APIException()
-    if end_date < start_date:
-        logger.error("end_date must be greater than start_date")
-        raise APIException()
-
-    local_start = datetime.combine(start_date, time(0)).replace(tzinfo=time_zone)
-    # Add extra element to timeline, for the next day at midnight.
-    local_end_dt = datetime.combine(end_date + timedelta(days=1), time(0)).replace(
-        tzinfo=time_zone
-    )
-    utc_end = local_end_dt.astimezone(tz.utc)
-    # timedelta is broken when crossing DST boundaries in tz's which honor DST, so we'll do all the time
-    # math in UTC and convert the answers back to local.
-    timeline = []
-    utc_cur = local_start.astimezone(tz.utc)
-    while utc_cur <= utc_end:
-        timeline.append(utc_cur.astimezone(time_zone))
-        utc_cur += timedelta(minutes=interval_minutes)
-
-    return timeline
-
-
-def build_timeline(start_dt: datetime, end_dt: datetime, interval_minutes=15) -> list:
-    """
-    This version of building a timeline is for arbitrary time ranges rather than complete days.
-    """
-    timeline = []
-    if start_dt.tzinfo != end_dt.tzinfo:
-        logger.error(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
-        raise ValueError
-
-    # Must do all datetime arithmetic in UTC in modern Python.
-    utc_end = end_dt.astimezone(tz.utc)
-    utc_cur = start_dt.astimezone(tz.utc)
-    while utc_cur <= utc_end:
-        timeline.append(utc_cur.astimezone(start_dt.tzinfo))
-        utc_cur += timedelta(minutes=interval_minutes)
-    return timeline
 
 
 def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:

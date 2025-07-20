@@ -5,6 +5,7 @@ from app import util
 from app.datasource import cdmo
 
 from . import tzutil as tz
+from app.timeline import Timeline
 
 time_zone = tz.eastern
 
@@ -20,7 +21,7 @@ def get_latest_info():
 
     end_dt = util.round_to_quarter(tz.now(time_zone))
     start_dt = end_dt - timedelta(hours=4)
-    timeline = util.build_timeline(start_dt, end_dt)
+    timeline = Timeline(start_dt, end_dt)
 
     wind_data_dict = cdmo.get_recorded_wind_data(
         timeline
