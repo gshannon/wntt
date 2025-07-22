@@ -117,26 +117,32 @@ class GraphTimeline(Timeline):
 
 class HiloTimeline(GraphTimeline):
     """A type of GraphTimeline that allows you to limit the data to only datetimes that map to a high or low
-    tide -- either an observed tide (past) or later predicted tide. Caller should not reference raw_times, but should call
-    set_past_hilo_times and set_later_hilo_times before finally calling get_final_times.
+    tide -- either an observed tide (past) or later predicted tide. Caller should call
+    register_hilo_times before calling build_plot or get_final_times.
     """
 
-    _all_hilo_times = []
+    _all_hilo_times = None
 
     def register_hilo_times(self, past_hilo_dts: list, later_hilo_dts: list):
         """Call this to register the subset of raw_times which map to observed high and low tides and
-        susequent predicted high and low tides.
+        susequent predicted high and low tides.  This must be called before build_plot or get_final_times.
 
         Args:
-            - past_hilo_dts (list): datetimes which correspond with an observed high or low tide, or {}
+            - past_hilo_dts (list): datetimes which correspond with an observed high or low tide.
+              Pass None or [] if there are no past high/low tides.
             - other_hilo_dts (list): datetimes which correspond with a predicted high or low tide that
-              is not part or past_times_with_hilo. We call this "later" rather than "future" because we
-              include values from the past if they occur after the highest recorded tide datetime. This
-              fills in graph gaps due to the lag time between making the reading and publication thereof.
+              is not part or past_times_with_hilo, or None. We call this "later" rather than "future"
+              because we want to include values from the past if they occur after the highest recorded tide
+              datetime. This fills in graph gaps due to the latency between taking the reading and
+              publication. Pass None or [] if there are no later high/low tides.
 
         Raises:
-            ValueError: If a datetime was given which is already part of the list of later times.
+            ValueError: If duplicates, overlaps or other issues are detected.
         """
+        if past_hilo_dts is None:
+            past_hilo_dts = []
+        if later_hilo_dts is None:
+            later_hilo_dts = []
         if len(past_hilo_dts) > 0 and max(past_hilo_dts) > self.now:
             raise ValueError("All dts must be in past")
 
@@ -161,9 +167,14 @@ class HiloTimeline(GraphTimeline):
             - callback (function): Callback function that, based on the datetime in question, returns
               the matching data, or None as appropriate.
 
+        Raises:
+            ValueError: If register_hilo_times has not been called.
+
         Returns:
             list: The resulting list of data values or None
         """
+        if self._all_hilo_times is None:
+            raise ValueError("register_hilo_times must be called first")
 
         # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
         plot = list(map(callback, self._all_hilo_times))
@@ -182,9 +193,15 @@ class HiloTimeline(GraphTimeline):
             future predicted tide rather than the nearest 15-min boundary value. The key is the datetime in question, and
             the value is a dict where the "real_dt" key contains the correct datetime.
 
+        Raises:
+            ValueError: If register_hilo_times has not been called.
+
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
+        if self._all_hilo_times is None:
+            raise ValueError("register_hilo_times must be called first")
+
         final = self._all_hilo_times.copy()
         if len(self._all_hilo_times) == 0 or self.start_dt != final[0]:
             final.insert(0, self.start_dt)

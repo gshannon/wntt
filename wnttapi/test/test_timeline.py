@@ -109,6 +109,17 @@ class TestGraphTimeline(TestCase):
 
 
 class TestHiloTimeline(TestCase):
+    def test_register_hilo_times_called(self):
+        # HiloTimeline.register_hilo_times() must be called before build_plot()
+        start_date = date(2025, 9, 1)
+        end_date = date(2025, 9, 1)
+        timeline = HiloTimeline(start_date, end_date, tz.central)
+
+        with self.assertRaisesRegex(ValueError, "must be called first"):
+            timeline.build_plot(lambda _: None)
+        with self.assertRaisesRegex(ValueError, "must be called first"):
+            timeline.get_final_times({})
+
     def test_build_wind_plots_hilo(self):
         zone = tz.mountain
         start_date = date(2025, 2, 1)
@@ -167,6 +178,7 @@ class TestHiloTimeline(TestCase):
         end_date = date(2025, 9, 1)
         timeline = HiloTimeline(start_date, end_date, zone)
         timeline.now = datetime(2025, 8, 30, 0, 0, tzinfo=zone)
+        timeline.register_hilo_times([], [])
 
         plot = timeline.build_plot(lambda _: None)
         self.assertEqual(len(plot), 2)
