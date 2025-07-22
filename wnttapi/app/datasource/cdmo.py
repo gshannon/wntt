@@ -30,18 +30,35 @@ max_wind_speed = 120  # any wind speed reading higher than this is considered ba
 
 
 def get_recorded_tides(
-    timeline: Timeline, station=wells_water_station, param=tide_param
+    timeline: Timeline,
+    station: str = wells_water_station,
+    param: str = tide_param,
+    included_minutes: list = [0, 15, 30, 45],
 ) -> dict:
-    """
-    For the given timeline, get a dense dict of tide water levels from CDMO in MLLW feet.
-    """
+    """Retrieve tide water levels from CDMO relative to MLLW feet.
 
+    Args:
+        timeline (Timeline): the timeline of datetimes to fetch data for
+        station (str, optional): The station code. Defaults to "welinwq".
+        param (str, optional): Parameter name. Defaults to "Level".
+        included_minutes (list, optional): _description_. Defaults to [0, 15, 30, 45].
+
+    Returns:
+        dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
+        tide level in MLLW feet.
+    """
     if timeline.length() == 0 or timeline.is_all_future():
         # Nothing to fetch
         return {}
 
     # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
-    return get_cdmo(timeline, station, param, converter=handle_navd88_level)
+    return get_cdmo(
+        timeline,
+        station,
+        param,
+        converter=handle_navd88_level,
+        included_minutes=included_minutes,
+    )
 
 
 def get_recorded_wind_data(timeline: Timeline) -> dict:
@@ -157,9 +174,7 @@ def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
     user_name = os.environ.get("CDMO_USER")
     password = os.environ.get("CDMO_PASSWORD")
     transport = CustomTransport(user_name, password)
-    soap_client = Client(
-        cdmo_wsdl, timeout=90, retxml=True, transport=transport
-    )  # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
+    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=transport)
 
     try:
         xml = soap_client.service.exportAllParamsDateRangeXMLNew(
