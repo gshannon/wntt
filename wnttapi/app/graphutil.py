@@ -1,5 +1,5 @@
 import logging
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 from rest_framework.exceptions import ValidationError
 
@@ -81,12 +81,14 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
-    hist_tides_plot = timeline.build_plot(lambda dt: obs_dict.get(dt, None))
+    hist_tides_plot, hist_hilo_labels = build_hist_tide_plot(
+        timeline, obs_dict, obs_hilo_dict
+    )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
         timeline, wind_dict
     )
-    astro_tides_plot, astro_hilo_dts, astro_hilo_vals = build_astro_plot(
+    astro_tides_plot, astro_hilo_labels = build_astro_plot(
         timeline, astro_preds15_dict, astro_later_hilo_dict
     )
 
@@ -109,11 +111,9 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     return {
         "timeline": final_timeline,
         "hist_tides": hist_tides_plot,
-        "hist_hilo_dts": list(obs_hilo_dict.keys()),
-        "hist_hilo_vals": obs_hilo_dict.values(),
+        "hist_hilo_labels": hist_hilo_labels,
         "astro_tides": astro_tides_plot,
-        "astro_hilo_dts": astro_hilo_dts,
-        "astro_hilo_vals": astro_hilo_vals,
+        "astro_hilo_labels": astro_hilo_labels,
         "wind_speeds": wind_speed_plot,
         "wind_gusts": wind_gust_plot,
         "wind_dir": wind_dir_plot,
@@ -131,6 +131,32 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         "past_tl_index": past_tl_index,
         "future_tl_index": future_tl_index,
     }
+
+
+def build_hist_tide_plot(
+    timeline: GraphTimeline, obs_dict: dict, obs_hilo_dict: dict
+) -> tuple[list, list]:
+    """Build historical tide plot and high or low tide labels.
+
+    Args:
+        timeline (GraphTimeline): the timeline
+        obs_dict (dict): observed tides {dt: height MLLW feet}
+        obs_hilo_dict (dict): {dt: 'H' or 'L'} for high or low tide, keyed by datetime
+
+    Returns:
+        tuple[list, list]:
+        - hist_tides_plot: list of historical tide heights in MLLW feet, or None if no data
+        - hist_hilo_labels: list of corresponding high or low tide labels or '' for each datetime in the timeline
+    """
+
+    def get_hilo_label(dt: datetime):
+        if dt in obs_hilo_dict:
+            return "(HIGH)" if obs_hilo_dict[dt] == "H" else "(LOW)"
+        return ""
+
+    hist_tides_plot = timeline.build_plot(lambda dt: obs_dict.get(dt, None))
+    hist_hilo_labels = timeline.build_plot(get_hilo_label)
+    return hist_tides_plot, hist_hilo_labels
 
 
 def build_future_surge_plots(
@@ -224,34 +250,21 @@ def build_astro_plot(
         else:
             return None
 
-    def check_value(dt):
+    def get_value(dt):
+        # For value, prefer the later_hilo_dict value if present, else use the regular predictions.
         val = check_later(dt, "value")
         return val or reg_preds_dict.get(dt, None)
 
-    def check_real_dt(dt):
-        return check_later(dt, "real_dt")
+    def get_type(dt):
+        type = check_later(dt, "type")
+        if type is None:
+            return ""
+        return "(HIGH)" if type == "H" else "(LOW)"
 
-    def check_type(dt):
-        return check_later(dt, "type")
+    astro_tides_plot = timeline.build_plot(get_value)
+    astro_hilo_labels = timeline.build_plot(get_type)
 
-    astro_tides_plot = timeline.build_plot(check_value)
-    astro_hilo_dts = timeline.build_plot(check_real_dt)
-    """
-    TODO: There's a small window where a High or Low does not appear on hover text, which is a result of using observed
-    levels for discovering what's high and low rather than just using predicted values (since actual
-    seems better than predicted).
-
-    Example: 
-    - observed low is at 12:30
-    - last available observed data is from 12:30, e.g. 12:00=1.7, 12:15=1.1, 12:30=0.9. This means the last dt 12:30 will NOT
-    -   be labeled as 'Low' because there's no rising data point afterwards for it to know that.
-    - the hilo "later" prediction data only starts at {last observed time} + {15 min}, or 12:45. (See astrotide, hilo_start_dt)
-    This means the 15-min data will display at 12:30, as it's still part of the past, and will not be labeled.
-    Ergo, no low tide is labelled, even though there's obviously one there by looking at the lines.
-    """
-    astro_hilo_labels = timeline.build_plot(check_type)
-
-    return astro_tides_plot, astro_hilo_dts, astro_hilo_labels
+    return astro_tides_plot, astro_hilo_labels
 
 
 def build_wind_plots(

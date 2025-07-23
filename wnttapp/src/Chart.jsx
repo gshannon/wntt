@@ -129,43 +129,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
         dragmode: isWideEnough && !isTouchScreen ? 'zoom' : false,
     }
 
-    // Build hover text for all astro tide predictions, past and future.  Future ones get annotated as High or Low
-    // as appropriate.
-    const buildAstroText = () => {
-        return data.timeline.map((dt) => {
-            const i = data.astro_hilo_dts.indexOf(dt)
-            if (i < 0) {
-                return ''
-            } else {
-                const val = data.astro_hilo_vals[i]
-                if (val == 'H') {
-                    return '(HIGH)'
-                } else {
-                    return '(LOW)'
-                }
-            }
-        })
-    }
-
-    // Build hover text for recorded tides, to include High/Low labels.
-    const buildHistTideText = () => {
-        // console.log('hist_hilo_dts', data.hist_hilo_dts)
-        // console.log('hist_hilo_dts', data.hist_hilo_vals)
-        return data.timeline.map((dt) => {
-            const i = data.hist_hilo_dts.indexOf(dt)
-            if (i >= 0) {
-                const val = data.hist_hilo_vals[i]
-                if (val == 'H') {
-                    return '(HIGH)'
-                } else {
-                    return '(LOW)'
-                }
-            } else {
-                return ''
-            }
-        })
-    }
-
     const expandConstant = (value) => {
         return Array(data.timeline.length).fill(value)
     }
@@ -232,7 +195,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       lineType: 'solid',
                       markerSize: hiloMode ? tideMarkerSize : 0,
                       color: ObservedTideColor,
-                      hovertext: buildHistTideText(),
+                      hovertext: data.hist_hilo_labels,
                       hovertemplate: '%{y} %{hovertext}',
                   }),
               ]
@@ -245,7 +208,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             markerSize: hiloMode ? tideMarkerSize : 0,
             color: PredictedTideColor,
             connect: !hiloMode,
-            hovertext: buildAstroText(),
+            hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
         }),
         ...(data.past_surge !== null
