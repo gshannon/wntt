@@ -213,7 +213,11 @@ def build_future_surge_plots(
 
     def handle_storm_surge(dt):
         surge_val, hilo_pred = get_surge_and_hilo_prediction(dt)
-        return round(surge_val + hilo_pred, 2) if surge_val and hilo_pred else None
+        return (
+            round(surge_val + hilo_pred, 2)
+            if surge_val is not None and hilo_pred
+            else None
+        )
 
     future_surge_plot = timeline.build_plot(handle_surge_pred)
     future_storm_tide_plot = timeline.build_plot(handle_storm_surge)
