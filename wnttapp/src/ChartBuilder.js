@@ -11,11 +11,11 @@ export const buildPlot = ({
     y,
     legendOnly = false,
     lineType = null, // null means no lines
+    connectgaps = false, // connect any gaps in data if using lines
     markerSize = null, // 0 means no markers (this forces lines)
     markerSymbol = 'circle', // ignored if markerSize=0
     markerAngle = null, // ignored if markerSize=0
     color = 'black',
-    connect = true,
     hoverinfo = 'all', // 'all', 'skip' or 'text'; ignored if hovertemplate is provided
     hovertext = null, // ignored unless referred to in hovertemplate
     hovertemplate = null, // if given, hoverinfo is ignored.
@@ -28,7 +28,7 @@ export const buildPlot = ({
         visible: legendOnly ? 'legendonly' : true,
         type: 'scatter',
         legendgroup: 'grp1',
-        connectgaps: connect,
+        connectgaps: connectgaps,
         hoverinfo: hoverinfo,
         // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
         // Otherwise must override default template of "{name} : %{y}".

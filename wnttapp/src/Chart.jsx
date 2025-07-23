@@ -182,7 +182,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       lineType: 'dash',
                       markerSize: hiloMode ? tideMarkerSize : 0,
                       color: ProjectedStormTideColor,
-                      connect: !hiloMode,
                   }),
               ]
             : []),
@@ -207,7 +206,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             lineType: 'solid',
             markerSize: hiloMode ? tideMarkerSize : 0,
             color: PredictedTideColor,
-            connect: !hiloMode,
             hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
         }),
@@ -232,7 +230,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       lineType: 'dash',
                       markerSize: hiloMode ? tideMarkerSize : 0,
                       color: ProjectedStormSurgeColor,
-                      connect: !hiloMode,
                   }),
               ]
             : []),
