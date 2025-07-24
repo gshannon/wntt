@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 from rest_framework.exceptions import ValidationError
 
@@ -58,21 +58,27 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
 
     # Start with the observed tide data, which will be useful in gathering other data.
     obs_dict = cdmo.get_recorded_tides(timeline)
-    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
 
     # Determine highs and lows from observed data.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
 
     wind_dict = cdmo.get_recorded_wind_data(timeline)
 
+    # For astronomical tides, we need to know the last observed high or low tide,
+    # if we're showing only highs and lows. Otherwise, we just need the last observed tide.
+    if hilo_mode:
+        last_recorded_dt = max(obs_hilo_dict) if len(obs_hilo_dict) > 0 else None
+    else:
+        last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
+
     astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
         timeline, last_recorded_dt
     )
+
     if hilo_mode:
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(
-            past_hilo_dts=list(obs_hilo_dict.keys()),
-            later_hilo_dts=list(astro_later_hilo_dict.keys()),
+            list(obs_hilo_dict.keys()) + list(astro_later_hilo_dict.keys())
         )
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
@@ -97,13 +103,16 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         timeline, future_surge_dict, astro_preds15_dict, astro_later_hilo_dict
     )
 
-    # If the timeline includes any future times, we want to replace the times of the high/low tides with the
-    # actual times of those highs and lows, rather than the nearest 15 minute interval. This gives the users
-    # the most accurate information possible. Since the timeline is just a list of datetimes and the plots
-    # are a list of data values or None, all we have to do is alter the timeline and provide minor adjustments
-    # to the original 00/15/30/45 minute specs as appropriate. This is the version of the timeline we'll
-    # return to the caller.
-    final_timeline = timeline.get_final_times(astro_later_hilo_dict)
+    # If we've prepared any predicted high or low tides times, which have actual times rather than the nearest
+    # 15-min time, we want to replace those timeline times with the real times, so they show accurately on the graph.
+    # Since the timeline is just a list of datetimes and the plots are a list of data values or None, all we have to
+    # do is replace those values in the timeline, and then return the timeline with the plots.
+    if len(astro_later_hilo_dict) > 0:
+        final_timeline = timeline.get_final_times(
+            {key: val["real_dt"] for key, val in astro_later_hilo_dict.items()}
+        )
+    else:
+        final_timeline = timeline.get_final_times({})
     past_tl_index, future_tl_index = util.get_timeline_boundaries(final_timeline)
     start_date_str = timeline.start_date.strftime("%m/%d/%Y")
     end_date_str = timeline.end_date.strftime("%m/%d/%Y")
@@ -231,7 +240,7 @@ def build_future_surge_plots(
 
 def build_astro_plot(
     timeline: GraphTimeline, reg_preds_dict: dict, later_hilo_dict: dict
-) -> tuple[list, list, list]:
+) -> tuple[list, list]:
     """
     Builds plots for the astronomical tide data. We essentially merge the regular 15-min predictions and the
     hilo data, preferring the hilo value if present, which is more accurate.

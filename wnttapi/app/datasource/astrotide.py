@@ -32,21 +32,20 @@ def get_astro_tides(timeline: Timeline, max_observed_dt: datetime) -> tuple[dict
         - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
             MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
 
-    We don't include hi/low entries for predictions that map to recorded tide data, since they would be used only for
-    labelling, and recorded tides always take precedence over predicted tides for "high" and "low" labelling.
-    These dicts are dense -- only datetimes with data are included, and both dicts are keyed in chronological order.
-
     Args:
         timeline (Timeline): the timeline
-        max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines
+        max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines.
+        For HiloTimelines, this is the latest time that has a recorded tide known to be a high or low tide.
 
     Returns:
         tuple[dict, dict]:
-        - dict of 15-min interval predictions for the past portion of the timeline. {dt: val}.
-        - {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} same, but for highs and lows only,
-            which will be only for "later" times in the timeline, meaning after the last recorded tide time,
-            or the timeline start time if there is no past recorded data.  The "real_dt" is the actual datetime
-            of the high/low, likely not on a 15-min boundary.
+        - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
+        - dict of 15-min interval predictions for highs and lows only.
+          Structure is: {timeline_dt: {'real_dt': dt, 'value': level, 'type': 'H' or 'L'}}
+          The time range will begin with the timeline start, or 15 minutes after the last max_observed_dt,
+          which should be the most recent High or Low tide if we have a HiloTimeline. This means that the
+          earliest predicted value returned could be in the past. This is desirable as there's generally
+          a 30-90 minute latency between observation time and its availability from the API and we don't want gaps.
     """
 
     preds15_dict = {}
@@ -61,15 +60,12 @@ def get_astro_tides(timeline: Timeline, max_observed_dt: datetime) -> tuple[dict
     )
     pred_json = pull_data(url15min)
     preds15_dict = pred15_json_to_dict(pred_json, timeline)
-    # logger.debug("preds15_dict:")
-    # logger.debug(util.pp.pprint(preds15_dict))
 
     # Part 2: For the the more precise High/Low values, we'll use a different API call.
     if max_observed_dt is not None:
         hilo_start_dt = max_observed_dt + timedelta(minutes=15)
     else:
         hilo_start_dt = timeline.start_dt
-    logger.debug(f"hilo_start_dt: {hilo_start_dt}")
 
     if hilo_start_dt <= timeline.end_dt:
         start_date = hilo_start_dt.strftime("%Y%m%d")

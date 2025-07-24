@@ -90,19 +90,17 @@ class GraphTimeline(Timeline):
         Args:
             corrections (dict): Corrections to make to the raw timeline, so they can display the actual time of the
             future predicted tide rather than the nearest 15-min boundary value. The key is the datetime in question, and
-            the value is a dict where the "real_dt" key contains the correct datetime.
+            the value is the correct datetime.
 
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
-        return [
-            change_dict[dt]["real_dt"] if dt in change_dict else dt
-            for dt in self._raw_times
-        ]
+        return [change_dict[dt] if dt in change_dict else dt for dt in self._raw_times]
 
     def build_plot(self, callback):
         """Build an array of data values or None -- that matches the known datetimes
-            that correspond to a High or Low tide data value, suitable for using to build a plot line.
+            that correspond to a tide data value, either recorded or predicted, suitable for using to
+            build a Plotly scatter plot.
 
         Args:
             callback (function): Callback function that, based on the datetime in question,
@@ -116,48 +114,40 @@ class GraphTimeline(Timeline):
 
 
 class HiloTimeline(GraphTimeline):
-    """A type of GraphTimeline that allows you to limit the data to only datetimes that map to a high or low
-    tide -- either an observed tide (past) or later predicted tide. Caller should call
-    register_hilo_times before calling build_plot or get_final_times.
+    """A type of GraphTimeline where the initial 15-min interval timeline gets replaced with the start time,
+    end time, and all times which map to an observed or predicted high or low tide in between. The original
+    start and end times are included in the final timeline, but not repeated.
+    You must register the high/low tide times before calling build_plot or get_final_times.
     """
 
-    _all_hilo_times = None
+    _hilo_timeline = None
 
-    def register_hilo_times(self, past_hilo_dts: list, later_hilo_dts: list):
+    def register_hilo_times(self, hilo_dts: list):
         """Call this to register the subset of raw_times which map to observed high and low tides and
         susequent predicted high and low tides.  This must be called before build_plot or get_final_times.
 
         Args:
-            - past_hilo_dts (list): datetimes which correspond with an observed high or low tide.
-              Pass None or [] if there are no past high/low tides.
-            - other_hilo_dts (list): datetimes which correspond with a predicted high or low tide that
-              is not part or past_times_with_hilo, or None. We call this "later" rather than "future"
-              because we want to include values from the past if they occur after the highest recorded tide
-              datetime. This fills in graph gaps due to the latency between taking the reading and
-              publication. Pass None or [] if there are no later high/low tides.
+            - hilo_dts (list): datetimes which correspond with an observed high or low tide, either
+              observed or predicted. All times between the start and end of the raw timeline, although
+              they don't need to be on a 15-min boundary. Any duplicates are removed.
 
         Raises:
-            ValueError: If duplicates, overlaps or other issues are detected.
+            ValueError: if any times are outside the timeline start/end times.
         """
-        if past_hilo_dts is None:
-            past_hilo_dts = []
-        if later_hilo_dts is None:
-            later_hilo_dts = []
-        if len(past_hilo_dts) > 0 and max(past_hilo_dts) > self.now:
-            raise ValueError("All dts must be in past")
+        self._hilo_timeline = list(
+            set(
+                [self.start_dt]
+                + (hilo_dts if hilo_dts is not None else [])
+                + [self.end_dt]
+            )
+        )
+        self._hilo_timeline.sort()
 
         if (
-            len(later_hilo_dts) > 0
-            and len(past_hilo_dts) > 0
-            and min(later_hilo_dts) <= max(past_hilo_dts)
+            min(self._hilo_timeline) < self.start_dt
+            or max(self._hilo_timeline) > self.end_dt
         ):
-            raise ValueError("later hilos must be after past hilos")
-
-        self._all_hilo_times = past_hilo_dts + later_hilo_dts
-        # verify no duplicates
-        if len(self._all_hilo_times) > len(set(self._all_hilo_times)):
-            raise ValueError("duplicates detected")
-        self._all_hilo_times.sort()  # should not be necessary, but just in case
+            raise ValueError("All dts must be within the timeline start and end")
 
     def build_plot(self, callback) -> list:
         """Build an array of data values or None's -- which matches the known datetimes
@@ -173,17 +163,11 @@ class HiloTimeline(GraphTimeline):
         Returns:
             list: The resulting list of data values or None
         """
-        if self._all_hilo_times is None:
+        if self._hilo_timeline is None:
             raise ValueError("register_hilo_times must be called first")
 
         # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
-        plot = list(map(callback, self._all_hilo_times))
-        # The actual plot will need to have start/end times too, so add them unless they are already there.
-        if len(self._all_hilo_times) == 0 or self.start_dt != self._all_hilo_times[0]:
-            plot.insert(0, None)  # empty slot for start time
-        if len(self._all_hilo_times) == 0 or self.end_dt != self._all_hilo_times[-1]:
-            plot.append(None)  # empty slot for end time
-        return plot
+        return list(map(callback, self._hilo_timeline))
 
     def get_final_times(self, corrections) -> list:
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
@@ -191,7 +175,7 @@ class HiloTimeline(GraphTimeline):
         Args:
             corrections (dict): Corrections to make to the timeline of high/low, so they can display the actual time of the
             future predicted tide rather than the nearest 15-min boundary value. The key is the datetime in question, and
-            the value is a dict where the "real_dt" key contains the correct datetime.
+            the value is the correct datetime. It may be empty.
 
         Raises:
             ValueError: If register_hilo_times has not been called.
@@ -199,13 +183,9 @@ class HiloTimeline(GraphTimeline):
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
-        if self._all_hilo_times is None:
+        if self._hilo_timeline is None:
             raise ValueError("register_hilo_times must be called first")
 
-        final = self._all_hilo_times.copy()
-        if len(self._all_hilo_times) == 0 or self.start_dt != final[0]:
-            final.insert(0, self.start_dt)
-        if self.end_dt != final[-1]:
-            final.append(self.end_dt)
-
-        return [corrections[dt]["real_dt"] if dt in corrections else dt for dt in final]
+        return [
+            corrections[dt] if dt in corrections else dt for dt in self._hilo_timeline
+        ]

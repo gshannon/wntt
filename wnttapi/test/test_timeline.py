@@ -80,8 +80,8 @@ class TestGraphTimeline(TestCase):
         self.assertTrue(real_time_2 not in timeline._raw_times)
 
         corrections = {
-            original_time_1: {"real_dt": real_time_1},
-            original_time_2: {"real_dt": real_time_2},
+            original_time_1: real_time_1,
+            original_time_2: real_time_2,
         }
         final = timeline.get_final_times(corrections)
         self.assertEqual(timeline.length(), len(final))
@@ -128,7 +128,7 @@ class TestHiloTimeline(TestCase):
         past_hilo_time_2 = datetime(2025, 2, 1, 11, 45, tzinfo=zone)
         later_hilo_time_1 = datetime(2025, 2, 1, 14, 00, tzinfo=zone)
         later_hilo_time_2 = datetime(2025, 2, 1, 23, 30, tzinfo=zone)
-        non_hilo_time_1 = datetime(2025, 2, 1, 0, 0, tzinfo=zone)
+        non_hilo_time_1 = datetime(2025, 2, 1, 0, 15, tzinfo=zone)
         non_hilo_time_2 = datetime(2025, 2, 1, 9, 30, tzinfo=zone)
 
         wind_dict = {
@@ -139,7 +139,7 @@ class TestHiloTimeline(TestCase):
 
         timeline = HiloTimeline(start_date, end_date, zone)
         timeline.register_hilo_times(
-            [past_hilo_time_1, past_hilo_time_2], [later_hilo_time_1, later_hilo_time_2]
+            [past_hilo_time_1, past_hilo_time_2, later_hilo_time_1, later_hilo_time_2]
         )
 
         wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = (
@@ -157,35 +157,26 @@ class TestHiloTimeline(TestCase):
         end_date = date(2025, 8, 20)
         timeline = HiloTimeline(start_date, end_date, zone)
         timeline.now = datetime(2025, 8, 18, 0, 0, tzinfo=zone)
-        dt1 = datetime(2025, 8, 16, 0, 15, tzinfo=zone)
+        dt1 = datetime(2025, 8, 15, 23, 45, tzinfo=zone)
         dt2 = datetime(2025, 8, 16, 14, 45, tzinfo=zone)
         dt3 = datetime(2025, 8, 16, 22, 30, tzinfo=zone)
         dt4 = datetime(2025, 8, 19, 4, 0, tzinfo=zone)
-        with self.assertRaisesRegex(ValueError, "duplicates"):
-            timeline.register_hilo_times([dt1, dt1, dt3], [])
-        with self.assertRaisesRegex(ValueError, "duplicates"):
-            timeline.register_hilo_times([], [dt4, dt4])
 
-        with self.assertRaisesRegex(ValueError, "must be in past"):
-            timeline.register_hilo_times([dt1, dt2, dt3, dt4], [])
+        with self.assertRaisesRegex(ValueError, "within the timeline"):
+            timeline.register_hilo_times([dt1, dt2, dt3, dt4])
 
-        with self.assertRaisesRegex(ValueError, "must be after"):
-            timeline.register_hilo_times([dt1, dt2], [dt2, dt4])
-
-    def test_build_hilo_plot(self):
+    def test_hilo_plot_with_boundary_data(self):
         zone = tz.hawaii
         start_date = date(2025, 9, 1)
         end_date = date(2025, 9, 1)
         timeline = HiloTimeline(start_date, end_date, zone)
         timeline.now = datetime(2025, 8, 30, 0, 0, tzinfo=zone)
-        timeline.register_hilo_times([], [])
+        timeline.register_hilo_times(None)
 
-        plot = timeline.build_plot(lambda _: None)
-        self.assertEqual(len(plot), 2)
-        self.assertEqual(plot, [None] * len(plot))
-
-        data = {datetime(2025, 9, 1, 3, 15, tzinfo=zone): 12.51}
-        timeline.register_hilo_times([], list(data.keys()))
+        dt1 = datetime(2025, 9, 1, 0, tzinfo=zone)
+        dt2 = datetime(2025, 9, 1, 3, 15, tzinfo=zone)
+        dt3 = datetime(2025, 9, 2, 0, tzinfo=zone)
+        data = {dt1: 8.0, dt2: 12.51, dt3: 9.3}
+        timeline.register_hilo_times(list(data.keys()))
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(len(plot), 3)
-        self.assertTrue(12.51 in plot)
+        self.assertEqual(plot, [8.0, 12.51, 9.3])
