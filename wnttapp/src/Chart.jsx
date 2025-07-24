@@ -173,18 +173,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             color: MeanHighWaterColor,
             hoverinfo: 'skip',
         }),
-        ...(data.future_tide !== null
-            ? [
-                  buildPlot({
-                      name: 'Projected Storm Tide',
-                      x: data.timeline,
-                      y: data.future_tide,
-                      lineType: 'dash',
-                      markerSize: hiloMode ? tideMarkerSize : 0,
-                      color: ProjectedStormTideColor,
-                  }),
-              ]
-            : []),
         ...(data.hist_tides !== null
             ? [
                   buildPlot({
@@ -218,6 +206,18 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       lineType: 'solid',
                       markerSize: hiloMode ? tideMarkerSize : 0,
                       color: RecordedStormSurgeColor,
+                  }),
+              ]
+            : []),
+        ...(data.future_tide !== null
+            ? [
+                  buildPlot({
+                      name: 'Projected Storm Tide',
+                      x: data.timeline,
+                      y: data.future_tide,
+                      lineType: 'dash',
+                      markerSize: hiloMode ? tideMarkerSize : 0,
+                      color: ProjectedStormTideColor,
                   }),
               ]
             : []),
