@@ -47,7 +47,7 @@ def get_recorded_tides(
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
         tide level in MLLW feet.
     """
-    if timeline.length() == 0 or timeline.is_all_future():
+    if timeline.length_raw() == 0 or timeline.is_all_future():
         # Nothing to fetch
         return {}
 
@@ -69,7 +69,7 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
 
     # If timeline is all in the future, don't bother.
-    if timeline.length() == 0 or timeline.is_all_future():
+    if timeline.length_raw() == 0 or timeline.is_all_future():
         return wind_dict
 
     # For readability, thin out the data points, as it gets pretty dense and hard to read.
@@ -119,7 +119,7 @@ def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of water temp readings from CDMO.
     """
-    if timeline.length() == 0 or timeline.is_all_future():
+    if timeline.length_raw() == 0 or timeline.is_all_future():
         # Nothing to fetch, it's all in the future
         return None
 
@@ -230,7 +230,7 @@ def get_cdmo_data(
             # Now convert to requested tzone, so DST is handled properly
             dt_in_local = in_utc.astimezone(timeline.time_zone)
             # Since we query more data than we need, only save the data that is in the requested timeline.
-            if dt_in_local not in timeline.get_all_past():
+            if dt_in_local not in timeline.get_all_past_raw():
                 skipped += 1
                 continue
             data_str = reading.find(f"./{param}").text
@@ -350,7 +350,7 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
 
     cur_arc = None
-    for dt in timeline.get_all_past():
+    for dt in timeline.get_all_past_raw():
         val = obs_dict.get(dt, None)
         if val is not None:
             position = HIGH_ARC if val > midtide else LOW_ARC
@@ -386,7 +386,8 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
 
         arc_timeline = list(
             filter(
-                lambda dt: min(datadict) <= dt <= max(datadict), timeline.get_all_past()
+                lambda dt: min(datadict) <= dt <= max(datadict),
+                timeline.get_all_past_raw(),
             )
         )
         sparse_vals = [datadict.get(dt, None) for dt in arc_timeline]

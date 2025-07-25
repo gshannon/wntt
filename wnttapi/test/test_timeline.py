@@ -27,12 +27,12 @@ class TestGraphTimeline(TestCase):
         # Start of DST, skips 2AM (4 elements)
         start_date = end_date = spring_date
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length(), normal_count - 4)
+        self.assertEqual(timeline.length_raw(), normal_count - 4)
 
         # End of DST, repeats 1AM (should have 4 extra elements)
         start_date = end_date = fall_date
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length(), normal_count + 4)
+        self.assertEqual(timeline.length_raw(), normal_count + 4)
         self.assertEqual(timeline._raw_times[0].day, timeline._raw_times[-2].day)
         self.assertNotEqual(timeline._raw_times[0].day, timeline._raw_times[-1].day)
 
@@ -48,21 +48,21 @@ class TestGraphTimeline(TestCase):
         end_date = date(2025, 7, 16)
 
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length(), (96 * 2) + 1)
+        self.assertEqual(timeline.length_raw(), (96 * 2) + 1)
 
         timeline.now = datetime(2025, 7, 16, 1, 7, tzinfo=zone)
-        past = timeline.get_all_past()
+        past = timeline.get_all_past_raw()
         self.assertEqual(len(past), 96 + 5)  # full day (96) + 1 hour (4) + 01:00 (1)
 
         # force them all in the future
         timeline.now = datetime(2025, 7, 15, 0, 0, tzinfo=zone)
-        past = timeline.get_all_past()
+        past = timeline.get_all_past_raw()
         self.assertEqual(len(past), 0)
 
         # force all in the past
         timeline.now = datetime(2025, 7, 17, 5, 23, tzinfo=zone)
-        past = timeline.get_all_past()
-        self.assertEqual(len(past), timeline.length())
+        past = timeline.get_all_past_raw()
+        self.assertEqual(len(past), timeline.length_raw())
 
     def test_graph_final_times(self):
         # GraphTimeline correctly substitutes corrected times in the timeline
@@ -84,7 +84,7 @@ class TestGraphTimeline(TestCase):
             original_time_2: real_time_2,
         }
         final = timeline.get_final_times(corrections)
-        self.assertEqual(timeline.length(), len(final))
+        self.assertEqual(timeline.length_raw(), len(final))
         self.assertNotEqual(final, timeline._raw_times)
         self.assertTrue(original_time_1 not in final)
         self.assertTrue(real_time_1 in final)
@@ -99,12 +99,12 @@ class TestGraphTimeline(TestCase):
 
         data = {}
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(timeline.length(), len(plot))
+        self.assertEqual(timeline.length_raw(), len(plot))
         self.assertEqual(plot, [None] * len(plot))
 
         data = {datetime(2025, 9, 1, 3, 15, tzinfo=zone): 12.51}
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(timeline.length(), len(plot))
+        self.assertEqual(timeline.length_raw(), len(plot))
         self.assertTrue(12.51 in plot)
 
 

@@ -129,7 +129,7 @@ def pred15_json_to_dict(pred_json: list, timeline: Timeline) -> dict:
     for pred in pred_json:
         dts = pred["t"]
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
-        if timeline.contains(dt):
+        if timeline.contains_raw(dt):
             val = pred["v"]
             reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(float(val))
     return reg_preds_dict

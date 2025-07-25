@@ -48,17 +48,21 @@ class Timeline:
             self._raw_times.append(utc_cur.astimezone(self.start_dt.tzinfo))
             utc_cur += timedelta(minutes=15)
 
-    def length(self):
+    def is_all_future(self):
+        """Returns whether the timeline start time is in the future."""
+        return self.start_dt > self.now
+
+    def length_raw(self):
+        """Return the number of times in the initial timeline."""
         return len(self._raw_times)
 
-    def contains(self, dt: datetime) -> bool:
+    def contains_raw(self, dt: datetime) -> bool:
+        """Returns whether the given datetime is in the initial timeline."""
         return dt in self._raw_times
 
-    def get_all_past(self):
+    def get_all_past_raw(self) -> list:
+        """Return all datetimes in the initial timeline that are before now."""
         return list(filter(lambda dt: dt < self.now, self._raw_times))
-
-    def is_all_future(self):
-        return self.start_dt > self.now
 
 
 class GraphTimeline(Timeline):
@@ -84,6 +88,20 @@ class GraphTimeline(Timeline):
             ),
         )
 
+    def build_plot(self, callback):
+        """Build an array of data values or None -- that matches the known datetimes
+            that correspond to a tide data value, either recorded or predicted, suitable for using to
+            build a Plotly scatter plot.
+
+        Args:
+            callback (function): Callback function that, based on the datetime in question,
+            returns the data that matches, or None as appropriate.
+
+        Returns:
+            list: The resulting list of data values or None
+        """
+        return list(map(callback, self._raw_times))
+
     def get_final_times(self, change_dict: dict):
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
 
@@ -97,43 +115,43 @@ class GraphTimeline(Timeline):
         """
         return [change_dict[dt] if dt in change_dict else dt for dt in self._raw_times]
 
-    def build_plot(self, callback):
-        """Build an array of data values or None -- that matches the known datetimes
-            that correspond to a tide data value, either recorded or predicted, suitable for using to
-            build a Plotly scatter plot.
-
-        Args:
-            callback (function): Callback function that, based on the datetime in question,
-            returns the data that matches, or None as appropriate.
-            ignored boolean parameter: present to support subclass overloading.
-
-        Returns:
-            list: The resulting list of data values or None
-        """
-        return list(map(callback, self._raw_times))
-
 
 class HiloTimeline(GraphTimeline):
-    """A type of GraphTimeline where the initial 15-min interval timeline gets replaced with the start time,
-    end time, and all times which map to an observed or predicted high or low tide in between. The original
-    start and end times are included in the final timeline, but not repeated.
+    """A specialization of GraphTimeline where the initial 15-min interval timeline gets replaced with the
+    start time and end time, plus all times which map to an observed or predicted high or low tide in between.
+    The original start and end times are included in the final timeline, but not repeated.
     You must register the high/low tide times before calling build_plot or get_final_times.
     """
 
-    _hilo_timeline = None
-
-    def register_hilo_times(self, hilo_dts: list):
-        """Call this to register the subset of raw_times which map to observed high and low tides and
-        susequent predicted high and low tides.  This must be called before build_plot or get_final_times.
+    def __init__(self, start_date: date, end_date: date, time_zone: ZoneInfo):
+        """Constructor.
 
         Args:
-            - hilo_dts (list): datetimes which correspond with an observed high or low tide, either
-              observed or predicted. All times between the start and end of the raw timeline, although
-              they don't need to be on a 15-min boundary. Any duplicates are removed.
+            start_date (date): First day.
+            end_date (date): Last day.
+            time_zone (ZoneInfo): time zone data will be displayed in.
+        """
+        self._hilo_timeline = None
+        self._start_has_data = False
+        self._end_has_data = False
+        super().__init__(start_date, end_date, time_zone)
+
+    def register_hilo_times(self, hilo_dts: list):
+        """Call this to alter the alter the timeline so it includes only these times, plus start and end times,
+        with no repeats. This must be called before build_plot or get_final_times.
+
+        Args:
+            - hilo_dts (list): datetimes which correspond with a high or low tide, either
+              observed or predicted. All times must be between the start and end times, inclusive.
+              Any duplicates are silently removed.
 
         Raises:
             ValueError: if any times are outside the timeline start/end times.
         """
+        # We'll need to know if the start and end times have data, to determine whether we include them
+        # in the final plot.
+        self._start_has_data = self.start_dt in hilo_dts
+        self._end_has_data = self.end_dt in hilo_dts
         self._hilo_timeline = list(
             set(
                 [self.start_dt]
@@ -167,7 +185,11 @@ class HiloTimeline(GraphTimeline):
             raise ValueError("register_hilo_times must be called first")
 
         # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
-        return list(map(callback, self._hilo_timeline))
+        # Note we only callback for the start and end times if they have data.
+        plot = callback(self.start_dt) if self._start_has_data else [None]
+        plot += list(map(callback, self._hilo_timeline[1:-1]))
+        plot += callback(self.end_dt) if self._end_has_data else [None]
+        return plot
 
     def get_final_times(self, corrections) -> list:
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
