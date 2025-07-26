@@ -186,9 +186,10 @@ class HiloTimeline(GraphTimeline):
 
         # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
         # Note we only callback for the start and end times if they have data.
-        plot = callback(self.start_dt) if self._start_has_data else [None]
+        plot = []
+        plot.append(callback(self.start_dt) if self._start_has_data else None)
         plot += list(map(callback, self._hilo_timeline[1:-1]))
-        plot += callback(self.end_dt) if self._end_has_data else [None]
+        plot.append(callback(self.end_dt) if self._end_has_data else None)
         return plot
 
     def get_final_times(self, corrections) -> list:
