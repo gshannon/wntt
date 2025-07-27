@@ -1,5 +1,11 @@
 import { AppContext } from './AppContext'
-import { maxCustomElevationNavd88, MediumBase, navd88ToMllw, widthGreaterOrEqual } from './utils'
+import {
+    isTouchScreen,
+    maxCustomElevationNavd88,
+    MediumBase,
+    navd88ToMllw,
+    widthGreaterOrEqual,
+} from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
@@ -27,9 +33,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const isWideEnough = widthGreaterOrEqual(MediumBase)
     const tideMarkerSize = 8
     const windMarkerSize = 11
-    // Are we on a touch screen?
-    const isTouchScreen =
-        'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
     if (error) {
         console.error(error)

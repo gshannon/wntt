@@ -8,14 +8,13 @@ import BarLoader from 'react-spinners/BarLoader'
 import Container from 'react-bootstrap/Container'
 import Table from 'react-bootstrap/Table'
 import { Col, Row } from 'react-bootstrap'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import Tooltip from 'react-bootstrap/Tooltip'
 import { YellowPin, RedPin } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
 import { MapBounds, maxCustomElevationNavd88, navd88ToMllw, Page } from './utils'
 import { AppContext } from './AppContext'
 import Tutorial from './Tutorial'
+import Overlay from './Overlay'
 import { getData } from './tutorials/map'
 
 const WellsStationLocation = {
@@ -147,40 +146,37 @@ export default function Map() {
                 <Col xs={12} sm={4} className='align-self-center'>
                     <Row>
                         <Col className='col-12 text-center'>
-                            <OverlayTrigger
-                                overlay={
-                                    <Tooltip id='id-set-button'>
-                                        Add or replace your custom elevation to the graph and return
-                                        to the Graph.
-                                    </Tooltip>
-                                }>
-                                <Button
-                                    variant='custom-primary'
-                                    className='m-2'
-                                    onClick={() => addtoGraph()}
-                                    disabled={
-                                        !appContext.markerElevationNav ||
-                                        appContext.markerElevationNav ===
-                                            appContext.customElevationNav ||
-                                        appContext.markerElevationNav > maxCustomElevationNavd88()
-                                    }>
-                                    Add to Graph
-                                </Button>
-                            </OverlayTrigger>
-                            <OverlayTrigger
-                                overlay={
-                                    <Tooltip id='id-set-button'>
-                                        Remove your custom marker from the map and the graph.
-                                    </Tooltip>
-                                }>
-                                <Button
-                                    variant='custom-primary'
-                                    className='m-2'
-                                    onClick={() => removeMarker()}
-                                    disabled={!appContext.markerLocation}>
-                                    Remove&nbsp;Marker
-                                </Button>
-                            </OverlayTrigger>
+                            <Overlay
+                                text='Add or replace your custom elevation to the graph and return
+                                        to the Graph.'
+                                placement='top'
+                                contents={
+                                    <Button
+                                        variant='custom-primary'
+                                        className='m-2'
+                                        onClick={() => addtoGraph()}
+                                        disabled={
+                                            !appContext.markerElevationNav ||
+                                            appContext.markerElevationNav ===
+                                                appContext.customElevationNav ||
+                                            appContext.markerElevationNav >
+                                                maxCustomElevationNavd88()
+                                        }>
+                                        Add to Graph
+                                    </Button>
+                                }></Overlay>
+                            <Overlay
+                                text='Remove your custom marker from the map and the graph.'
+                                placement='top'
+                                contents={
+                                    <Button
+                                        variant='custom-primary'
+                                        className='m-2'
+                                        onClick={() => removeMarker()}
+                                        disabled={!appContext.markerLocation}>
+                                        Remove&nbsp;Marker
+                                    </Button>
+                                }></Overlay>
                         </Col>
                     </Row>
                     <Row>
@@ -216,42 +212,26 @@ export default function Map() {
                     className='d-flex justify-content-center align-items-center'>
                     <Row>
                         <Col className='map-vertical-buttons'>
-                            <OverlayTrigger
-                                trigger={['hover', 'hover']}
-                                overlay={
-                                    <Tooltip id='id-set-button'>
-                                        Find a location by entering a physical address.
-                                    </Tooltip>
-                                }>
-                                <a href='#' onClick={() => setShowAddressPopup(true)}>
-                                    Address&nbsp;Lookup
-                                </a>
-                            </OverlayTrigger>
-                            <OverlayTrigger
-                                overlay={
-                                    <Tooltip id='id-set-button'>Return to the Graph page.</Tooltip>
-                                }>
-                                <a
-                                    href='#'
-                                    className='my-1'
-                                    onClick={() => appContext.gotoPage(Page.Graph)}>
-                                    Return&nbsp;to Graph
-                                </a>
-                            </OverlayTrigger>
-                            <OverlayTrigger
-                                trigger={['hover', 'hover']}
-                                overlay={
-                                    <Tooltip id='id-set-button'>
-                                        Open the Map page tutorial in a popup window.
-                                    </Tooltip>
-                                }>
-                                <Button
-                                    variant='primary'
-                                    className='my-1'
-                                    onClick={() => setShowTut(true)}>
-                                    Map Tutorial
-                                </Button>
-                            </OverlayTrigger>
+                            <a href='#' onClick={() => setShowAddressPopup(true)}>
+                                Address&nbsp;Lookup
+                            </a>
+                            <a
+                                href='#'
+                                className='my-1'
+                                onClick={() => appContext.gotoPage(Page.Graph)}>
+                                Return&nbsp;to Graph
+                            </a>
+                            <Overlay
+                                text='Open the Map page tutorial in a popup window.'
+                                placement='top'
+                                contents={
+                                    <Button
+                                        variant='primary'
+                                        className='my-1'
+                                        onClick={() => setShowTut(true)}>
+                                        Map Tutorial
+                                    </Button>
+                                }></Overlay>
                         </Col>
                     </Row>
                 </Col>

@@ -2,8 +2,6 @@ import './css/GetDates.css'
 import { useContext, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { Col, Form, FormLabel, FormText, Row } from 'react-bootstrap'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import Tooltip from 'react-bootstrap/Tooltip'
 import { DatePicker } from 'reactstrap-date-picker'
 import Container from 'react-bootstrap/Container'
 import {
@@ -18,6 +16,7 @@ import {
     Page,
 } from './utils'
 import Tutorial from './Tutorial'
+import Overlay from './Overlay'
 import { AppContext } from './AppContext'
 import { getData } from './tutorials/graph'
 
@@ -138,54 +137,43 @@ export default function GetDates({
                             <Col className='col-4'>
                                 <Row className='mx-1'>
                                     <Col className='d-flex align-items-center justify-content-center'>
-                                        <OverlayTrigger
-                                            trigger={['hover', 'hover']}
-                                            overlay={
-                                                <Tooltip id='id-refresh-button'>
-                                                    Redraw the graph with the latest data using the
-                                                    selected date range.
-                                                </Tooltip>
-                                            }>
-                                            <Button
-                                                variant='custom-primary'
-                                                className='px-2 m-1'
-                                                type='submit'
-                                                name='refresh'>
-                                                Refresh
-                                            </Button>
-                                        </OverlayTrigger>
-                                        <OverlayTrigger
-                                            trigger={['hover', 'hover']}
-                                            overlay={
-                                                <Tooltip id='id-reset-button'>
-                                                    Return to the default date range and refresh the
-                                                    graph.
-                                                </Tooltip>
-                                            }>
-                                            <Button
-                                                variant='custom-primary'
-                                                className='px-2 m-1'
-                                                type='submit'
-                                                name='reset'>
-                                                Reset
-                                            </Button>
-                                        </OverlayTrigger>
+                                        <Overlay
+                                            text='Redraw the graph with the latest data using the selected date range.'
+                                            placement='top'
+                                            contents={
+                                                <Button
+                                                    variant='custom-primary'
+                                                    className='px-2 m-1'
+                                                    type='submit'
+                                                    name='refresh'>
+                                                    Refresh
+                                                </Button>
+                                            }></Overlay>
+                                        <Overlay
+                                            text='Return to the default date range and refresh the graph.'
+                                            placement='top'
+                                            contents={
+                                                <Button
+                                                    variant='custom-primary'
+                                                    className='px-2 m-1'
+                                                    type='submit'
+                                                    name='reset'>
+                                                    Reset
+                                                </Button>
+                                            }></Overlay>
                                     </Col>
                                     <Col className='d-flex align-items-center justify-content-center'>
-                                        <OverlayTrigger
-                                            trigger={['hover', 'hover']}
-                                            overlay={
-                                                <Tooltip id='id-set-button'>
-                                                    Open the Graph page tutorial in a popup window.
-                                                </Tooltip>
-                                            }>
-                                            <Button
-                                                variant='primary'
-                                                className='px-2 my-1'
-                                                onClick={() => setShowTut(true)}>
-                                                Graph Tutorial
-                                            </Button>
-                                        </OverlayTrigger>
+                                        <Overlay
+                                            text='Open the Graph page tutorial in a popup window.'
+                                            placement='top'
+                                            contents={
+                                                <Button
+                                                    variant='primary'
+                                                    className='px-2 my-1'
+                                                    onClick={() => setShowTut(true)}>
+                                                    Graph Tutorial
+                                                </Button>
+                                            }></Overlay>
                                     </Col>
                                 </Row>
                                 <Row></Row>
@@ -206,19 +194,17 @@ export default function GetDates({
                             )}
                         </Col>
                         <Col className='text-center'>
-                            <OverlayTrigger
-                                overlay={
-                                    <Tooltip id='id-set-button'>
-                                        Go to Map page to manage your custom elevation.
-                                    </Tooltip>
-                                }>
-                                <Button
-                                    variant='custom-primary'
-                                    className='py-0'
-                                    onClick={() => appContext.gotoPage(Page.Map)}>
-                                    Edit
-                                </Button>
-                            </OverlayTrigger>
+                            <Overlay
+                                text='Go to Map page to manage your custom elevation.'
+                                placement='top'
+                                contents={
+                                    <Button
+                                        variant='custom-primary'
+                                        className='py-0'
+                                        onClick={() => appContext.gotoPage(Page.Map)}>
+                                        Edit
+                                    </Button>
+                                }></Overlay>
                         </Col>
                     </Row>
                 </Col>

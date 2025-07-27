@@ -2,10 +2,9 @@ import './css/Home.css'
 import banner from './images/aerial-4.jpg'
 import { Page } from './utils'
 import { Container, Col, Row, Stack } from 'react-bootstrap'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import ToolTip from 'react-bootstrap/Tooltip'
 import { useContext } from 'react'
 import { AppContext } from './AppContext'
+import Overlay from './Overlay'
 import useLatestData from './useLatestData'
 
 export default function Home() {
@@ -65,36 +64,48 @@ export default function Home() {
                 </Row>
                 <Row className='conditions text-center mt-3'>
                     <Col className='mx-2 px-1 offset-2'>
-                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
-                            <Stack>
-                                <div className='label'>Wind Speed</div>
-                                <div className='data'>{windSpeedStr}</div>
-                            </Stack>
-                        </OverlayTrigger>
+                        <Overlay
+                            text={`As of ${windTime}`}
+                            placement='top'
+                            contents={
+                                <Stack>
+                                    <div className='label'>Wind Speed</div>
+                                    <div className='data'>{windSpeedStr}</div>
+                                </Stack>
+                            }></Overlay>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {windTime}</ToolTip>}>
-                            <Stack>
-                                <div className='label'>Wind Gust</div>
-                                <div className='data'>{windGustStr}</div>
-                            </Stack>
-                        </OverlayTrigger>
+                        <Overlay
+                            text={`As of ${windTime}`}
+                            placement='top'
+                            contents={
+                                <Stack>
+                                    <div className='label'>Wind Gust</div>
+                                    <div className='data'>{windGustStr}</div>
+                                </Stack>
+                            }></Overlay>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {tideTime}</ToolTip>}>
-                            <Stack>
-                                <div className='label'>Tide Level</div>
-                                <div className='data'>{tideStr}</div>
-                            </Stack>
-                        </OverlayTrigger>
+                        <Overlay
+                            text={`As of ${tideTime}`}
+                            placement='top'
+                            contents={
+                                <Stack>
+                                    <div className='label'>Tide Level</div>
+                                    <div className='data'>{tideStr}</div>
+                                </Stack>
+                            }></Overlay>
                     </Col>
                     <Col className='mx-1 px-1'>
-                        <OverlayTrigger overlay={<ToolTip id='id-1'>As of {tempTime}</ToolTip>}>
-                            <Stack>
-                                <div className='label'>Water Temperature</div>
-                                <div className='data'>{tempStr}</div>
-                            </Stack>
-                        </OverlayTrigger>
+                        <Overlay
+                            text={`As of ${tempTime}`}
+                            placement='top'
+                            contents={
+                                <Stack>
+                                    <div className='label'>Water Temperature</div>
+                                    <div className='data'>{tempStr}</div>
+                                </Stack>
+                            }></Overlay>
                     </Col>
                 </Row>
             </Container>
