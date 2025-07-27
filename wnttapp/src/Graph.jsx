@@ -1,10 +1,9 @@
 import './css/Graph.css'
 import { useEffect, useReducer, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import Tooltip from 'react-bootstrap/Tooltip'
 import GetDates from './GetDates'
 import Chart from './Chart'
+import Overlay from './Overlay'
 import useGraphData from './useGraphData'
 import {
     addDays,
@@ -137,13 +136,16 @@ export default function Graph() {
             return <Col />
         }
         return (
-            <OverlayTrigger overlay={<Tooltip id={props.id}>{props.hoverText}</Tooltip>}>
-                <Col xs={1} className='text-center'>
-                    <a href='#' onClick={props.action}>
-                        <img className='pic' src={props.image} alt={props.hoverText} />
-                    </a>
-                </Col>
-            </OverlayTrigger>
+            <Overlay
+                text={props.hoverText}
+                placement='top'
+                contents={
+                    <Col xs={1} className='text-center'>
+                        <a href='#' onClick={props.action}>
+                            <img className='pic' src={props.image} alt={props.hoverText} />
+                        </a>
+                    </Col>
+                }></Overlay>
         )
     }
 
@@ -167,7 +169,6 @@ export default function Graph() {
             */}
             <Row className='justify-content-center align-items-center me-0'>
                 <JumpDates
-                    id='id-prev'
                     hoverText={`Previous ${numDaysText}`}
                     action={handlePreviousClick}
                     image={prevButton}
@@ -176,7 +177,6 @@ export default function Graph() {
                     <Chart loading={loading} error={error} hiloMode={hiloMode} data={data} />
                 </Col>
                 <JumpDates
-                    id='id-next'
                     hoverText={`Next ${numDaysText}`}
                     action={handleNextClick}
                     image={nextButton}

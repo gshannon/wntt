@@ -21,6 +21,10 @@ export const XXLBase = 1400
 export const widthGreaterOrEqual = (base) => window.matchMedia(`(min-width: ${base}px)`).matches
 export const widthLessThan = (base) => window.matchMedia(`(max-width: ${base - 1}px)`).matches
 
+// Are we on a touch screen?
+export const isTouchScreen =
+    'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+
 // Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would
 // be skipped.

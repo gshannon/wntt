@@ -168,8 +168,9 @@ class HiloTimeline(GraphTimeline):
             raise ValueError("All dts must be within the timeline start and end")
 
     def build_plot(self, callback) -> list:
-        """Build an array of data values or None's -- which matches the known datetimes
-            that correspond to a High or Low tide data value, suitable for using to build a plot line.
+        """Using the caller's callback function, build an array of data values or None's -- which
+            matches the known datetimes that correspond to a High or Low tide data value, suitable
+            for using to build a plot line.
 
         Args:
             - callback (function): Callback function that, based on the datetime in question, returns

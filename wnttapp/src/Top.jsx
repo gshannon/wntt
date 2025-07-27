@@ -8,13 +8,12 @@ import NavbarCollapse from 'react-bootstrap/NavbarCollapse'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import Tooltip from 'react-bootstrap/Tooltip'
 import { Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import HelpButton from './images/util/help.png'
 import Conditions from './Conditions'
+import Overlay from './Overlay'
 
 export default function Top(props) {
     const page = props.page
@@ -59,28 +58,21 @@ export default function Top(props) {
                         </Nav>
                     </NavbarCollapse>
                     <NavbarBrand>
-                        <OverlayTrigger
+                        <Overlay
+                            text='Popup that shows current weather and tide data.'
                             placement='bottom'
-                            // Dflt trigger includes 'focus' which causes display problems. I'd like to
-                            // just trigger on hover but then it spams the console. This is a workaround.
-                            // https://github.com/react-bootstrap/react-bootstrap/issues/5027
-                            trigger={['hover', 'hover']}
-                            overlay={
-                                <Tooltip id='id-cond-button'>
-                                    Popup that shows current weather and tide data.
-                                </Tooltip>
-                            }>
-                            <NavLink
-                                className='px-sm-2 px-lg-4'
-                                onClick={() => setShowConditions(true)}>
-                                <img
-                                    className='conditions-menu object-fit-contain'
-                                    src={Wave}
-                                    width={50}
-                                    alt='Current conditions'
-                                />
-                            </NavLink>
-                        </OverlayTrigger>
+                            contents={
+                                <NavLink
+                                    className='px-sm-2 px-lg-4'
+                                    onClick={() => setShowConditions(true)}>
+                                    <img
+                                        className='conditions-menu object-fit-contain'
+                                        src={Wave}
+                                        width={50}
+                                        alt='Current conditions'
+                                    />
+                                </NavLink>
+                            }></Overlay>
                     </NavbarBrand>
                     <NavDropdown
                         className='ps-sm-2 pe-sm-4'
