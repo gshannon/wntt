@@ -98,7 +98,11 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         timeline, astro_preds15_dict, astro_later_hilo_dict
     )
 
-    past_surge_plot = timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
+    past_surge_plot = (
+        timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
+        if not timeline.is_all_future()
+        else None
+    )
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
         timeline, future_surge_dict, astro_preds15_dict, astro_later_hilo_dict
     )
@@ -145,7 +149,8 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
 def build_hist_tide_plot(
     timeline: GraphTimeline, obs_dict: dict, obs_hilo_dict: dict
 ) -> tuple[list, list]:
-    """Build historical tide plot and high or low tide labels.
+    """Build historical tide plot and high or low tide labels. For timeslines entirely in the future,
+    each callback would return None, so we can just return None for both lists.
 
     Args:
         timeline (GraphTimeline): the timeline
@@ -157,6 +162,9 @@ def build_hist_tide_plot(
         - hist_tides_plot: list of historical tide heights in MLLW feet, or None if no data
         - hist_hilo_labels: list of corresponding high or low tide labels or '' for each datetime in the timeline
     """
+
+    if timeline.is_all_future():
+        return None, None
 
     def get_hilo_label(dt: datetime):
         if dt in obs_hilo_dict:
