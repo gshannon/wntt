@@ -15,7 +15,7 @@ import {
     getMaxNumDays,
     minGraphDate,
     maxGraphDate,
-    SmallBase,
+    MediumBase,
     widthLessThan,
 } from './utils'
 import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
@@ -33,6 +33,7 @@ export default function Graph() {
     const datesStorage = getDailyLocalStorage('dates')
     const [startDateStr, setStartDateStr] = useState(datesStorage.start ?? defaultStartStr)
     const [endDateStr, setEndDateStr] = useState(datesStorage.end ?? defaultEndStr)
+    const [isHiloMode, setIsHiloMode] = useState(datesStorage.hiloMode ?? widthLessThan(MediumBase))
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     // eslint-disable-next-line no-unused-vars
@@ -50,16 +51,17 @@ export default function Graph() {
         max: addDays(new Date(startDateStr), getMaxNumDays() - 1),
     })
 
-    const setDateStorage = (start, end) => {
+    const setDateStorage = (start, end, hiloMode) => {
         setDailyLocalStorage('dates', {
             start: start,
             end: end,
+            hiloMode: hiloMode,
         })
     }
 
     useEffect(() => {
-        setDateStorage(startDateStr, endDateStr)
-    }, [startDateStr, endDateStr])
+        setDateStorage(startDateStr, endDateStr, isHiloMode)
+    }, [startDateStr, endDateStr, isHiloMode])
 
     const queryClient = useQueryClient()
     const daysShown = dateDiff(startDateStr, endDateStr) + 1
@@ -68,9 +70,13 @@ export default function Graph() {
         setStartDateStr(startDateStr)
         setEndDateStr(endDateStr)
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
-        const key = buildCacheKey(startDateStr, endDateStr)
+        const key = buildCacheKey(startDateStr, endDateStr, isHiloMode)
         queryClient.removeQueries({ queryKey: key, exact: true })
         forceGraphUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
+    }
+
+    const toggleHiloMode = () => {
+        setIsHiloMode(!isHiloMode)
     }
 
     const setJumpDates = (directionFactor) => {
@@ -127,25 +133,24 @@ export default function Graph() {
         resetDateControls()
     }
 
-    // If CSS Pixels width is less than Bootstrap's "small" breakpoint, show only highs and lows.
-    const hiloMode = widthLessThan(SmallBase)
-    const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr, hiloMode)
+    // If CSS Pixels width is less than Bootstrap's "Medium" breakpoint, show only highs and lows.
+    const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr, isHiloMode)
 
     const JumpDates = (props) => {
         if (error || loading) {
-            return <Col />
+            return <Col className='col-1' />
         }
         return (
-            <Overlay
-                text={props.hoverText}
-                placement='top'
-                contents={
-                    <Col xs={1} className='text-center'>
+            <Col className='col-1 text-center px-0'>
+                <Overlay
+                    text={props.hoverText}
+                    placement='top'
+                    contents={
                         <a href='#' onClick={props.action}>
                             <img className='pic' src={props.image} alt={props.hoverText} />
                         </a>
-                    </Col>
-                }></Overlay>
+                    }></Overlay>
+            </Col>
         )
     }
 
@@ -159,22 +164,24 @@ export default function Graph() {
                 endCtl={endCtl}
                 setEndCtl={setEndCtl}
                 setDateRangeStrings={setDateRangeStrings}
+                isHiloMode={isHiloMode}
+                toggleHiloMode={toggleHiloMode}
                 resetDateControls={resetDateControls}
             />
             {/*
             Note we are not using Container because it sets left & right margin to auto, and this
             doesn't allow enough horizontal space to be used when in between 2 breakpoints.
-            For the Row, we must undo the negative margin it carries as compensation for the Container's.
-            Otherwise it pushes the Row right and causes a horizontal scrollbar.
+            Since Row has a default x margin of -12 to compensate for the Container's margin of +12, 
+            we add mx-0 to keep it from pushing the Row beyond the screen and causing a horizontal scrollbar.
             */}
-            <Row className='justify-content-center align-items-center me-0'>
+            <Row className='justify-content-center align-items-center mx-0'>
                 <JumpDates
                     hoverText={`Previous ${numDaysText}`}
                     action={handlePreviousClick}
                     image={prevButton}
                 />
                 <Col xs={10} className='px-0'>
-                    <Chart loading={loading} error={error} hiloMode={hiloMode} data={data} />
+                    <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
                 </Col>
                 <JumpDates
                     hoverText={`Next ${numDaysText}`}

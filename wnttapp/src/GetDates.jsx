@@ -14,6 +14,8 @@ import {
     maxGraphDate,
     navd88ToMllw,
     Page,
+    MediumBase,
+    widthLessThan,
 } from './utils'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
@@ -28,11 +30,12 @@ export default function GetDates({
     endCtl,
     setEndCtl,
     setDateRangeStrings,
+    isHiloMode,
+    toggleHiloMode,
     resetDateControls,
 }) {
     const appContext = useContext(AppContext)
     const [showTut, setShowTut] = useState(false)
-
     const months = [
         'Jan',
         'Feb',
@@ -51,6 +54,10 @@ export default function GetDates({
     const maxDate = maxGraphDate()
     const rangeMin = `${months[minDate.getMonth()]} ${minDate.getFullYear()}`
     const rangeMax = `${months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
+
+    const handleHiloToggle = () => {
+        toggleHiloMode()
+    }
 
     const handleSubmit = (e) => {
         // The form has 2 submit buttons -- refresh & reset, so handle them both here.
@@ -103,7 +110,7 @@ export default function GetDates({
             <Row className='align-items-center'>
                 <Col sm={9}>
                     <Form onSubmit={handleSubmit}>
-                        <Row className='align-items-center'>
+                        <Row className='align-items-center mx-0 options'>
                             <Col className='col-4 align-self-start'>
                                 <FormLabel>Start Date: </FormLabel>
                                 <DatePicker
@@ -164,6 +171,31 @@ export default function GetDates({
                                     </Col>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <Overlay
+                                            text='Turn on to show only high and low tides.'
+                                            placement='top'
+                                            contents={
+                                                <Form>
+                                                    <Form.Check
+                                                        type='checkbox'
+                                                        // id='myCheckbox'
+                                                        label='Highs/Lows only'
+                                                        checked={isHiloMode}
+                                                        onChange={handleHiloToggle}
+                                                        disabled={widthLessThan(MediumBase)}
+                                                    />
+                                                </Form>
+                                                // <label>
+                                                //     <input
+                                                //         type='checkbox'
+                                                //         checked={isHiloMode}
+                                                //         onChange={handleHiloToggle}
+                                                //         disabled={widthLessThan(MediumBase)}
+                                                //     />
+                                                //     <nbsp />
+                                                //     Highs/Lows only
+                                                // </label>
+                                            }></Overlay>
+                                        {/* <Overlay
                                             text='Open the Graph page tutorial in a popup window.'
                                             placement='top'
                                             contents={
@@ -171,9 +203,9 @@ export default function GetDates({
                                                     variant='primary'
                                                     className='px-2 my-1'
                                                     onClick={() => setShowTut(true)}>
-                                                    Graph Tutorial
+                                                    Tutorial
                                                 </Button>
-                                            }></Overlay>
+                                            }></Overlay> */}
                                     </Col>
                                 </Row>
                                 <Row></Row>

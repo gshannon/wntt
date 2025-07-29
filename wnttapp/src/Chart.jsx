@@ -78,11 +78,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
         template: 'plotly',
         plot_bgcolor: PlotBgColor,
         title: {
-            text: 'Wells Harbor Tides' + (data.wind_speeds !== null ? ' & Wind Data' : '') + '<br>',
-            font: { size: widthGreaterOrEqual(MediumBase) ? 18 : 15 },
+            text: 'Wells Harbor Tides',
             subtitle: {
                 text: data.start_date + ' - ' + data.end_date,
-                font: { size: 15 },
             },
         },
         hovermode: 'x unified',

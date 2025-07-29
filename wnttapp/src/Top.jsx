@@ -57,25 +57,21 @@ export default function Top(props) {
                             </NavLink>
                         </Nav>
                     </NavbarCollapse>
-                    <NavbarBrand>
-                        <Overlay
-                            text='Popup that shows current weather and tide data.'
-                            placement='bottom'
-                            contents={
-                                <NavLink
-                                    className='px-sm-2 px-lg-4'
-                                    onClick={() => setShowConditions(true)}>
-                                    <img
-                                        className='conditions-menu object-fit-contain'
-                                        src={Wave}
-                                        width={50}
-                                        alt='Current conditions'
-                                    />
-                                </NavLink>
-                            }></Overlay>
-                    </NavbarBrand>
+                    <Overlay
+                        text='Popup that shows current weather and tide data.'
+                        placement='bottom'
+                        contents={
+                            <NavLink className='px-md-3' onClick={() => setShowConditions(true)}>
+                                <img
+                                    className='conditions-menu object-fit-contain'
+                                    src={Wave}
+                                    width={50}
+                                    alt='Current conditions'
+                                />
+                            </NavLink>
+                        }></Overlay>
                     <NavDropdown
-                        className='ps-sm-2 pe-sm-4'
+                        className='pe-1'
                         title={
                             <img
                                 className='object-fit-contain'

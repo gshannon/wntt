@@ -103,8 +103,8 @@ export const stringify = (date) => {
 }
 
 // Build the cache key to use for a given date range.
-export function buildCacheKey(startDate, endDate) {
-    return ['graph', startDate + ':' + endDate]
+export function buildCacheKey(startDate, endDate, hiloMode) {
+    return ['graph', startDate + ':' + endDate, hiloMode ? 'hilo' : 'normal']
 }
 
 // Give a Date or a string.  Days may be negative. Returns Date.
