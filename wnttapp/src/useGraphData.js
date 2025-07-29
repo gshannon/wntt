@@ -42,7 +42,7 @@ export default function useGraphData(startDate, endDate, hiloMode) {
     // The main graph data api call.
     const { isPending, data, error } = useQuery({
         retry: false,
-        queryKey: buildCacheKey(startDate, endDate),
+        queryKey: buildCacheKey(startDate, endDate, hiloMode),
         queryFn: async () => {
             const res = await axios.post(import.meta.env.VITE_API_GRAPH_URL, {
                 start_date: startDate,
@@ -62,7 +62,7 @@ export default function useGraphData(startDate, endDate, hiloMode) {
         // hitting the graph page, no refetch is needed, as gc timer is reset when you return to graph
         // and stale timer is still running.
         staleTime: 10_000,
-        gcTime: 1_000,
+        gcTime: 10_000,
     })
 
     return { isPending, data, error }
