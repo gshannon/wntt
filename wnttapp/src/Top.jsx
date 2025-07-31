@@ -25,84 +25,69 @@ export default function Top(props) {
     }
 
     return (
-        <>
-            <Navbar className='my-0' expand='md'>
-                <Container>
-                    <NavbarBrand onClick={() => gotoPage(Page.Home)}>
-                        Wells Reserve <br />
-                        <i>
-                            <b>Tide Tracker</b>
-                        </i>
-                    </NavbarBrand>
-                    <NavbarToggle />
-                    <NavbarCollapse className='me-1'>
-                        <Nav>
-                            <NavLink
-                                onClick={() => gotoPage(Page.Home)}
-                                active={page === Page.Home}>
-                                Home
-                            </NavLink>
-                            <NavLink
-                                onClick={() => gotoPage(Page.Graph)}
-                                active={page === Page.Graph}>
-                                Graph
-                            </NavLink>
-                            <NavLink onClick={() => gotoPage(Page.Map)} active={page === Page.Map}>
-                                Map
-                            </NavLink>
-                            <NavLink
-                                onClick={() => gotoPage(Page.About)}
-                                active={page === Page.About}>
-                                About
-                            </NavLink>
-                        </Nav>
-                    </NavbarCollapse>
-                    <Overlay
-                        text='Popup that shows current weather and tide data.'
-                        placement='bottom'
-                        contents={
-                            <NavLink className='px-md-3' onClick={() => setShowConditions(true)}>
-                                <img
-                                    className='conditions-menu object-fit-contain'
-                                    src={Wave}
-                                    width={50}
-                                    alt='Current conditions'
-                                />
-                            </NavLink>
-                        }></Overlay>
-                    <NavDropdown
-                        className='pe-1'
-                        title={
+        <Navbar className='app-box-top my-0' expand='md'>
+            <Container>
+                <NavbarBrand onClick={() => gotoPage(Page.Home)}>
+                    <div>Wells Reserve</div>
+                    <div className='tide-tracker'>Tide Tracker</div>
+                </NavbarBrand>
+                <NavbarToggle />
+                <NavbarCollapse className='me-1'>
+                    <Nav>
+                        <NavLink onClick={() => gotoPage(Page.Home)} active={page === Page.Home}>
+                            Home
+                        </NavLink>
+                        <NavLink onClick={() => gotoPage(Page.Graph)} active={page === Page.Graph}>
+                            Graph
+                        </NavLink>
+                        <NavLink onClick={() => gotoPage(Page.Map)} active={page === Page.Map}>
+                            Map
+                        </NavLink>
+                        <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
+                            About
+                        </NavLink>
+                    </Nav>
+                </NavbarCollapse>
+                <Overlay
+                    text='Popup that shows current weather and tide data.'
+                    placement='bottom'
+                    contents={
+                        <NavLink className='px-md-3' onClick={() => setShowConditions(true)}>
                             <img
-                                className='object-fit-contain'
-                                src={HelpButton}
+                                className='conditions-menu object-fit-contain'
+                                src={Wave}
                                 width={50}
-                                alt='Help'
+                                alt='Current conditions'
                             />
-                        }>
-                        <NavDropdown.Item onClick={() => gotoPage(Page.Glossary)}>
-                            Glossary
-                        </NavDropdown.Item>
-                        <NavDropdown.Item onClick={() => gotoPage(Page.Help)}>
-                            Help
-                        </NavDropdown.Item>
-                    </NavDropdown>
-                    <NavbarBrand>
-                        <a
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            href='https://wellsreserve.org'>
-                            <img
-                                className='object-fit-contain'
-                                src={Logo}
-                                width={165}
-                                alt='Wells Reserve Logo'
-                            />
-                        </a>
-                    </NavbarBrand>
-                </Container>
-                {showConditions && <Conditions onClose={onModalClose} />}
-            </Navbar>
-        </>
+                        </NavLink>
+                    }></Overlay>
+                <NavDropdown
+                    className='pe-1'
+                    title={
+                        <img
+                            className='object-fit-contain'
+                            src={HelpButton}
+                            width={50}
+                            alt='Help'
+                        />
+                    }>
+                    <NavDropdown.Item onClick={() => gotoPage(Page.Glossary)}>
+                        Glossary
+                    </NavDropdown.Item>
+                    <NavDropdown.Item onClick={() => gotoPage(Page.Help)}>Help</NavDropdown.Item>
+                </NavDropdown>
+                <NavbarBrand>
+                    <a target='_blank' rel='noopener noreferrer' href='https://wellsreserve.org'>
+                        <img
+                            className='object-fit-contain'
+                            src={Logo}
+                            width={165}
+                            alt='Wells Reserve Logo'
+                        />
+                    </a>
+                </NavbarBrand>
+            </Container>
+            {showConditions && <Conditions onClose={onModalClose} />}
+        </Navbar>
     )
 }

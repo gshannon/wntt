@@ -110,7 +110,7 @@ export default function GetDates({
             <Row className='align-items-center'>
                 <Col sm={9}>
                     <Form onSubmit={handleSubmit}>
-                        <Row className='align-items-center mx-0 options'>
+                        <Row className='align-items-center mx-0 date-options'>
                             <Col className='col-4 align-self-start'>
                                 <FormLabel>Start Date: </FormLabel>
                                 <DatePicker

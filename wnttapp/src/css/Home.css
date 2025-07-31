@@ -2,88 +2,68 @@
 .home {
     display: flex;
     flex-direction: column;
-    position: relative;
+    align-items: center;
+    height: 100%;
+    background-image: url('/src/images/aerial-4.jpg');
+    background-size: cover;
+    background-position: top center;
 }
 
-.banner {
-    display: block;
-    position: absolute;
-    width: 90%;
-    left: 5%;
-    top: 5%;
-}
-
-.welcome {
+.home .welcome {
     text-align: center;
-    padding: 1em;
+    max-width: 60%;
     border-radius: 20px;
     color: var(--platinum);
     background: var(--partial-gray);
-    font-size: 1rem;
 }
 
-.welcome a {
+@media (max-width: 525px) {
+    .home {
+        background-image: url('/src/images/beach1.jpg');
+    }
+    .home .welcome {
+        max-width: 75%;
+        font-size: 0.9rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .home .welcome {
+        font-size: 1.25rem;
+    }
+}
+
+.home .welcome a {
     color: white;
     text-decoration: none;
     font-weight: bold;
 }
 
-.welcome a:hover {
+.home .welcome a:hover {
     /* Don't know why this isn't picked up from App.css */
     color: var(--link-blue);
 }
 
-.conditions {
+.home .conditions {
+    max-width: 90%;
     padding: 0.5em;
     border-radius: 20px;
-    color: var(--platinum);
-    background: var(--med-blue);
-    font-size: 1rem;
-}
-
-.conditions .label {
-    font-size: 0.9rem;
     color: white;
+    font-size: 0.9rem;
+    background: var(--med-blue);
 }
 
-.conditions .data {
-    font-weight: bold;
+.home .conditions .title {
+    font-size: 1rem;
+    font-weight: 600;
 }
 
-/* for xs & small, make it real wide */
-@media (max-width: 767px) {
-    .banner {
-        width: 96%;
-        left: 2%;
-    }
-    .welcome {
-        font-size: 0.9rem;
-    }
-    .conditions {
-        font-size: 0.9rem;
-        font-weight: 400;
-    }
+.home .conditions .label {
+    text-decoration: underline;
 }
 
-/* For xl + screens, narrower width and larger font */
-@media (min-width: 1200px) {
-    .banner {
-        width: 50%;
-        left: 25%;
-    }
-    .welcome {
+@media (min-width: 992px) {
+    .home .conditions {
         font-size: 1.25rem;
-    }
-    .conditions {
-        /* width: 60%;
-        left: 20%; */
-        font-size: 1.25rem;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-    /* this keeps the logo from getting squished */
-    .nav-link {
-        --bs-navbar-nav-link-padding-x: 6px;
     }
 }

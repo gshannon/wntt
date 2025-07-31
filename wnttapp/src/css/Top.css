@@ -1,5 +1,13 @@
 /* Top nav bar */
 
+.tide-tracker {
+    line-height: 0.9;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 1.3rem;
+    text-shadow: 3px 3px 2px var(--med-blue);
+}
+
 .navbar {
     background-color: var(--platinum);
 }

@@ -54,28 +54,30 @@ export default function Control(props) {
     }, [markerLocation, markerElevationNav])
 
     return (
-        <AppContext.Provider
-            value={{
-                gotoPage: gotoPage,
-                customElevationNav: customElevationNav,
-                setCustomElevationNav: setCustomElevationNav,
-                mapType: mapType,
-                setMapType: setMapType,
-                markerLocation: markerLocation,
-                setMarkerLocation: setMarkerLocation,
-                mapCenter: mapCenter,
-                setMapCenter: setMapCenter,
-                markerElevationNav: markerElevationNav,
-                setMarkerElevationNav: setMarkerElevationNav,
-                zoom: zoom,
-                setZoom: setZoom,
-            }}>
-            {page === Page.Home && <Home />}
-            {page === Page.Graph && <Graph />}
-            {page === Page.Map && <Map />}
-            {page === Page.About && <About />}
-            {page === Page.Glossary && <Glossary />}
-            {page === Page.Help && <Help />}
-        </AppContext.Provider>
+        <div className='app-box-bottom'>
+            <AppContext.Provider
+                value={{
+                    gotoPage: gotoPage,
+                    customElevationNav: customElevationNav,
+                    setCustomElevationNav: setCustomElevationNav,
+                    mapType: mapType,
+                    setMapType: setMapType,
+                    markerLocation: markerLocation,
+                    setMarkerLocation: setMarkerLocation,
+                    mapCenter: mapCenter,
+                    setMapCenter: setMapCenter,
+                    markerElevationNav: markerElevationNav,
+                    setMarkerElevationNav: setMarkerElevationNav,
+                    zoom: zoom,
+                    setZoom: setZoom,
+                }}>
+                {page === Page.Home && <Home />}
+                {page === Page.Graph && <Graph />}
+                {page === Page.Map && <Map />}
+                {page === Page.About && <About />}
+                {page === Page.Glossary && <Glossary />}
+                {page === Page.Help && <Help />}
+            </AppContext.Provider>
+        </div>
     )
 }
