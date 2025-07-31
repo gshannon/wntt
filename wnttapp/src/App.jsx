@@ -1,3 +1,4 @@
+// Importing this here ensures that the CSS is applied globally.
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
@@ -40,7 +41,7 @@ export default function App() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <div className='App'>
+            <div className='App app-box'>
                 <Top page={curPage} gotoPage={gotoPage} />
                 <Control page={curPage} gotoPage={gotoPage} />
             </div>

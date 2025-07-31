@@ -1,7 +1,6 @@
 import './css/Home.css'
-import banner from './images/aerial-4.jpg'
 import { Page } from './utils'
-import { Container, Col, Row, Stack } from 'react-bootstrap'
+import { Col, Row, Stack } from 'react-bootstrap'
 import { useContext } from 'react'
 import { AppContext } from './AppContext'
 import Overlay from './Overlay'
@@ -35,80 +34,75 @@ export default function Home() {
 
     return (
         <div className='home'>
-            <img src={banner} alt='Aerial photo of Wells Harbor' />
-            <Container className='banner'>
-                <Row>
-                    <Col xs={10} className='offset-1 welcome'>
-                        <p>
-                            Welcome to the Wells National Estuarine Research Reserve Tide Tracker.
-                            Here you can view historical tide and wind data, as well as predicted
-                            tides and storm surge. You can also obtain the elevation of any location
-                            within our boundaries (Kennebunk to Ogunquit), to assess the flood risk
-                            at that location.
-                        </p>
-                        <p>
-                            To get started, open the{' '}
-                            <a href='#' onClick={() => appContext.gotoPage(Page.Graph)}>
-                                Graph
-                            </a>
-                            &nbsp;page and use the Graph Tutorial button, or watch this{' '}
-                            <a
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
-                                tutorial video
-                            </a>{' '}
-                            on Youtube.
-                        </p>
-                    </Col>
-                </Row>
-                <Row className='conditions text-center mt-3'>
-                    <Col className='mx-2 px-1 offset-2'>
-                        <Overlay
-                            text={`As of ${windTime}`}
-                            placement='top'
-                            contents={
-                                <Stack>
-                                    <div className='label'>Wind Speed</div>
-                                    <div className='data'>{windSpeedStr}</div>
-                                </Stack>
-                            }></Overlay>
-                    </Col>
-                    <Col className='mx-1 px-1'>
-                        <Overlay
-                            text={`As of ${windTime}`}
-                            placement='top'
-                            contents={
-                                <Stack>
-                                    <div className='label'>Wind Gust</div>
-                                    <div className='data'>{windGustStr}</div>
-                                </Stack>
-                            }></Overlay>
-                    </Col>
-                    <Col className='mx-1 px-1'>
-                        <Overlay
-                            text={`As of ${tideTime}`}
-                            placement='top'
-                            contents={
-                                <Stack>
-                                    <div className='label'>Tide Level</div>
-                                    <div className='data'>{tideStr}</div>
-                                </Stack>
-                            }></Overlay>
-                    </Col>
-                    <Col className='mx-1 px-1'>
-                        <Overlay
-                            text={`As of ${tempTime}`}
-                            placement='top'
-                            contents={
-                                <Stack>
-                                    <div className='label'>Water Temperature</div>
-                                    <div className='data'>{tempStr}</div>
-                                </Stack>
-                            }></Overlay>
-                    </Col>
-                </Row>
-            </Container>
+            <div className='welcome p-2 my-3'>
+                <p>
+                    Welcome to the Wells National Estuarine Research Reserve Tide Tracker. Here you
+                    can view historical tide and wind data, as well as predicted tides and storm
+                    surge. You can also obtain the elevation of any location within our boundaries
+                    (Kennebunk to Ogunquit), to assess the flood risk at that location.
+                </p>
+                <p className='mb-1'>
+                    To get started, open the{' '}
+                    <a href='#' onClick={() => appContext.gotoPage(Page.Graph)}>
+                        Graph
+                    </a>
+                    &nbsp;page and use the Graph Tutorial button, or watch this{' '}
+                    <a
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
+                        tutorial video
+                    </a>{' '}
+                    on Youtube.
+                </p>
+            </div>
+            <Row className='conditions text-center mb-1 px-0'>
+                <Col className='col-12 title mb-1'>Latest Conditions</Col>
+                <Col className='mx-2 px-1 offset-2'>
+                    <Overlay
+                        text={`As of ${windTime}`}
+                        placement='top'
+                        contents={
+                            <Stack>
+                                <div className='label'>Wind Speed</div>
+                                <div>{windSpeedStr}</div>
+                            </Stack>
+                        }></Overlay>
+                </Col>
+                <Col className='mx-1 px-1'>
+                    <Overlay
+                        text={`As of ${windTime}`}
+                        placement='top'
+                        contents={
+                            <Stack>
+                                <div className='label'>Wind Gust</div>
+                                <div>{windGustStr}</div>
+                            </Stack>
+                        }></Overlay>
+                </Col>
+                <Col className='mx-1 px-1'>
+                    <Overlay
+                        text={`As of ${tideTime}`}
+                        placement='top'
+                        contents={
+                            <Stack>
+                                <div className='label'>Tide Level</div>
+                                <div>{tideStr}</div>
+                            </Stack>
+                        }></Overlay>
+                </Col>
+                <Col className='mx-1 px-1'>
+                    <Overlay
+                        text={`As of ${tempTime}`}
+                        placement='top'
+                        contents={
+                            <Stack>
+                                <div className='label'>Water Temp</div>
+                                <div>{tempStr}</div>
+                            </Stack>
+                        }></Overlay>
+                </Col>
+            </Row>
         </div>
     )
 }
