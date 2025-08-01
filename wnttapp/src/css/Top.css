@@ -1,6 +1,26 @@
-/* Top nav bar */
+.top-section {
+    background-color: var(--platinum);
+}
 
-.tide-tracker {
+/* Kill the litle down arrows under dropdowns */
+.dropdown-toggle::after {
+    display: none;
+}
+
+.nav-container {
+    flex-direction: row;
+    flex: 1 0 0%;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: space-around;
+}
+
+.main-title {
+    font-size: 1rem;
+    color: var(--deep-blue);
+}
+
+.main-title .tide-tracker {
     line-height: 0.9;
     font-style: italic;
     font-weight: bold;
@@ -8,13 +28,7 @@
     text-shadow: 3px 3px 2px var(--med-blue);
 }
 
-.navbar {
-    background-color: var(--platinum);
-}
-
-.navbar-brand,
 .navbar-brand:hover {
-    color: var(--deep-blue);
     cursor: pointer;
 }
 
@@ -28,7 +42,52 @@
     font-weight: bolder;
 }
 
-.conditions-menu {
+.conditions-img {
     border: solid;
     border-color: var(--ocean-blue);
+}
+
+/* Activate for x-small only */
+@media (max-width: 575px) {
+    .conditions-img {
+        width: 25px;
+    }
+    .help-img {
+        width: 25px;
+    }
+}
+
+/* Activate for very narrow, subset of xs */
+@media (max-width: 400px) {
+    .logo {
+        width: 100px;
+    }
+}
+
+/* Activate when small or smaller */
+@media (max-width: 767px) {
+    /* Important: collapse the hamburger menu */
+    .expandedMenu {
+        display: none;
+    }
+    .dropdownMenu {
+        flex-grow: 3;
+    }
+}
+
+/* Activate when medium or larger */
+@media (min-width: 768px) {
+    .expandedMenu {
+        flex-grow: 5;
+    }
+    .expandedMenu .nav .nav-link {
+        padding-right: 8px;
+    }
+    .expandedMenu .nav .active {
+        font-weight: bold;
+    }
+    /* Important: hide the hamburger menu */
+    .dropdownMenu {
+        display: none;
+    }
 }
