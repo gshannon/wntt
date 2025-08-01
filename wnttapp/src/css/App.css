@@ -37,6 +37,7 @@ beneath the top header area that covers the full height of the viewport */
     flex-grow: 0;
     flex-shrink: 1;
     flex-basis: auto;
+    line-height: 12px;
 }
 
 .app-box-bottom {
@@ -78,11 +79,6 @@ a:hover {
     .btn {
         font-size: 0.75rem;
     }
-}
-
-.borderme {
-    outline: 2px dashed red;
-    outline-offset: -2px;
 }
 
 .outblack {
