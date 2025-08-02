@@ -12,9 +12,9 @@ import { isTouchScreen } from './utils'
  */
 
 export default function Overlay(props) {
-    const { text, placement, contents } = props
+    const { text, placement, contents, enable = true } = props
 
-    if (isTouchScreen) {
+    if (isTouchScreen || !enable) {
         return <> {contents}</>
     } else {
         return (

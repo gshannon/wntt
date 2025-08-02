@@ -10,27 +10,20 @@ export default function Home() {
     const appContext = useContext(AppContext)
 
     const noData = '--'
-    let windSpeedStr = noData
-    let windGustStr = noData
-    let tideStr = noData
-    let tempStr = noData
-    let windTime = ''
-    let tideTime = ''
-    let tempTime = ''
 
     const { data, error } = useLatestData()
 
     if (error) {
         console.error(error)
-    } else if (data) {
-        windSpeedStr = `${data.wind_speed} mph from ${data.wind_dir}`
-        windGustStr = `${data.wind_gust} mph`
-        tideStr = `${data.tide} ft MLLW ${data.tide_dir}`
-        tempStr = `${data.temp}º F`
-        windTime = data.wind_time
-        tideTime = data.tide_time
-        tempTime = data.temp_time
     }
+
+    const windSpeedStr = data?.wind_speed ? `${data.wind_speed} mph from ${data.wind_dir}` : noData
+    const windGustStr = data?.wind_gust ? `${data.wind_gust} mph` : noData
+    const tideStr = data?.tide ? `${data.tide} ft MLLW ${data.tide_dir}` : noData
+    const tempStr = data?.temp ? `${data.temp}º F` : noData
+    const windTime = data?.wind_time ?? noData
+    const tideTime = data?.tide_time ?? noData
+    const tempTime = data?.temp_time ?? noData
 
     return (
         <div className='home'>
@@ -62,6 +55,7 @@ export default function Home() {
                     <Overlay
                         text={`As of ${windTime}`}
                         placement='top'
+                        enable={windSpeedStr != noData}
                         contents={
                             <Stack>
                                 <div className='label'>Wind Speed</div>
@@ -73,6 +67,7 @@ export default function Home() {
                     <Overlay
                         text={`As of ${windTime}`}
                         placement='top'
+                        enable={windGustStr != noData}
                         contents={
                             <Stack>
                                 <div className='label'>Wind Gust</div>
@@ -84,6 +79,7 @@ export default function Home() {
                     <Overlay
                         text={`As of ${tideTime}`}
                         placement='top'
+                        enable={tideStr != noData}
                         contents={
                             <Stack>
                                 <div className='label'>Tide Level</div>
@@ -95,6 +91,7 @@ export default function Home() {
                     <Overlay
                         text={`As of ${tempTime}`}
                         placement='top'
+                        enable={tempStr != noData}
                         contents={
                             <Stack>
                                 <div className='label'>Water Temp</div>

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class LatestInfoView(APIView):
     def post(self, request, format=None):
         logger.info(f"LatestInfoView: {obfuscate(request.data)}")
-        info = swmp.get_latest_info()
+        info = swmp.get_latest_conditions()
         return Response(data=info)
 
 

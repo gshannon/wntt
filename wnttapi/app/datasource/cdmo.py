@@ -292,8 +292,8 @@ def compute_cdmo_request_dates(
         requested_end_date -= timedelta(days=1)
 
     logger.debug(
-        f"Timeline: {start_time.date().strftime('%Y-%m-%d %H:%M')} "
-        f"- {end_time.date().strftime('%Y-%m-%d %H:%M')}, "
+        f"Timeline: {start_time.strftime('%Y-%m-%d %H:%M')} "
+        f"- {end_time.strftime('%Y-%m-%d %H:%M')}, "
         "Requesting CDMO dates: "
         f"{requested_start_date.strftime('%Y-%m-%d')} - "
         f"{requested_end_date.strftime('%Y-%m-%d')}"
