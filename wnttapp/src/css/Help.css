@@ -1,0 +1,24 @@
+.titles {
+    font-size: 1.25em;
+    font-weight: bold;
+}
+
+.video iframe {
+    border: 1px solid black;
+    width: 250px;
+    height: 140px;
+}
+
+@media (min-width: 576px) {
+    .video iframe {
+        width: 500px;
+        height: 281px;
+    }
+}
+
+@media (min-width: 992px) {
+    .video iframe {
+        width: 700px;
+        height: 393px;
+    }
+}
