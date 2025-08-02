@@ -6,13 +6,6 @@ import useLatestData from './useLatestData'
 
 export default function Conditions(props) {
     const noData = '--'
-    let windSpeedStr = noData
-    let windGustStr = noData
-    let tideStr = noData
-    let tempStr = noData
-    let windTime = ''
-    let tideTime = ''
-    let tempTime = ''
 
     const { data, error } = useLatestData()
     if (error) {
@@ -38,14 +31,6 @@ export default function Conditions(props) {
                 </Row>
             )
         } else {
-            windSpeedStr = `${data.wind_speed} mph from ${data.wind_dir}`
-            windGustStr = `${data.wind_gust} mph`
-            tideStr = `${data.tide} ft MLLW ${data.tide_dir}`
-            tempStr = `${data.temp}º F`
-            windTime = data.wind_time
-            tideTime = data.tide_time
-            tempTime = data.temp_time
-
             return (
                 <Table borderless>
                     <tbody>
@@ -56,16 +41,24 @@ export default function Conditions(props) {
                             <td className='cond-label'>Water Temperature</td>
                         </tr>
                         <tr className='text-center'>
-                            <td className='cond-data'>{windSpeedStr}</td>
-                            <td className='cond-data'>{windGustStr}</td>
-                            <td className='cond-data'>{tideStr}</td>
-                            <td className='cond-data'>{tempStr}</td>
+                            <td className='cond-data'>
+                                {data.wind_speed
+                                    ? `${data.wind_speed} mph from ${data.wind_dir}`
+                                    : noData}
+                            </td>
+                            <td className='cond-data'>
+                                {data.wind_gust ? `${data.wind_gust} mph` : noData}
+                            </td>
+                            <td className='cond-data'>
+                                {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
+                            </td>
+                            <td className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</td>
                         </tr>
                         <tr className='text-center'>
-                            <td className='cond-time'>{windTime}</td>
-                            <td className='cond-time'>{windTime}</td>
-                            <td className='cond-time'>{tideTime}</td>
-                            <td className='cond-time'>{tempTime}</td>
+                            <td className='cond-time'>{data.wind_time}</td>
+                            <td className='cond-time'>{data.wind_time}</td>
+                            <td className='cond-time'>{data.tide_time}</td>
+                            <td className='cond-time'>{data.temp_time}</td>
                         </tr>
                     </tbody>
                 </Table>
