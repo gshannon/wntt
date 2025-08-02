@@ -1,7 +1,14 @@
+/* To center the jump arrows, we have to to tweak the 
+image's container, which is the anchor tag. */
+.jumpdate a {
+    display: flex;
+    justify-content: center;
+}
+
 /* For xs, sm & md we prevent it from exceeding the column boundaries */
 @media (max-width: 991px) {
-    .pic {
-        width: 50%;
+    .jumpdate .pic {
+        width: 60%;
     }
 }
 

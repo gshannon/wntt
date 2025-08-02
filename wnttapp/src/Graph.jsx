@@ -141,7 +141,7 @@ export default function Graph() {
             return <Col className='col-1' />
         }
         return (
-            <Col className='col-1 text-center px-0'>
+            <Col className='col-1 px-0 jumpdate'>
                 <Overlay
                     text={props.hoverText}
                     placement='top'
