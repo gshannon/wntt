@@ -12,6 +12,7 @@ import {
     getMaxNumDays,
     minGraphDate,
     maxGraphDate,
+    Months,
     navd88ToMllw,
     Page,
     MediumBase,
@@ -36,24 +37,10 @@ export default function GetDates({
 }) {
     const appContext = useContext(AppContext)
     const [showTut, setShowTut] = useState(false)
-    const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-    ]
     const minDate = minGraphDate()
     const maxDate = maxGraphDate()
-    const rangeMin = `${months[minDate.getMonth()]} ${minDate.getFullYear()}`
-    const rangeMax = `${months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
+    const rangeMin = `${Months[minDate.getMonth()]} ${minDate.getFullYear()}`
+    const rangeMax = `${Months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
 
     const handleHiloToggle = () => {
         toggleHiloMode()

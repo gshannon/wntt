@@ -1,5 +1,6 @@
-.modal-body {
-    /* override bootstrap white */
+#conditions-modal .modal-body {
+    /* override bootstrap white. If I don't use the id prefix, this override
+    seems to bleed into other modals in the app. */
     background: var(--med-blue);
 }
 
@@ -13,8 +14,7 @@
     grid-template-rows: repeat(4, 1fr);
     grid-template-columns: 2fr 3fr 2fr;
     background: var(--med-blue);
-    font-size: 0.9em;
-    align-items: stretch;
+    font-size: 0.9rem;
 }
 
 .cond-container > * {

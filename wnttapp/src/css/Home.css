@@ -45,25 +45,40 @@
 }
 
 .home .conditions {
-    max-width: 90%;
-    padding: 0.5em;
+    padding: 1rem;
     border-radius: 20px;
-    color: white;
-    font-size: 0.9rem;
     background: var(--med-blue);
 }
 
-.home .conditions .title {
+#home .cond-container {
+    /* override Conditions.css */
+    background: none;
+}
+
+#home .cond-container > * {
+    /* override Conditions.css */
+    color: white;
+    background: none;
+}
+
+#home .conditions .title {
+    text-align: center;
+    color: white;
     font-size: 1rem;
     font-weight: 600;
 }
 
-.home .conditions .label {
-    text-decoration: underline;
+@media (max-width: 525px) {
+    #home .conditions {
+        padding: 5px;
+    }
+    #home .cond-container {
+        font-size: 0.8rem;
+    }
 }
 
 @media (min-width: 992px) {
-    .home .conditions {
+    #home .conditions {
         font-size: 1.25rem;
     }
 }

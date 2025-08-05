@@ -37,11 +37,9 @@ def extract_data(wind_dict, tide_dict, temp_dict) -> dict:
     if len(tide_dict) > 0:
         latest_tide_dt, latest_tide_val = max(tide_dict.items(), key=lambda x: x[0])
         tide_str = f"{latest_tide_val:.2f}"
-        tide_dt_str = ftime(latest_tide_dt)
         del tide_dict[latest_tide_dt]
     else:
-        tide_str = None
-        tide_dt_str = None
+        tide_str = latest_tide_dt = None
 
     if len(tide_dict) > 0:
         _, prior_tide_val = max(tide_dict.items(), key=lambda x: x[0])
@@ -51,19 +49,17 @@ def extract_data(wind_dict, tide_dict, temp_dict) -> dict:
 
     if len(wind_dict) > 0:
         latest_wind_dt, wind_data = max(wind_dict.items(), key=lambda x: x[0])
-        wind_time_str = ftime(latest_wind_dt)
         wind_speed_str = wind_data["speed"]
         wind_gust_str = wind_data["gust"]
         wind_dir_str = util.degrees_to_dir(wind_data["dir"])
     else:
-        wind_time_str = wind_speed_str = wind_gust_str = wind_dir_str = None
+        latest_wind_dt = wind_speed_str = wind_gust_str = wind_dir_str = None
 
     if len(temp_dict) > 0:
         latest_temp_dt, temp = max(temp_dict.items(), key=lambda x: x[0])
-        temp_dt_str = ftime(latest_temp_dt)
         temp_str = f"{util.centigrade_to_fahrenheit(temp):.1f}"
     else:
-        temp_dt_str = temp_str = None
+        latest_temp_dt = temp_str = None
 
     return {
         "wind_speed": wind_speed_str,
@@ -72,9 +68,9 @@ def extract_data(wind_dict, tide_dict, temp_dict) -> dict:
         "tide": tide_str,
         "tide_dir": direction_str,
         "temp": temp_str,
-        "wind_time": wind_time_str,
-        "tide_time": tide_dt_str,
-        "temp_time": temp_dt_str,
+        "wind_time": latest_wind_dt,
+        "tide_time": latest_tide_dt,
+        "temp_time": latest_temp_dt,
     }
 
 

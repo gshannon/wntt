@@ -11,7 +11,7 @@ import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
 import HelpButton from './images/util/help.png'
-import Conditions from './Conditions'
+import ConditionsPopup from './ConditionsPopup'
 import Overlay from './Overlay'
 export default function Top(props) {
     const page = props.page
@@ -116,7 +116,7 @@ export default function Top(props) {
                     </Col>
                 </Row>
             </Container>
-            {showConditions && <Conditions onClose={onModalClose} />}
+            {showConditions && <ConditionsPopup onClose={onModalClose} />}
         </div>
     )
 }
