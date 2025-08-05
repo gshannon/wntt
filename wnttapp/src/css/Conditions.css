@@ -1,18 +1,39 @@
+.modal-body {
+    /* override bootstrap white */
+    background: var(--med-blue);
+}
+
 .cond-header {
     background: var(--federal-blue);
     border-bottom-width: 0;
 }
 
-.cond-label {
-    text-decoration: underline;
-    color: black;
+.cond-container {
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    grid-template-columns: 2fr 3fr 2fr;
+    background: var(--med-blue);
+    font-size: 0.9em;
+    align-items: stretch;
 }
 
-.cond-data {
+.cond-container > * {
+    color: var(--federal-blue);
+    background: var(--platinum);
+    margin: 1px 0px;
+    padding: 3px;
+    text-align: center;
+}
+
+.cond-container .cond-label {
+    text-align: end;
+}
+
+.cond-container .cond-data {
     font-weight: bold;
 }
 
-.cond-time {
-    font-size: 0.8rem;
+.cond-container .cond-time {
+    font-size: 0.7rem;
     font-style: italic;
 }
