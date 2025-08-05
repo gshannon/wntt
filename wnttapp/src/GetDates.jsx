@@ -169,6 +169,8 @@ export default function GetDates({
                                                 </Button>
                                             }></Overlay>
                                     </Col>
+                                </Row>
+                                <Row className='mx-1'>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <Overlay
                                             text='Turn on to show only high and low tides.'
@@ -177,25 +179,16 @@ export default function GetDates({
                                                 <Form>
                                                     <Form.Check
                                                         type='checkbox'
-                                                        // id='myCheckbox'
-                                                        label='Highs/Lows only'
+                                                        label='Highs/Lows'
                                                         checked={isHiloMode}
                                                         onChange={handleHiloToggle}
                                                         disabled={widthLessThan(MediumBase)}
                                                     />
                                                 </Form>
-                                                // <label>
-                                                //     <input
-                                                //         type='checkbox'
-                                                //         checked={isHiloMode}
-                                                //         onChange={handleHiloToggle}
-                                                //         disabled={widthLessThan(MediumBase)}
-                                                //     />
-                                                //     <nbsp />
-                                                //     Highs/Lows only
-                                                // </label>
                                             }></Overlay>
-                                        {/* <Overlay
+                                    </Col>
+                                    <Col className='d-flex align-items-center justify-content-center'>
+                                        <Overlay
                                             text='Open the Graph page tutorial in a popup window.'
                                             placement='top'
                                             contents={
@@ -205,7 +198,7 @@ export default function GetDates({
                                                     onClick={() => setShowTut(true)}>
                                                     Tutorial
                                                 </Button>
-                                            }></Overlay> */}
+                                            }></Overlay>
                                     </Col>
                                 </Row>
                                 <Row></Row>

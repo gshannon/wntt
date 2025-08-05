@@ -1,6 +1,5 @@
 import './css/Conditions.css'
-import { Container, Row, Col, Spinner } from 'react-bootstrap'
-import Table from 'react-bootstrap/Table'
+import { Row, Col, Spinner } from 'react-bootstrap'
 import Modal from 'react-bootstrap/Modal'
 import useLatestData from './useLatestData'
 
@@ -32,48 +31,40 @@ export default function Conditions(props) {
             )
         } else {
             return (
-                <Table borderless>
-                    <tbody>
-                        <tr className='text-center'>
-                            <td className='cond-label'>Wind Speed</td>
-                            <td className='cond-label'>Wind Gust</td>
-                            <td className='cond-label'>Tide Level</td>
-                            <td className='cond-label'>Water Temperature</td>
-                        </tr>
-                        <tr className='text-center'>
-                            <td className='cond-data'>
-                                {data.wind_speed
-                                    ? `${data.wind_speed} mph from ${data.wind_dir}`
-                                    : noData}
-                            </td>
-                            <td className='cond-data'>
-                                {data.wind_gust ? `${data.wind_gust} mph` : noData}
-                            </td>
-                            <td className='cond-data'>
-                                {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
-                            </td>
-                            <td className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</td>
-                        </tr>
-                        <tr className='text-center'>
-                            <td className='cond-time'>{data.wind_time}</td>
-                            <td className='cond-time'>{data.wind_time}</td>
-                            <td className='cond-time'>{data.tide_time}</td>
-                            <td className='cond-time'>{data.temp_time}</td>
-                        </tr>
-                    </tbody>
-                </Table>
+                <div className='cond-container'>
+                    <div className='cond-label'>Wind Speed</div>
+                    <div className='cond-data'>
+                        {data.wind_speed ? `${data.wind_speed} mph from ${data.wind_dir}` : noData}
+                    </div>
+                    <div className='cond-time'>{data.wind_time}</div>
+
+                    <div className='cond-label'>Wind Gust</div>
+                    <div className='cond-data'>
+                        {data.wind_gust ? `${data.wind_gust} mph` : noData}
+                    </div>
+                    <div className='cond-time'>{data.wind_time}</div>
+
+                    <div className='cond-label'>Tide Level</div>
+                    <div className='cond-data'>
+                        {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
+                    </div>
+                    <div className='cond-time'>{data.tide_time}</div>
+
+                    <div className='cond-label'>Water Temp</div>
+                    <div className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</div>
+
+                    <div className='cond-time'>{data.temp_time}</div>
+                </div>
             )
         }
     }
 
     return (
-        <Modal show={true} size='lg' onHide={props.onClose}>
+        <Modal show={true} size='md' onHide={props.onClose}>
             <Modal.Header className='py-2 cond-header text-white' closeButton closeVariant='white'>
-                Current Conditions
+                Latest Conditions
             </Modal.Header>
-            <Modal.Body className='px-4 py-4'>
-                <Container>{getContent()}</Container>
-            </Modal.Body>
+            <Modal.Body className='px-4 py-4'>{getContent()}</Modal.Body>
         </Modal>
     )
 }
