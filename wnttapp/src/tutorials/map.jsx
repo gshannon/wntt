@@ -7,9 +7,11 @@ import img05a from '../images/mtut05a.jpg'
 import img06 from '../images/mtut06.jpg'
 import img07 from '../images/mtut07.jpg'
 import img08 from '../images/mtut08.jpg'
-import { MaxCustomElevationMllw } from '../utils'
+import { isTouchScreen, MaxCustomElevationMllw } from '../utils'
 
 export const getData = () => {
+    const clickOrTap = isTouchScreen ? 'tap' : 'click'
+    const clickOrTapCap = isTouchScreen ? 'Tap' : 'Click'
     return [
         {
             img: img01,
@@ -42,7 +44,8 @@ export const getData = () => {
                     <span>
                         In the upper left corner there&apos;s a zoom control. Use this to zoom in or
                         out. The buttons will become disabled when you&apos;re reached the minimum
-                        or maximum zoom level. You can also zoom with the scroll wheel or touch pad.
+                        or maximum zoom level. You can also zoom with a scroll wheel or touch pad.
+                        On touch screens, you can pinch the screen with 2 fingers.
                     </span>
                 )
             },
@@ -52,22 +55,16 @@ export const getData = () => {
             cls: 'pic-width-60-90',
             render: () => {
                 return (
-                    <span>
-                        To pan, click and hold your mouse button, then move the mouse in the
-                        direction you want to push the map.
-                    </span>
-                )
-            },
-        },
-        {
-            img: img07,
-            render: () => {
-                return (
-                    <span>
-                        One way to select a location is to search by address. Click on{' '}
-                        <b>Address Lookup</b> and enter an address, including the street number and
-                        town. Then click the <b>Search</b> button.
-                    </span>
+                    <>
+                        {isTouchScreen ? (
+                            <span>
+                                To pan on a touchscreen device, tap and hold on the map, then drag
+                                the map.
+                            </span>
+                        ) : (
+                            <span>To pan, click and hold, then drag the map.</span>
+                        )}
+                    </>
                 )
             },
         },
@@ -77,13 +74,25 @@ export const getData = () => {
             render: () => {
                 return (
                     <span>
-                        Another way is to pan and zoom inside the map, and click on the desired
-                        spot. A blue marker will appear. To change it, you can just click somewhere
-                        else, or you can drag the marker to a new location. Each time the marker
-                        changes, the system will determine the latitude/longitude, then use that to
-                        retrieve the elevation. When you are ready, if the elevation is less than{' '}
-                        {MaxCustomElevationMllw} ft, you can click the <b>Add to Graph</b> button,
-                        and you will be returned to the graph.
+                        There are two ways to select a location. The first way is to {clickOrTap} it
+                        on the map. A red marker will appear. To change it, you can just{' '}
+                        {clickOrTap} somewhere else, or you can drag the marker to a new location.
+                        Each time the marker changes, the system will determine the
+                        latitude/longitude, then retrieve the elevation. If the elevation is less
+                        than {MaxCustomElevationMllw} ft, you can {clickOrTap} the{' '}
+                        <b>Add to Graph</b> button, and you will be returned to the graph.
+                    </span>
+                )
+            },
+        },
+        {
+            img: img07,
+            render: () => {
+                return (
+                    <span>
+                        The other way to select a location is to search by address. {clickOrTapCap}{' '}
+                        on <b>Address Lookup</b> and enter an address, including the street number
+                        and town. Then {clickOrTap} the <b>Search</b> button.
                     </span>
                 )
             },
@@ -109,8 +118,8 @@ export const getData = () => {
             render: () => {
                 return (
                     <span>
-                        Now you can see your custom elevation on the graph, and you can compare it
-                        to the past and predicted tide levels.
+                        If you added it to the graph, you can now see your custom elevation there,
+                        and you can compare it to the past and predicted tide levels.
                     </span>
                 )
             },
@@ -122,9 +131,9 @@ export const getData = () => {
                 return (
                     <span>
                         If you want to remove the location at any time, just navigate back to the
-                        map page and click the <b>Remove Marker</b> button. If you want to use a
-                        different location from the one that&apos;s already on the graph, move the
-                        marker to a new location, and click <b>Add to Graph</b> again.
+                        map page and {clickOrTap} the <b>Remove Marker</b> button. If you want to
+                        use a different location from the one that&apos;s already on the graph, move
+                        the marker to a new location, and {clickOrTap} <b>Add to Graph</b> again.
                     </span>
                 )
             },

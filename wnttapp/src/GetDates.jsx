@@ -7,6 +7,7 @@ import Container from 'react-bootstrap/Container'
 import {
     addDays,
     dateDiff,
+    isSmallScreen,
     limitDate,
     stringify,
     getMaxNumDays,
@@ -15,8 +16,6 @@ import {
     Months,
     navd88ToMllw,
     Page,
-    MediumBase,
-    widthLessThan,
 } from './utils'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
@@ -169,7 +168,7 @@ export default function GetDates({
                                                         label='Highs/Lows'
                                                         checked={isHiloMode}
                                                         onChange={handleHiloToggle}
-                                                        disabled={widthLessThan(MediumBase)}
+                                                        disabled={isSmallScreen()}
                                                     />
                                                 </Form>
                                             }></Overlay>
