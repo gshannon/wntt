@@ -302,12 +302,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     responsive: isWideEnough, // accept clicks?
                     scrollZoom: isWideEnough, // zoom with mouse wheel?
                     displayModeBar: isWideEnough, // show mode bar at all?
+                    // For touch screens, zoom & pan don't work. Remove all but the camera option.
                     modeBarButtonsToRemove: [
                         'select2d',
                         'lasso2d',
                         'autoscale2d',
                         'zoomIn2d',
                         'zoomOut2d',
+                        ...(isTouchScreen ? ['zoom2d', 'pan2d', 'resetScale2d'] : []),
                     ],
                     displaylogo: false, // hide the plotly link in the mode bar
                 }}

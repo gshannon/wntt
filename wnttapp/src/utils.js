@@ -25,6 +25,9 @@ export const widthLessThan = (base) => window.matchMedia(`(max-width: ${base - 1
 export const isTouchScreen =
     'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
+// This will allow handling of smart phones or other narrow screen devices.
+export const isSmallScreen = () => widthLessThan(MediumBase)
+
 export const Months = [
     'Jan',
     'Feb',

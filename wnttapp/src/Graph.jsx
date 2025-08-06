@@ -11,12 +11,11 @@ import {
     getDefaultDateStrings,
     stringify,
     dateDiff,
+    isSmallScreen,
     limitDate,
     getMaxNumDays,
     minGraphDate,
     maxGraphDate,
-    MediumBase,
-    widthLessThan,
 } from './utils'
 import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
 import prevButton from './images/util/previous.png'
@@ -33,7 +32,7 @@ export default function Graph() {
     const datesStorage = getDailyLocalStorage('dates')
     const [startDateStr, setStartDateStr] = useState(datesStorage.start ?? defaultStartStr)
     const [endDateStr, setEndDateStr] = useState(datesStorage.end ?? defaultEndStr)
-    const [isHiloMode, setIsHiloMode] = useState(datesStorage.hiloMode ?? widthLessThan(MediumBase))
+    const [isHiloMode, setIsHiloMode] = useState(datesStorage.hiloMode ?? isSmallScreen())
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     // eslint-disable-next-line no-unused-vars
