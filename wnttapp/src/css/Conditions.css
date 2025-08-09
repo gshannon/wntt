@@ -21,8 +21,9 @@
     color: var(--federal-blue);
     background: var(--platinum);
     margin: 1px 0px;
-    padding: 3px;
+    padding: 3px 8px;
     text-align: center;
+    align-content: center;
 }
 
 .cond-container .cond-label {
