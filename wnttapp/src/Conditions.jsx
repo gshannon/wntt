@@ -32,12 +32,14 @@ export default function Conditions({ data, error }) {
         <div className='cond-container'>
             <div className='cond-label'>Wind Speed</div>
             <div className='cond-data'>
-                {data.wind_speed ? `${data.wind_speed} mph from ${data.wind_dir}` : noData}
+                {data.wind_speed == null ? noData : `${data.wind_speed} mph from ${data.wind_dir}`}
             </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
 
             <div className='cond-label'>Wind Gust</div>
-            <div className='cond-data'>{data.wind_gust ? `${data.wind_gust} mph` : noData}</div>
+            <div className='cond-data'>
+                {data.wind_gust == null ? noData : `${data.wind_gust} mph`}
+            </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
 
             <div className='cond-label'>Tide Level</div>
