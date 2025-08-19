@@ -17,6 +17,7 @@ export default function Control(props) {
     const mainStorage = getLocalStorage('main')
     const [markerElevationNav, setMarkerElevationNav] = useState(mainStorage.markerElevationNav)
     const [customElevationNav, setCustomElevationNav] = useState(mainStorage.customElevationNav)
+    const [markerElevationError, setMarkerElevationError] = useState(false)
     const [mapType, setMapType] = useState(mainStorage.mapType ? mainStorage.mapType : 'basic')
     const [markerLocation, setMarkerLocation] = useState(mainStorage.markerLocation)
     const [mapCenter, setMapCenter] = useState(mainStorage.mapCenter || DefaultMapCenter)
@@ -41,17 +42,30 @@ export default function Control(props) {
             const url =
                 `${EpqsUrl}?x=${markerLocation.lng}&y=${markerLocation.lat}` +
                 `&units=Feet&wkid=4326&includeDate=False`
+
+            // We'll allow 10 seconds to handle connection-related timeouts.
             axios
-                .get(url)
+                .get(url, { timeout: 10000 })
                 .then((response) => {
+                    setMarkerElevationError(false)
                     setMarkerElevationNav(roundTo(parseFloat(response.data.value), 2))
                 })
-                .catch((err) => {
-                    //setError(err);
-                    console.error(err)
+                .catch((error) => {
+                    if (error.code === 'ECONNABORTED') {
+                        console.error(`Request timed out: ${url}`)
+                    } else {
+                        console.error(`ERROR fetching elevation: ${error} URL=${url}`)
+                    }
+                    setMarkerElevationError(true)
                 })
         }
     }, [markerLocation, markerElevationNav])
+
+    // Set the marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
+    const setMarkerLatLng = (latlng) => {
+        const { lat, lng } = latlng
+        setMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
+    }
 
     return (
         <div className='app-box-bottom'>
@@ -63,11 +77,12 @@ export default function Control(props) {
                     mapType: mapType,
                     setMapType: setMapType,
                     markerLocation: markerLocation,
-                    setMarkerLocation: setMarkerLocation,
+                    setMarkerLatLng: setMarkerLatLng,
                     mapCenter: mapCenter,
                     setMapCenter: setMapCenter,
                     markerElevationNav: markerElevationNav,
                     setMarkerElevationNav: setMarkerElevationNav,
+                    markerElevationError: markerElevationError,
                     zoom: zoom,
                     setZoom: setZoom,
                 }}>
