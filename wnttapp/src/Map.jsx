@@ -48,12 +48,12 @@ export default function Map() {
     const mapTile = appContext.mapType === 'basic' ? openMap : satelliteMap
 
     const setAddressMarker = (latlng) => {
-        appContext.setMarkerLocation(latlng)
+        appContext.setMarkerLatLng(latlng)
         appContext.setMarkerElevationNav(null) // the old elevation is invalid now
         appContext.setMapCenter(latlng)
     }
     const removeMarker = () => {
-        appContext.setMarkerLocation(null)
+        appContext.setMarkerLatLng(null)
         appContext.setMarkerElevationNav(null)
         appContext.setCustomElevationNav(null)
     }
@@ -67,7 +67,7 @@ export default function Map() {
             dragend() {
                 const marker = markerRef.current
                 if (marker != null) {
-                    appContext.setMarkerLocation(marker.getLatLng())
+                    appContext.setMarkerLatLng(marker.getLatLng())
                     appContext.setMarkerElevationNav(null) // the old elevation is invalid now
                 }
             },
@@ -78,7 +78,7 @@ export default function Map() {
     const MapClickHandler = () => {
         useMapEvents({
             click: (e) => {
-                appContext.setMarkerLocation(e.latlng)
+                appContext.setMarkerLatLng(e.latlng)
                 appContext.setMarkerElevationNav(null)
             },
             zoomend: (e) => {
@@ -102,6 +102,16 @@ export default function Map() {
         useMap().setView(appContext.mapCenter, appContext.zoom)
     }
 
+    const elevationContent = () => {
+        if (appContext.markerElevationNav) {
+            return <>{navd88ToMllw(appContext.markerElevationNav) + ' ft MLLW'}</>
+        } else if (appContext.markerElevationError) {
+            return <>Error, please try again later.</>
+        } else if (appContext.markerLocation) {
+            return <BarLoader loading={true} color={'green'} />
+        }
+    }
+
     return (
         <Container>
             <Row className='py-2'>
@@ -116,7 +126,7 @@ export default function Map() {
                                 <td>Latitude:</td>
                                 <td>
                                     {appContext.markerLocation
-                                        ? appContext.markerLocation.lat.toFixed(3) + ' º'
+                                        ? appContext.markerLocation.lat.toFixed(6) + ' º'
                                         : '-'}
                                 </td>
                             </tr>
@@ -124,21 +134,13 @@ export default function Map() {
                                 <td>Longitude:</td>
                                 <td>
                                     {appContext.markerLocation
-                                        ? appContext.markerLocation.lng.toFixed(3) + ' º'
+                                        ? appContext.markerLocation.lng.toFixed(6) + ' º'
                                         : '-'}
                                 </td>
                             </tr>
                             <tr>
                                 <td>Elevation:</td>
-                                <td>
-                                    {appContext.markerElevationNav ? (
-                                        navd88ToMllw(appContext.markerElevationNav) + ' ft MLLW'
-                                    ) : appContext.markerLocation ? (
-                                        <BarLoader loading={true} color={'blue'} />
-                                    ) : (
-                                        '-'
-                                    )}
-                                </td>
+                                <td>{elevationContent()}</td>
                             </tr>
                         </tbody>
                     </Table>
