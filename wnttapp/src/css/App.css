@@ -21,6 +21,13 @@ body {
     padding: 0;
 }
 
+/* Smaller x-gutters on small screens. */
+@media (width < 768px) {
+    .col {
+        --bs-gutter-x: 0.5rem;
+    }
+}
+
 /* This frames the entire app, and allows us to use a background on the section
 beneath the top header area that covers the full height of the viewport */
 .app-box {
@@ -34,6 +41,7 @@ beneath the top header area that covers the full height of the viewport */
     flex-shrink: 1;
     flex-basis: auto;
     line-height: 12px;
+    background-color: var(--platinum);
 }
 
 .app-box-bottom {
@@ -62,6 +70,11 @@ a:hover {
 .btn-custom-primary:hover {
     color: white;
     background: var(--steel-blue);
+}
+
+/* For text you don't want to wrap */
+.nowrap {
+    white-space: nowrap;
 }
 
 /* Smaller button text on smaller screens */

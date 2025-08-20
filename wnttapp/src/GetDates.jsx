@@ -94,10 +94,10 @@ export default function GetDates({
     return (
         <Container className='my-2'>
             <Row className='align-items-center'>
-                <Col sm={9}>
+                <Col className='px-0'>
                     <Form onSubmit={handleSubmit}>
                         <Row className='align-items-center mx-0 date-options'>
-                            <Col className='col-4 align-self-start'>
+                            <Col className='align-self-start'>
                                 <FormLabel>Start Date: </FormLabel>
                                 <DatePicker
                                     id='start-datepicker'
@@ -113,7 +113,7 @@ export default function GetDates({
                                     Range: {rangeMin} - {rangeMax}
                                 </FormText>
                             </Col>
-                            <Col className='col-4 align-self-start'>
+                            <Col className='align-self-start'>
                                 <FormLabel>End Date: </FormLabel>
                                 <DatePicker
                                     id='end-datepicker'
@@ -127,8 +127,8 @@ export default function GetDates({
                                 <FormText muted>Maximum {getMaxNumDays()} day range</FormText>
                             </Col>
 
-                            <Col className='col-4'>
-                                <Row className='mx-1'>
+                            <Col>
+                                <Row className='mx-0'>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <Overlay
                                             text='Redraw the graph with the latest data using the selected date range.'
@@ -136,7 +136,7 @@ export default function GetDates({
                                             contents={
                                                 <Button
                                                     variant='custom-primary'
-                                                    className='px-2 m-1'
+                                                    className='m-1'
                                                     type='submit'
                                                     name='refresh'>
                                                     Refresh
@@ -148,7 +148,7 @@ export default function GetDates({
                                             contents={
                                                 <Button
                                                     variant='custom-primary'
-                                                    className='px-2 m-1'
+                                                    className='m-1'
                                                     type='submit'
                                                     name='reset'>
                                                     Reset
@@ -156,7 +156,7 @@ export default function GetDates({
                                             }></Overlay>
                                     </Col>
                                 </Row>
-                                <Row className='mx-1'>
+                                <Row className='mx-0'>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <Overlay
                                             text='Turn on to show only high and low tides.'
@@ -173,27 +173,26 @@ export default function GetDates({
                                                 </Form>
                                             }></Overlay>
                                     </Col>
-                                    <Col className='d-flex align-items-center justify-content-center'>
+                                    <Col className='d-flex justify-content-center'>
                                         <Overlay
                                             text='Open the Graph page tutorial in a popup window.'
                                             placement='top'
                                             contents={
                                                 <Button
                                                     variant='primary'
-                                                    className='px-2 my-1'
+                                                    className='px-2 mb-1'
                                                     onClick={() => setShowTut(true)}>
                                                     Tutorial
                                                 </Button>
                                             }></Overlay>
                                     </Col>
                                 </Row>
-                                <Row></Row>
                             </Col>
                         </Row>
                     </Form>
                 </Col>
                 <Col sm={3}>
-                    <Row className='custom-elevation mx-0 py-3 align-items-center'>
+                    <Row className='custom-elevation mx-0 py-2 align-items-center'>
                         <Col xs={7} className='text-center flex-grow-1'>
                             Custom Elevation:{' '}
                             {appContext.customElevationNav ? (

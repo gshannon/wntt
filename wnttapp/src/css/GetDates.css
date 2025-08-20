@@ -2,6 +2,10 @@
     border: 1px solid black;
 }
 
+.form-check {
+    margin-bottom: 0;
+}
+
 @media (max-width: 767px) {
     /* .options controls everthing except datepicker and buttons */
     .options {

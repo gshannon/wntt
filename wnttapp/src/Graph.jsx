@@ -169,9 +169,8 @@ export default function Graph() {
             />
             {/*
             Note we are not using Container because it sets left & right margin to auto, and this
-            doesn't allow enough horizontal space to be used when in between 2 breakpoints.
-            Since Row has a default x margin of -12 to compensate for the Container's margin of +12, 
-            we add mx-0 to keep it from pushing the Row beyond the screen and causing a horizontal scrollbar.
+            doesn't allow enough horizontal space to be used when in between 2 breakpoints. That means setting row's x margins 
+            to 0, to override the default of -12.
             */}
             <Row className='justify-content-center align-items-center mx-0'>
                 <JumpDates

@@ -23,7 +23,7 @@ export default function Top(props) {
     }
 
     const expandedMenu = (
-        <Col className='expandedMenu px-1'>
+        <Col className='expanded-menu px-1'>
             <Nav>
                 <NavLink onClick={() => gotoPage(Page.Home)} active={page === Page.Home}>
                     Home
@@ -42,7 +42,7 @@ export default function Top(props) {
     )
 
     const pulldownMenu = (
-        <Col className='dropdownMenu px-1'>
+        <Col className='hamburger-menu px-1'>
             <NavDropdown className='pe-1' title={<img width={35} src={Hamburger} alt='Menu' />}>
                 <NavDropdown.Item onClick={() => gotoPage(Page.Home)} active={page === Page.Home}>
                     Home
@@ -61,7 +61,7 @@ export default function Top(props) {
     )
 
     return (
-        <div className='top-section app-box-top'>
+        <div className='app-box-top'>
             <Container className=' my-0'>
                 <Row className='nav-container align-items-center'>
                     <Col className='pe-1'>
