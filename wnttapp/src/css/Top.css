@@ -1,7 +1,3 @@
-.top-section {
-    background-color: var(--platinum);
-}
-
 /* Kill the litle down arrows under dropdowns */
 .dropdown-toggle::after {
     display: none;
@@ -47,6 +43,13 @@
     border-color: var(--ocean-blue);
 }
 
+/* Activate for very narrow, subset of xs */
+@media (max-width: 400px) {
+    .logo {
+        width: 100px;
+    }
+}
+
 /* Activate for x-small only */
 @media (max-width: 575px) {
     .conditions-img {
@@ -57,37 +60,30 @@
     }
 }
 
-/* Activate for very narrow, subset of xs */
-@media (max-width: 400px) {
-    .logo {
-        width: 100px;
-    }
-}
-
 /* Activate when small or smaller */
 @media (max-width: 767px) {
     /* Important: collapse the hamburger menu */
-    .expandedMenu {
+    .app-box-top .expanded-menu {
         display: none;
     }
-    .dropdownMenu {
+    .app-box-top .hamburger-menu {
         flex-grow: 3;
     }
 }
 
 /* Activate when medium or larger */
 @media (min-width: 768px) {
-    .expandedMenu {
+    .app-box-top .expanded-menu {
         flex-grow: 5;
     }
-    .expandedMenu .nav .nav-link {
+    .app-box-top .expanded-menu .nav .nav-link {
         padding-right: 8px;
     }
-    .expandedMenu .nav .active {
+    .app-box-top .expanded-menu .nav .active {
         font-weight: bold;
     }
     /* Important: hide the hamburger menu */
-    .dropdownMenu {
+    .app-box-top .hamburger-menu {
         display: none;
     }
 }

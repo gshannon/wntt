@@ -115,16 +115,12 @@ export default function Map() {
     return (
         <Container>
             <Row className='py-2'>
-                <Col
-                    xs={12}
-                    sm={5}
-                    md={4}
-                    className='d-flex justify-content-center align-items-center'>
+                <Col className='px-0 d-flex justify-content-center align-items-center'>
                     <Table>
                         <tbody>
                             <tr>
                                 <td>Latitude:</td>
-                                <td>
+                                <td className='nowrap'>
                                     {appContext.markerLocation
                                         ? appContext.markerLocation.lat.toFixed(6) + ' º'
                                         : '-'}
@@ -132,7 +128,7 @@ export default function Map() {
                             </tr>
                             <tr>
                                 <td>Longitude:</td>
-                                <td>
+                                <td className='nowrap'>
                                     {appContext.markerLocation
                                         ? appContext.markerLocation.lng.toFixed(6) + ' º'
                                         : '-'}
@@ -145,8 +141,8 @@ export default function Map() {
                         </tbody>
                     </Table>
                 </Col>
-                <Col xs={12} sm={4} className='align-self-center'>
-                    <Row>
+                <Col className='px-0 align-self-center'>
+                    <Row className='mx-0'>
                         <Col className='col-12 text-center'>
                             <Overlay
                                 text='Add or replace your custom elevation to the graph and return
@@ -176,7 +172,7 @@ export default function Map() {
                                         className='m-2'
                                         onClick={() => removeMarker()}
                                         disabled={!appContext.markerLocation}>
-                                        Remove&nbsp;Marker
+                                        Remove Marker
                                     </Button>
                                 }></Overlay>
                         </Col>
@@ -184,7 +180,7 @@ export default function Map() {
                     <Row>
                         <Col className='text-center fw-bold'>Map Style</Col>
                     </Row>
-                    <Row>
+                    <Row className='mx-1'>
                         <Col className='col-6 text-end'>
                             <Form.Check
                                 inline
@@ -207,11 +203,7 @@ export default function Map() {
                         </Col>
                     </Row>
                 </Col>
-                <Col
-                    xs={12}
-                    sm={3}
-                    md={4}
-                    className='d-flex justify-content-center align-items-center'>
+                <Col className='d-flex justify-content-center align-items-center'>
                     <Row>
                         <Col className='map-vertical-buttons'>
                             <a href='#' onClick={() => setShowAddressPopup(true)}>
