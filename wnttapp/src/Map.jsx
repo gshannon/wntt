@@ -6,7 +6,6 @@ import { Tooltip as LeafletTooltip } from 'react-leaflet'
 import { Form } from 'react-bootstrap'
 import BarLoader from 'react-spinners/BarLoader'
 import Container from 'react-bootstrap/Container'
-import Table from 'react-bootstrap/Table'
 import { Col, Row } from 'react-bootstrap'
 import { YellowPin, RedPin } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
@@ -116,30 +115,22 @@ export default function Map() {
         <Container>
             <Row className='py-2'>
                 <Col className='px-0 d-flex justify-content-center align-items-center'>
-                    <Table>
-                        <tbody>
-                            <tr>
-                                <td>Latitude:</td>
-                                <td className='nowrap'>
-                                    {appContext.markerLocation
-                                        ? appContext.markerLocation.lat.toFixed(6) + ' º'
-                                        : '-'}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Longitude:</td>
-                                <td className='nowrap'>
-                                    {appContext.markerLocation
-                                        ? appContext.markerLocation.lng.toFixed(6) + ' º'
-                                        : '-'}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Elevation:</td>
-                                <td>{elevationContent()}</td>
-                            </tr>
-                        </tbody>
-                    </Table>
+                    <div className='loc-container'>
+                        <div className='loc-label'>Latitude:</div>
+                        <div className='loc-data nowrap'>
+                            {appContext.markerLocation
+                                ? appContext.markerLocation.lat.toFixed(6) + ' º'
+                                : '-'}
+                        </div>
+                        <div className='loc-label'>Longitude:</div>
+                        <div className='loc-data nowrap'>
+                            {appContext.markerLocation
+                                ? appContext.markerLocation.lng.toFixed(6) + ' º'
+                                : '-'}
+                        </div>
+                        <div className='loc-label'>Elevation:</div>
+                        <div className='loc-data'>{elevationContent()}</div>
+                    </div>
                 </Col>
                 <Col className='px-0 align-self-center'>
                     <Row className='mx-0'>
@@ -151,7 +142,7 @@ export default function Map() {
                                 contents={
                                     <Button
                                         variant='custom-primary'
-                                        className='m-2'
+                                        className='mt-2 mb-0 mx-1'
                                         onClick={() => addtoGraph()}
                                         disabled={
                                             !appContext.markerElevationNav ||
@@ -169,7 +160,7 @@ export default function Map() {
                                 contents={
                                     <Button
                                         variant='custom-primary'
-                                        className='m-2'
+                                        className='mt-2 mb-0'
                                         onClick={() => removeMarker()}
                                         disabled={!appContext.markerLocation}>
                                         Remove Marker
@@ -177,10 +168,10 @@ export default function Map() {
                                 }></Overlay>
                         </Col>
                     </Row>
-                    <Row>
+                    <Row className='mx-0'>
                         <Col className='text-center fw-bold'>Map Style</Col>
                     </Row>
-                    <Row className='mx-1'>
+                    <Row className='mx-0'>
                         <Col className='col-6 text-end'>
                             <Form.Check
                                 inline

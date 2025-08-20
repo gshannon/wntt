@@ -2,6 +2,30 @@
     margin-bottom: 0;
 }
 
+.loc-container {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: 2fr 3fr;
+    background: var(--powder-blue);
+    font-size: 0.9rem;
+}
+
+.loc-container > * {
+    background: white;
+    margin: 1px 0px;
+    padding: 5px 8px;
+    text-align: center;
+    align-content: center;
+}
+
+.loc-container .loc-label {
+    text-align: end;
+}
+
+.loc-container .loc-data {
+    font-weight: bold;
+}
+
 .map-vertical-buttons {
     display: flex;
     flex-flow: column;
