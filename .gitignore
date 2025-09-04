@@ -27,3 +27,4 @@ dist
 signature.json
 .buildnum*
 .DS_Store
+FileVaultMaster.*

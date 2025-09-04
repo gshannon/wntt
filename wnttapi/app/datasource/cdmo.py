@@ -28,6 +28,21 @@ min_tide = -2.0  # any mllw/feet tide reading lower than this is considered bad 
 max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad data
 max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
 
+# this is a temp workaround to an issue where recreating the suds client on
+# every request is causing the user/password to be rejected by CDMO. This should be
+# cleaned up once that issue is resolved.
+_client = None
+
+
+def get_soap_client():
+    global _client
+    if not _client:
+        user_name = os.environ.get("CDMO_USER")
+        password = os.environ.get("CDMO_PASSWORD")
+        transport = CustomTransport(user_name, password)
+        _client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=transport)
+    return _client
+
 
 def get_recorded_tides(
     timeline: Timeline,
@@ -84,6 +99,7 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     speed_dict = get_cdmo(
         timeline, wells_met_station, windspeed_param, handle_windspeed, minutes
     )
+    logger.debug(f"Wind speed data points retrieved: {len(speed_dict)}")
 
     if len(speed_dict) == 0:
         return wind_dict
@@ -92,9 +108,11 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     gust_dict = get_cdmo(
         timeline, wells_met_station, windgust_param, handle_windspeed, minutes
     )
+    logger.debug(f"Wind gust data points retrieved: {len(gust_dict)}")
     dir_dict = get_cdmo(
         timeline, wells_met_station, winddir_param, lambda d, dt: int(d), minutes
     )
+    logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
     # Assemble all the data.
     # The graph will display compass point names, so translate the direction into strings for dir_str.
@@ -171,13 +189,11 @@ def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
         timeline.start_dt, timeline.end_dt
     )
 
-    user_name = os.environ.get("CDMO_USER")
-    password = os.environ.get("CDMO_PASSWORD")
-    transport = CustomTransport(user_name, password)
-    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=transport)
+    # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=get_transport())
 
     try:
-        xml = soap_client.service.exportAllParamsDateRangeXMLNew(
+        client = get_soap_client()
+        xml = client.service.exportAllParamsDateRangeXMLNew(
             station, req_start_date, req_end_date, param
         )
         # util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
@@ -188,6 +204,9 @@ def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
         )
         raise APIException()
 
+    logger.debug(
+        f"CDMO {param} data retrieved for {station} for {req_start_date} to {req_end_date}"
+    )
     return xml
 
 
