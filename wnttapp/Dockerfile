@@ -1,13 +1,13 @@
-FROM node:22.3-alpine AS build
+FROM node:22-bullseye-slim AS build
 
 WORKDIR /app
-COPY package.json .
+COPY package.json package-lock.json .
 
 RUN --mount=type=cache,target=/app/.npm \
     npm set cache /app/.npm && \
     npm install
 
-COPY index.html .eslintrc.cjs vite.config.js .env.production ./
+COPY index.html eslint.config.js vite.config.js .env.production ./
 ARG BUILDNUM=?
 ENV VITE_BUILD_NUM=${BUILDNUM}
 COPY src ./src/

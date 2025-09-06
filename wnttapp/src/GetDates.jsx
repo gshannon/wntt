@@ -95,40 +95,40 @@ export default function GetDates({
         <Container className='my-2'>
             <Row className='align-items-center'>
                 <Col className='px-0'>
-                    <Form onSubmit={handleSubmit}>
-                        <Row className='align-items-center mx-0 date-options'>
-                            <Col className='align-self-start'>
-                                <FormLabel>Start Date: </FormLabel>
-                                <DatePicker
-                                    id='start-datepicker'
-                                    showClearButton={false}
-                                    showTodayButton={true}
-                                    dateFormat='MM/DD/YYYY'
-                                    value={stringify(startCtl.start)}
-                                    minDate={stringify(startCtl.min)}
-                                    maxDate={stringify(startCtl.max)}
-                                    onChange={(_, f) => handleStartChange(f)}
-                                />
-                                <FormText muted>
-                                    Range: {rangeMin} - {rangeMax}
-                                </FormText>
-                            </Col>
-                            <Col className='align-self-start'>
-                                <FormLabel>End Date: </FormLabel>
-                                <DatePicker
-                                    id='end-datepicker'
-                                    showClearButton={false}
-                                    dateFormat='MM/DD/YYYY'
-                                    value={stringify(endCtl.end)}
-                                    minDate={stringify(endCtl.min)}
-                                    maxDate={stringify(endCtl.max)}
-                                    onChange={(_, f) => handleEndChange(f)}
-                                />
-                                <FormText muted>Maximum {getMaxNumDays()} day range</FormText>
-                            </Col>
+                    <Row className='align-items-center mx-0 date-options'>
+                        <Col className='align-self-start'>
+                            <FormLabel>Start Date: </FormLabel>
+                            <DatePicker
+                                id='start-datepicker'
+                                showClearButton={false}
+                                showTodayButton={true}
+                                dateFormat='MM/DD/YYYY'
+                                value={stringify(startCtl.start)}
+                                minDate={stringify(startCtl.min)}
+                                maxDate={stringify(startCtl.max)}
+                                onChange={(_, f) => handleStartChange(f)}
+                            />
+                            <FormText muted>
+                                Range: {rangeMin} - {rangeMax}
+                            </FormText>
+                        </Col>
+                        <Col className='align-self-start'>
+                            <FormLabel>End Date: </FormLabel>
+                            <DatePicker
+                                id='end-datepicker'
+                                showClearButton={false}
+                                dateFormat='MM/DD/YYYY'
+                                value={stringify(endCtl.end)}
+                                minDate={stringify(endCtl.min)}
+                                maxDate={stringify(endCtl.max)}
+                                onChange={(_, f) => handleEndChange(f)}
+                            />
+                            <FormText muted>Maximum {getMaxNumDays()} day range</FormText>
+                        </Col>
 
-                            <Col>
-                                <Row className='mx-0'>
+                        <Col>
+                            <Row className='mx-0'>
+                                <Form onSubmit={handleSubmit}>
                                     <Col className='d-flex align-items-center justify-content-center'>
                                         <Overlay
                                             text='Redraw the graph with the latest data using the selected date range.'
@@ -155,41 +155,41 @@ export default function GetDates({
                                                 </Button>
                                             }></Overlay>
                                     </Col>
-                                </Row>
-                                <Row className='mx-0'>
-                                    <Col className='d-flex align-items-center justify-content-center'>
-                                        <Overlay
-                                            text='Turn on to show only high and low tides.'
-                                            placement='top'
-                                            contents={
-                                                <Form>
-                                                    <Form.Check
-                                                        type='checkbox'
-                                                        label='Highs/Lows'
-                                                        checked={isHiloMode}
-                                                        onChange={handleHiloToggle}
-                                                        disabled={isSmallScreen()}
-                                                    />
-                                                </Form>
-                                            }></Overlay>
-                                    </Col>
-                                    <Col className='d-flex justify-content-center'>
-                                        <Overlay
-                                            text='Open the Graph page tutorial in a popup window.'
-                                            placement='top'
-                                            contents={
-                                                <Button
-                                                    variant='primary'
-                                                    className='px-2 mb-1'
-                                                    onClick={() => setShowTut(true)}>
-                                                    Tutorial
-                                                </Button>
-                                            }></Overlay>
-                                    </Col>
-                                </Row>
-                            </Col>
-                        </Row>
-                    </Form>
+                                </Form>
+                            </Row>
+                            <Row className='mx-0'>
+                                <Col className='d-flex align-items-center justify-content-center'>
+                                    <Overlay
+                                        text='Turn on to show only high and low tides.'
+                                        placement='top'
+                                        contents={
+                                            <Form>
+                                                <Form.Check
+                                                    type='checkbox'
+                                                    label='Highs/Lows'
+                                                    checked={isHiloMode}
+                                                    onChange={handleHiloToggle}
+                                                    disabled={isSmallScreen()}
+                                                />
+                                            </Form>
+                                        }></Overlay>
+                                </Col>
+                                <Col className='d-flex justify-content-center'>
+                                    <Overlay
+                                        text='Open the Graph page tutorial in a popup window.'
+                                        placement='top'
+                                        contents={
+                                            <Button
+                                                variant='primary'
+                                                className='px-2 mb-1'
+                                                onClick={() => setShowTut(true)}>
+                                                Tutorial
+                                            </Button>
+                                        }></Overlay>
+                                </Col>
+                            </Row>
+                        </Col>
+                    </Row>
                 </Col>
                 <Col sm={3}>
                     <Row className='custom-elevation mx-0 py-2 align-items-center'>
