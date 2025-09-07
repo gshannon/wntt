@@ -17,6 +17,14 @@
     background: var(--partial-gray);
 }
 
+.get-started {
+    border-width: 4px;
+    border-color: var(--powder-blue);
+    font-size: 1.3rem;
+    font-weight: bold;
+    border-radius: 20px;
+}
+
 @media (max-width: 525px) {
     .home {
         background-image: url('/src/images/beach1.jpg');

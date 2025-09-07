@@ -1,5 +1,6 @@
 import './css/Home.css'
 import { Page } from './utils'
+import Button from 'react-bootstrap/Button'
 import { useContext } from 'react'
 import { AppContext } from './AppContext'
 import Conditions from './Conditions'
@@ -21,21 +22,24 @@ export default function Home() {
                     Welcome to the Wells National Estuarine Research Reserve Tide Tracker. Here you
                     can view historical tide and wind data, as well as predicted tides and storm
                     surge. You can also obtain the elevation of any location within our boundaries
-                    (Kennebunk to Ogunquit), to assess the flood risk at that location.
-                </p>
-                <p className='mb-1'>
-                    To get started, open the{' '}
-                    <a href='#' onClick={() => appContext.gotoPage(Page.Graph)}>
-                        Graph
-                    </a>
-                    &nbsp;page and use the Graph Tutorial button, or watch this{' '}
+                    (Kennebunk to Ogunquit), to assess the flood risk at that location. To learn
+                    more, watch this{' '}
                     <a
                         target='_blank'
                         rel='noopener noreferrer'
                         href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
                         tutorial video
                     </a>{' '}
-                    on Youtube.
+                    on Youtube, or click the button below.
+                </p>
+                <p className='mb-1'>
+                    <Button
+                        className='get-started m-1'
+                        variant='custom-primary'
+                        onClick={() => appContext.gotoPage(Page.Graph)}>
+                        {' '}
+                        Get Started
+                    </Button>
                 </p>
             </div>
             <div className='conditions'>
