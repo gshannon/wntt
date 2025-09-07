@@ -132,6 +132,24 @@ export default function Graph() {
         resetDateControls()
     }
 
+    console.log(`Days shown: ${daysShown} max: ${getMaxNumDays()}`)
+    if (isSmallScreen()) {
+        if (!isHiloMode) {
+            // Small screen detected, force to Hilo mode
+            setIsHiloMode(true)
+        }
+        // if (daysShown > getMaxNumDays()) {
+        //     // Small screen detected, limit end date to honor max days
+        //     const newEnd = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
+        //     setEndCtl({
+        //         min: new Date(startDateStr),
+        //         end: newEnd,
+        //         max: newEnd,
+        //     })
+        //     setDateRangeStrings(startDateStr, stringify(newEnd))
+        // }
+    }
+
     // If CSS Pixels width is less than Bootstrap's "Medium" breakpoint, show only highs and lows.
     const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr, isHiloMode)
 

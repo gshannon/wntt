@@ -17,16 +17,12 @@ export const LargeBase = 992
 export const XLBase = 1200
 export const XXLBase = 1400
 
-// Do a media query for the available viewport width. Note this is *device*
-export const widthGreaterOrEqual = (base) => window.matchMedia(`(min-width: ${base}px)`).matches
-export const widthLessThan = (base) => window.matchMedia(`(max-width: ${base - 1}px)`).matches
-
 // Are we on a touch screen?
 export const isTouchScreen =
     'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
 // This will allow handling of smart phones or other narrow screen devices.
-export const isSmallScreen = () => widthLessThan(MediumBase)
+export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase - 1}px)`).matches
 
 export const Months = [
     'Jan',
@@ -61,15 +57,6 @@ export const getMaxNumDays = () => {
         return 3
     }
     return 2
-}
-
-// Returns the default number of days to show on the graph.
-export const getDefaultNumDays = () => {
-    const width = window.innerWidth
-    if (width >= MediumBase) {
-        return 4
-    }
-    return 1
 }
 
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
@@ -150,8 +137,9 @@ export const limitDate = (date) => {
 // Compute the default date range for the graph. Returns mm/dd/yyyy strings.
 export const getDefaultDateStrings = () => {
     const today = new Date()
+    const defaultDays = window.innerWidth >= MediumBase ? 4 : 1
     return {
         defaultStartStr: stringify(today),
-        defaultEndStr: stringify(addDays(today, getDefaultNumDays() - 1)),
+        defaultEndStr: stringify(addDays(today, defaultDays - 1)),
     }
 }
