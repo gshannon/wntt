@@ -9,6 +9,7 @@ import {
     addDays,
     buildCacheKey,
     getDefaultDateStrings,
+    getScreenBase,
     stringify,
     dateDiff,
     isSmallScreen,
@@ -30,13 +31,13 @@ export default function Graph() {
     */
     const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
     const datesStorage = getDailyLocalStorage('dates')
+    // these strings drive what's in the screen start/end date text box controls.
     const [startDateStr, setStartDateStr] = useState(datesStorage.start ?? defaultStartStr)
     const [endDateStr, setEndDateStr] = useState(datesStorage.end ?? defaultEndStr)
     const [isHiloMode, setIsHiloMode] = useState(datesStorage.hiloMode ?? isSmallScreen())
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
-    // eslint-disable-next-line no-unused-vars
-    const [dummy, forceGraphUpdate] = useReducer((x) => x + 1, 0)
+    const [, forceUpdate] = useReducer((x) => x + 1, 0)
 
     const [startCtl, setStartCtl] = useState({
         min: minGraphDate(),
@@ -55,6 +56,7 @@ export default function Graph() {
             start: start,
             end: end,
             hiloMode: hiloMode,
+            screenBase: getScreenBase(),
         })
     }
 
@@ -65,13 +67,14 @@ export default function Graph() {
     const queryClient = useQueryClient()
     const daysShown = dateDiff(startDateStr, endDateStr) + 1
 
-    const setDateRangeStrings = (startDateStr, endDateStr) => {
-        setStartDateStr(startDateStr)
-        setEndDateStr(endDateStr)
+    const setDateRangeStrings = (newStartDateStr, newEndDateStr) => {
+        setStartDateStr(newStartDateStr)
+
+        setEndDateStr(newEndDateStr)
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
-        const key = buildCacheKey(startDateStr, endDateStr, isHiloMode)
+        const key = buildCacheKey(newStartDateStr, newEndDateStr, isHiloMode)
         queryClient.removeQueries({ queryKey: key, exact: true })
-        forceGraphUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
+        forceUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
     }
 
     const toggleHiloMode = () => {
@@ -80,7 +83,10 @@ export default function Graph() {
 
     const setJumpDates = (directionFactor) => {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
-        const newStart = limitDate(addDays(startDateStr, daysToShow * directionFactor))
+        const newStart =
+            directionFactor > 0
+                ? limitDate(addDays(endDateStr, 1))
+                : limitDate(addDays(startDateStr, daysToShow * directionFactor))
         const newEnd = limitDate(addDays(newStart, daysToShow - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
@@ -132,22 +138,28 @@ export default function Graph() {
         resetDateControls()
     }
 
-    console.log(`Days shown: ${daysShown} max: ${getMaxNumDays()}`)
-    if (isSmallScreen()) {
-        if (!isHiloMode) {
-            // Small screen detected, force to Hilo mode
+    // The user changing their screen width doesn't trigger a rerender, only a DOM redraw, which doesn't
+    // execute our code. So if we detect that here, we need to set some state that normally is set
+    // only on initial render, or when user does something to trigger it.
+    if (datesStorage.screenBase != getScreenBase()) {
+        if (isSmallScreen() && !isHiloMode) {
+            // This is normally forced only on initial render.
             setIsHiloMode(true)
         }
-        // if (daysShown > getMaxNumDays()) {
-        //     // Small screen detected, limit end date to honor max days
-        //     const newEnd = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
-        //     setEndCtl({
-        //         min: new Date(startDateStr),
-        //         end: newEnd,
-        //         max: newEnd,
-        //     })
-        //     setDateRangeStrings(startDateStr, stringify(newEnd))
-        // }
+        // We probably need to adjust the date range. We'll adjust the max, and also the selected
+        // end date if it is now too late.
+        const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
+        const newEnd = new Date(Math.min(newMax, endCtl.end))
+        setEndCtl({
+            min: new Date(startDateStr),
+            end: newEnd,
+            max: newMax,
+        })
+        // This avoids and endless loop on rerender.
+        setDailyLocalStorage('dates', {
+            ...datesStorage,
+            screenBase: getScreenBase(),
+        })
     }
 
     // If CSS Pixels width is less than Bootstrap's "Medium" breakpoint, show only highs and lows.
