@@ -24,7 +24,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
     const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
     // If display isn't wide enough, we won't show the legend or the mode bar, and disallow zoom/pan.
-    // const isWideEnough = !isSmallScreen()
+    const isNarrow = isSmallScreen()
     const tideMarkerSize = 8
     const windMarkerSize = 11
 
@@ -67,7 +67,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const graph2_min = 0
 
     const layout = {
-        showlegend: !isSmallScreen(),
+        showlegend: !isNarrow,
         height: 420,
         template: 'plotly',
         plot_bgcolor: PlotBgColor,
@@ -121,7 +121,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             roworder: 'top to bottom',
         },
         // Don't allow zoom dragging on small or touch screens.
-        dragmode: isSmallScreen() || isTouchScreen ? false : 'zoom',
+        dragmode: isNarrow || isTouchScreen ? false : 'zoom',
     }
 
     const expandConstant = (value) => {
@@ -143,10 +143,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
             lineType: 'solid',
             color: RecordTideColor,
             // We want hover text only for small screens, otherwise it clutters the hover.
-            hoverinfo: isSmallScreen() ? 'all' : 'skip',
+            hoverinfo: isNarrow ? 'all' : 'skip',
             // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
             // Otherwise must override default template of "{name} : %{y}".
-            hovertemplate: isSmallScreen()
+            hovertemplate: isNarrow
                 ? `Record (${data.record_tide_date}) : %{y}<extra></extra>`
                 : '',
         }),
@@ -156,8 +156,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             y: expandConstant(data.highest_annual_prediction),
             lineType: 'solid',
             color: HighestAnnualPredictionColor,
-            hoverinfo: isSmallScreen() ? 'all' : 'skip',
-            hovertemplate: isSmallScreen() ? 'Highest Annual Predicted: %{y}<extra></extra>' : '',
+            hoverinfo: isNarrow ? 'all' : 'skip',
+            hovertemplate: isNarrow ? 'Highest Annual Predicted: %{y}<extra></extra>' : '',
         }),
         buildPlot({
             name: `Mean High Water (${data.mean_high_water})`,
@@ -293,9 +293,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 useResizeHandler={true}
                 style={{ width: '100%', height: '100%' }}
                 config={{
-                    responsive: !isSmallScreen(), // accept clicks?
-                    scrollZoom: !isSmallScreen(), // zoom with mouse wheel?
-                    displayModeBar: !isSmallScreen(), // show mode bar at all?
+                    responsive: !isNarrow, // accept clicks?
+                    scrollZoom: !isNarrow, // zoom with mouse wheel?
+                    displayModeBar: !isNarrow, // show mode bar at all?
                     // For touch screens, zoom & pan don't work. Remove all but the camera option.
                     modeBarButtonsToRemove: [
                         'select2d',
