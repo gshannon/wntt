@@ -30,7 +30,7 @@ fi
 
 # This is the file we believe is the latest. 
 RAWFILE=etss.t${CYCLE}z.csv.tar.gz
-DATAFILE=etss.$FILEDATE/t${CYCLE}z_csv/${WELLS_STN}.csv
+DATAFILE=etss.$FILEDATE/t${CYCLE}z.csv/${WELLS_STN}.csv
 SAVEFILE=${FILEDATE}-${CYCLE}.csv
 
 # Do nothing if we previously downloaded this file
@@ -60,14 +60,14 @@ fi
 ###################################
 # UNCOMMENT TO STOP ARCHIVING FILES
 # Rename and move it to where the webapp can read it.
-#mv $DATAFILE $DATADIR/surge-data.csv
+mv $DATAFILE $DATADIR/surge-data.csv
 ###################################
 
 ###################################
 # REMOVE THIS SECTION TO STOP ARCHIVING FILES
-cp $DATAFILE $DATADIR/surge-data.csv
+#cp $DATAFILE $DATADIR/surge-data.csv
 # Move it to the archive area. 
-mv $DATAFILE $ARCHIVE/$SAVEFILE
+#mv $DATAFILE $ARCHIVE/$SAVEFILE
 ###################################
 
 # Remember the last 10 downloaded files so we can avoid double-downloads. 
