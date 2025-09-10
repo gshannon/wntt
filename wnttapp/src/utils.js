@@ -13,9 +13,6 @@ export const MaxCustomElevationMllw = 25 // Prevents the graph scale from gettin
 export const isTouchScreen =
     'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
-// This will allow handling of smart phones or other narrow screen devices.
-export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase - 1}px)`).matches
-
 export const Months = [
     'Jan',
     'Feb',
@@ -39,6 +36,9 @@ export const MediumBase = 768
 export const LargeBase = 992
 export const XLBase = 1200
 export const XXLBase = 1400
+
+// This will allow handling of smart phones or other narrow screen devices.
+export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase - 1}px)`).matches
 
 // Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would

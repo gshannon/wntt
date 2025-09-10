@@ -148,7 +148,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             // Otherwise must override default template of "{name} : %{y}".
             hovertemplate: isNarrow
                 ? `Record (${data.record_tide_date}) : %{y}<extra></extra>`
-                : '',
+                : null,
         }),
         buildPlot({
             name: 'Highest Annual Predicted (' + data.highest_annual_prediction + ')',
@@ -277,10 +277,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 y: expandConstant(customElevationMllw),
                 lineType: 'solid',
                 color: CustomElevationColor,
-                hovertext: `Custom Elevation: ${customElevationMllw}`,
-                // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
-                // Otherwise must override default template of "{name} : %{y}".
-                hoverinfo: 'text', // tells it to use the 'text' field in hover
+                hovertemplate: 'Custom Elevation: %{y}<extra></extra>',
             })
         )
     }
