@@ -63,8 +63,12 @@ export default function Control(props) {
 
     // Set the marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
     const setMarkerLatLng = (latlng) => {
-        const { lat, lng } = latlng
-        setMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
+        if (!latlng) {
+            setMarkerLocation(null)
+        } else {
+            const { lat, lng } = latlng
+            setMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
+        }
     }
 
     return (
