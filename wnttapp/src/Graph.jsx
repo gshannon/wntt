@@ -150,12 +150,16 @@ export default function Graph() {
         // end date if it is now too late.
         const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
         const newEnd = new Date(Math.min(newMax, endCtl.end))
-        setEndCtl({
-            min: new Date(startDateStr),
-            end: newEnd,
-            max: newMax,
-        })
-        // This avoids and endless loop on rerender.
+        if (newEnd < endCtl.end) {
+            // If we're shortening the selected range, update state and trigger refetch.
+            setEndCtl({
+                min: new Date(startDateStr),
+                end: newEnd,
+                max: newMax,
+            })
+            setEndDateStr(stringify(newEnd))
+        }
+        // This avoids an endless loop on rerender.
         setDailyLocalStorage('dates', {
             ...datesStorage,
             screenBase: getScreenBase(),
