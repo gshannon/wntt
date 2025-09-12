@@ -161,6 +161,20 @@ export default function About() {
                                     </div>
                                 </div>
                             </li>
+                            <li className='list-group-item d-flex justify-content-between align-items-start'>
+                                <div className='ms-2 me-auto'>
+                                    <div className='fw-bold'>Moon phase data</div>
+                                    <div>
+                                        U.S. Navy Astronomical Applications Department:{' '}
+                                        <a
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                            href='https://aa.usno.navy.mil/data/api'>
+                                            https://aa.usno.navy.mil/data/api
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
                         </ol>
                     </Accordion.Body>
                 </Accordion.Item>

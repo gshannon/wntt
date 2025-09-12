@@ -51,6 +51,16 @@ export default function Conditions({ data, error }) {
             <div className='cond-label'>Water Temp</div>
             <div className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</div>
             <div className='cond-time'>{data.temp_time ? format_dt(data.temp_time) : noData}</div>
+
+            <div className='cond-label'>Moon Phase</div>
+            <div className='cond-data'>{data.phase ? `${data.phase}` : noData}</div>
+            <div className='cond-time'>{data.phase_dt ? format_dt(data.phase_dt) : noData}</div>
+
+            <div className='cond-label'>Next Phase</div>
+            <div className='cond-data'>{data.next_phase ? `${data.next_phase}` : noData}</div>
+            <div className='cond-time'>
+                {data.next_phase_dt ? format_dt(data.next_phase_dt) : noData}
+            </div>
         </div>
     )
 }

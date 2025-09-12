@@ -89,9 +89,8 @@ class GraphTimeline(Timeline):
         )
 
     def build_plot(self, callback):
-        """Build an array of data values or None -- that matches the known datetimes
-            that correspond to a tide data value, either recorded or predicted, suitable for using to
-            build a Plotly scatter plot.
+        """Build a list containing a combination of data values and None's, which correspond to
+            this timeline, suitable for using to build a Plotly scatter plot.
 
         Args:
             callback (function): Callback function that, based on the datetime in question,
@@ -118,8 +117,8 @@ class GraphTimeline(Timeline):
 
 class HiloTimeline(GraphTimeline):
     """A specialization of GraphTimeline where the initial 15-min interval timeline gets replaced with the
-    start time and end time, plus all times which map to an observed or predicted high or low tide in between.
-    The original start and end times are included in the final timeline, but not repeated.
+    start time, all times which map to an observed or predicted high or low tide, and the end time.
+    In case the start and/or end times also correspond to a high or low tide, they will not be repeated.
     You must register the high/low tide times before calling build_plot or get_final_times.
     """
 
@@ -150,8 +149,8 @@ class HiloTimeline(GraphTimeline):
         """
         # We'll need to know if the start and end times have data, to determine whether we include them
         # in the final plot.
-        self._start_has_data = self.start_dt in hilo_dts
-        self._end_has_data = self.end_dt in hilo_dts
+        self._start_has_data = hilo_dts is not None and self.start_dt in hilo_dts
+        self._end_has_data = hilo_dts is not None and self.end_dt in hilo_dts
         self._hilo_timeline = list(
             set(
                 [self.start_dt]
