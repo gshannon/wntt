@@ -3,23 +3,23 @@ from datetime import timedelta
 
 from app import util
 from app.datasource import cdmo
+from app.datasource import moon
 from app.timeline import Timeline
 
 from . import tzutil as tz
 
-time_zone = tz.eastern
-
 logger = logging.getLogger(__name__)
 
 
-def get_latest_conditions():
+def get_latest_conditions(tzone=tz.eastern):
     """
     Pull the most recent wind, tide & temp readings from CDMO.
     We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
     only 1 for the others.  Most of the time, this will result in only 1 day being requested from CDMO.
+    We'll probably get time zone from the request later.
     """
 
-    end_dt = util.round_to_quarter(tz.now(time_zone))
+    end_dt = util.round_to_quarter(tz.now(tzone))
     # Find recent data. If it's not in this time window, it's not current enough to display.
     start_dt = end_dt - timedelta(hours=4)
     timeline = Timeline(start_dt, end_dt)
@@ -27,11 +27,12 @@ def get_latest_conditions():
     wind_dict = cdmo.get_recorded_wind_data(timeline)
     tide_dict = cdmo.get_recorded_tides(timeline)
     temp_dict = cdmo.get_recorded_temps(timeline)
+    moon_dict = moon.get_moon_phases(tzone)
 
-    return extract_data(wind_dict, tide_dict, temp_dict)
+    return extract_data(wind_dict, tide_dict, temp_dict, moon_dict)
 
 
-def extract_data(wind_dict, tide_dict, temp_dict) -> dict:
+def extract_data(wind_dict, tide_dict, temp_dict, moon_dict) -> dict:
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
     # we don't have to worry about missing data.  All dict keys are in chronological order.
     if len(tide_dict) > 0:
@@ -71,6 +72,10 @@ def extract_data(wind_dict, tide_dict, temp_dict) -> dict:
         "wind_time": latest_wind_dt,
         "tide_time": latest_tide_dt,
         "temp_time": latest_temp_dt,
+        "phase": moon_dict["current"],
+        "phase_dt": moon_dict["currentdt"],
+        "next_phase": moon_dict["nextphase"],
+        "next_phase_dt": moon_dict["nextdt"],
     }
 
 
