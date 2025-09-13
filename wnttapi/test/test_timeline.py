@@ -107,6 +107,18 @@ class TestGraphTimeline(TestCase):
         self.assertEqual(timeline.length_raw(), len(plot))
         self.assertTrue(12.51 in plot)
 
+    def test_add_date_to_timeline(self):
+        zone = tz.eastern
+        start_date = date(2025, 7, 15)
+        end_date = date(2025, 7, 15)
+
+        timeline = GraphTimeline(start_date, end_date, zone)
+        len1 = timeline.length_raw()
+        adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
+        timeline.add_time(adder)
+        self.assertEqual(timeline.length_raw(), len1 + 1)
+        self.assertTrue(timeline.contains_raw(adder))
+
 
 class TestHiloTimeline(TestCase):
     def test_register_hilo_times_called(self):
@@ -180,3 +192,15 @@ class TestHiloTimeline(TestCase):
         timeline.register_hilo_times(list(data.keys()))
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
         self.assertEqual(plot, [8.0, 12.51, 9.3])
+
+    def test_add(self):
+        zone = tz.eastern
+        start_date = date(2025, 7, 15)
+        end_date = date(2025, 7, 15)
+
+        timeline = GraphTimeline(start_date, end_date, zone)
+        len1 = timeline.length_raw()
+        adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
+        timeline.add_time(adder)
+        self.assertEqual(timeline.length_raw(), len1 + 1)
+        self.assertTrue(timeline.contains_raw(adder))

@@ -1,5 +1,11 @@
 import { AppContext } from './AppContext'
-import { isTouchScreen, maxCustomElevationNavd88, navd88ToMllw, isSmallScreen } from './utils'
+import {
+    getMoonEmoji,
+    isTouchScreen,
+    maxCustomElevationNavd88,
+    navd88ToMllw,
+    isSmallScreen,
+} from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
@@ -122,6 +128,23 @@ export default function Chart({ error, loading, hiloMode, data }) {
         },
         // Don't allow zoom dragging on small or touch screens.
         dragmode: isNarrow || isTouchScreen ? false : 'zoom',
+    }
+
+    // Add a little phase of moon emoji with hover label, if applicable.
+    if (data.moon_phase?.phase) {
+        const pdt = new Date(data.moon_phase.phasedt)
+        layout.annotations = [
+            {
+                text: getMoonEmoji(data.moon_phase.phase),
+                font: { size: 16 },
+                x: data.moon_phase.phasedt,
+                yref: 'paper', // We'll put this at the top of the graph, sticking out a bit
+                y: 1.025,
+                showarrow: false,
+                hovertext: `${data.moon_phase.phase}<br>${pdt.toLocaleTimeString()}`,
+                hoverlabel: { bgcolor: 'white', font: { color: 'black' } },
+            },
+        ]
     }
 
     const expandConstant = (value) => {

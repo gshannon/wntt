@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Timeline:
     """
-    Build a datetime list using the given interval in requested timezone for a given date range.
+    Build a datetime list with 15-minute intervals in the requested timezone for a given range.
 
     If a daylight savings time boundary is included, you will get:
     - for spring forward, the 02:00 hour will be skipped
@@ -60,6 +60,9 @@ class Timeline:
         """Returns whether the given datetime is in the initial timeline."""
         return dt in self._raw_times
 
+    def within(self, dt: datetime) -> bool:
+        return self.start_dt <= dt <= self.end_dt
+
     def get_all_past_raw(self) -> list:
         """Return all datetimes in the initial timeline that are before now."""
         return list(filter(lambda dt: dt < self.now, self._raw_times))
@@ -87,6 +90,23 @@ class GraphTimeline(Timeline):
                 tzinfo=time_zone
             ),
         )
+
+    def add_time(self, dt: datetime):
+        """Add a datetime to the timeline, if its in bounds, and sort the times so it's still in order.
+        This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
+        in the timeline.
+
+        Args:
+            dt (datetime): time to add
+
+        Raises:
+            ValueError: if the time is out of bounds.
+        """
+        if not self.within(dt):
+            raise ValueError(f"{dt} is outside of timeline boundaries")
+        if not self.contains_raw(dt):
+            self._raw_times.append(dt)
+            self._raw_times.sort()
 
     def build_plot(self, callback):
         """Build a list containing a combination of data values and None's, which correspond to
