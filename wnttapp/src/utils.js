@@ -164,3 +164,18 @@ export const getDefaultDateStrings = () => {
         defaultEndStr: stringify(addDays(today, defaultDays - 1)),
     }
 }
+
+export const getMoonEmoji = (phaseName) => {
+    if (phaseName == 'New Moon') {
+        return '\u{1F311}'
+    }
+    if (phaseName == 'First Quarter') {
+        return '\u{1F313}'
+    }
+    if (phaseName == 'Full Moon') {
+        return '\u{1F315}'
+    }
+    if (phaseName == 'Last Quarter') {
+        return '\u{1F317}'
+    }
+}

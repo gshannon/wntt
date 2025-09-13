@@ -11,7 +11,6 @@ export const buildPlot = ({
     y,
     legendOnly = false,
     lineType = null, // null means no lines
-    connectgaps = false, // connect any gaps in data if using lines
     markerSize = null, // 0 means no markers (this forces lines)
     markerSymbol = 'circle', // ignored if markerSize=0
     markerAngle = null, // ignored if markerSize=0
@@ -28,7 +27,7 @@ export const buildPlot = ({
         visible: legendOnly ? 'legendonly' : true,
         type: 'scatter',
         legendgroup: 'grp1',
-        connectgaps: connectgaps,
+        connectgaps: true, // This needs to on for most/all of the plots due to moon phase being there at exact times
         hoverinfo: hoverinfo,
         // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
         // Otherwise must override default template of "{name} : %{y}".

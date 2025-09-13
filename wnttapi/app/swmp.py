@@ -2,8 +2,7 @@ import logging
 from datetime import timedelta
 
 from app import util
-from app.datasource import cdmo
-from app.datasource import moon
+from app.datasource import cdmo, moon
 from app.timeline import Timeline
 
 from . import tzutil as tz
@@ -27,7 +26,7 @@ def get_latest_conditions(tzone=tz.eastern):
     wind_dict = cdmo.get_recorded_wind_data(timeline)
     tide_dict = cdmo.get_recorded_tides(timeline)
     temp_dict = cdmo.get_recorded_temps(timeline)
-    moon_dict = moon.get_moon_phases(tzone)
+    moon_dict = moon.get_current_moon_phases(tzone)
 
     return extract_data(wind_dict, tide_dict, temp_dict, moon_dict)
 

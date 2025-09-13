@@ -6,13 +6,15 @@ from zoneinfo import ZoneInfo
 import requests
 from rest_framework.exceptions import APIException
 
+from app.timeline import GraphTimeline
+
 logger = logging.getLogger(__name__)
 
 # The Navy API requests we use a ID string so they can track usage metrics.
 base_url = "https://aa.usno.navy.mil/api/moon/phases/date?id=wellsreserve"
 
 
-def get_moon_phases(tzone) -> dict:
+def get_current_moon_phases(tzone) -> dict:
     """Get the current moon phase and the next moon phase.
 
     Args:
@@ -27,7 +29,25 @@ def get_moon_phases(tzone) -> dict:
     url = f"{base_url}&date={start_date_utc.isoformat()}&nump=3"
     logger.debug(f"url: {url}")
     json = pull_data(url)
-    phase_dict = parse_json(json, tzone)
+    phase_dict = parse_json_current(json, tzone)
+
+    return phase_dict
+
+
+def get_moon_phase(timeline: GraphTimeline) -> dict:
+    """Get the moon phase that starts (or started) inside this timeline, if any.
+
+    Args:
+        tzone (ZoneInfo): Time zone to return results in.
+
+    Returns:
+        dict: { "phase": <phase-name>, "phasedt": <datetime> }
+    """
+    # Calculate start date in UTC. We should never need more than 2 since they are 8-9 days apart.
+    url = f"{base_url}&date={timeline.start_date.isoformat()}&nump=2"
+    logger.debug(f"url: {url}")
+    json = pull_data(url)
+    phase_dict = parse_json_timeline(json, timeline)
 
     return phase_dict
 
@@ -62,7 +82,7 @@ def pull_data(url: str) -> dict:
         raise APIException(e)
 
 
-def parse_json(phase_json: dict, tzone, asof: datetime = None) -> dict:
+def parse_json_current(phase_json: dict, tzone, asof: datetime = None) -> dict:
     """Parse the JSON returned by the moon phase API.
 
     Args:
@@ -107,14 +127,6 @@ def parse_json(phase_json: dict, tzone, asof: datetime = None) -> dict:
     phases = phase_json["phasedata"]
 
     for entry in phases:
-        # Example entry:
-        # {
-        #     "day": 14,
-        #     "month": 9,
-        #     "phase": "Last Quarter",
-        #     "time": "10:33",
-        #     "year": 2025
-        # }
         phase = entry["phase"]
         dt_str = (
             f"{entry['year']}-{entry['month']:02d}-{entry['day']:02d} {entry['time']}"
@@ -140,3 +152,36 @@ def parse_json(phase_json: dict, tzone, asof: datetime = None) -> dict:
         "nextphase": next_phase,
         "nextdt": next_phase_dt,
     }
+
+
+def parse_json_timeline(phase_json: dict, timeline: GraphTimeline) -> dict:
+    """Parse the JSON returned by the moon phase API.
+
+    Args:
+        phase_json (dict): json from API call
+        timeline: we are looking for a phase start within this timeline
+
+    Returns:
+        dict: { "phase": <phase-name>, "phasedt": <datetime> }
+    """
+    phase_name = None
+    phase_dt = None
+
+    phases = phase_json["phasedata"]
+
+    for entry in phases:
+        phase = entry["phase"]
+        dt_str = (
+            f"{entry['year']}-{entry['month']:02d}-{entry['day']:02d} {entry['time']}"
+        )
+        utc = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(
+            tzinfo=ZoneInfo("UTC")
+        )
+        dt_local = utc.astimezone(timeline.time_zone)
+        if timeline.within(dt_local):
+            phase_name = phase
+            phase_dt = dt_local
+            break
+
+    logger.debug(f"Returning phase={phase_name}, phasedt={phase_dt}")
+    return {"phase": phase_name, "phasedt": phase_dt}
