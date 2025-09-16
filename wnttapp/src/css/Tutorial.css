@@ -25,6 +25,12 @@
     line-height: 1.1rem;
 }
 
+@media (max-width: 575px) {
+    .tut-text {
+        font-size: 0.8rem;
+    }
+}
+
 .pic-width-90,
 .pic-width-60-90,
 .pic-width-70-90 {
