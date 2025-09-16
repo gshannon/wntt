@@ -49,7 +49,7 @@ export default function Tutorial(props) {
                                             />
                                         </Col>
                                     </Row>
-                                    <Row className='tut-bottom'>
+                                    <Row className='tut-bottom mx-0'>
                                         <Col className='tut-text text-center'>{obj.render()}</Col>
                                     </Row>
                                 </Carousel.Item>

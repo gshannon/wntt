@@ -84,18 +84,24 @@ export default function Chart({ error, loading, hiloMode, data }) {
             },
         },
         hovermode: 'x unified',
-        // hoverlabel must be extra wide due to issue created by hoverdistance (see below)
-        hoverlabel: { namelength: 22 },
+        // hoverlabel can get pretty wide thanks to the hoverdistance problem (see below), so for narrow screens,
+        // we slightly decrease font size.
+        hoverlabel: { namelength: 22, font: { size: isNarrow ? 12 : 13 } },
         /* hoverdistance controls how many pixels to the left or right of the cursor it will look for data when
             trying to show hover text for a plot that has a None for the time the cursor is over. While this is
             an essential feature, since otherwise you'd have to hover exactly over a data point to see the
             hover text, it has a serious drawback: with "x unified" hovermode, it will perform this logic on each plot 
             independently. This means that if the closest non-null data for some plots are to the left, and others are
-            to the right, it will identify the x axis (time) based on on (probably the first it finds), and then 
-            show data from a different time for other plots, with the actual datetime in parens. This makes the display
-            much wider.  What I want is for it to skip those plots that have no data for the time displayed on the hover, 
-            but that seems to be impossible. */
-        hoverdistance: hiloMode ? 10 : 1,
+            to the right, it will identify the x axis (time) based on only one (probably the first it finds), and then 
+            show data from a nearby time for other plots, with the actual datetime in parens. I can see where this
+            might be useful for some, but they don't give a way to suppress this behavior. Here, I want to show hover text for 
+            only plots that have a value for the selected time.  Worse, when it shows this "nearby" data, it ends up
+            being quite wide, messing up the display on narrow screens. In hilo mode, we could set a higher value, like 10,
+            for user convenience, but when there's a high or low value very close to the start or end of the graph,
+            where the hover for the midnight would bring in the nearby high or low, it can look ugly.
+            So we use a happy middle ground of around 5 pixels.
+             */
+        hoverdistance: hiloMode ? 5 : 1,
         hoversubplots: 'axis', // to include wind hovers in upper graph
         legend: {
             groupclick: 'toggleitem',
