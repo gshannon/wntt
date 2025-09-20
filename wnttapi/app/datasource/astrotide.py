@@ -80,7 +80,7 @@ def get_astro_tides(timeline: Timeline, max_observed_dt: datetime) -> tuple[dict
     return preds15_dict, preds_hilo_dict
 
 
-def get_astro_highest(year) -> float:
+def get_astro_highest_navd88(year) -> float:
     """Calls the external API for all hilo tides for a year, and returns the highest found."""
     begin_date = f"{year}0101"
     end_date = f"{year}1231"
@@ -88,7 +88,7 @@ def get_astro_highest(year) -> float:
     logger.debug(f"for {year}, urlhilo: {urlhilo}")
 
     hilo_json_dict = pull_data(urlhilo)
-    return find_highest(hilo_json_dict)
+    return find_highest_navd88(hilo_json_dict)
 
 
 def extract_past_hilos(hilo_list: list, timeline: list, cutoff: datetime) -> dict:
@@ -185,12 +185,12 @@ def hilo_json_to_dict(
     return future_hilo_dict
 
 
-def find_highest(hilo_json_dict) -> float:
-    """Searches through the json and returns the highest high tide value found. Converts NAVD88 to MLLW."""
+def find_highest_navd88(hilo_json_dict) -> float:
+    """Searches through the json and returns the highest NAVD88 high tide value found."""
     highest = None
 
     for pred in hilo_json_dict:
-        val = util.navd88_feet_to_mllw_feet(float(pred["v"]))
+        val = round(float(pred["v"]), 2)
         typ = pred["type"]  # should be 'H' or 'L'
         if typ not in ["H", "L"]:
             logger.error(f"Unknown type {typ}: {pred}")
