@@ -16,10 +16,9 @@ class TestAstro(TestCase):
 
         raw = util.read_file(f"{path}/data/astro_hilo_2027.json")
         contents = astro.extract_json(raw)
-        highest = astro.find_highest(contents)
-        returned_high_navd88 = 6.019
-        expected_high_mllw = util.navd88_feet_to_mllw_feet(returned_high_navd88)
-        self.assertEqual(highest, expected_high_mllw)
+        highest = astro.find_highest_navd88(contents)
+        expected_high_navd88 = round(6.019, 2)
+        self.assertEqual(highest, expected_high_navd88)
 
     def test_parse_15m_predictions(self):
         """Able to parse 15m predictions from a json list of predictions from API call."""
