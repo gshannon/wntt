@@ -150,7 +150,7 @@ export default function Graph() {
         // end date if it is now too late.
         const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
         const newEnd = new Date(Math.min(newMax, endCtl.end))
-        if (newEnd < endCtl.end) {
+        if (newEnd != endCtl.end) {
             // If we're shortening the selected range, update state and trigger refetch.
             setEndCtl({
                 min: new Date(startDateStr),
