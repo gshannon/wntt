@@ -1,4 +1,4 @@
-FROM node:22-bullseye-slim AS build
+FROM node:current-bullseye-slim AS build
 
 WORKDIR /app
 COPY package.json package-lock.json .
