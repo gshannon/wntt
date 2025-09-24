@@ -12,8 +12,8 @@
         "test": "vitest "
     },
     "dependencies": {
-        "@tanstack/react-query": "^5.86.0",
-        "axios": "^1.11.0",
+        "@tanstack/react-query": "^5.90.2",
+        "axios": "^1.12.2",
         "bootstrap": "^5.3.8",
         "leaflet": "^1.9.4",
         "patch-package": "^8.0.0",
@@ -27,12 +27,12 @@
         "reactstrap-date-picker": "^2.0.0"
     },
     "devDependencies": {
-        "@vitejs/plugin-react-swc": "^4.0.1",
-        "eslint": "^9.34.0",
+        "@vitejs/plugin-react-swc": "^4.1.0",
+        "eslint": "^9.36.0",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.2.0",
-        "eslint-plugin-react-refresh": "^0.4.20",
-        "vite": "^7.1.4",
+        "eslint-plugin-react-refresh": "^0.4.21",
+        "vite": "^7.1.7",
         "vite-plugin-eslint2": "^5.0.4",
         "vite-plugin-inspect": "^11.3.3",
         "vitest": "^3.2.4"
