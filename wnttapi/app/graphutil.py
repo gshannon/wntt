@@ -1,13 +1,13 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta
-
-from rest_framework.exceptions import ValidationError
 
 from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, moon
 from app.datasource import surge as sg
 from app.timeline import GraphTimeline, HiloTimeline
+from rest_framework.exceptions import APIException, ValidationError
 
 from . import config as cfg
 from . import tzutil as tz
@@ -61,13 +61,11 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     # Phase 1: Retrieve all data from external sources. All these dicts are dense -- they
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
-    # Start with the observed tide data, which will be useful in gathering other data.
-    obs_dict = cdmo.get_recorded_tides(timeline)
+    # Start with the observed tide data and wind data, which may be useful in gathering other data.
+    obs_dict, wind_dict = get_cdmo_data(timeline)
 
     # Determine highs and lows from observed data.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
-
-    wind_dict = cdmo.get_recorded_wind_data(timeline)
 
     # For astronomical tides, we need to know the last observed high or low tide,
     # if we're showing only highs and lows. Otherwise, we just need the last observed tide.
@@ -150,6 +148,44 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         "past_tl_index": past_tl_index,
         "future_tl_index": future_tl_index,
     }
+
+
+def get_cdmo_data(timeline: GraphTimeline) -> tuple[dict, dict]:
+    """Retrieve all cdmo historical data needed for the graph. We do these calls in parallel to save time.
+
+    Args:
+        timeline (GraphTimeline)
+
+    Raises:
+        APIException: if a call fails
+
+    Returns:
+        tuple[dict, dict]: tide_dict, wind_dict.  Both will be empty if timeline is all in future.
+    """
+    if timeline.is_all_future():
+        return {}, {}
+
+    cdmo_calls = [
+        {"name": "tide", "func": cdmo.get_recorded_tides},
+        {"name": "wind", "func": cdmo.get_recorded_wind_data},
+    ]
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        # Use a dict comprehension to map active futures to calls
+        future_to_call = {
+            executor.submit(call["func"], timeline): call for call in cdmo_calls
+        }
+        for future in as_completed(future_to_call):
+            call = future_to_call[future]
+            try:
+                logger.debug(f"waiting on {call['name']}...")
+                call["data"] = future.result()
+            except Exception as exc:
+                logger.error("%r generated an exception: %s" % (call["name"], exc))
+                raise APIException(f"Getting {call['name']}: {exc}")
+            else:
+                logger.debug(f"Got data back from {call['name']}")
+
+    return cdmo_calls[0]["data"], cdmo_calls[1]["data"]
 
 
 def build_hist_tide_plot(

@@ -65,12 +65,11 @@ class TestMoon(TestCase):
         start_date = datetime(2025, 9, 11, tzinfo=zone)
         end_date = datetime(2025, 9, 15, tzinfo=zone)
         timeline = GraphTimeline(start_date, end_date, zone)
-        times = timeline.get_final_times({})
 
         raw = util.read_file(f"{path}/data/moon1.json")
         contents = json.loads(raw)
 
-        data = moon.parse_json_timeline_old(contents, times)
+        data = moon.parse_json_timeline(contents, timeline)
         expected = {
             "phase": "Last Quarter",
             "phasedt": datetime(2025, 9, 14, 6, 33, tzinfo=zone),

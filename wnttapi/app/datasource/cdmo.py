@@ -62,7 +62,7 @@ def get_recorded_tides(
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
         tide level in MLLW feet.
     """
-    if timeline.length_raw() == 0 or timeline.is_all_future():
+    if timeline.is_all_future():
         # Nothing to fetch
         return {}
 
@@ -84,7 +84,7 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
 
     # If timeline is all in the future, don't bother.
-    if timeline.length_raw() == 0 or timeline.is_all_future():
+    if timeline.is_all_future():
         return wind_dict
 
     # For readability, thin out the data points, as it gets pretty dense and hard to read.
@@ -137,7 +137,7 @@ def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of water temp readings from CDMO.
     """
-    if timeline.length_raw() == 0 or timeline.is_all_future():
+    if timeline.is_all_future():
         # Nothing to fetch, it's all in the future
         return None
 
