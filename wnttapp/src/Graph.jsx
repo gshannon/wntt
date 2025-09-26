@@ -213,7 +213,13 @@ export default function Graph() {
                     image={prevButton}
                 />
                 <Col xs={10} className='px-0'>
-                    <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
+                    <Chart
+                        loading={loading}
+                        error={error}
+                        forceUpdate={forceUpdate}
+                        hiloMode={isHiloMode}
+                        data={data}
+                    />
                 </Col>
                 <JumpDates
                     hoverText={`Next ${numDaysText}`}
