@@ -1,5 +1,5 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from app.datasource.apiutil import APICall, run_parallel
 from datetime import date, datetime, timedelta
 
 from app import util
@@ -7,7 +7,7 @@ from app.datasource import astrotide as astro
 from app.datasource import cdmo, moon
 from app.datasource import surge as sg
 from app.timeline import GraphTimeline, HiloTimeline
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 
 from . import config as cfg
 from . import tzutil as tz
@@ -166,26 +166,13 @@ def get_cdmo_data(timeline: GraphTimeline) -> tuple[dict, dict]:
         return {}, {}
 
     cdmo_calls = [
-        {"name": "tide", "func": cdmo.get_recorded_tides},
-        {"name": "wind", "func": cdmo.get_recorded_wind_data},
+        APICall("tide", cdmo.get_recorded_tides, timeline),
+        APICall("wind", cdmo.get_recorded_wind_data, timeline),
     ]
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        # Use a dict comprehension to map active futures to calls
-        future_to_call = {
-            executor.submit(call["func"], timeline): call for call in cdmo_calls
-        }
-        for future in as_completed(future_to_call):
-            call = future_to_call[future]
-            try:
-                logger.debug(f"waiting on {call['name']}...")
-                call["data"] = future.result()
-            except Exception as exc:
-                logger.error("%r generated an exception: %s" % (call["name"], exc))
-                raise APIException(f"Getting {call['name']}: {exc}")
-            else:
-                logger.debug(f"Got data back from {call['name']}")
 
-    return cdmo_calls[0]["data"], cdmo_calls[1]["data"]
+    run_parallel(cdmo_calls)
+
+    return cdmo_calls[0].data, cdmo_calls[1].data
 
 
 def build_hist_tide_plot(

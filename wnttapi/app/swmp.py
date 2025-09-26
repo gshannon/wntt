@@ -1,10 +1,9 @@
 import logging
-from rest_framework.exceptions import APIException
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import timedelta
 
 from app import util
 from app.datasource import cdmo, moon
+from app.datasource.apiutil import APICall, run_parallel
 from app.timeline import Timeline
 
 from . import tzutil as tz
@@ -12,7 +11,7 @@ from . import tzutil as tz
 logger = logging.getLogger(__name__)
 
 
-def get_latest_conditions(tzone=tz.eastern):
+def get_latest_conditions(tzone=tz.eastern) -> dict:
     """
     Pull the most recent wind, tide & temp readings from CDMO.
     We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
@@ -26,32 +25,17 @@ def get_latest_conditions(tzone=tz.eastern):
     timeline = Timeline(start_dt, end_dt)
 
     cdmo_calls = [
-        {"name": "wind", "func": cdmo.get_recorded_wind_data},
-        {"name": "tide", "func": cdmo.get_recorded_tides},
-        {"name": "temp", "func": cdmo.get_recorded_temps},
+        APICall("wind", cdmo.get_recorded_wind_data, timeline),
+        APICall("tide", cdmo.get_recorded_tides, timeline),
+        APICall("temp", cdmo.get_recorded_temps, timeline),
     ]
 
-    # Use parallel threads to optimize multiple calls to cdmo.
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        # Use a dict comprehension to map active futures to calls
-        future_to_call = {
-            executor.submit(call["func"], timeline): call for call in cdmo_calls
-        }
-        for future in as_completed(future_to_call):
-            call = future_to_call[future]
-            try:
-                logger.debug(f"waiting on {call['name']}...")
-                call["data"] = future.result()
-            except Exception as exc:
-                logger.error("%r generated an exception: %s" % (call["name"], exc))
-                raise APIException(f"Getting {call['name']}: {exc}")
-            else:
-                logger.debug(f"Got data back from {call['name']}")
+    run_parallel(cdmo_calls)
 
     moon_dict = moon.get_current_moon_phases(tzone)
 
     return extract_data(
-        cdmo_calls[0]["data"], cdmo_calls[1]["data"], cdmo_calls[2]["data"], moon_dict
+        cdmo_calls[0].data, cdmo_calls[1].data, cdmo_calls[2].data, moon_dict
     )
 
 
