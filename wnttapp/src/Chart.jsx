@@ -24,7 +24,7 @@ const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 
-export default function Chart({ error, loading, hiloMode, data }) {
+export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
     const appContext = useContext(AppContext)
     const customElevationNav = appContext.customElevationNav
     const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
@@ -45,7 +45,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 fetching data.
                 <br /> {error.message}
                 <br />
-                <Button variant='warning' onClick={() => window.location.reload()}>
+                <Button variant='warning' onClick={() => forceUpdate()}>
                     Try again
                 </Button>
                 <br />
@@ -120,11 +120,13 @@ export default function Chart({ error, loading, hiloMode, data }) {
             },
             domain: [graph1_min, graph1_max],
             gridcolor: 'black',
+            dtick: 2,
         },
         yaxis2: {
             title: { text: 'Wind MPH', font: { size: 15 } },
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
+            dtick: 2,
         },
         grid: {
             rows: 2,
