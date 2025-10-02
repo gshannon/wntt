@@ -1,6 +1,7 @@
 import './css/About.css'
 import { Container } from 'react-bootstrap'
 import Accordion from 'react-bootstrap/Accordion'
+import { SimpleLink, Link } from './Links'
 
 export default function About() {
     return (
@@ -16,12 +17,10 @@ export default function About() {
                             the data is only as good as the sources. Furthermore, actual water level
                             at any given location may differ from the measured tide level due to
                             variations of terrain and wave activity. As always, the local{' '}
-                            <a
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                href='https://forecast.weather.gov/MapClick.php?lat=43.3223&lon=-70.5809'>
-                                National Weather Service
-                            </a>{' '}
+                            <Link
+                                href='https://forecast.weather.gov/MapClick.php?lat=43.3223&lon=-70.5809'
+                                text='National Weather Service'
+                            />{' '}
                             should be consulted for official storm surge forecasts and any watches
                             or warnings.
                         </div>
@@ -81,12 +80,7 @@ export default function About() {
                                     <div>
                                         National Estuarine Research Reserve System, Centralized Data
                                         Management Office (Web Services):{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://cdmo.baruch.sc.edu'>
-                                            https://cdmo.baruch.sc.edu
-                                        </a>{' '}
+                                        <SimpleLink href='https://cdmo.baruch.sc.edu' />{' '}
                                     </div>
                                 </div>
                             </li>
@@ -95,21 +89,11 @@ export default function About() {
                                     <div className='fw-bold'>Astronomical Tide Predictions</div>
                                     <div>
                                         Main site:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317'>
-                                            https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
-                                        </a>
+                                        <SimpleLink href='https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317' />
                                     </div>
                                     <div>
                                         API:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://api.tidesandcurrents.noaa.gov/api/prod/'>
-                                            https://api.tidesandcurrents.noaa.gov/api/prod/
-                                        </a>
+                                        <SimpleLink href='https://api.tidesandcurrents.noaa.gov/api/prod/' />
                                     </div>
                                 </div>
                             </li>
@@ -118,21 +102,11 @@ export default function About() {
                                     <div className='fw-bold'>Future Storm Surge</div>
                                     <div>
                                         Main site:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0'>
-                                            https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0
-                                        </a>
+                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0' />
                                     </div>
                                     <div>
                                         Disclaimer:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php'>
-                                            https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php
-                                        </a>
+                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php' />
                                     </div>
                                 </div>
                             </li>
@@ -143,21 +117,11 @@ export default function About() {
                                     </div>
                                     <div>
                                         Main Site:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://apps.nationalmap.gov/epqs/'>
-                                            https://apps.nationalmap.gov/epqs/
-                                        </a>
+                                        <SimpleLink href='https://apps.nationalmap.gov/epqs/' />
                                     </div>
                                     <div>
                                         Accuracy Information:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://www.usgs.gov/faqs/how-accurate-are-elevations-generated-elevation-point-query-service-national-map'>
-                                            https://www.usgs.gov/faqs/how-accurate-are-elevations-generated-elevation-point-query-service-national-map
-                                        </a>
+                                        <SimpleLink href='https://www.usgs.gov/faqs/how-accurate-are-elevations-generated-elevation-point-query-service-national-map' />
                                     </div>
                                 </div>
                             </li>
@@ -166,12 +130,7 @@ export default function About() {
                                     <div className='fw-bold'>Moon phase data</div>
                                     <div>
                                         U.S. Navy Astronomical Applications Department:{' '}
-                                        <a
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            href='https://aa.usno.navy.mil/data/api'>
-                                            https://aa.usno.navy.mil/data/api
-                                        </a>
+                                        <SimpleLink href='https://aa.usno.navy.mil/data/api' />
                                     </div>
                                 </div>
                             </li>
@@ -184,37 +143,28 @@ export default function About() {
                         Want to see more information about sea level rise in Maine? Try these links.
                         <ul>
                             <li>
-                                <a
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    href='https://coast.noaa.gov/sealevelcalculator/'>
-                                    NOAA Sea Level Calculator
-                                </a>
+                                <Link
+                                    href='https://coast.noaa.gov/sealevelcalculator/'
+                                    text='NOAA Sea Level Calculator'
+                                />
                             </li>
                             <li>
-                                <a
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    href='https://www.maine.gov/dacf/mgs/hazards/slr_ticker/slr_dashboard.html'>
-                                    Maine Geological Survey Sea Level Rise Dashboard
-                                </a>
+                                <Link
+                                    href='https://www.maine.gov/dacf/mgs/hazards/slr_ticker/slr_dashboard.html'
+                                    text='Maine Geological Survey Sea Level Rise Dashboard'
+                                />
                             </li>
                             <li>
-                                <a
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    href='https://www.maine.gov/climateplan/climate-impacts/climate-data'>
-                                    Maine Climate Science Dashboard
-                                </a>
+                                <Link
+                                    href='https://www.maine.gov/climateplan/climate-impacts/climate-data'
+                                    text='Maine Climate Science Dashboard'
+                                />
                             </li>
                             <li>
-                                <a
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    href='https://www.maine.gov/future/sites/maine.gov.future/files/inline-files/STS_EXSUM_2024.pdf'>
-                                    Scientific Assessment of Climate Change and Its Effects in Maine
-                                    (pdf)
-                                </a>
+                                <Link
+                                    href='https://www.maine.gov/future/sites/maine.gov.future/files/inline-files/STS_EXSUM_2024.pdf'
+                                    text='Scientific Assessment of Climate Change and Its Effects in Maine (pdf)'
+                                />
                             </li>
                         </ul>
                     </Accordion.Body>
