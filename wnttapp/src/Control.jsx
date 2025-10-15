@@ -11,10 +11,7 @@ import { getLocalStorage, setLocalStorage } from './localStorage'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
 
-export default function Control(props) {
-    const page = props.page
-    const gotoPage = props.gotoPage
-
+export default function Control({ page, returnPage, gotoPage }) {
     const mainStorage = getLocalStorage('main')
     const [markerElevationNav, setMarkerElevationNav] = useState(mainStorage.markerElevationNav)
     const [customElevationNav, setCustomElevationNav] = useState(mainStorage.customElevationNav)
@@ -97,7 +94,9 @@ export default function Control(props) {
                 {page === Page.About && <About />}
                 {page === Page.Glossary && <Glossary />}
                 {page === Page.Help && <Help />}
-                {page === Page.HelpSyzygy && <HelpSyzygy />}
+                {page === Page.HelpSyzygy && (
+                    <HelpSyzygy gotoPage={gotoPage} returnPage={returnPage} />
+                )}
             </AppContext.Provider>
         </div>
     )

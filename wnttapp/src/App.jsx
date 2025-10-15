@@ -30,20 +30,22 @@ export default function App() {
     setDailyLocalStorage('misc-daily', { ...daily, upgraded: false }) // always reset the upgraded flag
 
     const [curPage, setCurPage] = useState(upgraded ? Page.Graph : Page.Home)
+    const [returnPage, setReturnPage] = useState(null)
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_BUILD_NUM}`)
     }, [])
 
-    const gotoPage = (opt) => {
-        setCurPage(opt)
+    const gotoPage = (page, returnPage) => {
+        setCurPage(page)
+        setReturnPage(returnPage || null)
     }
 
     return (
         <QueryClientProvider client={queryClient}>
             <div className='App app-box'>
                 <Top page={curPage} gotoPage={gotoPage} />
-                <Control page={curPage} gotoPage={gotoPage} />
+                <Control page={curPage} returnPage={returnPage} gotoPage={gotoPage} />
             </div>
             {/* <ReactQueryDevtools initialIsOpen={false} buttonPosition='top-right' position='right' /> */}
         </QueryClientProvider>

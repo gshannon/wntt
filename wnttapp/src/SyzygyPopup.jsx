@@ -11,7 +11,10 @@ export default function SyzygyPopup({ code, onClose }) {
     const Help = () => {
         return (
             <p>
-                <a href='#' className='my-1' onClick={() => appContext.gotoPage(Page.HelpSyzygy)}>
+                <a
+                    href='#'
+                    className='my-1'
+                    onClick={() => appContext.gotoPage(Page.HelpSyzygy, Page.Graph)}>
                     More details...
                 </a>{' '}
             </p>
