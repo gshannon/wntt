@@ -28,6 +28,39 @@ export const Months = [
     'Dec',
 ]
 
+// These must be kept in sync with the API
+export const NewMoon = 'NM'
+export const FirstQuarter = 'FQ'
+export const FullMoon = 'FM'
+export const LastQuarter = 'LQ'
+export const Perigee = 'PG'
+// export const Apogee = 'AG'
+export const Perihelion = 'PH'
+// export const Aphelion = 'AH'
+
+export const SyzygyInfo = {}
+SyzygyInfo[NewMoon] = { name: 'New Moon', display: '\u{1F31A}' } // 🌚
+SyzygyInfo[FirstQuarter] = { name: 'First Quarter', display: '\u{1F313}' } // 🌓
+SyzygyInfo[FullMoon] = { name: 'Full Moon', display: '\u{1F31D}' } // 🌝
+SyzygyInfo[LastQuarter] = { name: 'Last Quarter', display: '\u{1F317}' } // 🌗
+SyzygyInfo[Perigee] = { name: 'Perigee', display: '\u{1F535}' } //  🔵 \u{1F53B} 🔻 \u{1F53A} 🔺
+// SyzygyInfo[Apogee] = { name: 'Apogee', display: '?' }
+SyzygyInfo[Perihelion] = { name: 'Perihelion', display: '\u{2600}\u{fe0f}' } // ☀️
+// SyzygyInfo[Aphelion] = { name: 'Aphelion', display: '?' }
+
+// Format a Date object for display. Output: "Jan 3, 2026 04:08 PM"
+export const formatDatetime = (dt) => {
+    if (!dt) {
+        return null
+    }
+    const month = Months[dt.getMonth()]
+    const hours = dt.getHours() == 12 ? 12 : (dt.getHours() % 12).toString()
+    const minutes = dt.getMinutes().toString().padStart(2, '0')
+    const ampm = dt.getHours() >= 12 ? 'PM' : 'AM'
+    const formatted = `${month} ${dt.getDate()}, ${dt.getFullYear()} ${hours}:${minutes} ${ampm}`
+    return formatted
+}
+
 // CSS Pixel (Logical Pixel) width of Bootstrap's responsive width breakpoints.  Note this is different
 // from Device Pixels (Physical) Pixels, which are usually 2 or 3 times as bigger. See DPR (Device Pixel Ratio).
 // These values match Bootstrap's responsive breakpoints.
@@ -99,6 +132,7 @@ export const Page = Object.freeze({
     Glossary: 4,
     About: 5,
     Help: 6,
+    HelpSyzygy: 7,
 })
 
 // Round a floating point value to n digits of precision
@@ -141,7 +175,7 @@ export const addDays = (date, days) => {
 }
 
 // Pass dates as Dates or string in any order.
-export const dateDiff = (date1, date2) => {
+export const daysBetween = (date1, date2) => {
     const d1 = new Date(date1)
     const d2 = new Date(date2)
     const oneDay = 24 * 60 * 60 * 1000 // millis in a normal day
@@ -162,20 +196,5 @@ export const getDefaultDateStrings = () => {
     return {
         defaultStartStr: stringify(today),
         defaultEndStr: stringify(addDays(today, defaultDays - 1)),
-    }
-}
-
-export const getMoonEmoji = (phaseName) => {
-    if (phaseName == 'New Moon') {
-        return '\u{1F311}'
-    }
-    if (phaseName == 'First Quarter') {
-        return '\u{1F313}'
-    }
-    if (phaseName == 'Full Moon') {
-        return '\u{1F315}'
-    }
-    if (phaseName == 'Last Quarter') {
-        return '\u{1F317}'
     }
 }

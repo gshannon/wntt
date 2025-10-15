@@ -11,7 +11,7 @@ import {
     getDefaultDateStrings,
     getScreenBase,
     stringify,
-    dateDiff,
+    daysBetween,
     isSmallScreen,
     limitDate,
     getMaxNumDays,
@@ -65,7 +65,7 @@ export default function Graph() {
     }, [startDateStr, endDateStr, isHiloMode])
 
     const queryClient = useQueryClient()
-    const daysShown = dateDiff(startDateStr, endDateStr) + 1
+    const daysShown = daysBetween(startDateStr, endDateStr) + 1
 
     const setDateRangeStrings = (newStartDateStr, newEndDateStr) => {
         setStartDateStr(newStartDateStr)
@@ -166,20 +166,25 @@ export default function Graph() {
         })
     }
 
-    // If CSS Pixels width is less than Bootstrap's "Medium" breakpoint, show only highs and lows.
     const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr, isHiloMode)
 
     const JumpDates = (props) => {
         if (error || loading) {
             return <Col className='col-1' />
         }
+        // Disable these if out of range
+        const anchorClass =
+            (props.dir === 'back' && startCtl.start <= minGraphDate()) ||
+            (props.dir === 'forward' && endCtl.end >= maxGraphDate())
+                ? 'disable-pointer'
+                : ''
         return (
             <Col className='col-1 px-0 jumpdate'>
                 <Overlay
                     text={props.hoverText}
                     placement='top'
                     contents={
-                        <a href='#' onClick={props.action}>
+                        <a href='#' onClick={props.action} className={anchorClass}>
                             <img className='pic' src={props.image} alt={props.hoverText} />
                         </a>
                     }></Overlay>
@@ -211,6 +216,7 @@ export default function Graph() {
                     hoverText={`Previous ${numDaysText}`}
                     action={handlePreviousClick}
                     image={prevButton}
+                    dir='back'
                 />
                 <Col xs={10} className='px-0'>
                     <Chart
@@ -225,6 +231,7 @@ export default function Graph() {
                     hoverText={`Next ${numDaysText}`}
                     action={handleNextClick}
                     image={nextButton}
+                    dir='forward'
                 />
             </Row>
         </>

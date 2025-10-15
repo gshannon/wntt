@@ -1,0 +1,10 @@
+#syzygy-modal .modal-body {
+    /* override bootstrap white. If I don't use the id prefix, this override
+    seems to bleed into other modals in the app. */
+    background: var(--powder-blue);
+}
+
+.syzygy-header {
+    background: var(--federal-blue);
+    border-bottom-width: 0;
+}

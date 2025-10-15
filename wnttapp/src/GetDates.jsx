@@ -6,7 +6,7 @@ import { DatePicker } from 'reactstrap-date-picker'
 import Container from 'react-bootstrap/Container'
 import {
     addDays,
-    dateDiff,
+    daysBetween,
     isSmallScreen,
     limitDate,
     stringify,
@@ -64,7 +64,7 @@ export default function GetDates({
         // Datepicker won't call this if date is invalid or outside min/max, but it calls it if
         // they empty it out or click Today when date is already today, so we will ignore those.
         if (formatted && formatted !== stringify(startCtl.start)) {
-            const daysShown = dateDiff(startCtl.start, endCtl.end) + 1
+            const daysShown = daysBetween(startCtl.start, endCtl.end) + 1
             const newStart = new Date(formatted)
             const newEnd = limitDate(addDays(newStart, daysShown - 1))
             setStartCtl({ ...startCtl, start: newStart })

@@ -53,11 +53,8 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     else:
         timeline = GraphTimeline(start_date, end_date, time_zone)
 
-    # We'll add the phase of moon if applicable.
-    moon_phase_data = moon.get_moon_phase(timeline)
-    if moon_phase_data["phasedt"]:
-        timeline.add_time(moon_phase_data["phasedt"])
-
+    # Get moon/sun tide data
+    syzygy_data = moon.get_syzygy_data(timeline)
     # Phase 1: Retrieve all data from external sources. All these dicts are dense -- they
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
@@ -126,7 +123,7 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     record_tide_mllw = util.navd88_feet_to_mllw_feet(cfg.get_record_tide_navd88())
     return {
         "timeline": final_timeline,
-        "moon_phase": moon_phase_data,
+        "syzygy": syzygy_data,
         "hist_tides": hist_tides_plot,
         "hist_hilo_labels": hist_hilo_labels,
         "astro_tides": astro_tides_plot,

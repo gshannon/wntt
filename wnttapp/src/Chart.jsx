@@ -1,16 +1,12 @@
 import { AppContext } from './AppContext'
-import {
-    getMoonEmoji,
-    isTouchScreen,
-    maxCustomElevationNavd88,
-    navd88ToMllw,
-    isSmallScreen,
-} from './utils'
+import { isTouchScreen, maxCustomElevationNavd88, navd88ToMllw, isSmallScreen } from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
-import { buildPlot } from './ChartBuilder'
-import { useContext } from 'react'
+import { buildSyzygyAnnotations, buildPlot } from './ChartBuilder'
+import SyzygyPopup from './SyzygyPopup'
+import { useContext, useState } from 'react'
+
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
 const HighestAnnualPredictionColor = '#ff7f0e'
@@ -33,6 +29,11 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
     const isNarrow = isSmallScreen()
     const tideMarkerSize = 8
     const windMarkerSize = 11
+    const [showHelp, setShowHelp] = useState(-1)
+
+    const onModalClose = () => {
+        setShowHelp(-1)
+    }
 
     if (error) {
         console.error(error)
@@ -109,7 +110,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                 text: '<b>Click lines below to toggle visibility.<br>See Help for details.</b>',
             },
         },
-        margin: { t: 60, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
+        margin: { t: 70, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
         // Override default date format to more readable, with 12-hour clock.
         xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
         xaxis2: { gridcolor: 'black' },
@@ -120,13 +121,25 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
             },
             domain: [graph1_min, graph1_max],
             gridcolor: 'black',
-            dtick: 2,
+            // For tide, we will use 1-ft intervals for tick marks if not showing wind and
+            // total range is low enough to avoid being too cluttered.
+            dtick:
+                data.wind_speeds === null &&
+                Math.max(data.record_tide, customElevationMllw ?? 0) < 16
+                    ? 1
+                    : 2,
         },
         yaxis2: {
             title: { text: 'Wind MPH', font: { size: 15 } },
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
-            dtick: 2,
+            // For wind, we prefer a tick interval of 2, for greater precistion, but if the range
+            // is too high, it gets very cluttered, so we bump it to 5.
+            dtick:
+                data.wind_speeds !== null &&
+                Math.max(...data.wind_gusts) - Math.min(...data.wind_speeds) < 18
+                    ? 2
+                    : 5,
         },
         grid: {
             rows: 2,
@@ -138,22 +151,9 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
         dragmode: isNarrow || isTouchScreen ? false : 'zoom',
     }
 
-    // Add a little phase of moon emoji with hover label, if applicable.
-    if (data.moon_phase?.phase) {
-        const pdt = new Date(data.moon_phase.phasedt)
-        layout.annotations = [
-            {
-                text: getMoonEmoji(data.moon_phase.phase),
-                font: { size: 16 },
-                x: data.moon_phase.phasedt,
-                yref: 'paper', // We'll put this at the top of the graph, sticking out a bit
-                y: 1.025,
-                showarrow: false,
-                hovertext: `${data.moon_phase.phase}<br>${pdt.toLocaleTimeString()}`,
-                hoverlabel: { bgcolor: 'white', font: { color: 'black' } },
-            },
-        ]
-    }
+    // Add annotations for moon, sun data.
+    const [annotations, displayedCodes] = buildSyzygyAnnotations(data.syzygy, data.timeline)
+    layout.annotations = annotations
 
     const expandConstant = (value) => {
         return Array(data.timeline.length).fill(value)
@@ -164,6 +164,14 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
     // should be the highest 2 values. If there's a custom elevation, that will be inserted in the proper place
     // so the 1st 3 are in descending order. After that, the precise order could vary by time, so we just make our
     // best guess here.
+
+    // Hack: Plotly uses the 1st element of wind_dir array to control the direction of the marker in the legend.
+    // Unfortunately it doesn't use the first non-null value.  So if the 1st element is null, as is normally the
+    // case in hilo mode, it will show wind speed & wind gust in the legend with NO MARKER.. So we cheat a little.
+    // This does not cause the false value to appear in the graph, since the speed & gust values are null.
+    if (data.wind_dir !== null && data.wind_dir.length > 0 && data.wind_dir[0] === null) {
+        data.wind_dir[0] = 0
+    }
 
     const plotData = [
         buildPlot({
@@ -335,11 +343,18 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                     ],
                     displaylogo: false, // hide the plotly link in the mode bar
                 }}
+                onClickAnnotation={(data) => {
+                    // data.index will be 0-based index into displayedCodes[]
+                    setShowHelp(data.index)
+                }}
             />
             <p style={{ fontSize: '.95em', textAlign: 'center' }}>
                 Tide and wind observation data may be missing due to equipment maintenance,
                 equipment failure or power failure.
             </p>
+            {showHelp >= 0 && (
+                <SyzygyPopup code={displayedCodes[showHelp]} onClose={onModalClose} />
+            )}
         </>
     )
 }

@@ -16,6 +16,7 @@ const Entry = (props) => {
 export default function Glossary() {
     return (
         <Container>
+            <Row className='justify-content-center fs-4 fw-bold'>Glossary</Row>
             <Stack gap={3} className='py-3'>
                 <Entry title='Wells Reserve SWMP'>
                     The{' '}
@@ -74,7 +75,7 @@ export default function Glossary() {
                     , provided by the United States Geological Service, to obtain the elevation of
                     that point relative to NAVD88, which is then converted to MLLW.
                 </Entry>
-                <Entry title='Record Tide<'>
+                <Entry title='Record Tide'>
                     This is the highest recorded tide at Wells. Source: <b>Wells Reserve SWMP</b>
                 </Entry>
                 <Entry title='Highest Annual Predicted'>

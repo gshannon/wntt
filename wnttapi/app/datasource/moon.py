@@ -1,20 +1,33 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
+from app.timeline import GraphTimeline
 from rest_framework.exceptions import APIException
 
-from app.timeline import GraphTimeline
+from . import syzygy_data as data
 
 logger = logging.getLogger(__name__)
 
 # The Navy API requests we use a ID string so they can track usage metrics.
-base_url = "https://aa.usno.navy.mil/api/moon/phases/date?id=wellsreserve"
+# Example: curl "https://aa.usno.navy.mil/api/moon/phases/date?date=2025-09-29&nump=2"
+# base_url = "https://aa.usno.navy.mil/api/moon/phases/date?id=wellsreserve"
+
+utc = ZoneInfo("UTC")
+
+NEW_MOON = "NM"
+FIRST_QUARTER = "FQ"
+FULL_MOON = "FM"
+LAST_QUARTER = "LQ"
+PERIGEE = "PG"
+APOGEE = "AG"
+PERIHELION = "PH"
+APHELION = "AH"
 
 
-def get_current_moon_phases(tzone) -> dict:
+def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
     """Get the current moon phase and the next moon phase.
 
     Args:
@@ -25,45 +38,96 @@ def get_current_moon_phases(tzone) -> dict:
     """
     # Calculate start date in UTC. To make sure we get both the current phase and next phase, we
     # need to go back 9 days and get 3 phases.
-    start_date_utc = datetime.now(tz=tzone).date() - timedelta(days=9)
-    url = f"{base_url}&date={start_date_utc.isoformat()}&nump=3"
-    logger.debug(f"url: {url}")
-    json = pull_data(url)
-    phase_dict = parse_json_current(json, tzone)
+    current_phase_code = None
+    current_phase_utc = None
+    next_phase_code = None
+    next_phase_utc = None
 
-    return phase_dict
+    utc = ZoneInfo("UTC")
+
+    now = asof if asof else datetime.now(tz=tzone)
+
+    now_utc = now.astimezone(utc)
+
+    for utc, code in data.phase_data.items():
+        if utc <= now_utc:
+            current_phase_code = code
+            current_phase_utc = utc
+        else:
+            next_phase_code = code
+            next_phase_utc = utc
+            break
+
+    if current_phase_code is None or next_phase_code is None:
+        logger.error(f"Could not find current phase. asof={asof}")
+
+    return {
+        "current": current_phase_code,
+        "currentdt": current_phase_utc.astimezone(tzone),
+        "nextphase": next_phase_code,
+        "nextdt": next_phase_utc.astimezone(tzone),
+    }
 
 
-def get_moon_phase(timeline: GraphTimeline) -> dict:
-    """Get the moon phase that starts (or started) inside this timeline, if any.
+def get_syzygy_data(timeline: GraphTimeline) -> dict:
+    """Get moon phase, moon perigee and sun perihelion that occur within this timeline, if any.
 
     Args:
-        tzone (ZoneInfo): Time zone to return results in.
+        timeline
 
     Returns:
-        dict: { "phase": <phase-name>, "phasedt": <datetime> }
+        [ { <datetime>: <code> }, ... ]  sorted by datetime
     """
-    # Calculate start date in UTC. We should never need more than 2 since they are 8-9 days apart.
-    url = f"{base_url}&date={timeline.start_date.isoformat()}&nump=2"
-    logger.debug(f"url: {url}")
-    json = pull_data(url)
-    phase_dict = parse_json_timeline(json, timeline)
+    data = []
+    phase_code, phase_dt = get_moon_phase(timeline)
+    if phase_dt:
+        data.append({"code": phase_code, "dt": phase_dt})
+    perigee_dt = get_perigee(timeline)
+    if perigee_dt:
+        data.append({"code": PERIGEE, "dt": perigee_dt})
+    perihelion_dt = get_perihelion(timeline)
+    if perihelion_dt:
+        data.append({"code": PERIHELION, "dt": perihelion_dt})
 
-    return phase_dict
+    # These must be sorted by time, the graph is depending on it.
+    return sorted(data, key=lambda d: d["dt"])
+
+
+def get_moon_phase(timeline: GraphTimeline) -> tuple[str, datetime]:
+    """Find the moon phase that is within the timeline, if any.
+
+    Args:
+        timeline: we are looking for a phase start within this timeline
+
+    Returns:
+        <phase-name>, <phase-datetime>
+    """
+
+    for utc, code in data.phase_data.items():
+        if timeline.within(utc):
+            return code, utc.astimezone(timeline.time_zone)
+
+    return None, None
+
+
+def get_perigee(timeline: GraphTimeline) -> datetime:
+    """Get the datetime of the Perigee that occurs in this timeline, if any."""
+    for utc in data.perigee_utc:
+        if timeline.within(utc):
+            return utc.astimezone(timeline.time_zone)
+    return None
+
+
+def get_perihelion(timeline: GraphTimeline) -> datetime:
+    """Get the datetime of the Perihelion that occurs in this timeline, if any."""
+    for utc in data.perihelion_utc:
+        if timeline.within(utc):
+            return utc.astimezone(timeline.time_zone)
+    return None
 
 
 def pull_data(url: str) -> dict:
-    """Call the API and return the moon phase data as a json list of dicts
-
-    Args:
-        url (str): _description_
-
-    Raises:
-        APIException: If there was an error calling the API
-
-    Returns:
-        dict: JSON response from the API
-    """
+    """Use this if/when we need to programatically call the API."""
     try:
         response = requests.get(url)
     except Exception as e:
@@ -82,106 +146,23 @@ def pull_data(url: str) -> dict:
         raise APIException(e)
 
 
-def parse_json_current(phase_json: dict, tzone, asof: datetime = None) -> dict:
+def parse_json_year(phase_json: dict, year: int) -> list:
     """Parse the JSON returned by the moon phase API.
-
-    Args:
-        phase_json (dict): json that looks like this:
-            API return looks like this (times in UTC):
-    {
-        "apiversion": "4.0.1",
-        "day": 11,
-        "month": 9,
-        "numphases": 3,
-        "phasedata": [
-            {
-            "day": 14,
-            "month": 9,
-            "phase": "Last Quarter",
-            "time": "10:33",
-            "year": 2025
-            },
-            {
-            "day": 21,
-            "month": 9,
-            "phase": "New Moon",
-            "time": "19:54",
-            "year": 2025
-            },
-            ...
-        ]
-    }
-
-        tzone: time zone to return datetimes in
-        asof (datetime, optional): For testing only. Defaults is current time.
-
-    Returns:
-        dict: {"current": "phase", "currentdt": datetime, "nextphase": "phase", "nextdt": datetime}
+    Use this if/when we need to programatically call the API.
     """
-    current_phase = None
-    current_phase_dt = None
-    next_phase = None
-    next_phase_dt = None
-    now = asof if asof else datetime.now(tz=tzone)
 
     phases = phase_json["phasedata"]
+    utc = ZoneInfo("UTC")
+    data = []
+    start = datetime(year, 1, 1, tzinfo=utc)
+    end = datetime(year, 12, 31, 23, 59, tzinfo=utc)
 
     for entry in phases:
         phase = entry["phase"]
         dt_str = (
             f"{entry['year']}-{entry['month']:02d}-{entry['day']:02d} {entry['time']}"
         )
-        utc = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(
-            tzinfo=ZoneInfo("UTC")
-        )
-        dt_local = utc.astimezone(tzone)
-        if dt_local <= now:
-            current_phase = phase
-            current_phase_dt = dt_local
-        elif current_phase is not None and next_phase is None:
-            next_phase = phase
-            next_phase_dt = dt_local
-            break
-
-    if current_phase is None or next_phase is None:
-        logger.error(f"Could not find current phase. asof={asof} phases={phases}")
-
-    return {
-        "current": current_phase,
-        "currentdt": current_phase_dt,
-        "nextphase": next_phase,
-        "nextdt": next_phase_dt,
-    }
-
-
-def parse_json_timeline(phase_json: dict, timeline: GraphTimeline) -> dict:
-    """Parse the JSON returned by the moon phase API.
-
-    Args:
-        phase_json (dict): json from API call
-        timeline: we are looking for a phase start within this timeline
-
-    Returns:
-        dict: { "phase": <phase-name>, "phasedt": <datetime> }
-    """
-    phase_name = None
-    phase_dt = None
-
-    phases = phase_json["phasedata"]
-
-    for entry in phases:
-        phase = entry["phase"]
-        dt_str = (
-            f"{entry['year']}-{entry['month']:02d}-{entry['day']:02d} {entry['time']}"
-        )
-        utc = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(
-            tzinfo=ZoneInfo("UTC")
-        )
-        dt_local = utc.astimezone(timeline.time_zone)
-        if timeline.within(dt_local):
-            phase_name = phase
-            phase_dt = dt_local
-            break
-
-    logger.debug(f"Returning phase={phase_name}, phasedt={phase_dt}")
-    return {"phase": phase_name, "phasedt": phase_dt}
+        dt_utc = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=utc)
+        if start <= dt_utc <= end:
+            data.append({dt_utc: phase})
+    return data

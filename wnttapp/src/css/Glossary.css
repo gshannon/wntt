@@ -1,0 +1,33 @@
+.glos-container {
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+    grid-template-columns: 1fr 1fr 1fr 2fr;
+    padding: 0px 0px;
+    background: var(--platinum);
+    outline: 2px solid var(--federal-blue);
+    border-radius: 6px;
+    /* font-size: 0.9rem; */
+}
+
+.glos-container > * {
+    color: var(--federal-blue);
+    margin: 1px 0px;
+    padding: 3px 8px;
+    text-align: center;
+    align-content: center;
+}
+
+.glos-header {
+    background: var(--med-blue);
+    border-bottom-width: 0;
+    font-weight: bold;
+}
+
+.glos-container .glos-high {
+    color: red;
+}
+
+.glos-caption {
+    font-size: 0.9rem;
+    font-style: italic;
+}

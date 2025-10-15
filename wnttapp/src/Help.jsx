@@ -18,6 +18,7 @@ export default function Help() {
 
     return (
         <Container>
+            <Row className='justify-content-center fs-4 fw-bold'>Tutorials</Row>
             <Row>
                 <Col className='text-center pt-4 pb-2 titles'>
                     This video covers all the basics of the Tide Tracker.
