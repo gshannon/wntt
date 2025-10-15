@@ -45,10 +45,7 @@ def get_soap_client():
 
 
 def get_recorded_tides(
-    timeline: Timeline,
-    station: str = wells_water_station,
-    param: str = tide_param,
-    included_minutes: list = [0, 15, 30, 45],
+    timeline: Timeline, station: str = wells_water_station, param: str = tide_param
 ) -> dict:
     """Retrieve tide water levels from CDMO relative to MLLW feet.
 
@@ -56,7 +53,6 @@ def get_recorded_tides(
         timeline (Timeline): the timeline of datetimes to fetch data for
         station (str, optional): The station code. Defaults to "welinwq".
         param (str, optional): Parameter name. Defaults to "Level".
-        included_minutes (list, optional): _description_. Defaults to [0, 15, 30, 45].
 
     Returns:
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
@@ -67,13 +63,7 @@ def get_recorded_tides(
         return {}
 
     # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
-    return get_cdmo(
-        timeline,
-        station,
-        param,
-        converter=handle_navd88_level,
-        included_minutes=included_minutes,
-    )
+    return get_cdmo(timeline, station, param, converter=handle_navd88_level)
 
 
 def get_recorded_wind_data(timeline: Timeline) -> dict:
@@ -87,17 +77,8 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     if timeline.is_all_future():
         return wind_dict
 
-    # For readability, thin out the data points, as it gets pretty dense and hard to read.
-    days = (timeline.end_dt.date() - timeline.start_dt.date()).days
-    if days > 5:
-        minutes = [0]  # only show 1 point per hour
-    elif days > 2:
-        minutes = [0, 30]  # show 2 per hour
-    else:
-        minutes = [0, 15, 30, 45]  # show all 4
-
     speed_dict = get_cdmo(
-        timeline, wells_met_station, windspeed_param, handle_windspeed, minutes
+        timeline, wells_met_station, windspeed_param, handle_windspeed
     )
     logger.debug(f"Wind speed data points retrieved: {len(speed_dict)}")
 
@@ -105,12 +86,10 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
         return wind_dict
 
     # CDMO returns wind speed in meters per second, so convert to mph.
-    gust_dict = get_cdmo(
-        timeline, wells_met_station, windgust_param, handle_windspeed, minutes
-    )
+    gust_dict = get_cdmo(timeline, wells_met_station, windgust_param, handle_windspeed)
     logger.debug(f"Wind gust data points retrieved: {len(gust_dict)}")
     dir_dict = get_cdmo(
-        timeline, wells_met_station, winddir_param, lambda d, dt: int(d), minutes
+        timeline, wells_met_station, winddir_param, lambda d, dt: int(d)
     )
     logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
@@ -145,13 +124,7 @@ def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
     return get_cdmo(timeline, station=station, param=temp_param, converter=handle_float)
 
 
-def get_cdmo(
-    timeline: Timeline,
-    station: str,
-    param: str,
-    converter,
-    included_minutes=[0, 15, 30, 45],
-) -> dict:
+def get_cdmo(timeline: Timeline, station: str, param: str, converter) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     Returns a dense dict of tide levels, key = dt, value = level
@@ -161,8 +134,6 @@ def get_cdmo(
     station : name of the station that is the data source
     param : name of the data parameter being requested
     converter : a function to convert a data point into the desired type, e.g. float or int, or unit conversion
-    included_minutes : subset of [0,15,30,45] to indicate which data points to populate in each hour. Giving a subset
-        allows you to display a sparser graph.
 
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
     that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
@@ -172,7 +143,7 @@ def get_cdmo(
     CDMO returns dates in LST (local standard time), which is not sensitive to DST.
     """
     xml = get_cdmo_xml(timeline, station, param)
-    data = get_cdmo_data(timeline, xml, param, converter, included_minutes)
+    data = get_cdmo_data(timeline, xml, param, converter)
     return data
 
 
@@ -210,13 +181,7 @@ def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
     return xml
 
 
-def get_cdmo_data(
-    timeline: Timeline,
-    xml: str,
-    param: str,
-    converter,
-    included_minutes: list = [0, 15, 30, 45],
-) -> dict:
+def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
     """
     Parse the data returned from CDMO for the requested timeline. Returns a dense, key-ordered
     dict of {dt: value} where dt=datetime matching an element of the timeline and value = the data value.
@@ -233,7 +198,7 @@ def get_cdmo_data(
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
     text_error_check(root.find(".//data"))
-    records = skipped = skipmin = nodata = 0
+    records = skipped = nodata = 0
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use the utc stamp, not the DateTimeStamp because the latter is in LST, sensitive to DST.
@@ -243,28 +208,26 @@ def get_cdmo_data(
         except ValueError:
             logger.error(f"Skipping bad datetime '{date_str}'")
             continue
-        if naive_utc.minute in included_minutes:
-            # We need this local time. First promote to UTC.
-            in_utc = naive_utc.replace(tzinfo=tz.utc)
-            # Now convert to requested tzone, so DST is handled properly
-            dt_in_local = in_utc.astimezone(timeline.time_zone)
-            # Since we query more data than we need, only save the data that is in the requested timeline.
-            if dt_in_local not in timeline.get_all_past_raw():
-                skipped += 1
-                continue
-            data_str = reading.find(f"./{param}").text
-            try:
-                value = converter(data_str, dt_in_local)
-                if value is None:
-                    nodata += 1
-                else:
-                    datadict[dt_in_local] = value
-            except (TypeError, ValueError):
-                logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
-        else:
-            skipmin += 1
 
-    logger.debug(f"read={records} skipped={skipped} nodata={nodata} skipmin={skipmin}")
+        # We need this local time. First promote to UTC.
+        in_utc = naive_utc.replace(tzinfo=tz.utc)
+        # Now convert to requested tzone, so DST is handled properly
+        dt_in_local = in_utc.astimezone(timeline.time_zone)
+        # Since we query more data than we need, only save the data that is in the requested timeline.
+        if dt_in_local not in timeline.get_all_past_raw():
+            skipped += 1
+            continue
+        data_str = reading.find(f"./{param}").text
+        try:
+            value = converter(data_str, dt_in_local)
+            if value is None:
+                nodata += 1
+            else:
+                datadict[dt_in_local] = value
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
+
+    logger.debug(f"read={records} skipped={skipped} nodata={nodata}")
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))

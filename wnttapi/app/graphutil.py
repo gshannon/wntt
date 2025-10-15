@@ -333,8 +333,17 @@ def build_wind_plots(
         # There are no wind predictions, return None for all lists.
         return None, None, None, None
 
+    # If not in hilo mode, for readability, thin out the data points, as it gets pretty dense and hard to read.
+    minutes = [0, 15, 30, 45]  # show all
+    if not isinstance(timeline, HiloTimeline):
+        days = (timeline.end_dt.date() - timeline.start_dt.date()).days
+        if days > 5:
+            minutes = [0]  # only show 1 point per hour
+        elif days > 2:
+            minutes = [0, 30]  # show 2 per hour
+
     def check_item(dt, key):
-        if dt in wind_dict:
+        if dt.minute in minutes and dt in wind_dict:
             return wind_dict[dt].get(key, None)
         else:
             return None
