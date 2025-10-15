@@ -98,11 +98,20 @@ export default function Top(props) {
                             title={
                                 <img className='help-img' width={40} src={HelpButton} alt='Help' />
                             }>
-                            <NavDropdown.Item onClick={() => gotoPage(Page.Glossary)}>
+                            <NavDropdown.Item
+                                className={page === Page.Glossary ? 'active' : ''}
+                                onClick={() => gotoPage(Page.Glossary)}>
                                 Glossary
                             </NavDropdown.Item>
-                            <NavDropdown.Item onClick={() => gotoPage(Page.Help)}>
-                                Help
+                            <NavDropdown.Item
+                                className={page === Page.HelpSyzygy ? 'active' : ''}
+                                onClick={() => gotoPage(Page.HelpSyzygy)}>
+                                Sun, Moon & Tides
+                            </NavDropdown.Item>
+                            <NavDropdown.Item
+                                className={page === Page.Help ? 'active' : ''}
+                                onClick={() => gotoPage(Page.Help)}>
+                                Tutorials
                             </NavDropdown.Item>
                         </NavDropdown>
                     </Col>

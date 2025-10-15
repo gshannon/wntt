@@ -77,6 +77,11 @@ a:hover {
     white-space: nowrap;
 }
 
+/* For <a> you want disabled */
+.disable-pointer {
+    pointer-events: none;
+}
+
 /* Smaller button text on smaller screens */
 @media (max-width: 767px) {
     .btn {

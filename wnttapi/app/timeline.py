@@ -61,7 +61,7 @@ class Timeline:
         return dt in self._raw_times
 
     def within(self, dt: datetime) -> bool:
-        return self.start_dt <= dt <= self.end_dt
+        return dt and self.start_dt <= dt <= self.end_dt
 
     def get_all_past_raw(self) -> list:
         """Return all datetimes in the initial timeline that are before now."""

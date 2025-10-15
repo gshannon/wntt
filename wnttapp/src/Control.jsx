@@ -5,6 +5,7 @@ import Graph from './Graph'
 import Map from './Map'
 import About from './About'
 import Help from './Help'
+import HelpSyzygy from './HelpSyzygy'
 import { DefaultMapCenter, DefaultMapZoom, EpqsUrl, Page, roundTo } from './utils'
 import { getLocalStorage, setLocalStorage } from './localStorage'
 import Glossary from './Glossary'
@@ -96,6 +97,7 @@ export default function Control(props) {
                 {page === Page.About && <About />}
                 {page === Page.Glossary && <Glossary />}
                 {page === Page.Help && <Help />}
+                {page === Page.HelpSyzygy && <HelpSyzygy />}
             </AppContext.Provider>
         </div>
     )
