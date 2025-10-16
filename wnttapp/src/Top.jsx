@@ -109,16 +109,17 @@ export default function Top(props) {
                             text='Popup that shows current weather and tide data.'
                             placement='bottom'
                             contents={
-                                <NavLink
-                                    className='px-md-3'
+                                <div
+                                    className='conditions-container mx-md-2'
                                     onClick={() => setShowConditions(true)}>
                                     <img
                                         className='conditions-img'
                                         src={Wave}
-                                        width={50}
+                                        width={75}
                                         alt='Latest conditions'
                                     />
-                                </NavLink>
+                                    <div className='conditions-centered'>Current Conditions</div>
+                                </div>
                             }></Overlay>
                     </Col>
                     <Col className='px-1'>

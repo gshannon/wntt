@@ -38,9 +38,26 @@
     font-weight: bolder;
 }
 
+.conditions-container {
+    position: relative;
+    text-align: center;
+    cursor: pointer;
+}
+
+.conditions-centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--federal-blue);
+    font-size: 0.9rem;
+}
+
 .conditions-img {
     border: solid;
-    border-color: var(--ocean-blue);
+    border-color: var(--federal-blue);
+    border-radius: 10%;
+    opacity: 0.2;
 }
 
 /* Activate for very narrow, subset of xs */
@@ -50,6 +67,12 @@
     }
     .logo {
         width: 100px;
+    }
+    .conditions-centered {
+        display: none;
+    }
+    .conditions-img {
+        opacity: 1;
     }
 }
 
@@ -70,7 +93,7 @@
         flex-grow: 5;
     }
     .app-box-top .expanded-menu .nav .nav-link {
-        padding-right: 8px;
+        padding-right: 4px;
     }
     .app-box-top .expanded-menu .nav .active {
         font-weight: bold;
