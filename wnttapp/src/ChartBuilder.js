@@ -23,11 +23,13 @@ export const buildPlot = ({
     hovertext = null, // ignored unless referred to in hovertemplate
     hovertemplate = null, // if given, hoverinfo is ignored.
     yaxis = 'y', // use 'y2' for 2nd graph (wind)
+    disableToggle = false, // for use by event handlers
 } = {}) => {
     const p = {
         name: name,
         x: x,
         y: y,
+        disableToggle: disableToggle,
         visible: legendOnly ? 'legendonly' : true,
         type: 'scatter',
         legendgroup: 'grp1',

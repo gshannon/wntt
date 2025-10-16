@@ -218,6 +218,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                       color: ObservedTideColor,
                       hovertext: data.hist_hilo_labels,
                       hovertemplate: '%{y} %{hovertext}',
+                      disableToggle: true,
                   }),
               ]
             : []),
@@ -230,6 +231,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
             color: PredictedTideColor,
             hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
+            disableToggle: true,
         }),
         ...(data.past_surge !== null
             ? [
@@ -280,6 +282,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',
                       hovertext: data.wind_dir_hover,
+                      disableToggle: true,
                   }),
                   buildPlot({
                       name: 'Wind Speed',
@@ -292,6 +295,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',
                       hovertext: data.wind_dir_hover,
+                      disableToggle: true,
                   }),
               ]
             : []),
@@ -346,6 +350,15 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                 onClickAnnotation={(data) => {
                     // data.index will be 0-based index into displayedCodes[]
                     setShowHelp(data.index)
+                }}
+                onLegendClick={(e) => {
+                    // return false to disable toggle
+                    return !e.data[e.curveNumber].disableToggle
+                }}
+                onLegendDoubleClick={(e) => {
+                    // These are supposed to make that the only plot visible, but seem to
+                    // do nothing. Disabling anyway to be safe.
+                    return !e.data[e.curveNumber].disableToggle
                 }}
             />
             <p style={{ fontSize: '.95em', fontWeight: 700, textAlign: 'center' }}>
