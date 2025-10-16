@@ -129,10 +129,10 @@ export const Page = Object.freeze({
     Home: 1,
     Graph: 2,
     Map: 3,
-    Glossary: 4,
-    About: 5,
-    Help: 6,
-    HelpSyzygy: 7,
+    About: 4,
+    Glossary: 5,
+    HelpSyzygy: 6,
+    Tutorials: 7,
 })
 
 // Round a floating point value to n digits of precision

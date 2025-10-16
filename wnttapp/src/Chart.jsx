@@ -348,7 +348,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                     setShowHelp(data.index)
                 }}
             />
-            <p style={{ fontSize: '.95em', textAlign: 'center' }}>
+            <p style={{ fontSize: '.95em', fontWeight: 700, textAlign: 'center' }}>
                 Tide and wind observation data may be missing due to equipment maintenance,
                 equipment failure or power failure.
             </p>

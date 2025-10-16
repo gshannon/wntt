@@ -93,7 +93,7 @@ export default function Control({ page, returnPage, gotoPage }) {
                 {page === Page.Map && <Map />}
                 {page === Page.About && <About />}
                 {page === Page.Glossary && <Glossary />}
-                {page === Page.Help && <Help />}
+                {page === Page.Tutorials && <Help />}
                 {page === Page.HelpSyzygy && (
                     <HelpSyzygy gotoPage={gotoPage} returnPage={returnPage} />
                 )}
