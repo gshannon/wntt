@@ -10,7 +10,6 @@ import { Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
-import HelpButton from './images/util/help.png'
 import ConditionsPopup from './ConditionsPopup'
 import Overlay from './Overlay'
 export default function Top(props) {
@@ -20,6 +19,28 @@ export default function Top(props) {
 
     const onModalClose = () => {
         setShowConditions(false)
+    }
+
+    const HelpItems = () => {
+        return (
+            <>
+                <NavDropdown.Item
+                    className={page === Page.Glossary ? 'active' : ''}
+                    onClick={() => gotoPage(Page.Glossary)}>
+                    Glossary
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                    className={page === Page.HelpSyzygy ? 'active' : ''}
+                    onClick={() => gotoPage(Page.HelpSyzygy)}>
+                    Sun, Moon & Tides
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                    className={page === Page.Tutorials ? 'active' : ''}
+                    onClick={() => gotoPage(Page.Tutorials)}>
+                    Tutorials
+                </NavDropdown.Item>
+            </>
+        )
     }
 
     const expandedMenu = (
@@ -37,6 +58,11 @@ export default function Top(props) {
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavLink>
+                <NavDropdown
+                    title='Help'
+                    active={[Page.Glossary, Page.HelpSyzygy, Page.Tutorials].includes(page)}>
+                    <HelpItems />
+                </NavDropdown>
             </Nav>
         </Col>
     )
@@ -56,6 +82,9 @@ export default function Top(props) {
                 <NavDropdown.Item onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item disabled={true}>Help:</NavDropdown.Item>
+                <HelpItems />
             </NavDropdown>
         </Col>
     )
@@ -91,29 +120,6 @@ export default function Top(props) {
                                     />
                                 </NavLink>
                             }></Overlay>
-                    </Col>
-                    <Col className='px-1'>
-                        <NavDropdown
-                            className='pe-1'
-                            title={
-                                <img className='help-img' width={40} src={HelpButton} alt='Help' />
-                            }>
-                            <NavDropdown.Item
-                                className={page === Page.Glossary ? 'active' : ''}
-                                onClick={() => gotoPage(Page.Glossary)}>
-                                Glossary
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                className={page === Page.HelpSyzygy ? 'active' : ''}
-                                onClick={() => gotoPage(Page.HelpSyzygy)}>
-                                Sun, Moon & Tides
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                className={page === Page.Help ? 'active' : ''}
-                                onClick={() => gotoPage(Page.Help)}>
-                                Tutorials
-                            </NavDropdown.Item>
-                        </NavDropdown>
                     </Col>
                     <Col className='px-1'>
                         <a

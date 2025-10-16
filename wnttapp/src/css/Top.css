@@ -45,18 +45,11 @@
 
 /* Activate for very narrow, subset of xs */
 @media (max-width: 400px) {
-    .logo {
-        width: 100px;
-    }
-}
-
-/* Activate for x-small only */
-@media (max-width: 575px) {
     .conditions-img {
         width: 25px;
     }
-    .help-img {
-        width: 25px;
+    .logo {
+        width: 100px;
     }
 }
 
