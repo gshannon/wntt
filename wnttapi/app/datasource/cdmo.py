@@ -302,16 +302,14 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     necessarily one).
 
     We are expecting a timeline with full days, at 96 per day, so whether we are dealing with a diurnal
-    or semidiurnal station, there should be at least 1 high and 1 low per day.  Missing data values (None)
-    are tolerated, but peaks and troughs are identified by consecutive values like [9.5, 10.1, 9.9] and
-    [2.5, 2.1, 2.1, 2.3], and any None embedded in these will cause us to ignore the arc, since they could
-    be disguising the actual peak or trough. E.g. if we see [9.5, 10.1, None, 9.9], it may look like high
-    tide was 10.1, but the None could be hiding an even higher value that was not recorded.
+    or semidiurnal station, there should be at least 1 high and 1 low per day.  Peaks and troughs are
+    identified by consecutive values like [9.5, 10.1, 9.9] and [2.5, 2.1, 2.1, 2.1, 2.3]. Up to 4 missing
+    values will be tolerated, so [7, 8, None, None, None, None, 7] would yield a peak of 8.  More than 4
+    will cause the arced to be skipped for fear they are disguising the actual peak or trough.
     """
 
-    MIN_TIDAL_RANGE = (
-        4  # In feet. If range is less than this, there's likely a lot of missing data.
-    )
+    # In feet. If range is less than this, there's likely a lot of missing data.
+    MIN_TIDAL_RANGE = 4
     (HIGH_ARC, LOW_ARC) = ("H", "L")
     hilomap = {}  # {dt: 'H' or 'L'}
 
@@ -330,8 +328,8 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     midtide = round((highest + lowest) / 2, 1)
     logger.debug(f"hi={highest} low={lowest} midtide={midtide} points={len(obs_dict)}")
 
-    # Walk through the timeline and identify arcs.  An arc is a half-cycle of the wave -- above or below the
-    # midline, each of which may contain a high or low tide.
+    # Phase 1: Walk through the timeline and identify arcs.  An arc is a half-cycle of the wave --
+    # above or below the midline -- each of which may contain a high or low tide.
     arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
 
     cur_arc = None
@@ -351,6 +349,7 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
 
     arcs.append(cur_arc)  # save the last one we were working on
 
+    # Phase 2: Walk through arcs and look for valid ones.
     for arc in arcs:
         position = arc["position"]
         datadict = arc["datadict"]
@@ -392,13 +391,17 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
             continue
         # Finally check the right side. Any number of repeats are allowed, but must end with a different value.
         accepted = False
+        nonesSkipped = 0
         for val in sparse_vals[ndx + 1 :]:
             if val is None:
                 logger.debug(
                     f"None found after {hilo_val} in arc beginning at {arc_timeline[0]}"
                 )
-                break
-            if val != hilo_val:
+                # We'll allow up to 4 None's.
+                nonesSkipped += 1
+                if nonesSkipped > 4:
+                    break
+            elif val != hilo_val:
                 accepted = True
                 break
 
