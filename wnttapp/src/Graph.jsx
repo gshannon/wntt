@@ -1,5 +1,5 @@
 import './css/Graph.css'
-import { useContext, useEffect, useReducer, useState } from 'react'
+import { useContext, useEffect, useEffectEvent, useReducer, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { AppContext } from './AppContext'
 import GetDates from './GetDates'
@@ -61,17 +61,17 @@ export default function Graph() {
         max: addDays(new Date(startDateStr), getMaxNumDays() - 1),
     })
 
-    const setDateStorage = (start, end, hiloMode) => {
+    const onDateChange = useEffectEvent((start, end, hiloMode) => {
         stationDailyCache.save({
             start: start,
             end: end,
             hiloMode: hiloMode,
             screenBase: getScreenBase(),
         })
-    }
+    })
 
     useEffect(() => {
-        setDateStorage(startDateStr, endDateStr, isHiloMode)
+        onDateChange(startDateStr, endDateStr, isHiloMode)
     }, [startDateStr, endDateStr, isHiloMode])
 
     const queryClient = useQueryClient()
