@@ -1,5 +1,5 @@
 import './css/Top.css'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import Container from 'react-bootstrap/Container'
 import { Row, Col } from 'react-bootstrap'
 import NavbarBrand from 'react-bootstrap/NavbarBrand'
@@ -12,9 +12,11 @@ import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
 import ConditionsPopup from './ConditionsPopup'
 import Overlay from './Overlay'
-export default function Top(props) {
-    const page = props.page
-    const gotoPage = props.gotoPage
+import { AppContext } from './AppContext'
+
+export default function Top({ page, gotoPage }) {
+    const ctx = useContext(AppContext)
+
     const [showConditions, setShowConditions] = useState(false)
 
     const onModalClose = () => {
@@ -132,7 +134,9 @@ export default function Top(props) {
                     </Col>
                 </Row>
             </Container>
-            {showConditions && <ConditionsPopup onClose={onModalClose} />}
+            {showConditions && ctx.station && (
+                <ConditionsPopup station={ctx.station} onClose={onModalClose} />
+            )}
         </div>
     )
 }

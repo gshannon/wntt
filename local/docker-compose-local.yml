@@ -20,10 +20,6 @@ services:
             SECRET_KEY: ${DJANGO_KEY}
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
-            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
-            MEAN_HIGH_WATER_MLLW: ${MEAN_HIGH_WATER_MLLW}
-            RECORD_TIDE_NAVD88: ${RECORD_TIDE_NAVD88}
-            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
         ports:
             - 8000:8001
         restart: unless-stopped

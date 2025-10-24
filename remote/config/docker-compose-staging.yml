@@ -23,11 +23,8 @@ services:
             SECRET_KEY: ${DJANGO_KEY}
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
+
             API_ALLOWED_HOST: api-c-staging
-            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
-            MEAN_HIGH_WATER_MLLW: ${MEAN_HIGH_WATER_MLLW}
-            RECORD_TIDE_NAVD88: ${RECORD_TIDE_NAVD88}
-            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
         container_name: api-c-staging
         # No ports. container will listen on 8081, but it's only accessible via the proxy
         restart: unless-stopped

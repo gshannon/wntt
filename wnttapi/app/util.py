@@ -45,21 +45,21 @@ def round_up_to_quarter(dt: datetime) -> datetime:
     return dt + timedelta(minutes=new_minute - dt.minute)
 
 
-def navd88_feet_to_mllw_feet(in_value: float) -> float:
-    return round(in_value + cfg.get_mllw_conversion(), 2)
+def navd88_feet_to_mllw_feet(in_value: float, noaa_station_id: str) -> float:
+    return round(in_value + cfg.get_mllw_conversion(noaa_station_id), 2)
 
 
-def mllw_feet_to_navd88_feet(in_value: float) -> float:
-    return round(in_value - cfg.get_mllw_conversion(), 2)
+def mllw_feet_to_navd88_feet(in_value: float, noaa_station_id: str) -> float:
+    return round(in_value - cfg.get_mllw_conversion(noaa_station_id), 2)
 
 
-def navd88_meters_to_mllw_feet(in_value: float) -> float:
+def navd88_meters_to_mllw_feet(in_value: float, noaa_station_id: str) -> float:
     feet = round(in_value * 3.28084, 2)
-    return round(navd88_feet_to_mllw_feet(feet), 2)
+    return round(navd88_feet_to_mllw_feet(feet, noaa_station_id), 2)
 
 
-def mllw_feet_to_navd88_meters(in_value: float) -> float:
-    feet = mllw_feet_to_navd88_feet(in_value)
+def mllw_feet_to_navd88_meters(in_value: float, noaa_station_id: str) -> float:
+    feet = mllw_feet_to_navd88_feet(in_value, noaa_station_id)
     return round(feet / 3.28084, 2)
 
 

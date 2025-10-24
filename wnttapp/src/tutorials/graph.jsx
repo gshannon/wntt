@@ -14,9 +14,9 @@ import reset from '../images/reset.jpg'
 import zoomMode from '../images/zoom-mode.jpg'
 import panning from '../images/panning.jpg'
 import elevation from '../images/elevation.jpg'
-import { isSmallScreen, isTouchScreen, MaxCustomElevationMllw } from '../utils'
+import { isSmallScreen, isTouchScreen } from '../utils'
 
-export const getData = () => {
+export const getData = (station) => {
     const clickOrTap = isTouchScreen ? 'tap' : 'click'
     const clickOrTapCap = isTouchScreen ? 'Tap' : 'Click'
     return [
@@ -128,8 +128,8 @@ export const getData = () => {
                         Edit button, or the Map tab on the menu bar, and follow the instructions
                         there. This will allow you to compare the elevation of your home, business
                         or other point of interest to the predicted tides. Only elevations less than{' '}
-                        {MaxCustomElevationMllw} feet MLLW may be added to the graph, to avoid
-                        skewing the graph scale.
+                        {station.maxCustomElevationMllw()} feet MLLW may be added to the graph, to
+                        avoid skewing the graph scale.
                     </span>
                 )
             },

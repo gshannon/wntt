@@ -1,13 +1,15 @@
 import './css/Help.css'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import { getData as getGraphData } from './tutorials/graph'
 import { getData as getMapData } from './tutorials/map'
 import Tutorial from './Tutorial'
+import { AppContext } from './AppContext'
 
 export default function Help() {
+    const ctx = useContext(AppContext)
     const [showGraphTut, setShowGraphTut] = useState(false)
     const [showMapTut, setShowMapTut] = useState(false)
 
@@ -53,10 +55,18 @@ export default function Help() {
                 </Col>
             </Row>
             {showGraphTut && (
-                <Tutorial onClose={onModalClose} data={getGraphData()} title='Graph Tutorial' />
+                <Tutorial
+                    onClose={onModalClose}
+                    data={getGraphData(ctx.station)}
+                    title='Graph Tutorial'
+                />
             )}
             {showMapTut && (
-                <Tutorial onClose={onModalClose} data={getMapData()} title='Map Tutorial' />
+                <Tutorial
+                    onClose={onModalClose}
+                    data={getMapData(ctx.station)}
+                    title='Map Tutorial'
+                />
             )}
         </Container>
     )

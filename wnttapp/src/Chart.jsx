@@ -1,5 +1,5 @@
 import { AppContext } from './AppContext'
-import { isTouchScreen, maxCustomElevationNavd88, navd88ToMllw, isSmallScreen } from './utils'
+import { formatDate, isTouchScreen, isSmallScreen } from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
@@ -21,10 +21,11 @@ const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 
 export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
-    const appContext = useContext(AppContext)
-    const customElevationNav = appContext.customElevationNav
-    const showElevation = customElevationNav && customElevationNav <= maxCustomElevationNavd88()
-    const customElevationMllw = showElevation ? navd88ToMllw(customElevationNav) : null
+    const ctx = useContext(AppContext)
+    const customElevationNav = ctx.customElevationNav
+    const showElevation =
+        customElevationNav && customElevationNav <= ctx.station.maxCustomElevationNavd88()
+    const customElevationMllw = showElevation ? ctx.station.navd88ToMllw(customElevationNav) : null
     // If display isn't wide enough, we won't show the legend or the mode bar, and disallow zoom/pan.
     const isNarrow = isSmallScreen()
     const tideMarkerSize = 8
@@ -79,7 +80,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
         template: 'plotly',
         plot_bgcolor: PlotBgColor,
         title: {
-            text: 'Wells Harbor Tides',
+            text: `${ctx.station.reserveName}: ${ctx.station.waterStationName} Tides`,
             subtitle: {
                 text: data.start_date + ' - ' + data.end_date,
             },
@@ -125,7 +126,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
             // total range is low enough to avoid being too cluttered.
             dtick:
                 data.wind_speeds === null &&
-                Math.max(data.record_tide, customElevationMllw ?? 0) < 16
+                Math.max(ctx.station.recordTideMllw(), customElevationMllw ?? 0) < 16
                     ? 1
                     : 2,
         },
@@ -175,10 +176,12 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
 
     const plotData = [
         buildPlot({
-            name: `Record Tide, ${data.record_tide_date} (${data.record_tide})`,
+            name: `Record Tide ${formatDate(
+                new Date(ctx.station.recordTideDate)
+            )} (${ctx.station.recordTideMllw()})`,
             x: data.timeline,
             // We need this one filled across cuz it may appear on the hover text.
-            y: expandConstant(data.record_tide),
+            y: expandConstant(ctx.station.recordTideMllw()),
             lineType: 'solid',
             color: RecordTideColor,
             // We want hover text only for small screens, otherwise it clutters the hover.
@@ -186,7 +189,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
             // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
             // Otherwise must override default template of "{name} : %{y}".
             hovertemplate: isNarrow
-                ? `Record (${data.record_tide_date}) : %{y}<extra></extra>`
+                ? `Record (${ctx.station.recordTideDate}) : %{y}<extra></extra>`
                 : null,
         }),
         buildPlot({
@@ -199,9 +202,9 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
             hovertemplate: isNarrow ? 'Highest Annual Predicted: %{y}<extra></extra>' : '',
         }),
         buildPlot({
-            name: `Mean High Water (${data.mean_high_water})`,
+            name: `Mean High Water (${ctx.station.meanHighWaterMllw})`,
             x: data.timeline,
-            y: expandConstant(data.mean_high_water),
+            y: expandConstant(ctx.station.meanHighWaterMllw),
             legendOnly: true,
             lineType: 'solid',
             color: MeanHighWaterColor,
@@ -305,7 +308,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
         // If they are showing a custom elevation, insert it into the plot data, so that the
         // 1st 3 items are in descending order.
         const index =
-            customElevationMllw >= data.record_tide
+            customElevationMllw >= ctx.station.recordTideMllw()
                 ? 0
                 : customElevationMllw >= data.highest_annual_prediction
                 ? 1

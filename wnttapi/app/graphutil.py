@@ -1,11 +1,11 @@
 import logging
-from app.datasource.apiutil import APICall, run_parallel
 from datetime import date, datetime, timedelta
 
 from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, moon
 from app.datasource import surge as sg
+from app.datasource.apiutil import APICall, run_parallel
 from app.timeline import GraphTimeline, HiloTimeline
 from rest_framework.exceptions import ValidationError
 
@@ -29,12 +29,19 @@ dictionaries of data keyed on datetime objects would entail a lot of bandwidth a
 
 logger = logging.getLogger(__name__)
 
-# For now this is all we support, for Wells.  But someday if we support multiple reserves in multiple zones,
+# For now this is all we support.  But someday if we support multiple reserves in multiple zones,
 # there will be others to support, so we'll probably pull this from the http client request.
 time_zone = tz.eastern
 
 
-def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
+def get_graph_data(
+    start_date: date,
+    end_date: date,
+    hilo_mode: bool,
+    water_station: str,
+    weather_station: str,
+    noaa_station_id: str,
+):
     """Generate plot data.
 
     Args:
@@ -59,7 +66,9 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    obs_dict, wind_dict = get_cdmo_data(timeline)
+    obs_dict, wind_dict = get_cdmo_data(
+        timeline, water_station, weather_station, noaa_station_id
+    )
 
     # Determine highs and lows from observed data.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
@@ -72,7 +81,7 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
 
     astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
-        timeline, last_recorded_dt
+        timeline, last_recorded_dt, noaa_station_id
     )
 
     if hilo_mode:
@@ -120,7 +129,6 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     past_tl_index, future_tl_index = util.get_timeline_boundaries(final_timeline)
     start_date_str = timeline.start_date.strftime("%m/%d/%Y")
     end_date_str = timeline.end_date.strftime("%m/%d/%Y")
-    record_tide_mllw = util.navd88_feet_to_mllw_feet(cfg.get_record_tide_navd88())
     return {
         "timeline": final_timeline,
         "syzygy": syzygy_data,
@@ -132,13 +140,12 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
         "wind_gusts": wind_gust_plot,
         "wind_dir": wind_dir_plot,
         "wind_dir_hover": wind_dir_hover,
-        "record_tide": record_tide_mllw,
-        "record_tide_date": cfg.get_record_tide_date().strftime("%b %d, %Y"),
         "past_surge": past_surge_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
-        "mean_high_water": cfg.get_mean_high_water_mllw(),
-        "highest_annual_prediction": cfg.get_astro_high_tide_mllw(start_date.year),
+        "highest_annual_prediction": cfg.get_astro_high_tide_mllw(
+            start_date.year, noaa_station_id
+        ),
         "start_date": start_date_str,
         "end_date": end_date_str,
         "num_days": (end_date - start_date).days + 1,
@@ -147,7 +154,12 @@ def get_graph_data(start_date: date, end_date: date, hilo_mode: bool):
     }
 
 
-def get_cdmo_data(timeline: GraphTimeline) -> tuple[dict, dict]:
+def get_cdmo_data(
+    timeline: GraphTimeline,
+    water_station: str,
+    weather_station: str,
+    noaa_station_id: str,
+) -> tuple[dict, dict]:
     """Retrieve all cdmo historical data needed for the graph. We do these calls in parallel to save time.
 
     Args:
@@ -163,8 +175,18 @@ def get_cdmo_data(timeline: GraphTimeline) -> tuple[dict, dict]:
         return {}, {}
 
     cdmo_calls = [
-        APICall("tide", cdmo.get_recorded_tides, timeline),
-        APICall("wind", cdmo.get_recorded_wind_data, timeline),
+        APICall(
+            "tide",
+            cdmo.get_recorded_tides,
+            timeline,
+            {"water_station": water_station, "noaa_station_id": noaa_station_id},
+        ),
+        APICall(
+            "wind",
+            cdmo.get_recorded_wind_data,
+            timeline,
+            {"weather_station": weather_station},
+        ),
     ]
 
     run_parallel(cdmo_calls)

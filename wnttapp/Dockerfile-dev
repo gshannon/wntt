@@ -3,7 +3,7 @@ FROM node:current-bullseye-slim
 WORKDIR /app
 COPY package.json package-lock.json .
 
-RUN npm ci   # running clean install for production
+RUN npm ci   # run clean install
 
 COPY index.html eslint.config.js vite.config.js .env.development ./
 ARG BUILDNUM=?

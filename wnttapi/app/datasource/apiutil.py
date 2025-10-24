@@ -6,10 +6,11 @@ logger = logging.getLogger(__name__)
 
 
 class APICall:
-    def __init__(self, name: str, func, param):
+    def __init__(self, name: str, func, timeline, kwargs):
         self.name = name
         self.func = func
-        self.param = param
+        self.timeline = timeline
+        self.kwargs = kwargs
         self.data = None
 
     def setData(self, data: dict):
@@ -21,7 +22,8 @@ def run_parallel(calls: list):
     with ThreadPoolExecutor(max_workers=3) as executor:
         # Use a dict comprehension to map active futures to calls
         future_to_call = {
-            executor.submit(call.func, call.param): call for call in calls
+            executor.submit(call.func, call.timeline, **call.kwargs): call
+            for call in calls
         }
         for future in as_completed(future_to_call):
             call = future_to_call[future]

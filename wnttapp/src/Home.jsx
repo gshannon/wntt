@@ -7,9 +7,9 @@ import Conditions from './Conditions'
 import useLatestData from './useLatestData'
 
 export default function Home() {
-    const appContext = useContext(AppContext)
+    const ctx = useContext(AppContext)
 
-    const { data, error } = useLatestData()
+    const { data, error } = useLatestData(ctx.station)
 
     if (error) {
         console.error(error)
@@ -36,7 +36,7 @@ export default function Home() {
                     <Button
                         className='get-started m-1'
                         variant='custom-primary'
-                        onClick={() => appContext.gotoPage(Page.Graph)}>
+                        onClick={() => ctx.gotoPage(Page.Graph)}>
                         {' '}
                         Get Started
                     </Button>

@@ -4,7 +4,6 @@ import { SimpleLink, Link } from './Links'
 import { SyzygyInfo } from './utils'
 
 export default function HelpSyzygy({ gotoPage, returnPage }) {
-    console.log(`returnPage: ${returnPage}`)
     const Back = () => {
         return returnPage ? (
             <Row className='justify-content-start my-3'>

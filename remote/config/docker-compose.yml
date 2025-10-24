@@ -30,10 +30,6 @@ services:
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
             API_ALLOWED_HOST: api-c
-            NAVD88_MLLW_CONVERSION: ${NAVD88_MLLW_CONVERSION}
-            MEAN_HIGH_WATER_MLLW: ${MEAN_HIGH_WATER_MLLW}
-            RECORD_TIDE_NAVD88: ${RECORD_TIDE_NAVD88}
-            RECORD_TIDE_DATE: ${RECORD_TIDE_DATE}
         container_name: api-c
         # No port publishing, container will listen on 8001, but it's only accessible by nginx in the app container
         restart: unless-stopped

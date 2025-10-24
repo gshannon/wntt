@@ -2,15 +2,15 @@ import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
 
-from rest_framework.exceptions import APIException
-
 import app.datasource.cdmo as cdmo
 import app.tzutil as tz
 import app.util as util
 from app.timeline import GraphTimeline, Timeline
+from rest_framework.exceptions import APIException
 
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
+noaa_station_id = "8419317"
 
 
 class TestCdmo(TestCase):
@@ -91,9 +91,8 @@ class TestCdmo(TestCase):
         """High/Low detetion works properly with complete day of data"""
         xml = self.load_xml("cdmo-level.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
-        datadict = cdmo.get_cdmo_data(
-            timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
-        )
+        converter = cdmo.make_navd88_level_converter("8419317")
+        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
         expected = {
             datetime(2025, 3, 31, 0, 45, tzinfo=self.tzone): "H",
             datetime(2025, 3, 31, 7, 0, tzinfo=self.tzone): "L",
@@ -111,42 +110,40 @@ class TestCdmo(TestCase):
         xml = self.load_xml("cdmo-level.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         actual = cdmo.get_cdmo_data(
-            timeline, xml, cdmo.tide_param, cdmo.handle_navd88_level
+            timeline, xml, cdmo.tide_param, cdmo.make_navd88_level_converter("8419317")
         )
         # 3 of the data points have invalid or missing values
         self.assertEqual(len(actual), len(timeline._raw_times) - 3)
         self.assertEqual(
             actual.get(datetime(2025, 3, 31, tzinfo=self.tzone)),
             cdmo.handle_navd88_level(
-                "1.67", None
+                "1.67", None, "8419317"
             ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp> or 03/31/2025 00:00 EDT"
         )
         self.assertEqual(
             actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=self.tzone)),
             cdmo.handle_navd88_level(
-                "1.12", None
+                "1.12", None, "8419317"
             ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp> or 03/31/2025 23:45 EDT"
         )
 
     def test_handle_navd88(self):
-        self.assertTrue(cdmo.handle_navd88_level(None, None) is None)
+        converter = cdmo.make_navd88_level_converter("8419317")
+        self.assertTrue(converter(None, None) is None)
         self.assertTrue(cdmo.handle_windspeed("nONE", None) is None)
-        self.assertTrue(cdmo.handle_navd88_level("", None) is None)
-        self.assertTrue(cdmo.handle_navd88_level("13s", None) is None)
-        self.assertTrue(cdmo.handle_navd88_level("\n\t", None) is None)
+        self.assertTrue(converter("", None) is None)
+        self.assertTrue(converter("13s", None) is None)
+        self.assertTrue(converter("\n\t", None) is None)
 
-        max_meters = util.mllw_feet_to_navd88_meters(cdmo.max_tide)
-        min_meters = util.mllw_feet_to_navd88_meters(cdmo.min_tide)
-        self.assertTrue(cdmo.handle_navd88_level(f"{max_meters + 1.0}", None) is None)
-        self.assertTrue(
-            cdmo.handle_navd88_level(f"{max_meters - 1.0}", None) is not None
-        )
-        self.assertTrue(cdmo.handle_navd88_level(f"{min_meters - 1.0}", None) is None)
-        self.assertTrue(
-            cdmo.handle_navd88_level(f"{min_meters + 1.0}", None) is not None
-        )
+        max_meters = util.mllw_feet_to_navd88_meters(cdmo.max_tide, noaa_station_id)
+        min_meters = util.mllw_feet_to_navd88_meters(cdmo.min_tide, noaa_station_id)
+        self.assertTrue(converter(f"{max_meters + 1.0}", None) is None)
+        self.assertTrue(converter(f"{max_meters - 1.0}", None) is not None)
+        self.assertTrue(converter(f"{min_meters - 1.0}", None) is None)
+        self.assertTrue(converter(f"{min_meters + 1.0}", None) is not None)
         self.assertEqual(
-            cdmo.handle_navd88_level("1.5", None), util.navd88_meters_to_mllw_feet(1.5)
+            converter("1.5", None),
+            util.navd88_meters_to_mllw_feet(1.5, noaa_station_id),
         )
 
     def test_handle_windspeed(self):

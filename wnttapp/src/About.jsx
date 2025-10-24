@@ -2,8 +2,15 @@ import './css/About.css'
 import { Container } from 'react-bootstrap'
 import Accordion from 'react-bootstrap/Accordion'
 import { SimpleLink, Link } from './Links'
+// import { AppContext } from './AppContext'
+// import { useContext } from 'react'
 
 export default function About() {
+    // const ctx = useContext(AppContext)
+    // const toggle = () => {
+    //     alert('Special mode is now ' + (ctx.special ? 'OFF' : 'ON'))
+    //     ctx.toggleSpecial()
+    // }
     return (
         <Container>
             <Accordion alwaysOpen defaultActiveKey={['0']}>
@@ -29,14 +36,14 @@ export default function About() {
                 <Accordion.Item eventKey='1'>
                     <Accordion.Header>Who is this for?</Accordion.Header>
                     <Accordion.Body>
-                        This is intended for the residents and property owners of Wells and the
-                        surrounding communities (Ogunquit/Kennebunk), particularly those with
-                        properties at lower elevations near the shore. Do you know the elevation of
-                        your property? If there were a storm coming, would you know how to get the
-                        relevant tide and storm surge predictions? And would you know how to ensure
-                        that those predictions and your property elevation were relative to the same
-                        vertical <i>datum</i>, so you are comparing apples to apples? If not, this
-                        is for you.
+                        This is intended for the residents and property owners in the surrounding
+                        communities of the reserves in the National Estuarine Research Reserve
+                        System, particularly those with properties at lower elevations near the
+                        shore. Do you know the elevation of your property? If there were a storm
+                        coming, would you know how to get the relevant tide and storm surge
+                        predictions? And would you know how to ensure that those predictions and
+                        your property elevation were relative to the same vertical <i>datum</i>, so
+                        you are comparing apples to apples? If not, this is for you.
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey='2'>
@@ -45,10 +52,10 @@ export default function About() {
                         <p>
                             January 13, 2024 saw a record breaking storm event hit the coast of
                             Maine, causing hundreds of millions of dollars in damages and breaking
-                            water level records at Wells Harbor going back to the 1990’s. How can we
-                            get the most reliable predictions about future storm tides, and most
-                            importantly, relate that to the elevation of our homes, businesses or
-                            points of interest?
+                            water level records going back to the 1990’s. How can we get the most
+                            reliable predictions about future storm tides, and most importantly,
+                            relate that to the elevation of our homes, businesses or points of
+                            interest?
                         </p>
                         <p>
                             You can find historical tides on one web site, predicted astronomical
@@ -172,8 +179,10 @@ export default function About() {
             </Accordion>
 
             <div className='p-3' style={{ fontSize: '.7em', float: 'right' }}>
-                Version {import.meta.env.VITE_BUILD_NUM ?? '?'} W{window.innerWidth}.
-                {window.outerWidth} H{window.innerHeight}.{window.outerHeight}
+                {/* <a href='#' onClick={() => toggle()}> */}
+                Version {/* </a>{' '} */}
+                {import.meta.env.VITE_BUILD_NUM ?? '?'} W{window.innerWidth}.{window.outerWidth} H
+                {window.innerHeight}.{window.outerHeight}
             </div>
         </Container>
     )

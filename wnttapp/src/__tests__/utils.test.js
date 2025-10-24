@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { minGraphDate, maxGraphDate, addDays, limitDate, stringify } from '../utils'
+import { maxGraphDate, addDays, limitDate, stringify } from '../utils'
 import {
     setDailyLocalStorage,
     setLocalStorage,

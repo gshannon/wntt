@@ -10,30 +10,25 @@ import { Col, Row } from 'react-bootstrap'
 import { YellowPin, RedPin } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
-import { MapBounds, maxCustomElevationNavd88, navd88ToMllw, Page } from './utils'
+import { Page } from './utils'
 import { AppContext } from './AppContext'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
 import { getData } from './tutorials/map'
 
-const WellsStationLocation = {
-    lat: '43.320089',
-    lng: '-70.563442',
-}
-
 const MinZoom = 8
 const MaxZoom = 18
 
 export default function Map() {
-    const appContext = useContext(AppContext)
+    const ctx = useContext(AppContext)
 
     const [showAddressPopup, setShowAddressPopup] = useState(false)
     const [showTut, setShowTut] = useState(false)
     const markerRef = useRef(null)
 
     const addtoGraph = () => {
-        appContext.setCustomElevationNav(appContext.markerElevationNav)
-        appContext.gotoPage(Page.Graph) // start tracking elevation, goto graph
+        ctx.setCustomElevationNav(ctx.markerElevationNav)
+        ctx.gotoPage(Page.Graph) // start tracking elevation, goto graph
     }
 
     const openMap = {
@@ -44,21 +39,21 @@ export default function Map() {
         attrib: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     }
-    const mapTile = appContext.mapType === 'basic' ? openMap : satelliteMap
+    const mapTile = ctx.mapType === 'basic' ? openMap : satelliteMap
 
     const setAddressMarker = (latlng) => {
-        appContext.setMarkerLatLng(latlng)
-        appContext.setMarkerElevationNav(null) // the old elevation is invalid now
-        appContext.setMapCenter(latlng)
+        ctx.setMarkerLatLng(latlng)
+        ctx.setMarkerElevationNav(null) // the old elevation is invalid now
+        ctx.setMapCenter(latlng)
     }
     const removeMarker = () => {
-        appContext.setMarkerLatLng(null)
-        appContext.setMarkerElevationNav(null)
-        appContext.setCustomElevationNav(null)
+        ctx.setMarkerLatLng(null)
+        ctx.setMarkerElevationNav(null)
+        ctx.setCustomElevationNav(null)
     }
 
     const handleChange = (event) => {
-        appContext.setMapType(event.target.value)
+        ctx.setMapType(event.target.value)
     }
 
     const markerEventHandlers = useMemo(
@@ -66,25 +61,25 @@ export default function Map() {
             dragend() {
                 const marker = markerRef.current
                 if (marker != null) {
-                    appContext.setMarkerLatLng(marker.getLatLng())
-                    appContext.setMarkerElevationNav(null) // the old elevation is invalid now
+                    ctx.setMarkerLatLng(marker.getLatLng())
+                    ctx.setMarkerElevationNav(null) // the old elevation is invalid now
                 }
             },
         }),
-        [appContext]
+        [ctx]
     )
 
     const MapClickHandler = () => {
         useMapEvents({
             click: (e) => {
-                appContext.setMarkerLatLng(e.latlng)
-                appContext.setMarkerElevationNav(null)
+                ctx.setMarkerLatLng(e.latlng)
+                ctx.setMarkerElevationNav(null)
             },
             zoomend: (e) => {
-                appContext.setZoom(e.target.getZoom())
+                ctx.setZoom(e.target.getZoom())
             },
             dragend: (e) => {
-                appContext.setMapCenter(e.target.getCenter())
+                ctx.setMapCenter(e.target.getCenter())
             },
         })
         return null
@@ -98,15 +93,15 @@ export default function Map() {
     // A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
     // so when this child component is mounted it can reset the view settings to current values.
     const ChangeView = () => {
-        useMap().setView(appContext.mapCenter, appContext.zoom)
+        useMap().setView(ctx.mapCenter, ctx.zoom)
     }
 
     const elevationContent = () => {
-        if (appContext.markerElevationNav) {
-            return <>{navd88ToMllw(appContext.markerElevationNav) + ' ft MLLW'}</>
-        } else if (appContext.markerElevationError) {
+        if (ctx.markerElevationNav) {
+            return <>{ctx.station.navd88ToMllw(ctx.markerElevationNav) + ' ft MLLW'}</>
+        } else if (ctx.markerElevationError) {
             return <>Error, please try again later.</>
-        } else if (appContext.markerLocation) {
+        } else if (ctx.markerLocation) {
             return <BarLoader loading={true} color={'green'} />
         }
     }
@@ -118,15 +113,11 @@ export default function Map() {
                     <div className='loc-container'>
                         <div className='loc-label'>Latitude:</div>
                         <div className='loc-data nowrap'>
-                            {appContext.markerLocation
-                                ? appContext.markerLocation.lat.toFixed(6) + ' º'
-                                : '-'}
+                            {ctx.markerLocation ? ctx.markerLocation.lat.toFixed(6) + ' º' : '-'}
                         </div>
                         <div className='loc-label'>Longitude:</div>
                         <div className='loc-data nowrap'>
-                            {appContext.markerLocation
-                                ? appContext.markerLocation.lng.toFixed(6) + ' º'
-                                : '-'}
+                            {ctx.markerLocation ? ctx.markerLocation.lng.toFixed(6) + ' º' : '-'}
                         </div>
                         <div className='loc-label'>Elevation:</div>
                         <div className='loc-data'>{elevationContent()}</div>
@@ -145,11 +136,10 @@ export default function Map() {
                                         className='mt-2 mb-0 mx-1'
                                         onClick={() => addtoGraph()}
                                         disabled={
-                                            !appContext.markerElevationNav ||
-                                            appContext.markerElevationNav ===
-                                                appContext.customElevationNav ||
-                                            appContext.markerElevationNav >
-                                                maxCustomElevationNavd88()
+                                            !ctx.markerElevationNav ||
+                                            ctx.markerElevationNav === ctx.customElevationNav ||
+                                            ctx.markerElevationNav >
+                                                ctx.station.maxCustomElevationNavd88()
                                         }>
                                         Add to Graph
                                     </Button>
@@ -162,7 +152,7 @@ export default function Map() {
                                         variant='custom-primary'
                                         className='mt-2 mb-0'
                                         onClick={() => removeMarker()}
-                                        disabled={!appContext.markerLocation}>
+                                        disabled={!ctx.markerLocation}>
                                         Remove Marker
                                     </Button>
                                 }></Overlay>
@@ -178,7 +168,7 @@ export default function Map() {
                                 type='radio'
                                 label='Basic'
                                 value='basic'
-                                checked={appContext.mapType === 'basic'}
+                                checked={ctx.mapType === 'basic'}
                                 onChange={handleChange}
                             />
                         </Col>
@@ -188,7 +178,7 @@ export default function Map() {
                                 type='radio'
                                 label='Satellite'
                                 value='sat'
-                                checked={appContext.mapType === 'sat'}
+                                checked={ctx.mapType === 'sat'}
                                 onChange={handleChange}
                             />
                         </Col>
@@ -200,10 +190,7 @@ export default function Map() {
                             <a href='#' onClick={() => setShowAddressPopup(true)}>
                                 Address&nbsp;Lookup
                             </a>
-                            <a
-                                href='#'
-                                className='my-1'
-                                onClick={() => appContext.gotoPage(Page.Graph)}>
+                            <a href='#' className='my-1' onClick={() => ctx.gotoPage(Page.Graph)}>
                                 Return&nbsp;to Graph
                             </a>
                             <Overlay
@@ -223,28 +210,28 @@ export default function Map() {
             </Row>
             <Row className='justify-content-center mt-1'>
                 <MapContainer
-                    center={appContext.mapCenter}
-                    maxBounds={MapBounds}
-                    zoom={appContext.zoom}
+                    center={ctx.mapCenter}
+                    maxBounds={ctx.station.mapBounds}
+                    zoom={ctx.zoom}
                     minZoom={MinZoom}
                     maxZoom={MaxZoom}
                     className='map-container'>
-                    <ChangeView center={appContext.mapCenter} zoom={appContext.zoom} />
+                    <ChangeView center={ctx.mapCenter} zoom={ctx.zoom} />
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                     <MapClickHandler />
-                    <Marker draggable={false} position={WellsStationLocation} icon={YellowPin}>
+                    <Marker draggable={false} position={ctx.station.swmpLocation} icon={YellowPin}>
                         <LeafletTooltip
                             permanent
                             opacity={0.75}
                             direction={'right'}
                             offset={[30, -27]}>
-                            Wells Tide Gauge
+                            {ctx.station.reserveName}, {ctx.station.waterStationName}
                         </LeafletTooltip>
                     </Marker>
-                    {appContext.markerLocation && (
+                    {ctx.markerLocation && (
                         <Marker
                             draggable={true}
-                            position={appContext.markerLocation}
+                            position={ctx.markerLocation}
                             icon={RedPin}
                             eventHandlers={markerEventHandlers}
                             ref={markerRef}>
@@ -253,16 +240,22 @@ export default function Map() {
                                 opacity={0.75}
                                 direction={'right'}
                                 offset={[30, -27]}>
-                                Elevation: {navd88ToMllw(appContext.markerElevationNav) ?? '-'}
+                                Elevation: {ctx.station.navd88ToMllw(ctx.markerElevationNav) ?? '-'}
                             </LeafletTooltip>
                         </Marker>
                     )}
                 </MapContainer>
             </Row>
             {showAddressPopup && (
-                <AddressPopup setAddressMarker={setAddressMarker} onClose={onModalClose} />
+                <AddressPopup
+                    setAddressMarker={setAddressMarker}
+                    onClose={onModalClose}
+                    station={ctx.station}
+                />
             )}
-            {showTut && <Tutorial onClose={onModalClose} data={getData()} title='Map Tutorial' />}
+            {showTut && (
+                <Tutorial onClose={onModalClose} data={getData(ctx.station)} title='Map Tutorial' />
+            )}
         </Container>
     )
 }

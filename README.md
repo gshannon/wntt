@@ -21,10 +21,6 @@ Here are the configuration files needed during the build/deploy process.
 -   DJANGO_KEY : A unique key used by Django.
 -   CDMO_USER : Username for CDMO API access
 -   CDMO_PASSWORD : Password for CDMO API access
--   NAVD88_MLLW_CONVERSION : Floating point number with 2 digits of precision, which will be added to NAVD88 elevations to get MLLW. Should be updated when new National Tidal Datum Epoch is published.
--   MEAN_HIGH_WATER_MLLW : Floating point number with 2 digits of precision, to indicate MHW value for the current epoch, relative to MLLW. Should be updated when new National Tidal Datum Epoch is published.
--   RECORD_TIDE_NAVD88 : Floating point number with 2 digits of precision representing the highest tide to date, e.g. 13.44, relative to NAVD88. Update as needed.
--   RECORD_TIDE_DATE : Date of RECORD_TIDE_NAVD88, e.g. 1/13/2024
 
 ### wnttapp/.env.development, wnttapp/.env.production
 
@@ -33,7 +29,6 @@ Here are the configuration files needed during the build/deploy process.
     - VITE_API_GRAPH_URL : Url used by react app to get graph data from wnttapi service. Initially http://localhost:8000/graph/
     - VITE_API_LATEST_URL : Url used by react app to get latest weather data from wnttapi service. Initially http://localhost:8000/latest/
     - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
-    - VITE_NAVD88_MLLW_CONVERSION : Number to be added to NAVD88 elevations to get MLLW. Should match the NAVD88_MLLW_CONVERSION setting in Django .env file.
     - VITE_MAX_GRAPH_QUERIES_IN_CACHE : Max number of graph queries allowed to be held in query cache. Initially 3. Higher values will increase memory pressure on browser.
 
 ### wnttapp/public/signature.json
