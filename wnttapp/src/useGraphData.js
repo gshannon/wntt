@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useClientIp } from './useClientIp'
 import { buildCacheKey } from './utils'
-import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
+import { DailyStorage } from './storage'
 import axios from 'axios'
 
-export default function useGraphData(startDate, endDate, hiloMode) {
+export default function useGraphData(station, startDate, endDate, hiloMode) {
     // Using useQuery here so we can have dependent queries.
     const ourVersion = import.meta.env.VITE_BUILD_NUM
     const oneMinute = 60_000
@@ -25,8 +25,9 @@ export default function useGraphData(startDate, endDate, hiloMode) {
                         json.version
                     }, ours: ${ourVersion}`
                 )
-                const daily = getDailyLocalStorage('misc-daily') ?? {}
-                setDailyLocalStorage('misc-daily', { ...daily, upgraded: true })
+                const miscDailyStorage = new DailyStorage('misc-daily')
+                const miscDaily = miscDailyStorage.get()
+                miscDailyStorage.set({ ...miscDaily, upgraded: true })
                 window.location.reload()
             }
             return json.version
@@ -42,12 +43,15 @@ export default function useGraphData(startDate, endDate, hiloMode) {
     // The main graph data api call.
     const { isPending, data, error } = useQuery({
         retry: false,
-        queryKey: buildCacheKey(startDate, endDate, hiloMode),
+        queryKey: buildCacheKey(station.id, startDate, endDate, hiloMode),
         queryFn: async () => {
             const res = await axios.post(import.meta.env.VITE_API_GRAPH_URL, {
                 start_date: startDate,
                 end_date: endDate,
                 hilo_mode: hiloMode,
+                water_station: station.id,
+                weather_station: station.weatherStationId,
+                noaa_station_id: station.noaaStationId,
                 ip: clientIp ?? 'unknown',
                 time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 app_version: import.meta.env.VITE_BUILD_NUM,

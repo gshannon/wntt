@@ -5,7 +5,7 @@ import { Form } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
 import axios from 'axios'
-import { MapBounds, GeocodeUrl } from './utils'
+import { GeocodeUrl } from './utils'
 
 const Mode = Object.freeze({
     Ready: 1,
@@ -13,20 +13,10 @@ const Mode = Object.freeze({
     Error: 3,
 })
 
-export default function AddressPopup(props) {
-    const onClose = props.onClose
-    const setAddressMarker = props.setAddressMarker
+export default function AddressPopup({ onClose, setAddressMarker, station }) {
     const [mode, setMode] = useState(Mode.Ready)
     const [addressValue, setAddressValue] = useState('')
     const [error, setError] = useState('')
-
-    const isInBounds = (lat, lon) => {
-        const minLat = Math.min(MapBounds[0][0], MapBounds[1][0])
-        const minLon = Math.min(MapBounds[0][1], MapBounds[1][1])
-        const maxLat = Math.max(MapBounds[0][0], MapBounds[1][0])
-        const maxLon = Math.max(MapBounds[0][1], MapBounds[1][1])
-        return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon
-    }
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -42,8 +32,16 @@ export default function AddressPopup(props) {
     }
 
     useEffect(() => {
+        const isInBounds = (lat, lon) => {
+            const minLat = Math.min(station.mapBounds[0][0], station.mapBounds[1][0])
+            const minLon = Math.min(station.mapBounds[0][1], station.mapBounds[1][1])
+            const maxLat = Math.max(station.mapBounds[0][0], station.mapBounds[1][0])
+            const maxLon = Math.max(station.mapBounds[0][1], station.mapBounds[1][1])
+            return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon
+        }
+
         if (addressValue && /\S/.test(addressValue)) {
-            const lookupValue = addressValue + ' Maine USA'
+            const lookupValue = addressValue + ' USA'
             const encoded = lookupValue.replace(/\s+/gi, '+')
             const url =
                 GeocodeUrl + '/search?q=' + encoded + '&api_key=' + import.meta.env.VITE_GEOCODE_KEY
@@ -68,7 +66,8 @@ export default function AddressPopup(props) {
                     handleError('An error occurred. Please try again.')
                 })
         }
-    }, [addressValue, setAddressMarker, onClose])
+        // TODO: improve these dependencies
+    }, [addressValue, setAddressMarker, onClose, station.mapBounds])
 
     return (
         <Modal show={true} onHide={onClose}>
@@ -92,7 +91,7 @@ export default function AddressPopup(props) {
                             defaultValue={addressValue}
                         />
                         <Form.Text style={{ color: 'white' }}>
-                            Must be in the local area. Include city. It is assumed to be Maine.
+                            Must be in the local area. Include city and state.
                         </Form.Text>
                     </Form.Group>
                     <Button variant='custom-primary' type='submit' disabled={mode === Mode.Loading}>

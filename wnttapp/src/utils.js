@@ -1,13 +1,7 @@
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
-export const MapBounds = [
-    [44.01, -70.73],
-    [43.01, -69.8],
-]
-export const DefaultMapCenter = { lat: 43.3201432976, lng: -70.5639195442 }
 export const DefaultMapZoom = 13
-export const MaxCustomElevationMllw = 25 // Prevents the graph scale from getting skewed
 
 // Are we on a touch screen?
 export const isTouchScreen =
@@ -58,6 +52,16 @@ export const formatDatetime = (dt) => {
     const minutes = dt.getMinutes().toString().padStart(2, '0')
     const ampm = dt.getHours() >= 12 ? 'PM' : 'AM'
     const formatted = `${month} ${dt.getDate()}, ${dt.getFullYear()} ${hours}:${minutes} ${ampm}`
+    return formatted
+}
+
+// Format a Date object for display. Output: "Jan 3, 2026"
+export const formatDate = (dt) => {
+    if (!dt) {
+        return null
+    }
+    const month = Months[dt.getMonth()]
+    const formatted = `${month} ${dt.getDate()}, ${dt.getFullYear()}`
     return formatted
 }
 
@@ -116,10 +120,11 @@ export const getScreenBase = () => {
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
 // compute them every time they are requested, in case the year changes while the app is running.
 // Note that the graph API has the same limits, so these should be kept in sync.
-export const minGraphDate = () => {
-    const year = new Date().getFullYear()
-    return new Date(`1/1/${year - 2}`)
+
+export const defaultMinGraphDate = () => {
+    return new Date(`1/1/${new Date().getFullYear() - 2}`)
 }
+
 export const maxGraphDate = () => {
     const year = new Date().getFullYear()
     return new Date(`12/31/${year + 2}`)
@@ -138,22 +143,6 @@ export const Page = Object.freeze({
 // Round a floating point value to n digits of precision
 export const roundTo = (value, digits) => Number(value.toFixed(digits))
 
-export const navd88ToMllw = (navd88) => {
-    if (navd88 == null) {
-        return null
-    }
-    return roundTo(navd88 + parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION), 2)
-}
-
-export const mllwToNavd88 = (mllw) => {
-    if (mllw == null) {
-        return null
-    }
-    return roundTo(mllw - parseFloat(import.meta.env.VITE_NAVD88_MLLW_CONVERSION), 2)
-}
-
-export const maxCustomElevationNavd88 = () => mllwToNavd88(MaxCustomElevationMllw)
-
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.
 export const stringify = (date) => {
     const year = date.getFullYear()
@@ -163,8 +152,8 @@ export const stringify = (date) => {
 }
 
 // Build the cache key to use for a given date range.
-export function buildCacheKey(startDate, endDate, hiloMode) {
-    return ['graph', startDate + ':' + endDate, hiloMode ? 'hilo' : 'normal']
+export function buildCacheKey(stationId, startDate, endDate, hiloMode) {
+    return ['graph', `${stationId}:${startDate}:${endDate}`, hiloMode ? 'hilo' : 'all']
 }
 
 // Give a Date or a string.  Days may be negative. Returns Date.
@@ -183,9 +172,10 @@ export const daysBetween = (date1, date2) => {
 }
 
 // Pass a Date or string. Returns same, within min/max settings.
-export const limitDate = (date) => {
+// TODO: This should be moved to Station class
+export const limitDate = (date, station) => {
     const d1 = new Date(date)
-    const d2 = new Date(Math.max(d1, minGraphDate()))
+    const d2 = new Date(Math.max(d1, station.minGraphDate()))
     return new Date(Math.min(d2, maxGraphDate()))
 }
 

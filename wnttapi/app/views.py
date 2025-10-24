@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 class LatestInfoView(APIView):
     def post(self, request, format=None):
         logger.info(f"LatestInfoView: {obfuscate(request.data)}")
-        info = swmp.get_latest_conditions()
+        water_station = request.data["water_station"]
+        weather_station = request.data["weather_station"]
+        noaa_station_id = request.data["noaa_station_id"]
+        info = swmp.get_latest_conditions(
+            water_station, weather_station, noaa_station_id
+        )
         return Response(data=info)
 
 
@@ -24,10 +29,20 @@ class CreateGraphView(APIView):
 
         start_date = datetime.strptime(request.data["start_date"], "%m/%d/%Y").date()
         end_date = datetime.strptime(request.data["end_date"], "%m/%d/%Y").date()
+        water_station = request.data["water_station"]
+        weather_station = request.data["weather_station"]
+        noaa_station_id = request.data["noaa_station_id"]
         hilo_mode = request.data["hilo_mode"]
 
         # Gather all data needed for the graph and pass it back here
-        graph_data = gr.get_graph_data(start_date, end_date, hilo_mode)
+        graph_data = gr.get_graph_data(
+            start_date,
+            end_date,
+            hilo_mode,
+            water_station,
+            weather_station,
+            noaa_station_id,
+        )
         return Response(data=graph_data)
 
 

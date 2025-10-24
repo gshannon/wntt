@@ -47,14 +47,7 @@ export default function Glossary() {
                     <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />{' '}
                     (point of reference) used by this application for all land and sea elevations.
                     MLLW is the average of all lowest daily tides observed over the{' '}
-                    <b>National Tidal Datum Epoch</b>. Another commonly used datum is{' '}
-                    <Link
-                        href='https://en.wikipedia.org/wiki/North_American_Vertical_Datum_of_1988'
-                        text='NAVD88'
-                    />
-                    , and during the current <b>National Tidal Datum Epoch</b>, MLLW is{' '}
-                    {import.meta.env.VITE_NAVD88_MLLW_CONVERSION} feet higher than NAVD88 (
-                    <i>MLLW = NAVD88 + {import.meta.env.VITE_NAVD88_MLLW_CONVERSION}</i>). See{' '}
+                    <b>National Tidal Datum Epoch</b>. See{' '}
                     <Link
                         href='https://tidesandcurrents.noaa.gov/datums.html?id=8419317'
                         text='here'

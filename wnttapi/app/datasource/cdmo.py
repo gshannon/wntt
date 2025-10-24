@@ -3,13 +3,12 @@ import os
 import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 
-from rest_framework.exceptions import APIException
-from suds.client import Client
-
 from app import tzutil as tz
 from app import util
 from app.datasource.custom_transport import CustomTransport
 from app.timeline import Timeline
+from rest_framework.exceptions import APIException
+from suds.client import Client
 
 """
 Utility data and functions for graph building. 
@@ -17,8 +16,6 @@ Utility data and functions for graph building.
 
 logger = logging.getLogger(__name__)
 cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
-wells_water_station = "welinwq"
-wells_met_station = "wellfmet"
 windspeed_param = "Wspd"
 windgust_param = "MaxWspd"
 winddir_param = "Wdir"
@@ -44,9 +41,7 @@ def get_soap_client():
     return _client
 
 
-def get_recorded_tides(
-    timeline: Timeline, station: str = wells_water_station, param: str = tide_param
-) -> dict:
+def get_recorded_tides(timeline: Timeline, **kwargs) -> dict:
     """Retrieve tide water levels from CDMO relative to MLLW feet.
 
     Args:
@@ -62,14 +57,23 @@ def get_recorded_tides(
         # Nothing to fetch
         return {}
 
+    water_station = kwargs.pop("water_station")
+    noaa_station_id = kwargs.pop("noaa_station_id")
     # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
-    return get_cdmo(timeline, station, param, converter=handle_navd88_level)
+    return get_cdmo(
+        timeline,
+        water_station,
+        tide_param,
+        converter=make_navd88_level_converter(noaa_station_id),
+    )
 
 
-def get_recorded_wind_data(timeline: Timeline) -> dict:
+def get_recorded_wind_data(timeline: Timeline, **kwargs) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
     """
+
+    weather_station = kwargs.pop("weather_station")
 
     wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
 
@@ -77,20 +81,16 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     if timeline.is_all_future():
         return wind_dict
 
-    speed_dict = get_cdmo(
-        timeline, wells_met_station, windspeed_param, handle_windspeed
-    )
+    speed_dict = get_cdmo(timeline, weather_station, windspeed_param, handle_windspeed)
     logger.debug(f"Wind speed data points retrieved: {len(speed_dict)}")
 
     if len(speed_dict) == 0:
         return wind_dict
 
     # CDMO returns wind speed in meters per second, so convert to mph.
-    gust_dict = get_cdmo(timeline, wells_met_station, windgust_param, handle_windspeed)
+    gust_dict = get_cdmo(timeline, weather_station, windgust_param, handle_windspeed)
     logger.debug(f"Wind gust data points retrieved: {len(gust_dict)}")
-    dir_dict = get_cdmo(
-        timeline, wells_met_station, winddir_param, lambda d, dt: int(d)
-    )
+    dir_dict = get_cdmo(timeline, weather_station, winddir_param, lambda d, dt: int(d))
     logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
     # Assemble all the data.
@@ -112,7 +112,7 @@ def get_recorded_wind_data(timeline: Timeline) -> dict:
     return wind_dict
 
 
-def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
+def get_recorded_temps(timeline: Timeline, water_station: str) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of water temp readings from CDMO.
     """
@@ -121,7 +121,7 @@ def get_recorded_temps(timeline: Timeline, station=wells_water_station) -> dict:
         return None
 
     # Use a converter to convert from string to formatted number.
-    return get_cdmo(timeline, station=station, param=temp_param, converter=handle_float)
+    return get_cdmo(timeline, water_station, temp_param, converter=handle_float)
 
 
 def get_cdmo(timeline: Timeline, station: str, param: str, converter) -> dict:
@@ -228,6 +228,9 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
             logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
 
     logger.debug(f"read={records} skipped={skipped} nodata={nodata}")
+
+    if len(datadict) == 0:
+        logger.warning(f"Got no {param} data from {records} records read")
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
@@ -418,13 +421,20 @@ def handle_float(data_str: str, local_dt: datetime):
     return value
 
 
-def handle_navd88_level(level_str: str, local_dt: datetime):
+def make_navd88_level_converter(noaa_station_id: str):
+    """Make a lambda to convert navd88 to mllw for a particular station."""
+    return lambda level_str, local_dt: handle_navd88_level(
+        level_str, local_dt, noaa_station_id
+    )
+
+
+def handle_navd88_level(level_str: str, local_dt: datetime, noaa_station_id: str):
     """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
     if level_str is None or len(level_str.strip()) == 0:
         return None
     try:
         read_level = float(level_str)
-        level = util.navd88_meters_to_mllw_feet(read_level)
+        level = util.navd88_meters_to_mllw_feet(read_level, noaa_station_id)
         if level < min_tide or level > max_tide:
             logger.error(
                 f"level out of range for {local_dt}: {level} (raw: {read_level})"

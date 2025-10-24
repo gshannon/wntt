@@ -1,6 +1,7 @@
 import './css/Graph.css'
-import { useEffect, useReducer, useState } from 'react'
+import { useContext, useEffect, useReducer, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
+import { AppContext } from './AppContext'
 import GetDates from './GetDates'
 import Chart from './Chart'
 import Overlay from './Overlay'
@@ -15,32 +16,41 @@ import {
     isSmallScreen,
     limitDate,
     getMaxNumDays,
-    minGraphDate,
     maxGraphDate,
 } from './utils'
-import { getDailyLocalStorage, setDailyLocalStorage } from './localStorage'
+import { DailyStorage } from './storage'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 import { useQueryClient } from '@tanstack/react-query'
 
 export default function Graph() {
+    const ctx = useContext(AppContext)
+
+    // TODO: Not handling race condition where ctx has no station.  Cannot put
+    // a short circuit here because of React errors.
+
     /* 
     Start & end dates are strings in format mm/dd/yyyy with 0-padding.  See utils.stringify.
     Javascript new Date() returns a date/time in the local time zone, so users should get the 
     right date whatever timezone they're in. 
     */
     const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
-    const datesStorage = getDailyLocalStorage('dates')
+
+    /////////////////
+    // start date, end date, hilo mode, screen size
+    const stationDailyCache = ctx.station ? new DailyStorage(`${ctx.station.id}-daily`) : null
+    const stationDaily = ctx.station ? stationDailyCache.get() : {}
+
     // these strings drive what's in the screen start/end date text box controls.
-    const [startDateStr, setStartDateStr] = useState(datesStorage.start ?? defaultStartStr)
-    const [endDateStr, setEndDateStr] = useState(datesStorage.end ?? defaultEndStr)
-    const [isHiloMode, setIsHiloMode] = useState(datesStorage.hiloMode ?? isSmallScreen())
+    const [startDateStr, setStartDateStr] = useState(stationDaily.start ?? defaultStartStr)
+    const [endDateStr, setEndDateStr] = useState(stationDaily.end ?? defaultEndStr)
+    const [isHiloMode, setIsHiloMode] = useState(stationDaily.hiloMode ?? isSmallScreen())
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     const [, forceUpdate] = useReducer((x) => x + 1, 0)
 
     const [startCtl, setStartCtl] = useState({
-        min: minGraphDate(),
+        min: ctx.station.minGraphDate(),
         start: new Date(startDateStr),
         max: maxGraphDate(),
     })
@@ -52,7 +62,7 @@ export default function Graph() {
     })
 
     const setDateStorage = (start, end, hiloMode) => {
-        setDailyLocalStorage('dates', {
+        stationDailyCache.save({
             start: start,
             end: end,
             hiloMode: hiloMode,
@@ -72,7 +82,7 @@ export default function Graph() {
 
         setEndDateStr(newEndDateStr)
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
-        const key = buildCacheKey(newStartDateStr, newEndDateStr, isHiloMode)
+        const key = buildCacheKey(ctx.station.id, newStartDateStr, newEndDateStr, isHiloMode)
         queryClient.removeQueries({ queryKey: key, exact: true })
         forceUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
     }
@@ -85,14 +95,14 @@ export default function Graph() {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
             directionFactor > 0
-                ? limitDate(addDays(endDateStr, 1))
-                : limitDate(addDays(startDateStr, daysToShow * directionFactor))
-        const newEnd = limitDate(addDays(newStart, daysToShow - 1))
+                ? limitDate(addDays(endDateStr, 1), ctx.station)
+                : limitDate(addDays(startDateStr, daysToShow * directionFactor), ctx.station)
+        const newEnd = limitDate(addDays(newStart, daysToShow - 1), ctx.station)
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
             min: newStart,
             end: newEnd,
-            max: limitDate(addDays(newStart, getMaxNumDays() - 1)),
+            max: limitDate(addDays(newStart, getMaxNumDays() - 1), ctx.station),
         })
         setDateRangeStrings(stringify(newStart), stringify(newEnd))
     }
@@ -101,7 +111,7 @@ export default function Graph() {
     const resetDateControls = () => {
         const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
         setStartCtl({
-            min: minGraphDate(),
+            min: ctx.station.minGraphDate(),
             start: new Date(defaultStartStr),
             max: maxGraphDate(),
         })
@@ -129,11 +139,11 @@ export default function Graph() {
     // which is only empty on the very first run, after local storage has been cleared, or when the
     // current date does not match the local storage date. (See utils.getDailyLocalStorage.)
     if (
-        datesStorage.start == undefined &&
+        stationDaily.start == undefined &&
         (startDateStr, endDateStr) != (defaultStartStr, defaultEndStr)
     ) {
         console.log(
-            `DatesStorage is empty, resetting range from (${startDateStr}-${endDateStr}) to default.`
+            `stationDaily is empty, resetting range from (${startDateStr}-${endDateStr}) to default.`
         )
         resetDateControls()
     }
@@ -141,14 +151,14 @@ export default function Graph() {
     // The user changing their screen width doesn't trigger a rerender, only a DOM redraw, which doesn't
     // execute our code. So if we detect that here, we need to set some state that normally is set
     // only on initial render, or when user does something to trigger it.
-    if (datesStorage.screenBase != getScreenBase()) {
+    if (stationDaily.screenBase != getScreenBase()) {
         if (isSmallScreen() && !isHiloMode) {
             // This is normally forced only on initial render.
             setIsHiloMode(true)
         }
         // We probably need to adjust the date range. We'll adjust the max, and also the selected
         // end date if it is now too late.
-        const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1))
+        const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1), ctx.station)
         const newEnd = new Date(Math.min(newMax, endCtl.end))
         if (newEnd != endCtl.end) {
             // If we're shortening the selected range, update state and trigger refetch.
@@ -160,13 +170,17 @@ export default function Graph() {
             setEndDateStr(stringify(newEnd))
         }
         // This avoids an endless loop on rerender.
-        setDailyLocalStorage('dates', {
-            ...datesStorage,
+        stationDailyCache.save({
+            ...stationDaily,
             screenBase: getScreenBase(),
         })
     }
 
-    const { isPending: loading, data, error } = useGraphData(startDateStr, endDateStr, isHiloMode)
+    const {
+        isPending: loading,
+        data,
+        error,
+    } = useGraphData(ctx.station, startDateStr, endDateStr, isHiloMode)
 
     const JumpDates = (props) => {
         if (error || loading) {
@@ -174,7 +188,7 @@ export default function Graph() {
         }
         // Disable these if out of range
         const anchorClass =
-            (props.dir === 'back' && startCtl.start <= minGraphDate()) ||
+            (props.dir === 'back' && startCtl.start <= ctx.station.minGraphDate()) ||
             (props.dir === 'forward' && endCtl.end >= maxGraphDate())
                 ? 'disable-pointer'
                 : ''

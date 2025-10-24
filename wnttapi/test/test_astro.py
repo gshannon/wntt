@@ -9,6 +9,8 @@ from app.timeline import Timeline
 
 path = os.path.dirname(os.path.abspath(__file__))
 
+station = "8419317"
+
 
 class TestAstro(TestCase):
     def test_find_highest(self):
@@ -29,19 +31,23 @@ class TestAstro(TestCase):
         start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
         end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=zone)
         tline = Timeline(start_dt, end_dt)
-        preds_dict = astro.pred15_json_to_dict(contents, tline)
+        preds_dict = astro.pred15_json_to_dict(contents, tline, station)
         self.assertEqual(len(preds_dict), 4)
         self.assertEqual(
-            preds_dict[tline._raw_times[0]], util.navd88_feet_to_mllw_feet(-3.624)
+            preds_dict[tline._raw_times[0]],
+            util.navd88_feet_to_mllw_feet(-3.624, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[1]], util.navd88_feet_to_mllw_feet(-3.621)
+            preds_dict[tline._raw_times[1]],
+            util.navd88_feet_to_mllw_feet(-3.621, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[2]], util.navd88_feet_to_mllw_feet(-3.564)
+            preds_dict[tline._raw_times[2]],
+            util.navd88_feet_to_mllw_feet(-3.564, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[3]], util.navd88_feet_to_mllw_feet(-3.452)
+            preds_dict[tline._raw_times[3]],
+            util.navd88_feet_to_mllw_feet(-3.452, station),
         )
 
     def test_parse_hilo_predictions(self):
@@ -55,13 +61,13 @@ class TestAstro(TestCase):
         end_dt = datetime(2025, 5, 8, 23, 45, tzinfo=zone)
         hilo_start_dt = datetime(2025, 5, 7, 19, tzinfo=zone)
         timeline = Timeline(start_dt, end_dt)
-        preds = astro.hilo_json_to_dict(contents, timeline, hilo_start_dt)
+        preds = astro.hilo_json_to_dict(contents, timeline, hilo_start_dt, station)
         self.assertEqual(len(preds), 4)
         self.assertEqual(
             preds[datetime(2025, 5, 8, 1, tzinfo=zone)],
             {
                 "real_dt": datetime(2025, 5, 8, 0, 58, tzinfo=zone),
-                "value": util.navd88_feet_to_mllw_feet(3.554),
+                "value": util.navd88_feet_to_mllw_feet(3.554, station),
                 "type": "H",
             },
         )
@@ -69,7 +75,7 @@ class TestAstro(TestCase):
             preds[datetime(2025, 5, 8, 7, tzinfo=zone)],
             {
                 "real_dt": datetime(2025, 5, 8, 7, 6, tzinfo=zone),
-                "value": util.navd88_feet_to_mllw_feet(-4.084),
+                "value": util.navd88_feet_to_mllw_feet(-4.084, station),
                 "type": "L",
             },
         )
@@ -77,7 +83,7 @@ class TestAstro(TestCase):
             preds[datetime(2025, 5, 8, 13, 15, tzinfo=zone)],
             {
                 "real_dt": datetime(2025, 5, 8, 13, 21, tzinfo=zone),
-                "value": util.navd88_feet_to_mllw_feet(3.294),
+                "value": util.navd88_feet_to_mllw_feet(3.294, station),
                 "type": "H",
             },
         )
@@ -85,7 +91,7 @@ class TestAstro(TestCase):
             preds[datetime(2025, 5, 8, 19, 30, tzinfo=zone)],
             {
                 "real_dt": datetime(2025, 5, 8, 19, 23, tzinfo=zone),
-                "value": util.navd88_feet_to_mllw_feet(-4.093),
+                "value": util.navd88_feet_to_mllw_feet(-4.093, station),
                 "type": "L",
             },
         )

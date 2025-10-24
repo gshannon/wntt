@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { useClientIp } from './useClientIp'
 
-export default function useLatestData() {
+export default function useLatestData(station) {
     const { clientIp, ipError } = useClientIp()
 
     const { data, error } = useQuery({
@@ -11,6 +11,9 @@ export default function useLatestData() {
         queryFn: async () => {
             const res = await axios.post(import.meta.env.VITE_API_LATEST_URL, {
                 ip: clientIp ?? 'unknown',
+                water_station: station.id,
+                weather_station: station.weatherStationId,
+                noaa_station_id: station.noaaStationId,
                 time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 app_version: import.meta.env.VITE_BUILD_NUM,
             })

@@ -7,14 +7,14 @@ import { Page, SyzygyInfo } from './utils'
 import { AppContext } from './AppContext'
 
 export default function SyzygyPopup({ code, onClose }) {
-    const appContext = useContext(AppContext)
+    const ctx = useContext(AppContext)
     const Help = () => {
         return (
             <p>
                 <a
                     href='#'
                     className='my-1'
-                    onClick={() => appContext.gotoPage(Page.HelpSyzygy, Page.Graph)}>
+                    onClick={() => ctx.gotoPage(Page.HelpSyzygy, Page.Graph)}>
                     More details...
                 </a>{' '}
             </p>

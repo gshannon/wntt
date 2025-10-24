@@ -11,16 +11,14 @@ import {
     limitDate,
     stringify,
     getMaxNumDays,
-    minGraphDate,
     maxGraphDate,
     Months,
-    navd88ToMllw,
     Page,
 } from './utils'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
-import { getData } from './tutorials/graph'
+import { getData as getGraphData } from './tutorials/graph'
 
 // Allow users to set start/end date range for the graph.
 
@@ -34,9 +32,9 @@ export default function GetDates({
     toggleHiloMode,
     resetDateControls,
 }) {
-    const appContext = useContext(AppContext)
+    const ctx = useContext(AppContext)
     const [showTut, setShowTut] = useState(false)
-    const minDate = minGraphDate()
+    const minDate = ctx.station.minGraphDate()
     const maxDate = maxGraphDate()
     const rangeMin = `${Months[minDate.getMonth()]} ${minDate.getFullYear()}`
     const rangeMax = `${Months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
@@ -66,13 +64,13 @@ export default function GetDates({
         if (formatted && formatted !== stringify(startCtl.start)) {
             const daysShown = daysBetween(startCtl.start, endCtl.end) + 1
             const newStart = new Date(formatted)
-            const newEnd = limitDate(addDays(newStart, daysShown - 1))
+            const newEnd = limitDate(addDays(newStart, daysShown - 1), ctx.station)
             setStartCtl({ ...startCtl, start: newStart })
             setEndCtl({
                 min: newStart,
                 // Set the end date to honor the numDays from previous settings, limited by overall max.
                 end: newEnd,
-                max: limitDate(addDays(newStart, getMaxNumDays() - 1)),
+                max: limitDate(addDays(newStart, getMaxNumDays() - 1), ctx.station),
             })
         }
     }
@@ -195,9 +193,10 @@ export default function GetDates({
                     <Row className='custom-elevation mx-0 py-2 align-items-center'>
                         <Col xs={7} className='text-center flex-grow-1'>
                             Custom Elevation:{' '}
-                            {appContext.customElevationNav ? (
+                            {ctx.customElevationNav ? (
                                 <strong>
-                                    {navd88ToMllw(appContext.customElevationNav)}&nbsp;ft
+                                    {ctx.station.navd88ToMllw(ctx.customElevationNav)}
+                                    &nbsp;ft
                                 </strong>
                             ) : (
                                 '-'
@@ -211,7 +210,7 @@ export default function GetDates({
                                     <Button
                                         variant='custom-primary'
                                         className='py-0'
-                                        onClick={() => appContext.gotoPage(Page.Map)}>
+                                        onClick={() => ctx.gotoPage(Page.Map)}>
                                         Edit
                                     </Button>
                                 }></Overlay>
@@ -219,7 +218,13 @@ export default function GetDates({
                     </Row>
                 </Col>
             </Row>
-            {showTut && <Tutorial onClose={onModalClose} data={getData()} title='Graph Tutorial' />}
+            {showTut && (
+                <Tutorial
+                    onClose={onModalClose}
+                    data={getGraphData(ctx.station)}
+                    title='Graph Tutorial'
+                />
+            )}
         </Container>
     )
 }
