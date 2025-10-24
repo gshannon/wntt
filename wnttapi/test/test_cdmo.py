@@ -63,7 +63,9 @@ class TestCdmo(TestCase):
         self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
 
         # high and low both compromised by None
-        tides = [8, 9, 10, 10, None, 9, 8, 7, 5, 4, 3, None, 2, 2, 3, 4]
+        # fmt: off
+        tides = [8, 9, 10, 10, None, None, None, None, None, 9, 8, 7, 5, 4, 3, None, None, None, None, None, 2, 2, 3, 4]
+        # fmt: on
         timeline, datadict = build_test_data(tides)
         self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
 
@@ -98,6 +100,24 @@ class TestCdmo(TestCase):
             datetime(2025, 3, 31, 7, 0, tzinfo=self.tzone): "L",
             datetime(2025, 3, 31, 13, 15, tzinfo=self.tzone): "H",
             datetime(2025, 3, 31, 19, 0, tzinfo=self.tzone): "L",
+        }
+        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
+
+    def test_calculate_hilos_with_nones(self):
+        """High/Low detetion works properly with 1 hour missing"""
+        xml = self.load_xml("cdmo-level-2d.xml")
+        timeline = GraphTimeline(date(2025, 10, 21), date(2025, 10, 22), self.tzone)
+        converter = cdmo.make_navd88_level_converter("8419317")
+        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
+        expected = {
+            datetime(2025, 10, 21, 5, 45, tzinfo=self.tzone): "L",
+            datetime(2025, 10, 21, 11, 45, tzinfo=self.tzone): "H",
+            datetime(2025, 10, 21, 18, 0, tzinfo=self.tzone): "L",
+            # This high had 4 Nones next to it.
+            datetime(2025, 10, 22, 0, 0, tzinfo=self.tzone): "H",
+            datetime(2025, 10, 22, 6, 15, tzinfo=self.tzone): "L",
+            datetime(2025, 10, 22, 12, 30, tzinfo=self.tzone): "H",
+            datetime(2025, 10, 22, 18, 30, tzinfo=self.tzone): "L",
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
 
