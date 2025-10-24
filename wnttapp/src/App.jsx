@@ -2,7 +2,7 @@
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import Top from './Top'
 import Control from './Control'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -62,13 +62,13 @@ export default function App() {
     )
     const [zoom, setZoom] = useState(stationMain.zoom ?? DefaultMapZoom)
 
-    useEffect(() => {
+    const onStationChange = useEffectEvent(() => {
         mainCache.save({
             stationId: station.id,
         })
-    }, [station])
+    })
 
-    useEffect(() => {
+    const onMainCacheChange = useEffectEvent(() => {
         stationMainCache.save({
             customElevationNav: customElevationNav,
             markerLocation: markerLocation,
@@ -77,6 +77,14 @@ export default function App() {
             mapType: mapType,
             zoom: zoom,
         })
+    })
+
+    useEffect(() => {
+        onStationChange()
+    }, [station])
+
+    useEffect(() => {
+        onMainCacheChange()
     }, [customElevationNav, markerLocation, markerElevationNav, mapCenter, mapType, zoom])
 
     useEffect(() => {
