@@ -23,28 +23,6 @@ export default function Top({ page, gotoPage }) {
         setShowConditions(false)
     }
 
-    const HelpItems = () => {
-        return (
-            <>
-                <NavDropdown.Item
-                    className={page === Page.Glossary ? 'active' : ''}
-                    onClick={() => gotoPage(Page.Glossary)}>
-                    Glossary
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                    className={page === Page.HelpSyzygy ? 'active' : ''}
-                    onClick={() => gotoPage(Page.HelpSyzygy)}>
-                    Sun, Moon & Tides
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                    className={page === Page.Tutorials ? 'active' : ''}
-                    onClick={() => gotoPage(Page.Tutorials)}>
-                    Tutorials
-                </NavDropdown.Item>
-            </>
-        )
-    }
-
     const expandedMenu = (
         <Col className='expanded-menu px-1'>
             <Nav>
@@ -63,7 +41,7 @@ export default function Top({ page, gotoPage }) {
                 <NavDropdown
                     title='Help'
                     active={[Page.Glossary, Page.HelpSyzygy, Page.Tutorials].includes(page)}>
-                    <HelpItems />
+                    <HelpItems page={page} gotoPage={gotoPage} />
                 </NavDropdown>
             </Nav>
         </Col>
@@ -138,5 +116,27 @@ export default function Top({ page, gotoPage }) {
                 <ConditionsPopup station={ctx.station} onClose={onModalClose} />
             )}
         </div>
+    )
+}
+
+const HelpItems = ({ page, gotoPage }) => {
+    return (
+        <>
+            <NavDropdown.Item
+                className={page === Page.Glossary ? 'active' : ''}
+                onClick={() => gotoPage(Page.Glossary)}>
+                Glossary
+            </NavDropdown.Item>
+            <NavDropdown.Item
+                className={page === Page.HelpSyzygy ? 'active' : ''}
+                onClick={() => gotoPage(Page.HelpSyzygy)}>
+                Sun, Moon & Tides
+            </NavDropdown.Item>
+            <NavDropdown.Item
+                className={page === Page.Tutorials ? 'active' : ''}
+                onClick={() => gotoPage(Page.Tutorials)}>
+                Tutorials
+            </NavDropdown.Item>
+        </>
     )
 }

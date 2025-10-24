@@ -170,9 +170,10 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
     // Unfortunately it doesn't use the first non-null value.  So if the 1st element is null, as is normally the
     // case in hilo mode, it will show wind speed & wind gust in the legend with NO MARKER.. So we cheat a little.
     // This does not cause the false value to appear in the graph, since the speed & gust values are null.
-    if (data.wind_dir !== null && data.wind_dir.length > 0 && data.wind_dir[0] === null) {
-        data.wind_dir[0] = 0
-    }
+    const my_wind_dir =
+        data.wind_dir !== null && data.wind_dir.length > 0 && data.wind_dir[0] === null
+            ? [0].concat(data.wind_dir.slice(1))
+            : data.wind_dir
 
     const plotData = [
         buildPlot({
@@ -280,7 +281,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                       y: data.wind_gusts,
                       markerSize: windMarkerSize,
                       markerSymbol: 'arrow',
-                      markerAngle: data.wind_dir,
+                      markerAngle: my_wind_dir,
                       color: WindGustColor,
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',
@@ -293,7 +294,7 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                       y: data.wind_speeds,
                       markerSize: windMarkerSize,
                       markerSymbol: 'arrow',
-                      markerAngle: data.wind_dir,
+                      markerAngle: my_wind_dir,
                       color: WindSpeedColor,
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',

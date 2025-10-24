@@ -182,30 +182,6 @@ export default function Graph() {
         error,
     } = useGraphData(ctx.station, startDateStr, endDateStr, isHiloMode)
 
-    const JumpDates = (props) => {
-        if (error || loading) {
-            return <Col className='col-1' />
-        }
-        // Disable these if out of range
-        const anchorClass =
-            (props.dir === 'back' && startCtl.start <= ctx.station.minGraphDate()) ||
-            (props.dir === 'forward' && endCtl.end >= maxGraphDate())
-                ? 'disable-pointer'
-                : ''
-        return (
-            <Col className='col-1 px-0 jumpdate'>
-                <Overlay
-                    text={props.hoverText}
-                    placement='top'
-                    contents={
-                        <a href='#' onClick={props.action} className={anchorClass}>
-                            <img className='pic' src={props.image} alt={props.hoverText} />
-                        </a>
-                    }></Overlay>
-            </Col>
-        )
-    }
-
     const numDaysText = daysShown > 1 ? `${daysShown} days` : 'day'
 
     return (
@@ -231,6 +207,10 @@ export default function Graph() {
                     action={handlePreviousClick}
                     image={prevButton}
                     dir='back'
+                    start={startCtl.start}
+                    end={endCtl.end}
+                    station={ctx.station}
+                    errorOrLoading={error || loading}
                 />
                 <Col xs={10} className='px-0'>
                     <Chart
@@ -239,6 +219,7 @@ export default function Graph() {
                         forceUpdate={forceUpdate}
                         hiloMode={isHiloMode}
                         data={data}
+                        errorOrLoading={error || loading}
                     />
                 </Col>
                 <JumpDates
@@ -246,8 +227,35 @@ export default function Graph() {
                     action={handleNextClick}
                     image={nextButton}
                     dir='forward'
+                    start={startCtl.start}
+                    end={endCtl.end}
+                    station={ctx.station}
                 />
             </Row>
         </>
+    )
+}
+
+const JumpDates = (props) => {
+    if (props.errorOrLoading) {
+        return <Col className='col-1' />
+    }
+    // Disable these if out of range
+    const anchorClass =
+        (props.dir === 'back' && props.start <= props.station.minGraphDate()) ||
+        (props.dir === 'forward' && props.end >= maxGraphDate())
+            ? 'disable-pointer'
+            : ''
+    return (
+        <Col className='col-1 px-0 jumpdate'>
+            <Overlay
+                text={props.hoverText}
+                placement='top'
+                contents={
+                    <a href='#' onClick={props.action} className={anchorClass}>
+                        <img className='pic' src={props.image} alt={props.hoverText} />
+                    </a>
+                }></Overlay>
+        </Col>
     )
 }

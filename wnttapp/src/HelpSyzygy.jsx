@@ -3,26 +3,26 @@ import Container from 'react-bootstrap/Container'
 import { SimpleLink, Link } from './Links'
 import { SyzygyInfo } from './utils'
 
-export default function HelpSyzygy({ gotoPage, returnPage }) {
-    const Back = () => {
-        return returnPage ? (
-            <Row className='justify-content-start my-3'>
-                <a
-                    href='#'
-                    onClick={() => {
-                        gotoPage(returnPage)
-                    }}>
-                    Back to Graph
-                </a>
-            </Row>
-        ) : (
-            ''
-        )
-    }
+const GoBack = ({ gotoPage, returnPage }) => {
+    return returnPage ? (
+        <Row className='justify-content-start my-3'>
+            <a
+                href='#'
+                onClick={() => {
+                    gotoPage(returnPage)
+                }}>
+                Back to Graph
+            </a>
+        </Row>
+    ) : (
+        ''
+    )
+}
 
+export default function HelpSyzygy({ gotoPage, returnPage }) {
     return (
         <Container>
-            <Back />
+            <GoBack gotoPage={gotoPage} returnPage={returnPage} />
             <Row className='justify-content-center fs-4 fw-bold my-3'>
                 Tidal Influence of the Sun and Moon
             </Row>
@@ -103,7 +103,7 @@ export default function HelpSyzygy({ gotoPage, returnPage }) {
                     </ListGroup.Item>
                 </ListGroup>
             </Row>
-            <Back />
+            <GoBack />
         </Container>
     )
 }
