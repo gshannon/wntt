@@ -18,7 +18,7 @@ import {
     getMaxNumDays,
     maxGraphDate,
 } from './utils'
-import { DailyStorage } from './storage'
+import * as storage from './storage'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 import { useQueryClient } from '@tanstack/react-query'
@@ -38,8 +38,7 @@ export default function Graph() {
 
     /////////////////
     // start date, end date, hilo mode, screen size
-    const stationDailyCache = ctx.station ? new DailyStorage(`${ctx.station.id}-daily`) : null
-    const stationDaily = ctx.station ? stationDailyCache.get() : {}
+    const stationDaily = storage.getStationDailyStorage(ctx.station?.id || null)
 
     // these strings drive what's in the screen start/end date text box controls.
     const [startDateStr, setStartDateStr] = useState(stationDaily.start ?? defaultStartStr)
@@ -62,7 +61,7 @@ export default function Graph() {
     })
 
     const onDateChange = useEffectEvent((start, end, hiloMode) => {
-        stationDailyCache.save({
+        storage.setStationDailyStorage(ctx.station.id, {
             start: start,
             end: end,
             hiloMode: hiloMode,
@@ -170,7 +169,7 @@ export default function Graph() {
             setEndDateStr(stringify(newEnd))
         }
         // This avoids an endless loop on rerender.
-        stationDailyCache.save({
+        storage.setStationDailyStorage(ctx.station.id, {
             ...stationDaily,
             screenBase: getScreenBase(),
         })

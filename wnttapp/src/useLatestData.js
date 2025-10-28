@@ -7,7 +7,7 @@ export default function useLatestData(station) {
 
     const { data, error } = useQuery({
         retry: false,
-        queryKey: ['latest'],
+        queryKey: [station.id, 'latest'],
         queryFn: async () => {
             const res = await axios.post(import.meta.env.VITE_API_LATEST_URL, {
                 ip: clientIp ?? 'unknown',

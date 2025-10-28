@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useClientIp } from './useClientIp'
 import { buildCacheKey } from './utils'
-import { DailyStorage } from './storage'
+import * as storage from './storage'
 import axios from 'axios'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
@@ -25,9 +25,7 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                         json.version
                     }, ours: ${ourVersion}`
                 )
-                const miscDailyStorage = new DailyStorage('misc-daily')
-                const miscDaily = miscDailyStorage.get()
-                miscDailyStorage.set({ ...miscDaily, upgraded: true })
+                storage.setGlobalDailyStorage({ upgraded: true })
                 window.location.reload()
             }
             return json.version

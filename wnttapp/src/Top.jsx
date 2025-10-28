@@ -1,12 +1,12 @@
 import './css/Top.css'
-import { useContext, useState } from 'react'
+import { Activity, useContext, useState } from 'react'
 import Container from 'react-bootstrap/Container'
 import { Row, Col } from 'react-bootstrap'
 import NavbarBrand from 'react-bootstrap/NavbarBrand'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
-import { Page } from './utils'
+import { MediumBase, Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
@@ -63,8 +63,8 @@ export default function Top({ page, gotoPage }) {
                     About
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item disabled={true}>Help:</NavDropdown.Item>
-                <HelpItems />
+                <NavDropdown.Item disabled={true}>Help</NavDropdown.Item>
+                <HelpItems page={page} gotoPage={gotoPage} />
             </NavDropdown>
         </Col>
     )
@@ -81,9 +81,12 @@ export default function Top({ page, gotoPage }) {
                             <div className='tide-tracker'>Tide Tracker</div>
                         </NavbarBrand>
                     </Col>
-                    {/* One of these will be hidden in the CSS */}
-                    {expandedMenu}
-                    {pulldownMenu}
+                    <Activity mode={window.innerWidth >= MediumBase ? 'visible' : 'hidden'}>
+                        {expandedMenu}
+                    </Activity>
+                    <Activity mode={window.innerWidth < MediumBase ? 'visible' : 'hidden'}>
+                        {pulldownMenu}
+                    </Activity>
                     <Col className='px-1'>
                         <Overlay
                             text='Popup that shows current weather and tide data.'
@@ -112,9 +115,7 @@ export default function Top({ page, gotoPage }) {
                     </Col>
                 </Row>
             </Container>
-            {showConditions && ctx.station && (
-                <ConditionsPopup station={ctx.station} onClose={onModalClose} />
-            )}
+            {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
         </div>
     )
 }
