@@ -2,15 +2,16 @@ import './css/About.css'
 import { Container } from 'react-bootstrap'
 import Accordion from 'react-bootstrap/Accordion'
 import { SimpleLink, Link } from './Links'
-// import { AppContext } from './AppContext'
-// import { useContext } from 'react'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 export default function About() {
-    // const ctx = useContext(AppContext)
-    // const toggle = () => {
-    //     alert('Special mode is now ' + (ctx.special ? 'OFF' : 'ON'))
-    //     ctx.toggleSpecial()
-    // }
+    const ctx = useContext(AppContext)
+    const toggle = () => {
+        alert('Special mode is now ' + (ctx.special ? 'OFF' : 'ON'))
+        ctx.toggleSpecial()
+    }
+
     return (
         <Container>
             <Accordion alwaysOpen defaultActiveKey={['0']}>
@@ -179,8 +180,9 @@ export default function About() {
             </Accordion>
 
             <div className='p-3' style={{ fontSize: '.7em', float: 'right' }}>
-                {/* <a href='#' onClick={() => toggle()}> */}
-                Version {/* </a>{' '} */}
+                <a href='#' onClick={() => toggle()}>
+                    Version{' '}
+                </a>{' '}
                 {import.meta.env.VITE_BUILD_NUM ?? '?'} W{window.innerWidth}.{window.outerWidth} H
                 {window.innerHeight}.{window.outerHeight}
             </div>

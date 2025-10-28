@@ -1,7 +1,7 @@
 import jsonData from './stations.json'
 import Station from './Station'
 
-const AllStations = {}
+export const AllStations = {}
 
 // Build javascript Station data from json file contents
 for (const key in jsonData) {
@@ -9,6 +9,6 @@ for (const key in jsonData) {
 }
 
 // Get the Station instance for this id, e.g. 'welinwq'
-export const getStation = (water_station_id) => {
+export const getStationConfig = (water_station_id) => {
     return AllStations[water_station_id]
 }

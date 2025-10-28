@@ -8,12 +8,10 @@ import Control from './Control'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import axios from 'axios'
-import { Storage, DailyStorage } from './storage'
+import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { DefaultMapZoom, EpqsUrl, Page, roundTo } from './utils'
-import { getStation } from './stations'
-
-// Page management needs to be here because it's needed by both child components.
+import { getStationConfig } from './stations'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -24,68 +22,121 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
-    const [special, setSpecial] = useState(true)
-    // Since the version detection only happens on the graph page, if we're upgrading we return there instead of home.
-    const miscDailyStorage = new DailyStorage('misc-daily')
-    const miscDaily = miscDailyStorage.get()
+    // Version detection only happens on the graph page, so if we're upgrading we return there instead of home.
+    const miscDaily = storage.getGlobalDailyStorage()
     const upgraded = miscDaily.upgraded ?? false
     if (upgraded) {
         console.log(`Auto upgrade detected, will start at graph page`)
+        storage.setGlobalDailyStorage({ upgraded: false }) // always reset the upgraded flag
     }
+
+    /////////////////////////////////////////////
+    // Set up state.
+    const [special, setSpecial] = useState(import.meta.env.VITE_SPECIAL ?? '0' === '1') // temporary dev hack
     const [curPage, setCurPage] = useState(upgraded ? Page.Graph : Page.Home)
     const [returnPage, setReturnPage] = useState(null)
-    miscDailyStorage.save({ ...miscDaily, upgraded: false }) // always reset the upgraded flag
 
-    /////////////////
-    // stationId
-    const mainCache = new Storage('main')
-    const main = mainCache.get()
-    const [station, setStation] = useState(getStation(main.stationId ?? 'welinwq'))
+    // Initial station will be the one stored, or Wells by default.
+    const main = storage.getGlobalPermanentStorage()
+    const [station, setStation] = useState(getStationConfig(main.stationId ?? 'welinwq'))
+    const stationOptions = getStationOptions(station)
 
-    /////////////////
-    // station-specific fields: zoom, mapCenter, etc
-    const stationMainCache = station ? new Storage(station.id) : null
-    const stationMain = station ? stationMainCache.get() : null
+    // All the station options need to be in their own state variable so we can save them as they're updated.
+    const [markerElevationError, setMarkerElevationError] = useState(false) // this one's operational only
+    const [markerElevationNav, setMarkerElevationNav] = useState(stationOptions.markerElevationNav)
+    const [customElevationNav, setCustomElevationNav] = useState(stationOptions.customElevationNav)
+    const [mapType, setMapType] = useState(stationOptions.mapType)
+    const [markerLocation, setMarkerLocation] = useState(stationOptions.markerLocation)
+    const [mapCenter, setMapCenter] = useState(stationOptions.mapCenter)
+    const [zoom, setZoom] = useState(stationOptions.zoom)
 
-    // Storage for the selected station. If none, defaults are used. Some of those are null
-    const [markerElevationNav, setMarkerElevationNav] = useState(
-        stationMain.markerElevationNav ?? null
-    )
-    const [customElevationNav, setCustomElevationNav] = useState(
-        stationMain.customElevationNav ?? null
-    )
-    const [markerElevationError, setMarkerElevationError] = useState(false)
-    const [mapType, setMapType] = useState(stationMain.mapType ?? 'basic')
-    const [markerLocation, setMarkerLocation] = useState(stationMain.markerLocation ?? null)
-    const [mapCenter, setMapCenter] = useState(
-        stationMain.mapCenter || (station?.swmpLocation ?? null)
-    )
-    const [zoom, setZoom] = useState(stationMain.zoom ?? DefaultMapZoom)
+    /////////////////////////////////////////////
+    // Action handlers
 
+    /**
+     * Handles user selecting a different station. Writes the selected id to storage.
+     * @param {string} id : id of selected station, e.g. 'welinwq'
+     */
+    const setStationId = (id) => {
+        if (id !== station.id) {
+            const s = getStationConfig(id)
+            storage.setGlobalPermanentStorage({
+                stationId: id,
+            })
+            setStation(s) // This will trigger a render and effect.
+        }
+    }
+
+    // temporary dev hack
+    const toggleSpecial = () => {
+        setSpecial(!special)
+    }
+
+    // All navigation is done with this.
+    const gotoPage = (page, returnPage) => {
+        setCurPage(page)
+        setReturnPage(returnPage || null)
+    }
+
+    // Set the map marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
+    const setMarkerLatLng = (latlng) => {
+        if (!latlng) {
+            setMarkerLocation(null)
+        } else {
+            const { lat, lng } = latlng
+            setMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
+        }
+    }
+
+    //////////////////////////////////
+    // Effects
+
+    useEffect(() => {
+        console.log(`WNTT Startup, build ${import.meta.env.VITE_BUILD_NUM}`)
+    }, [])
+
+    /**
+     * After a station change, we update the state variables for the selected station.
+     * I had to put this in useEffectEvent. If I did this in useEffect, I got:
+     * "Error: Calling setState synchronously within an effect can trigger cascading renders."
+     * Note that setting this state will trigger another render that saves it to storage, which is
+     * not necessary, but I don't know how to prevent that, and it results in no screen update.
+     */
     const onStationChange = useEffectEvent(() => {
-        mainCache.save({
-            stationId: station.id,
-        })
-    })
-
-    const onMainCacheChange = useEffectEvent(() => {
-        stationMainCache.save({
-            customElevationNav: customElevationNav,
-            markerLocation: markerLocation,
-            markerElevationNav: markerElevationNav,
-            mapCenter: mapCenter,
-            mapType: mapType,
-            zoom: zoom,
-        })
+        const options = getStationOptions(station)
+        setCustomElevationNav(options.markerElevationNav)
+        setMarkerLocation(options.markerLocation)
+        setMarkerElevationNav(options.markerElevationNav)
+        setMapCenter(options.mapCenter)
+        setMapType(options.mapType)
+        setZoom(options.zoom)
     })
 
     useEffect(() => {
         onStationChange()
-    }, [station])
+    }, [station.id])
 
+    /**
+     * Effect to keep the local storage of permanent station options in sync.
+     */
     useEffect(() => {
-        onMainCacheChange()
-    }, [customElevationNav, markerLocation, markerElevationNav, mapCenter, mapType, zoom])
+        storage.setStationPermanentStorage(station.id, {
+            customElevationNav,
+            markerLocation,
+            markerElevationNav,
+            mapCenter,
+            mapType,
+            zoom,
+        })
+    }, [
+        station.id,
+        customElevationNav,
+        markerLocation,
+        markerElevationNav,
+        mapCenter,
+        mapType,
+        zoom,
+    ])
 
     useEffect(() => {
         // We only fetch elevation if markerLocation is set and markerElevationNav is not set.
@@ -114,35 +165,12 @@ export default function App() {
         }
     }, [markerLocation, markerElevationNav])
 
-    // Set the marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
-    const setMarkerLatLng = (latlng) => {
-        if (!latlng) {
-            setMarkerLocation(null)
-        } else {
-            const { lat, lng } = latlng
-            setMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
-        }
-    }
-
-    const toggleSpecial = () => {
-        setSpecial(!special)
-    }
-
-    useEffect(() => {
-        console.log(`WNTT Startup, build ${import.meta.env.VITE_BUILD_NUM}`)
-    }, [])
-
-    const gotoPage = (page, returnPage) => {
-        setCurPage(page)
-        setReturnPage(returnPage || null)
-    }
-
     return (
         <QueryClientProvider client={queryClient}>
             <AppContext.Provider
                 value={{
                     station: station,
-                    setStation: setStation,
+                    setStationId: setStationId,
                     gotoPage: gotoPage,
                     customElevationNav: customElevationNav,
                     setCustomElevationNav: setCustomElevationNav,
@@ -168,4 +196,19 @@ export default function App() {
             {/* <ReactQueryDevtools initialIsOpen={false} buttonPosition='top-right' position='right' /> */}
         </QueryClientProvider>
     )
+}
+
+const getStationOptions = (station) => {
+    // Get station-specific fields from storage.  Will be {} if it's a first time user or storage was cleared.
+    const options = storage.getStationPermanentStorage(station.id)
+    // If we got {} back, fill in defaults.
+    if (Object.keys(options).length === 0) {
+        options.markerElevationNav = null
+        options.customElevationNav = null
+        options.markerLocation = null
+        options.mapCenter = station.swmpLocation
+        options.mapType = 'basic'
+        options.zoom = DefaultMapZoom
+    }
+    return options
 }

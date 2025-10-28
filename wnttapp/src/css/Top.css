@@ -78,10 +78,6 @@
 
 /* Activate when small or smaller */
 @media (max-width: 767px) {
-    /* Important: collapse the hamburger menu */
-    .app-box-top .expanded-menu {
-        display: none;
-    }
     .app-box-top .hamburger-menu {
         flex-grow: 3;
     }
@@ -97,9 +93,5 @@
     }
     .app-box-top .expanded-menu .nav .active {
         font-weight: bold;
-    }
-    /* Important: hide the hamburger menu */
-    .app-box-top .hamburger-menu {
-        display: none;
     }
 }
