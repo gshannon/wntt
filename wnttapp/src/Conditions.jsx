@@ -1,6 +1,6 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
-import { Months, SyzygyInfo } from './utils'
+import { apiErrorResponse, Months, SyzygyInfo } from './utils'
 
 export default function Conditions({ data, error }) {
     const noData = '--'
@@ -14,12 +14,9 @@ export default function Conditions({ data, error }) {
     }
 
     if (error) {
-        return (
-            <div className='text-center'>
-                There was a problem fetching the data. Please try again later.
-            </div>
-        )
+        return <div className='text-center'>{apiErrorResponse(error.response.status)}</div>
     }
+
     if (!data) {
         return (
             <div className='text-center'>

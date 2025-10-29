@@ -188,3 +188,11 @@ export const getDefaultDateStrings = () => {
         defaultEndStr: stringify(addDays(today, defaultDays - 1)),
     }
 }
+
+export const NotAcceptable = 406 // version out of date
+// Use when a call to the API fails.
+export const apiErrorResponse = (status) => {
+    return status === NotAcceptable
+        ? 'It looks like your version may be out of date. Please reload the page.'
+        : 'There was a problem fetching the data. Please try again later.'
+}
