@@ -1,8 +1,7 @@
 import { AppContext } from './AppContext'
-import { formatDate, isTouchScreen, isSmallScreen } from './utils'
+import { formatDate, isTouchScreen, isSmallScreen, apiErrorResponse } from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
-import Button from 'react-bootstrap/Button'
 import { buildSyzygyAnnotations, buildPlot } from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
 import { useContext, useState } from 'react'
@@ -20,7 +19,7 @@ const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 
-export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
+export default function Chart({ error, loading, hiloMode, data }) {
     const ctx = useContext(AppContext)
     const customElevationNav = ctx.customElevationNav
     const showElevation =
@@ -43,13 +42,8 @@ export default function Chart({ error, loading, hiloMode, data, forceUpdate }) {
                 <br />
                 <br />
                 <br />
-                Sorry, we are unable to generate the graph just now. There may have been a problem
-                fetching data.
-                <br /> {error.message}
+                <br /> {apiErrorResponse(error.response.status)}
                 <br />
-                <Button variant='warning' onClick={() => forceUpdate()}>
-                    Try again
-                </Button>
                 <br />
                 <br />
                 <br />

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 from zoneinfo import ZoneInfo
 from django.core.cache import cache
-from rest_framework.exceptions import APIException
 
 from app import tzutil as tz
 from app.timeline import Timeline
