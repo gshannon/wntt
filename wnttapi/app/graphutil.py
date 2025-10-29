@@ -91,7 +91,9 @@ def get_graph_data(
         )
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
-    future_surge_dict = sg.get_future_surge_data(timeline, last_recorded_dt)
+    future_surge_dict = sg.get_future_surge_data(
+        timeline, noaa_station_id, last_recorded_dt
+    )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
