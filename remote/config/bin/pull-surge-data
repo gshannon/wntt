@@ -1,80 +1,70 @@
 #!/bin/bash -e
 
-CWD=$(pwd)
-ROOT=$HOME/surge
-WORKDIR=$ROOT/tmp
-ARCHIVE=$ROOT/archive
-DATADIR=$ROOT/data
-mkdir -p $WORKDIR $ARCHIVE $DATADIR
+cwd=$(pwd)
+rootdir=$HOME/surge
+workdir=$rootdir/tmp
+archive=$rootdir/archive
+datadir=$rootdir/data
+mkdir -p $workdir $archive $datadir
 
-DOWNLOADED=$ROOT/downloaded
-touch $DOWNLOADED
+# List of NOAA station ids to pull.  For example of UI for this data:
+# See https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0
+# Edit this whenever a reserve is added/subtracted.
+stations=("8419317" "8658163")
 
-WELLS_STN=8419317
-# NOTE: Everything is in GMT here.
-FILEDATE=$(date +%Y%m%d)  # e.g. 20240321
-HOUR=$(date +%H)
-if [ $HOUR -ge 23 ]; then
-    CYCLE='18'
-elif [ $HOUR -ge 17 ]; then
-    CYCLE='12'
-elif [ $HOUR -ge 11 ]; then
-    CYCLE='06'
-elif [ $HOUR -ge 5 ]; then
-    CYCLE='00'
+# Top level directories are named "etss.<date>", e.t. etss.20251029, and the most recent 4
+# are kept. Each contains several varieties of tar files, with the time "cycle" (0, 6, 12 or 18) 
+# embedded in the name. The one we want is etss.t${cycle}z.csv.tar.gz.  Calculate that file 
+# name based on the current date/time.
+filedate=$(date +%Y%m%d)
+hour=$(date +%H)
+if [ $hour -ge 23 ]; then
+    cycle='18'
+elif [ $hour -ge 17 ]; then
+    cycle='12'
+elif [ $hour -ge 11 ]; then
+    cycle='06'
+elif [ $hour -ge 5 ]; then
+    cycle='00'
 else
     # Use yesterday's last cycle
-    FILEDATE=$(date -d '-1 day' +%Y%m%d)
-    CYCLE='18'
+    filedate=$(date -d '-1 day' +%Y%m%d)
+    cycle='18'
 fi
 
-# This is the file we believe is the latest. 
-RAWFILE=etss.t${CYCLE}z.csv.tar.gz
-DATAFILE=etss.$FILEDATE/t${CYCLE}z.csv/${WELLS_STN}.csv
-SAVEFILE=${FILEDATE}-${CYCLE}.csv
+# This is the expected most recent tar file.
+rawfile=etss.t${cycle}z.csv.tar.gz
 
-# Do nothing if we previously downloaded this file
-if [ $(grep -c $SAVEFILE $DOWNLOADED) -gt 0 ]; then
-  echo "$RAWFILE ($SAVEFILE) has been processed already, exiting..."
-  exit 0
-fi
-
-cd $WORKDIR
+cd $workdir
 rm -rf *  # clean up files from previous run 
-URL="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${FILEDATE}/${RAWFILE}"
-curl --no-progress-meter --fail-with-body -o $RAWFILE $URL || {
-  echo "Failed to download $URL"
+url="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${filedate}/${rawfile}"
+curl --no-progress-meter --fail-with-body -o $rawfile $url || {
+  echo "Failed to download $url"
   exit 1
 }
-tar zxf $RAWFILE || {
-  echo "Failed to extract $RAWFILE"
+tar zxf $rawfile || {
+  echo "Failed to extract $rawfile"
   exit 1
 }
 
-# At this point we should have several hundred files, including the one we want: $DATAFILE.
-if [ ! -f $DATAFILE ]; then
-  echo "Expected file $DATAFILE not found after extraction."
-  exit 1
-fi
+# At this point we should have:
+# etss.<date>/
+#    t<cycle>z.csv/
+#       <station>.csv ... for all stations
 
-###################################
-# UNCOMMENT TO STOP ARCHIVING FILES
-# Rename and move it to where the webapp can read it.
-mv $DATAFILE $DATADIR/surge-data.csv
-###################################
+for ((i=0; i<${#stations[@]}; i++)); do
+  datafile=etss.$filedate/t${cycle}z.csv/${stations[$i]}.csv
+  if [ ! -f $datafile ]; then
+    echo "Expected file $datafile not found after extraction."
+  else
+    cp $datafile $datadir
+    echo "extracted ${stations[$i]}.csv..."
+  fi
+done
 
-###################################
-# REMOVE THIS SECTION TO STOP ARCHIVING FILES
-#cp $DATAFILE $DATADIR/surge-data.csv
-# Move it to the archive area. 
-#mv $DATAFILE $ARCHIVE/$SAVEFILE
-###################################
+# We'll leave the tmp dir contents around for debugging.
+# rm -rf $workdir/*
 
-# Remember the last 10 downloaded files so we can avoid double-downloads. 
-tail -9 $DOWNLOADED > /tmp/_downloaded
-echo $SAVEFILE >> /tmp/_downloaded
-mv /tmp/_downloaded $DOWNLOADED
+echo "$(date): $filedate $cycle" >> $rootdir/log
 
-echo "$(date) downloaded: $SAVEFILE" >> $ROOT/log
-cd $CWD
 exit 0

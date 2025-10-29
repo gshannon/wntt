@@ -12,15 +12,16 @@ from app import tzutil as tz
 from app.timeline import Timeline
 
 # /surgedata is a mount defined in docker-compose.yml
-# TODO: make surge file reserve specific! Add reserve id to filename, and code logic.
-_surge_file_path = "/surgedata/surge-data.csv"
+_default_surge_file_dir = "/surgedata"
 _max_surge = 20
 _min_surge = -20
 
 logger = logging.getLogger(__name__)
 
 
-def get_future_surge_data(timeline: Timeline, last_recorded_dt: datetime) -> dict:
+def get_future_surge_data(
+    timeline: Timeline, noaa_station_id: str, last_recorded_dt: datetime
+) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes which are past the
     last_recorded_dt param, if given, else the current system time. These are extracted from a csv file
     obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).  We only have about 4 days of it, so
@@ -28,6 +29,7 @@ def get_future_surge_data(timeline: Timeline, last_recorded_dt: datetime) -> dic
 
     Args:
         timeline (Timeline): the timeline
+        noaa_station_id: the NOAA station code so we can get the right data
         last_recorded_dt (datetime): time of latest recorded tide, or None
 
     Returns:
@@ -39,7 +41,9 @@ def get_future_surge_data(timeline: Timeline, last_recorded_dt: datetime) -> dic
     if timeline.end_dt >= timeline.now and timeline.start_dt < timeline.now + timedelta(
         days=6
     ):
-        future_surge_dict = get_or_load_projected_surge_file(timeline.time_zone)
+        future_surge_dict = get_or_load_projected_surge_file(
+            noaa_station_id, timeline.time_zone
+        )
         # If there's any recorded tides in the timeline, we don't want any data for those times.
         if last_recorded_dt is not None:
             future_surge_dict = {
@@ -64,69 +68,66 @@ def calculate_past_storm_surge(astro_dict: dict, obs_dict: dict) -> dict:
 
 
 def get_or_load_projected_surge_file(
-    timezone: ZoneInfo, surge_file_path=_surge_file_path
+    noaa_station_id: str, timezone: ZoneInfo, surge_file_dir=_default_surge_file_dir
 ) -> dict:
     """
-    The csv file containing the projected surge data is updated on the NOAA site every 6 hours,
-    and is normally downloaded by a cron job. Once loaded, its contents are cached in Django for performance.
-    So here, we have to determine if the disk file has been replaced since we last processed it. Therefore,
-    if the data file exists and has not been replaced by a newer file, read the cache. Otherwise, read the
-    download file, throwing out all but xx:00 and xx:30 -- since the data is in 6-minute intervals
-    and we show 15-min intervals. Then save that to cache and return it. We read the entire file, even data
-    from the past, so graphs can display this data for past times when observed data is missing.
+    The csv files containing projected surge data are updated on the NOAA site every 6 hours,
+    and are normally downloaded by a cron job. Once loaded, contents are cached in Django for performance.
+    This cache is shared by all workers. Here we determine if the file for the station in question has been
+    replaced since it was cached, and update the cache if so. When parsing the file, we throw out all but
+    xx:00 and xx:30 since the data is in 6-minute intervals and we show 15-min intervals.
 
-    If file is missing, unreadable, or corrupt, an error is logged an an empty dict is returned.
+    If file is missing, unreadable, or corrupt, an error is logged and an empty dict is returned.
     All datetimes in the file are in UTC, and are converted as requested timezone.
 
+    Cache structure:
+    { <station-id> : [ <file-id>, {data} ] }
+
     Args:
+        noaa_station_id: the NOAA station id, so we know which file to read
         timezone (ZoneInfo): Timezone to convert to.
-        surge_file_path (str, optional): for testing, use to override standard surge file location.
+        surge_file_dir (str, optional): for testing, use to override standard surge file location.
 
     Raises:
         APIException: if file cannot be opened
 
     Returns:
-        dict: key = datetime, value = surge value in feet relative to MLLW
+        dict: key = datetime, value = surge value in MLLW feet
     """
 
-    # Since this is a small cache (< 1Kb), we'll use the process ID as the cache key, so each worker can have its own copy.
-    # This should avoid any multi-threading issues when setting the cache with multiple workers.
-    pid = os.getpid()
-    # The cached data is a dict with keys 'id' and 'data'.  'id' is the file's mtime, 'data' is the surge data.
-    cached = cache.get(pid)
-    logger.debug(f"found surge cache for process {pid}? {cached is not None}")
-    if cached is not None:
-        logger.debug(f"cached id: {cached['id']}")
-
-    file_id = (
-        os.path.getmtime(_surge_file_path)
-        if os.path.isfile(_surge_file_path) and os.access(_surge_file_path, os.R_OK)
+    # The cached data is a dict with key=(station_id,mtime) and value=data.
+    filepath = f"{surge_file_dir}/{noaa_station_id}.csv"
+    file_mtime = (
+        os.path.getmtime(filepath)
+        if os.path.isfile(filepath) and os.access(filepath, os.R_OK)
         else None
     )
-    logger.debug(f"current file id: {file_id}")
-    if file_id is None:
-        if cached is None:
+    [saved_mtime, data] = cache.get(noaa_station_id, [None, None])
+    logger.debug(f"current mtime: {file_mtime}, saved mtime: {saved_mtime}")
+
+    # First handle the case of a missing file.
+    if file_mtime is None:
+        if data is None:
             logger.error(
-                f"{_surge_file_path} is not found, and there is no cached surge data!"
+                f"{filepath} is not found, and there is no cached surge data for {noaa_station_id}"
             )
             return {}
-        else:
-            logger.error(f"Can't read {_surge_file_path} file, will use cache for now.")
-            return cached["data"]
+        logger.error(f"Can't read {filepath} file, forced to use cache")
+        return data
 
     # So now we know the file exists and is readable.  If we have cached data, check if the file has been updated.
-    if cached is not None and file_id == cached["id"]:
-        logger.debug(
-            f"cache id match id={file_id} {min(cached['data'])} - {max(cached['data'])} "
-        )
-        return cached["data"]  # return the cached data
+    if data is not None and file_mtime == saved_mtime:
+        logger.debug(f"cache id match id={file_mtime} {min(data)} - {max(data)} ")
+        return data
 
-    logger.debug(f"will cache/re-cache surge data, file id = {file_id}")
+    logger.debug(f"will cache/re-cache surge data, file mtime = {file_mtime}")
 
-    surge_data = {}  # key=datetime, value=surge
-    logger.debug(f"Reading {_surge_file_path}")
+    data = {}  # key=datetime, value=surge
+    logger.debug(f"Reading {filepath}...")
     try:
         """
+        Surge files contain a data entry for every 6 minutes, but only the ones with a SURGE value < 9999
+        are real. Those line up with top of the hour so we skip every TIME that's not a multiple of 100.
         Sample data:
                 TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
         202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
@@ -137,11 +138,10 @@ def get_or_load_projected_surge_file(
         202502181230,   1.570,9999.000,9999.000,9999.000,9999.000
         ...
         """
-        with open(_surge_file_path) as surge_file:
+        with open(filepath) as surge_file:
             reader = csv.reader(surge_file, skipinitialspace=True)
             next(reader)  # skip header row
             for row in reader:
-                # Surge values for Wells data is on the hour only, but the data file has a row for every 6 min.
                 # Only the times that are multiples of 100 have actual surge data.
                 if int(row[0]) % 100 != 0:
                     continue
@@ -151,7 +151,7 @@ def get_or_load_projected_surge_file(
                 try:
                     surge = float(row[3])
                     if _min_surge <= surge <= _max_surge:
-                        surge_data[local_dt] = round(surge, 2)
+                        data[local_dt] = round(surge, 2)
                     else:
                         logger.error(
                             f"Found unexpected surge value [{surge}] for target {in_utc}"
@@ -159,14 +159,12 @@ def get_or_load_projected_surge_file(
                 except ValueError:
                     logger.error(f"Invalid surge value: '{row[3]}'")
     except FileNotFoundError:
-        logger.error(f"Prediction file not found: {_surge_file_path}")
+        logger.error(f"Prediction file not found: {surge_file}")
         return {}
 
-    cache.set(
-        pid, {"id": file_id, "data": surge_data}, timeout=60 * 60 * 6
-    )  # 6 hour TTL
+    # Cache the data. We'll use a TTL of 24 hours to handle cases where download fails a few times.
+    cache.set(noaa_station_id, [file_mtime, data], timeout=60 * 60 * 24)
     logger.debug(
-        f"Cached for worker {pid}, {len(surge_data)} values from {_surge_file_path}"
+        f"{noaa_station_id}: cached {len(data)} recs from {filepath}, from {min(data)} to {max(data)}"
     )
-    logger.debug(f"read surge from file {min(surge_data)} - {max(surge_data)} ")
-    return surge_data
+    return data
