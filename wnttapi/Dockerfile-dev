@@ -24,8 +24,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Copy the source code into the container.
 COPY . .
-# Don't rely on cache dir being present, since it may be missing due to git (empty dir)
-RUN mkdir -p /wnttapi/cache
 
 # Run the application.
 CMD ["gunicorn", "--bind=0.0.0.0:8001", "-w 2", "project.wsgi"]

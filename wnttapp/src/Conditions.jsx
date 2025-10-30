@@ -14,7 +14,9 @@ export default function Conditions({ data, error }) {
     }
 
     if (error) {
-        return <div className='text-center'>{apiErrorResponse(error.response.status)}</div>
+        return (
+            <div className='text-center text-white'>{apiErrorResponse(error.response.status)}</div>
+        )
     }
 
     if (!data) {

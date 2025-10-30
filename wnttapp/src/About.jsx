@@ -97,7 +97,7 @@ export default function About() {
                                     <div className='fw-bold'>Astronomical Tide Predictions</div>
                                     <div>
                                         Main site:{' '}
-                                        <SimpleLink href='https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317' />
+                                        <SimpleLink href='https://tidesandcurrents.noaa.gov/tide_predictions.html' />
                                     </div>
                                     <div>
                                         API:{' '}
@@ -110,7 +110,7 @@ export default function About() {
                                     <div className='fw-bold'>Future Storm Surge</div>
                                     <div>
                                         Main site:{' '}
-                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0' />
+                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo' />
                                     </div>
                                     <div>
                                         Disclaimer:{' '}
