@@ -18,27 +18,33 @@ export default function Glossary() {
         <Container>
             <Row className='justify-content-center fs-4 fw-bold'>Glossary</Row>
             <Stack gap={3} className='py-3'>
-                <Entry title='Wells Reserve SWMP'>
+                <Entry title='SWMP'>
                     The{' '}
                     <Link
-                        href='https://www.wellsreserve.org/research/environmental-monitoring'
+                        href='https://coast.noaa.gov/nerrs/research/'
                         text='System-Wide Monitoring Program'
                     />{' '}
-                    at the Wells Reserve. This data is made available by the{' '}
+                    is part of <b>NERRS</b> and provides long term monitoring of water quality and
+                    weather, among other aspects of the habitat. This data is made available by the{' '}
                     <Link
                         href='https://cdmo.baruch.sc.edu'
                         text='Centralized Data Management Office'
-                    />{' '}
-                    of the{' '}
+                    />
+                    {'.'}
+                </Entry>
+                <Entry title='NERRS'>
+                    NERRS is the{' '}
                     <Link
-                        href='https://www.nerra.org'
+                        href='https://coast.noaa.gov/nerrs/'
                         text='National Estuarine Research Reserve System'
                     />
-                    .
+                    . It is a network of 30 coastal sites established by a partnership between NOAA
+                    and the coastal states. Its goals are to support estuary health and education.
                 </Entry>
                 <Entry title='MLLW (Mean Lower Low Water)'>
-                    When we say a tide is <i>9.5 feet MLLW</i>, we mean its height is 9.5 feet
-                    higher than{' '}
+                    MLLW is the average of all lowest daily tides observed over the{' '}
+                    <b>National Tidal Datum Epoch</b>. When we say a tide is <i>9.5 feet MLLW</i>,
+                    we mean its height is 9.5 feet higher than{' '}
                     <Link
                         href='https://tidesandcurrents.noaa.gov/datum_options.html#MLLW'
                         text='Mean Lower Low Water'
@@ -46,8 +52,7 @@ export default function Glossary() {
                     , which is the tidal{' '}
                     <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />{' '}
                     (point of reference) used by this application for all land and sea elevations.
-                    MLLW is the average of all lowest daily tides observed over the{' '}
-                    <b>National Tidal Datum Epoch</b>. See{' '}
+                    See{' '}
                     <Link
                         href='https://tidesandcurrents.noaa.gov/datums.html?id=8419317'
                         text='here'
@@ -55,8 +60,8 @@ export default function Glossary() {
                     for more information about datums.
                 </Entry>
                 <Entry title='Custom Elevation'>
-                    The elevation relative to MLLW of the selected location on the Map page. This is
-                    an elevation you are interested in showing on the graph for purposes of
+                    The elevation relative to MLLW of your selected location on the Map page. This
+                    is an elevation you are interested in showing on the graph for purposes of
                     comparison to tide data. If you enter an address to look up, it is sent to{' '}
                     <Link href='https://geocode.maps.co' text='Geocode' /> to get a
                     latitude/longitude. The elevation is determined by sending the selected
@@ -69,7 +74,8 @@ export default function Glossary() {
                     that point relative to NAVD88, which is then converted to MLLW.
                 </Entry>
                 <Entry title='Record Tide'>
-                    This is the highest recorded tide at Wells. Source: <b>Wells Reserve SWMP</b>
+                    Part of the <b>SWMP</b> data, this is the highest recorded tide at the
+                    reserve&apos;s monitoring station.
                 </Entry>
                 <Entry title='Highest Annual Predicted'>
                     The highest predicted astronomical tide for the requested year, relative to
@@ -86,7 +92,7 @@ export default function Glossary() {
                 <Entry title='Observed Tide'>
                     Recorded tide level relative to MLLW. Data is captured every 15 minutes, and
                     there is generally a delay of less than one hour between data collection and
-                    availability of the data for display. Source: <b>Wells Reserve SWMP</b>
+                    availability of the data for display. Source: <b>SWMP</b>
                 </Entry>
                 <Entry title='Predicted Tide'>
                     The predicted astronomical tide level relative to MLLW based on the gravity of
@@ -121,14 +127,14 @@ export default function Glossary() {
                     The sum of Predicted Tide and Projected Storm Surge.
                 </Entry>
                 <Entry title='Wind Gusts'>
-                    The highest wind speed detected during the 15-minute sample period at the Wells
-                    meteorological station. Samples are taken every five seconds. Source:{' '}
-                    <b>Wells Reserve SWMP</b>
+                    The highest wind speed detected during the 15-minute sample period at the
+                    reserve&apos; meteorological station. Samples are taken every five seconds.
+                    Source: <b>SWMP</b>
                 </Entry>
                 <Entry title='Wind Speed'>
-                    The average wind speed detected during the 15-minute sample period at the Wells
-                    meteorological station. Samples are taken every five seconds. Source:{' '}
-                    <b>Wells Reserve SWMP</b>
+                    The average wind speed detected during the 15-minute sample period at the
+                    reserve&apos;s meteorological station. Samples are taken every five seconds.
+                    Source: <b>SWMP</b>
                 </Entry>
                 <Entry title='National Tidal Datum Epoch'>
                     The specific{' '}
