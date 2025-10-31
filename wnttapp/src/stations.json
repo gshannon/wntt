@@ -1,11 +1,14 @@
 {
     "welinwq": {
         "id": "welinwq",
-        "reserveName": "Wells, ME",
+        "reserveName": "Wells Reserve",
+        "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
         "waterStationName": "Inlet",
         "weatherStationId": "wellfmet",
         "weatherStationName": "Laudholm Farm",
         "noaaStationId": "8419317",
+        "noaaStationName": "Wells, ME",
+        "noaaStationUrl": "https://tidesandcurrents.noaa.gov/stationhome.html?id=8419317",
         "navd88ToMllwConversion": 5.14,
         "meanHighWaterMllw": 9.13,
         "mapBounds": [
@@ -13,8 +16,12 @@
             [43.01, -69.8]
         ],
         "swmpLocation": {
-            "lat": "43.320089",
-            "lng": "-70.563442"
+            "lat": 43.320089,
+            "lng": -70.563442
+        },
+        "weatherLocation": {
+            "lat": 43.33738,
+            "lng": -70.54944
         },
         "recordTideNavd88": 8.13,
         "recordTideDate": "2024/1/13",
@@ -23,10 +30,13 @@
     "nocrcwq": {
         "id": "nocrcwq",
         "reserveName": "North Carolina",
+        "reserveUrl": "https://www.nerra.org/reserve/north-carolina-reserve/",
         "waterStationName": "Research Creek",
         "weatherStationId": "nocrcmet",
         "weatherStationName": "Research Creek",
         "noaaStationId": "8658163",
+        "noaaStationName": "Wrightsville Beach, NC",
+        "noaaStationUrl": "https://tidesandcurrents.noaa.gov/stationhome.html?id=8658163",
         "navd88ToMllwConversion": 2.75,
         "meanHighWaterMllw": 4.14,
         "mapBounds": [
@@ -37,8 +47,12 @@
             "lat": 34.155231,
             "lng": -77.850014
         },
-        "recordTideNavd88": 5,
-        "recordTideDate": "2021/1/1",
+        "weatherLocation": {
+            "lat": 34.1555,
+            "lng": -77.8509
+        },
+        "recordTideNavd88": 8.2,
+        "recordTideDate": "2018/9/14",
         "minDateOverride": "2025/3/1"
     }
 }

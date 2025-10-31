@@ -1,13 +1,14 @@
 import './css/Map.css'
 import { useMemo, useRef, useContext, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
 import { Form } from 'react-bootstrap'
 import BarLoader from 'react-spinners/BarLoader'
 import Container from 'react-bootstrap/Container'
 import { Col, Row } from 'react-bootstrap'
-import { YellowPin, RedPin } from './MarkerIcon'
+import { RedPinIcon } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
 import { Page } from './utils'
@@ -18,6 +19,18 @@ import { getData } from './tutorials/map'
 
 const MinZoom = 8
 const MaxZoom = 18
+const WaterStationEmoji = '\u{1F537}'
+const WeatherStationEmoji = '\u{1F536}'
+
+const stationIcon = (emoji) => {
+    return L.divIcon({
+        className: 'my-icon',
+        html: emoji,
+        iconSize: [16, 16],
+        iconAnchor: [8, 16],
+    })
+}
+// console.log(WaterStationIcon)
 
 export default function Map() {
     const ctx = useContext(AppContext)
@@ -99,9 +112,11 @@ export default function Map() {
     const elevationContent = () => {
         if (ctx.markerElevationNav) {
             return <>{ctx.station.navd88ToMllw(ctx.markerElevationNav) + ' ft MLLW'}</>
-        } else if (ctx.markerElevationError) {
+        }
+        if (ctx.markerElevationError) {
             return <>Error, please try again later.</>
-        } else if (ctx.markerLocation) {
+        }
+        if (ctx.markerLocation) {
             return <BarLoader loading={true} color={'green'} />
         }
     }
@@ -219,20 +234,30 @@ export default function Map() {
                     <ChangeView center={ctx.mapCenter} zoom={ctx.zoom} />
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                     <MapClickHandler />
-                    <Marker draggable={false} position={ctx.station.swmpLocation} icon={YellowPin}>
-                        <LeafletTooltip
-                            permanent
-                            opacity={0.75}
-                            direction={'right'}
-                            offset={[30, -27]}>
-                            {ctx.station.reserveName}, {ctx.station.waterStationName}
+                    <Marker
+                        draggable={false}
+                        position={ctx.station.swmpLocation}
+                        icon={stationIcon(WaterStationEmoji)}>
+                        <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
+                            Water Quality Station:
+                            <br />
+                            {ctx.station.waterStationName} ({ctx.station.id})
+                        </LeafletTooltip>
+                    </Marker>
+                    <Marker
+                        draggable={false}
+                        position={ctx.station.weatherLocation}
+                        icon={stationIcon(WeatherStationEmoji)}>
+                        <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
+                            Meterological Station:
+                            <br /> {ctx.station.weatherStationName} ({ctx.station.weatherStationId})
                         </LeafletTooltip>
                     </Marker>
                     {ctx.markerLocation && (
                         <Marker
                             draggable={true}
                             position={ctx.markerLocation}
-                            icon={RedPin}
+                            icon={RedPinIcon}
                             eventHandlers={markerEventHandlers}
                             ref={markerRef}>
                             <LeafletTooltip
@@ -240,7 +265,8 @@ export default function Map() {
                                 opacity={0.75}
                                 direction={'right'}
                                 offset={[30, -27]}>
-                                Elevation: {ctx.station.navd88ToMllw(ctx.markerElevationNav) ?? '-'}
+                                Custom Elevation:{' '}
+                                {ctx.station.navd88ToMllw(ctx.markerElevationNav) ?? '-'}
                             </LeafletTooltip>
                         </Marker>
                     )}
