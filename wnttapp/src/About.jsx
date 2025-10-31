@@ -78,6 +78,23 @@ export default function About() {
                         </p>
                     </Accordion.Body>
                 </Accordion.Item>
+                <Accordion.Item>
+                    <Accordion.Header>Selected SWMP Station</Accordion.Header>
+                    <Accordion.Body>
+                        <p>
+                            You have selected the <b>{ctx.station.waterStationName}</b> water
+                            quality station for recorded tides and temperature, in the{' '}
+                            <Link href={ctx.station.reserveUrl} text={ctx.station.reserveName} />{' '}
+                            reserve. Wind data is from the <b>{ctx.station.weatherStationName}</b>{' '}
+                            weather station. Tide predictions come from NOAA&apos;s{' '}
+                            <Link
+                                href={ctx.station.noaaStationUrl}
+                                text={ctx.station.noaaStationName}
+                            />{' '}
+                            station.
+                        </p>
+                    </Accordion.Body>
+                </Accordion.Item>
                 <Accordion.Item eventKey='3'>
                     <Accordion.Header>Sources</Accordion.Header>
                     <Accordion.Body>

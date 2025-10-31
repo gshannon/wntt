@@ -4,28 +4,36 @@ export default class Station {
     constructor({
         id,
         reserveName,
+        reserveUrl,
         waterStationName,
         weatherStationId,
         weatherStationName,
         noaaStationId,
+        noaaStationName,
+        noaaStationUrl,
         navd88ToMllwConversion,
         meanHighWaterMllw,
         mapBounds,
         swmpLocation,
+        weatherLocation,
         recordTideNavd88,
         recordTideDate, // string YYYY/MM/DD
         minDateOverride = null, // string YYYY/MM/DD to override default
     }) {
         this.id = id
         this.reserveName = reserveName
+        this.reserveUrl = reserveUrl
         this.waterStationName = waterStationName
         this.weatherStationId = weatherStationId
         this.weatherStationName = weatherStationName
         this.noaaStationId = noaaStationId
+        this.noaaStationName = noaaStationName
+        this.noaaStationUrl = noaaStationUrl
         this.navd88ToMllwConversion = navd88ToMllwConversion
         this.meanHighWaterMllw = meanHighWaterMllw
         this.mapBounds = mapBounds
         this.swmpLocation = swmpLocation
+        this.weatherLocation = weatherLocation
         this.recordTideNavd88 = recordTideNavd88
         this.recordTideDate = recordTideDate
         this.minDate = minDateOverride
