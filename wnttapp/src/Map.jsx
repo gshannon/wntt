@@ -109,7 +109,7 @@ export default function Map() {
         useMap().setView(ctx.mapCenter, ctx.zoom)
     }
 
-    const elevationContent = () => {
+    const elevationLabelContent = () => {
         if (ctx.markerElevationNav) {
             return <>{ctx.station.navd88ToMllw(ctx.markerElevationNav) + ' ft MLLW'}</>
         }
@@ -119,6 +119,13 @@ export default function Map() {
         if (ctx.markerLocation) {
             return <BarLoader loading={true} color={'green'} />
         }
+        return <>-</>
+    }
+
+    const elevationTooltipContent = () => {
+        return (
+            <>{ctx.markerElevationNav ? ctx.station.navd88ToMllw(ctx.markerElevationNav) : '-'}</>
+        )
     }
 
     return (
@@ -135,7 +142,7 @@ export default function Map() {
                             {ctx.markerLocation ? ctx.markerLocation.lng.toFixed(6) + ' º' : '-'}
                         </div>
                         <div className='loc-label'>Elevation:</div>
-                        <div className='loc-data'>{elevationContent()}</div>
+                        <div className='loc-data'>{elevationLabelContent()}</div>
                     </div>
                 </Col>
                 <Col className='px-0 align-self-center'>
@@ -265,8 +272,7 @@ export default function Map() {
                                 opacity={0.75}
                                 direction={'right'}
                                 offset={[30, -27]}>
-                                Custom Elevation:{' '}
-                                {ctx.station.navd88ToMllw(ctx.markerElevationNav) ?? '-'}
+                                Custom Elevation: {elevationTooltipContent()}
                             </LeafletTooltip>
                         </Marker>
                     )}

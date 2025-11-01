@@ -2,7 +2,7 @@
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import Top from './Top'
 import Control from './Control'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -29,6 +29,8 @@ export default function App() {
         console.log(`Auto upgrade detected, will start at graph page`)
         storage.setGlobalDailyStorage({ upgraded: false }) // always reset the upgraded flag
     }
+
+    const abortControllerRef = useRef(null)
 
     /////////////////////////////////////////////
     // Set up state.
@@ -147,20 +149,23 @@ export default function App() {
                 `${EpqsUrl}?x=${markerLocation.lng}&y=${markerLocation.lat}` +
                 `&units=Feet&wkid=4326&includeDate=False`
 
-            // We'll allow 10 seconds to handle connection-related timeouts.
+            // If there's a call still running, abort it.
+            abortControllerRef.current?.abort()
+            abortControllerRef.current = new AbortController()
             axios
-                .get(url, { timeout: 10000 })
+                // We'll allow 15 seconds to handle connection-related timeouts.
+                .get(url, { timeout: 15000, signal: abortControllerRef.current.signal })
                 .then((response) => {
                     setMarkerElevationError(false)
                     setMarkerElevationNav(roundTo(parseFloat(response.data.value), 2))
                 })
                 .catch((error) => {
-                    if (error.code === 'ECONNABORTED') {
-                        console.error(`Request timed out: ${url}`)
-                    } else {
-                        console.error(`ERROR fetching elevation: ${error} URL=${url}`)
+                    // It'll be canceled if user clicks another point before this finishes, so
+                    // that's not considered an error.
+                    if (error.name !== 'CanceledError') {
+                        console.error(`ERROR fetching elevation: ${error.name}`)
+                        setMarkerElevationError(true)
                     }
-                    setMarkerElevationError(true)
                 })
         }
     }, [markerLocation, markerElevationNav])
