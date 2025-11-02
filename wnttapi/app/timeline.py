@@ -27,12 +27,13 @@ class Timeline:
 
     """
 
-    def __init__(self, start_dt: datetime, end_dt: datetime):
-        self._raw_times = []
+    # The "now" param is for testing only!
+    def __init__(self, start_dt: datetime, end_dt: datetime, now: datetime = None):
+        self._requested_times = []
         self.start_dt = start_dt
         self.end_dt = end_dt
         self.time_zone = start_dt.tzinfo
-        self.now = tz.now(self.time_zone)
+        self.now = tz.now(self.time_zone) if now is None else now
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
             logger.error(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
             raise ValueError()
@@ -45,27 +46,32 @@ class Timeline:
         utc_end = self.end_dt.astimezone(tz.utc)
         utc_cur = self.start_dt.astimezone(tz.utc)
         while utc_cur <= utc_end:
-            self._raw_times.append(utc_cur.astimezone(self.start_dt.tzinfo))
+            self._requested_times.append(utc_cur.astimezone(self.time_zone))
             utc_cur += timedelta(minutes=15)
 
     def is_all_future(self):
-        """Returns whether the timeline start time is in the future."""
+        """Returns whether the start time is in the future."""
         return self.start_dt > self.now
 
-    def length_raw(self):
-        """Return the number of times in the initial timeline."""
-        return len(self._raw_times)
-
-    def contains_raw(self, dt: datetime) -> bool:
-        """Returns whether the given datetime is in the initial timeline."""
-        return dt in self._raw_times
+    def length_requested(self):
+        """Return the number of times in the requested timeline."""
+        return len(self._requested_times)
 
     def within(self, dt: datetime) -> bool:
+        """Returns whether the given datetime is within the boundries of the requested timeline."""
         return dt and self.start_dt <= dt <= self.end_dt
 
-    def get_all_past_raw(self) -> list:
-        """Return all datetimes in the initial timeline that are before now."""
-        return list(filter(lambda dt: dt < self.now, self._raw_times))
+    def get_all_past(self) -> list:
+        """Return all datetimes in the initial timeline that are before now, including."""
+        return list(filter(lambda dt: dt < self.now, self._requested_times))
+
+    def get_min_with_padding(self) -> datetime:
+        """Return the minimum datetime requested, including padding (none for this class)"""
+        return self._requested_times[0]
+
+    def get_max_with_padding(self) -> datetime:
+        """Return the maximum datetime requested, including padding (none for this class)"""
+        return self._requested_times[-1]
 
 
 class GraphTimeline(Timeline):
@@ -73,13 +79,22 @@ class GraphTimeline(Timeline):
     This timeline will always include an extra element for 00:00 on the day following the end_date.
     """
 
-    def __init__(self, start_date: date, end_date: date, time_zone: ZoneInfo):
+    _padding_points = 8  # How many 15-min intervals to go beyond the start/end times.
+
+    def __init__(
+        self,
+        start_date: date,
+        end_date: date,
+        time_zone: ZoneInfo,
+        now: datetime = None,
+    ):
         """Constructor.
 
         Args:
             start_date (date): First day.
             end_date (date): Last day.
             time_zone (ZoneInfo): time zone data will be displayed in.
+            now (datetime): For testing only. Default is current time.
         """
         self.start_date = start_date
         self.end_date = end_date
@@ -89,7 +104,43 @@ class GraphTimeline(Timeline):
             datetime.combine(end_date + timedelta(days=1), time(0)).replace(
                 tzinfo=time_zone
             ),
+            now,
         )
+        # For determining highs and lows for CDMO data, which is by definition only in the
+        # past (before "self.now"), we need to look a bit beyond the requested timeline in case
+        # there is a high or low near or on the first or last displayed time. Here we define
+        # the timeline extensions used for that purpose.
+        self._start_padding = []
+        self._end_padding = []
+        # Do nothing if the timeline entire timeline is in the future.
+        if self.start_dt < self.now:
+            utc_cur = self.start_dt.astimezone(tz.utc)
+            for _ in range(self._padding_points):
+                utc_cur -= timedelta(minutes=15)
+                self._start_padding.insert(0, utc_cur.astimezone(self.time_zone))
+
+            utc_cur = self.end_dt.astimezone(tz.utc)
+            for _ in range(self._padding_points):
+                utc_cur += timedelta(minutes=15)
+                dt = utc_cur.astimezone(self.time_zone)
+                if dt <= self.now:
+                    self._end_padding.append(dt)
+
+    def get_all_past(self) -> list:
+        # Return all requested times, plus any padding, that are in the past.
+        return (
+            self._start_padding
+            + list(filter(lambda dt: dt < self.now, self._requested_times))
+            + self._end_padding
+        )
+
+    def get_min_with_padding(self) -> datetime:
+        # Return the earliest time, including padding.
+        return min(self._start_padding + self._requested_times)
+
+    def get_max_with_padding(self) -> datetime:
+        # Return the latest time, including padding.
+        return max(self._end_padding + self._requested_times)
 
     def add_time(self, dt: datetime):
         """Add a datetime to the timeline, if its in bounds, and sort the times so it's still in order.
@@ -104,9 +155,9 @@ class GraphTimeline(Timeline):
         """
         if not self.within(dt):
             raise ValueError(f"{dt} is outside of timeline boundaries")
-        if not self.contains_raw(dt):
-            self._raw_times.append(dt)
-            self._raw_times.sort()
+        if dt not in self._requested_times:
+            self._requested_times.append(dt)
+            self._requested_times.sort()
 
     def build_plot(self, callback):
         """Build a list containing a combination of data values and None's, which correspond to
@@ -119,7 +170,7 @@ class GraphTimeline(Timeline):
         Returns:
             list: The resulting list of data values or None
         """
-        return list(map(callback, self._raw_times))
+        return list(map(callback, self._requested_times))
 
     def get_final_times(self, change_dict: dict):
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
@@ -132,7 +183,9 @@ class GraphTimeline(Timeline):
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
-        return [change_dict[dt] if dt in change_dict else dt for dt in self._raw_times]
+        return [
+            change_dict[dt] if dt in change_dict else dt for dt in self._requested_times
+        ]
 
 
 class HiloTimeline(GraphTimeline):
@@ -142,49 +195,55 @@ class HiloTimeline(GraphTimeline):
     You must register the high/low tide times before calling build_plot or get_final_times.
     """
 
-    def __init__(self, start_date: date, end_date: date, time_zone: ZoneInfo):
+    def __init__(
+        self,
+        start_date: date,
+        end_date: date,
+        time_zone: ZoneInfo,
+        now: datetime = None,
+    ):
         """Constructor.
 
         Args:
             start_date (date): First day.
             end_date (date): Last day.
             time_zone (ZoneInfo): time zone data will be displayed in.
+            now (datetime): For testing only. Default is current time.
         """
         self._hilo_timeline = None
         self._start_has_data = False
         self._end_has_data = False
-        super().__init__(start_date, end_date, time_zone)
+        super().__init__(start_date, end_date, time_zone, now)
 
     def register_hilo_times(self, hilo_dts: list):
-        """Call this to alter the alter the timeline so it includes only these times, plus start and end times,
-        with no repeats. This must be called before build_plot or get_final_times.
+        """Call this to alter the timeline so it includes only these times, plus start and end times,
+        with no repeats. This must be called before build_plot or get_final_times. Times not between
+        the start and end times are ignored. Any duplicates are silently removed.
 
         Args:
             - hilo_dts (list): datetimes which correspond with a high or low tide, either
-              observed or predicted. All times must be between the start and end times, inclusive.
-              Any duplicates are silently removed.
+              observed or predicted.
 
         Raises:
             ValueError: if any times are outside the timeline start/end times.
         """
         # We'll need to know if the start and end times have data, to determine whether we include them
         # in the final plot.
-        self._start_has_data = hilo_dts is not None and self.start_dt in hilo_dts
-        self._end_has_data = hilo_dts is not None and self.end_dt in hilo_dts
+
+        if hilo_dts is None:
+            raise ValueError("hilo_dts cannot be null")
+
+        self._start_has_data = self.start_dt in hilo_dts
+        self._end_has_data = self.end_dt in hilo_dts
+        # putting into a set, so duplicates are removed
         self._hilo_timeline = list(
             set(
                 [self.start_dt]
-                + (hilo_dts if hilo_dts is not None else [])
+                + list(filter(lambda dt: self.within(dt), hilo_dts))
                 + [self.end_dt]
             )
         )
         self._hilo_timeline.sort()
-
-        if (
-            min(self._hilo_timeline) < self.start_dt
-            or max(self._hilo_timeline) > self.end_dt
-        ):
-            raise ValueError("All dts must be within the timeline start and end")
 
     def build_plot(self, callback) -> list:
         """Using the caller's callback function, build an array of data values or None's -- which

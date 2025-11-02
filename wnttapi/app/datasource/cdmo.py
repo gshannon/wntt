@@ -46,8 +46,8 @@ def get_recorded_tides(timeline: Timeline, **kwargs) -> dict:
 
     Args:
         timeline (Timeline): the timeline of datetimes to fetch data for
-        station (str, optional): The station code. Defaults to "welinwq".
-        param (str, optional): Parameter name. Defaults to "Level".
+        **kwargs: Should contain water_station & noaa_station_id. Needs to be kwargs
+          so this method can be called in parallel.
 
     Returns:
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
@@ -71,11 +71,18 @@ def get_recorded_tides(timeline: Timeline, **kwargs) -> dict:
 def get_recorded_wind_data(timeline: Timeline, **kwargs) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
+
+    Args:
+        timeline (Timeline): the timeline of datetimes to fetch data for
+        **kwargs: Should contain weather_station. Needs to be kwargs so this method can be called in parallel.
+
+    Returns:
+        dense dict of {dt: {speed, gust, dir, dir_str}}
     """
 
     weather_station = kwargs.pop("weather_station")
 
-    wind_dict = {}  # {dt: {speed, gust, dir, dir_str}}
+    wind_dict = {}
 
     # If timeline is all in the future, don't bother.
     if timeline.is_all_future():
@@ -156,8 +163,9 @@ def get_cdmo_xml(timeline: Timeline, station: str, param: str) -> dict:
     - param: the CDMO param code
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
+    # Note we add padding before and after to help determine highs/lows when they are near the boundaries.
     req_start_date, req_end_date = compute_cdmo_request_dates(
-        timeline.start_dt, timeline.end_dt
+        timeline.get_min_with_padding(), timeline.get_max_with_padding()
     )
 
     # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=get_transport())
@@ -196,6 +204,10 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
     if xml is None or len(xml) == 0:
         return datadict
 
+    # We need to pull data for the padded timeline, for hi/lo functionality, not just
+    # display times. No sense looking for future, these are observations.
+    padded_timeline = timeline.get_all_past()
+
     root = ElTree.fromstring(xml)  # ElementTree.Element
     text_error_check(root.find(".//data"))
     records = skipped = nodata = 0
@@ -214,7 +226,7 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
         # Now convert to requested tzone, so DST is handled properly
         dt_in_local = in_utc.astimezone(timeline.time_zone)
         # Since we query more data than we need, only save the data that is in the requested timeline.
-        if dt_in_local not in timeline.get_all_past_raw():
+        if dt_in_local not in padded_timeline:
             skipped += 1
             continue
         data_str = reading.find(f"./{param}").text
@@ -316,6 +328,8 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     if len(obs_dict) == 0:
         return hilomap  # nothing to do
 
+    padded_timeline = timeline.get_all_past()
+
     highest = max(obs_dict.values())
     lowest = min(obs_dict.values())
     if highest - lowest < MIN_TIDAL_RANGE:
@@ -333,7 +347,7 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
     arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
 
     cur_arc = None
-    for dt in timeline.get_all_past_raw():
+    for dt in padded_timeline:
         val = obs_dict.get(dt, None)
         if val is not None:
             position = HIGH_ARC if val > midtide else LOW_ARC
@@ -371,7 +385,7 @@ def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
         arc_timeline = list(
             filter(
                 lambda dt: min(datadict) <= dt <= max(datadict),
-                timeline.get_all_past_raw(),
+                padded_timeline,
             )
         )
         sparse_vals = [datadict.get(dt, None) for dt in arc_timeline]
@@ -434,6 +448,7 @@ def make_navd88_level_converter(noaa_station_id: str):
 def handle_navd88_level(level_str: str, local_dt: datetime, noaa_station_id: str):
     """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
     if level_str is None or len(level_str.strip()) == 0:
+        logger.warning(f"skipping [{level_str}]")
         return None
     try:
         read_level = float(level_str)

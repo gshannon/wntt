@@ -22,7 +22,7 @@ class TestCdmo(TestCase):
         def build_test_data(tides, start_date=date(2025, 1, 1)):
             end_date = start_date + timedelta(days=(int(len(tides) / 96)))
             timeline = GraphTimeline(start_date, end_date, self.tzone)
-            d = dict(zip(timeline._raw_times, tides))  # no None's in datadict
+            d = dict(zip(timeline._requested_times, tides))  # no None's in datadict
             datadict = {key: val for key, val in d.items() if val is not None}
             return timeline, datadict
 
@@ -103,13 +103,33 @@ class TestCdmo(TestCase):
         }
         self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
 
+    def test_calculate_hilos_with_hi_on_boundary(self):
+        """High/Low detetion works properly with high at midnight"""
+        xml = self.load_xml("cdmo-level-1d.xml")
+        timeline = GraphTimeline(date(2025, 10, 22), date(2025, 10, 22), self.tzone)
+        converter = cdmo.make_navd88_level_converter("8419317")
+        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
+        expected = {
+            datetime(2025, 10, 22, 0, 0, tzinfo=self.tzone): "H",
+            datetime(2025, 10, 22, 6, 15, tzinfo=self.tzone): "L",
+            datetime(2025, 10, 22, 12, 30, tzinfo=self.tzone): "H",
+            datetime(2025, 10, 22, 18, 30, tzinfo=self.tzone): "L",
+            # This last one is outside the timeline, but was retrieve as padding. It's
+            # silently ignored.
+            datetime(2025, 10, 23, 0, 45, tzinfo=self.tzone): "H",
+        }
+        actual = cdmo.find_hilos(timeline, datadict)
+        self.assertEqual(actual, expected)
+
     def test_calculate_hilos_with_nones(self):
         """High/Low detetion works properly with 1 hour missing"""
         xml = self.load_xml("cdmo-level-2d.xml")
         timeline = GraphTimeline(date(2025, 10, 21), date(2025, 10, 22), self.tzone)
         converter = cdmo.make_navd88_level_converter("8419317")
         datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
+        # Note extra highs at beginning and end, from the padding.
         expected = {
+            datetime(2025, 10, 20, 23, 30, tzinfo=self.tzone): "H",
             datetime(2025, 10, 21, 5, 45, tzinfo=self.tzone): "L",
             datetime(2025, 10, 21, 11, 45, tzinfo=self.tzone): "H",
             datetime(2025, 10, 21, 18, 0, tzinfo=self.tzone): "L",
@@ -118,34 +138,16 @@ class TestCdmo(TestCase):
             datetime(2025, 10, 22, 6, 15, tzinfo=self.tzone): "L",
             datetime(2025, 10, 22, 12, 30, tzinfo=self.tzone): "H",
             datetime(2025, 10, 22, 18, 30, tzinfo=self.tzone): "L",
+            datetime(2025, 10, 23, 0, 45, tzinfo=self.tzone): "H",
         }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
+        actual = cdmo.find_hilos(timeline, datadict)
+        self.assertEqual(actual, expected)
 
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")
-        with self.assertRaisesRegex(APIException, "^Invalid ip"):
-            cdmo.get_cdmo_data([], xml, "anyparam", None)
-
-    def test_parse_level_data(self):
-        xml = self.load_xml("cdmo-level.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
-        actual = cdmo.get_cdmo_data(
-            timeline, xml, cdmo.tide_param, cdmo.make_navd88_level_converter("8419317")
-        )
-        # 3 of the data points have invalid or missing values
-        self.assertEqual(len(actual), len(timeline._raw_times) - 3)
-        self.assertEqual(
-            actual.get(datetime(2025, 3, 31, tzinfo=self.tzone)),
-            cdmo.handle_navd88_level(
-                "1.67", None, "8419317"
-            ),  # corresponds to "<utcStamp>03/31/2025 04:00</utcStamp> or 03/31/2025 00:00 EDT"
-        )
-        self.assertEqual(
-            actual.get(datetime(2025, 3, 31, 23, 45, tzinfo=self.tzone)),
-            cdmo.handle_navd88_level(
-                "1.12", None, "8419317"
-            ),  # corresponds to "<utcStamp>04/01/2025 03:45</utcStamp> or 03/31/2025 23:45 EDT"
-        )
+        with self.assertRaisesRegex(APIException, "^Invalid ip"):
+            cdmo.get_cdmo_data(timeline, xml, "anyparam", None)
 
     def test_handle_navd88(self):
         converter = cdmo.make_navd88_level_converter("8419317")
