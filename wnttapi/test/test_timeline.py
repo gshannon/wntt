@@ -20,49 +20,61 @@ class TestGraphTimeline(TestCase):
         start_date = end_date = date(2024, 3, 1)
 
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(len(timeline._raw_times), normal_count)
+        self.assertEqual(len(timeline._requested_times), normal_count)
         self.assertEqual(timeline.start_dt, datetime(2024, 3, 1, 0, tzinfo=zone))
         self.assertEqual(timeline.end_dt, datetime(2024, 3, 2, 0, tzinfo=zone))
 
         # Start of DST, skips 2AM (4 elements)
         start_date = end_date = spring_date
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length_raw(), normal_count - 4)
+        self.assertEqual(timeline.length_requested(), normal_count - 4)
 
         # End of DST, repeats 1AM (should have 4 extra elements)
         start_date = end_date = fall_date
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length_raw(), normal_count + 4)
-        self.assertEqual(timeline._raw_times[0].day, timeline._raw_times[-2].day)
-        self.assertNotEqual(timeline._raw_times[0].day, timeline._raw_times[-1].day)
+        self.assertEqual(timeline.length_requested(), normal_count + 4)
+        self.assertEqual(
+            timeline._requested_times[0].day, timeline._requested_times[-2].day
+        )
+        self.assertNotEqual(
+            timeline._requested_times[0].day, timeline._requested_times[-1].day
+        )
 
         bad_time_count = 0
-        for dt in timeline._raw_times:
+        for dt in timeline._requested_times:
             if dt.minute not in (0, 15, 30, 45):
                 bad_time_count += 1
         self.assertEqual(bad_time_count, 0)
 
-    def test_finds_past_dts(self):
+    def test_identifies_past_dts(self):
         zone = tz.eastern
         start_date = date(2025, 7, 15)
         end_date = date(2025, 7, 16)
 
-        timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(timeline.length_raw(), (96 * 2) + 1)
+        # some in past, some in future
+        timeline = GraphTimeline(
+            start_date, end_date, zone, datetime(2025, 7, 16, 1, 7, tzinfo=zone)
+        )
+        past = timeline.get_all_past()
+        self.assertEqual(
+            len(past), 96 + 5 + timeline._padding_points
+        )  # full day (96) + 1 hour (4) + 01:00 (1) + pre-timeline padding
 
-        timeline.now = datetime(2025, 7, 16, 1, 7, tzinfo=zone)
-        past = timeline.get_all_past_raw()
-        self.assertEqual(len(past), 96 + 5)  # full day (96) + 1 hour (4) + 01:00 (1)
-
-        # force them all in the future
-        timeline.now = datetime(2025, 7, 15, 0, 0, tzinfo=zone)
-        past = timeline.get_all_past_raw()
+        # all in the future
+        timeline = GraphTimeline(
+            start_date, end_date, zone, datetime(2025, 7, 14, tzinfo=zone)
+        )
+        past = timeline.get_all_past()
         self.assertEqual(len(past), 0)
 
-        # force all in the past
-        timeline.now = datetime(2025, 7, 17, 5, 23, tzinfo=zone)
-        past = timeline.get_all_past_raw()
-        self.assertEqual(len(past), timeline.length_raw())
+        # all in the past
+        timeline = GraphTimeline(
+            start_date, end_date, zone, datetime(2025, 7, 17, 4, 23, tzinfo=zone)
+        )
+        past = timeline.get_all_past()
+        self.assertEqual(
+            len(past), timeline.length_requested() + (timeline._padding_points * 2)
+        )
 
     def test_graph_final_times(self):
         # GraphTimeline correctly substitutes corrected times in the timeline
@@ -74,18 +86,18 @@ class TestGraphTimeline(TestCase):
         real_time_1 = datetime(2025, 8, 5, 7, 51, tzinfo=zone)
         original_time_2 = datetime(2025, 8, 5, 15, 30, tzinfo=zone)
         real_time_2 = datetime(2025, 8, 5, 15, 26, tzinfo=zone)
-        self.assertTrue(original_time_1 in timeline._raw_times)
-        self.assertTrue(real_time_1 not in timeline._raw_times)
-        self.assertTrue(original_time_2 in timeline._raw_times)
-        self.assertTrue(real_time_2 not in timeline._raw_times)
+        self.assertTrue(original_time_1 in timeline._requested_times)
+        self.assertTrue(real_time_1 not in timeline._requested_times)
+        self.assertTrue(original_time_2 in timeline._requested_times)
+        self.assertTrue(real_time_2 not in timeline._requested_times)
 
         corrections = {
             original_time_1: real_time_1,
             original_time_2: real_time_2,
         }
         final = timeline.get_final_times(corrections)
-        self.assertEqual(timeline.length_raw(), len(final))
-        self.assertNotEqual(final, timeline._raw_times)
+        self.assertEqual(timeline.length_requested(), len(final))
+        self.assertNotEqual(final, timeline._requested_times)
         self.assertTrue(original_time_1 not in final)
         self.assertTrue(real_time_1 in final)
         self.assertTrue(original_time_2 not in final)
@@ -99,12 +111,12 @@ class TestGraphTimeline(TestCase):
 
         data = {}
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(timeline.length_raw(), len(plot))
+        self.assertEqual(timeline.length_requested(), len(plot))
         self.assertEqual(plot, [None] * len(plot))
 
         data = {datetime(2025, 9, 1, 3, 15, tzinfo=zone): 12.51}
         plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(timeline.length_raw(), len(plot))
+        self.assertEqual(timeline.length_requested(), len(plot))
         self.assertTrue(12.51 in plot)
 
     def test_add_date_to_timeline(self):
@@ -113,11 +125,11 @@ class TestGraphTimeline(TestCase):
         end_date = date(2025, 7, 15)
 
         timeline = GraphTimeline(start_date, end_date, zone)
-        len1 = timeline.length_raw()
+        len1 = timeline.length_requested()
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
         timeline.add_time(adder)
-        self.assertEqual(timeline.length_raw(), len1 + 1)
-        self.assertTrue(timeline.contains_raw(adder))
+        self.assertEqual(timeline.length_requested(), len1 + 1)
+        self.assertTrue(timeline.within(adder))
 
 
 class TestHiloTimeline(TestCase):
@@ -162,28 +174,13 @@ class TestHiloTimeline(TestCase):
         self.assertEqual(wind_dir_plot, [None, 325, None, None, None, None])
         self.assertEqual(wind_dir_hover, [None, "NW", None, None, None, None])
 
-    def test_hilo_past_with_data(self):
-        # HiloTimeline supports storing subset of timeline which must be from the past
-        zone = tz.pacific
-        start_date = date(2025, 8, 16)
-        end_date = date(2025, 8, 20)
-        timeline = HiloTimeline(start_date, end_date, zone)
-        timeline.now = datetime(2025, 8, 18, 0, 0, tzinfo=zone)
-        dt1 = datetime(2025, 8, 15, 23, 45, tzinfo=zone)
-        dt2 = datetime(2025, 8, 16, 14, 45, tzinfo=zone)
-        dt3 = datetime(2025, 8, 16, 22, 30, tzinfo=zone)
-        dt4 = datetime(2025, 8, 19, 4, 0, tzinfo=zone)
-
-        with self.assertRaisesRegex(ValueError, "within the timeline"):
-            timeline.register_hilo_times([dt1, dt2, dt3, dt4])
-
     def test_hilo_plot_with_boundary_data(self):
         zone = tz.hawaii
         start_date = date(2025, 9, 1)
         end_date = date(2025, 9, 1)
-        timeline = HiloTimeline(start_date, end_date, zone)
-        timeline.now = datetime(2025, 8, 30, 0, 0, tzinfo=zone)
-        timeline.register_hilo_times(None)
+        timeline = HiloTimeline(
+            start_date, end_date, zone, datetime(2025, 8, 30, 0, 0, tzinfo=zone)
+        )
 
         dt1 = datetime(2025, 9, 1, 0, tzinfo=zone)
         dt2 = datetime(2025, 9, 1, 3, 15, tzinfo=zone)
@@ -199,8 +196,8 @@ class TestHiloTimeline(TestCase):
         end_date = date(2025, 7, 15)
 
         timeline = GraphTimeline(start_date, end_date, zone)
-        len1 = timeline.length_raw()
+        len1 = timeline.length_requested()
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
         timeline.add_time(adder)
-        self.assertEqual(timeline.length_raw(), len1 + 1)
-        self.assertTrue(timeline.contains_raw(adder))
+        self.assertEqual(timeline.length_requested(), len1 + 1)
+        self.assertTrue(timeline.within(adder))

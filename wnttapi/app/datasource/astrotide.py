@@ -103,7 +103,7 @@ def pred15_json_to_dict(
     for pred in pred_json:
         dts = pred["t"]
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
-        if timeline.contains_raw(dt):
+        if timeline.within(dt):
             val = pred["v"]
             reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(
                 float(val), noaa_station_id

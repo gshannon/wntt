@@ -34,19 +34,19 @@ class TestAstro(TestCase):
         preds_dict = astro.pred15_json_to_dict(contents, tline, station)
         self.assertEqual(len(preds_dict), 4)
         self.assertEqual(
-            preds_dict[tline._raw_times[0]],
+            preds_dict[tline._requested_times[0]],
             util.navd88_feet_to_mllw_feet(-3.624, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[1]],
+            preds_dict[tline._requested_times[1]],
             util.navd88_feet_to_mllw_feet(-3.621, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[2]],
+            preds_dict[tline._requested_times[2]],
             util.navd88_feet_to_mllw_feet(-3.564, station),
         )
         self.assertEqual(
-            preds_dict[tline._raw_times[3]],
+            preds_dict[tline._requested_times[3]],
             util.navd88_feet_to_mllw_feet(-3.452, station),
         )
 
