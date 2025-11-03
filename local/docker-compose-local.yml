@@ -4,6 +4,8 @@ services:
     app:
         container_name: app-c
         image: wnttapp:arm
+        environment:
+            VITE_GEOCODE_KEY: ${VITE_GEOCODE_KEY}
         ports:
             # Must be identical for dev, else importing local images fails - vite bug?
             - 3001:3001

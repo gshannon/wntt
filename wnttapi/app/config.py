@@ -1,6 +1,8 @@
 import logging
 import os
-from datetime import date, datetime
+import json
+from datetime import date
+from django.conf import settings
 
 from app import util
 from app.datasource import astrotide
@@ -38,6 +40,25 @@ _navd88_to_mllw = {
     "8419317": 5.14,
     "8658163": 2.75,
 }
+
+
+def get_version() -> str:
+    """Read the version json file which should look this: {"version":"3.04"}
+
+    Raises:
+        RuntimeError: if path cannot be found or json is invalid
+
+    Returns:
+        str: the version string
+    """
+    try:
+        path = os.path.join(settings.BASE_DIR, "version.json")
+        contents = util.read_file(path)
+        parsed = json.loads(contents)
+        return parsed["version"]
+    except Exception as e:
+        logger.error(f"Could not read or parse {path}", exc_info=e)
+        raise RuntimeError("Could not determine release version")
 
 
 def get_supported_years() -> list:

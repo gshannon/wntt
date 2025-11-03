@@ -2,13 +2,15 @@ import hashlib
 import logging
 from datetime import datetime
 
-from rest_framework.views import APIView, Response
 from rest_framework.exceptions import NotAcceptable
+from rest_framework.views import APIView, Response
 
+from . import config as cfg
 from . import graphutil as gr
 from . import swmp
 
 logger = logging.getLogger(__name__)
+version = cfg.get_version()
 
 
 # Try to get a param from the request. If not there, raise
@@ -21,12 +23,22 @@ def get_param(data, param):
     raise NotAcceptable()
 
 
+# Verify that caller's release version matches ours.  If not raise a NotAcceptable
+# which app should interpret as version out of date.
+def verify_version(caller_version):
+    if caller_version != version:
+        logger.warning(f"Caller version {caller_version} does not match {version}")
+        raise NotAcceptable()
+
+
 class LatestInfoView(APIView):
     def post(self, request, format=None):
         logger.info(f"LatestInfoView: {obfuscate(request.data)}")
         water_station = get_param(request.data, "water_station")
         weather_station = get_param(request.data, "weather_station")
         noaa_station_id = get_param(request.data, "noaa_station_id")
+        verify_version(get_param(request.data, "app_version"))
+
         info = swmp.get_latest_conditions(
             water_station, weather_station, noaa_station_id
         )
@@ -48,6 +60,7 @@ class CreateGraphView(APIView):
         weather_station = get_param(request.data, "weather_station")
         noaa_station_id = get_param(request.data, "noaa_station_id")
         hilo_mode = get_param(request.data, "hilo_mode")
+        verify_version(get_param(request.data, "app_version"))
 
         # Gather all data needed for the graph and pass it back here
         graph_data = gr.get_graph_data(
