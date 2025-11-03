@@ -211,15 +211,8 @@ export default function Graph() {
                     station={ctx.station}
                     errorOrLoading={error || loading}
                 />
-                <Col xs={10} className='px-0'>
-                    <Chart
-                        loading={loading}
-                        error={error}
-                        forceUpdate={forceUpdate}
-                        hiloMode={isHiloMode}
-                        data={data}
-                        errorOrLoading={error || loading}
-                    />
+                <Col className='col-10 px-0'>
+                    <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
                 </Col>
                 <JumpDates
                     hoverText={`Next ${numDaysText}`}
@@ -229,6 +222,7 @@ export default function Graph() {
                     start={startCtl.start}
                     end={endCtl.end}
                     station={ctx.station}
+                    errorOrLoading={error || loading}
                 />
             </Row>
         </>

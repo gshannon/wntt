@@ -2,9 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { ClientIpUrl } from './utils'
 
 export default function useClientIp() {
-    const oneMinute = 60_000
-    const oneHour = oneMinute * 60
-
     const { data: clientIp, error: ipError } = useQuery({
         queryKey: ['clientip'],
         queryFn: async () => {
@@ -12,9 +9,8 @@ export default function useClientIp() {
             const data = await resp.json()
             return data.ip
         },
-        // We don't need this to run very often -- it's just informational for now.
-        staleTime: oneHour,
-        gcTime: oneHour,
+        // This could only change if they switch VPNs maybe
+        staleTime: 'static',
     })
 
     if (ipError) {

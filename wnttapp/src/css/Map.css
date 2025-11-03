@@ -51,3 +51,7 @@
     background: transparent !important;
     border: none !important;
 }
+
+.my-icon {
+    font-size: 2rem;
+}
