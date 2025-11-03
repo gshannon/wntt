@@ -22,20 +22,12 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
-    // Version detection only happens on the graph page, so if we're upgrading we return there instead of home.
-    const miscDaily = storage.getGlobalDailyStorage()
-    const upgraded = miscDaily.upgraded ?? false
-    if (upgraded) {
-        console.log(`Auto upgrade detected, will start at graph page`)
-        storage.setGlobalDailyStorage({ upgraded: false }) // always reset the upgraded flag
-    }
-
     const abortControllerRef = useRef(null)
 
     /////////////////////////////////////////////
     // Set up state.
     const [special, setSpecial] = useState(import.meta.env.VITE_SPECIAL ?? '0' === '1') // temporary dev hack
-    const [curPage, setCurPage] = useState(upgraded ? Page.Graph : Page.Home)
+    const [curPage, setCurPage] = useState(Page.Home)
     const [returnPage, setReturnPage] = useState(null)
 
     // Initial station will be the one stored, or Wells by default.

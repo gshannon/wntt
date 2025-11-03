@@ -8,6 +8,7 @@ services:
         container_name: app-c-staging
         environment:
             NODE_ENV: production
+            VITE_GEOCODE_KEY: ${VITE_GEOCODE_KEY}
         ports:
             - 82:8082
         restart: unless-stopped

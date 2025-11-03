@@ -14,34 +14,31 @@ features are:
 
 Here are the configuration files needed during the build/deploy process.
 
+### .buildnum-dev, .buildnum-prod
+
+    They contain the build number. Update them before building for release.  E.g. 2.03.
+
+    - Its contents are passed to "docker build" using --build-arg, so Dockerfile can add VITE_BUILD_NUM to the React environment. wnttapp passes it as a parameter to all calls to wnttapi as a version check.
+
 ### local/.env, remote/config/.env
 
-    Contains security and configuration values used by wnttapi. Docker compose will read these and add them to the Django runtime environment.  Format is KEY=VALUE with no quotes.
+    Contains security and configuration values used by wnttapi. The .env file should be placed in the same directory as the Docker compose file, and compose will read these and add them to the Django runtime environment.  Format is KEY=VALUE with no quotes.
 
--   DJANGO_KEY : A unique key used by Django.
--   CDMO_USER : Username for CDMO API access
--   CDMO_PASSWORD : Password for CDMO API access
+    - DJANGO_KEY : A unique key used by Django
+    - CDMO_USER : Username for CDMO API access
+    - CDMO_PASSWORD : Password for CDMO API access
+    - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
 
 ### wnttapp/.env.development, wnttapp/.env.production
 
-    Contains security and configuration values used by Vite/React for wnttapp. Vite uses the correct file based on the NODE_ENV environment setting in docker compose file: either "development" (default) or "production". It then exposes these values to the runtime environment. Format is KEY=VALUE with no quotes.
+    Contains non-secure configuration values used by React for wnttapp. Vite uses the correct file based on the NODE_ENV environment setting in docker compose file: either "development" (default) or "production". It then exposes these values to the runtime environment. Format is KEY=VALUE with no quotes.
 
     - VITE_API_GRAPH_URL : Url used by react app to get graph data from wnttapi service. Initially http://localhost:8000/graph/
     - VITE_API_LATEST_URL : Url used by react app to get latest weather data from wnttapi service. Initially http://localhost:8000/latest/
-    - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
-    - VITE_MAX_GRAPH_QUERIES_IN_CACHE : Max number of graph queries allowed to be held in query cache. Initially 3. Higher values will increase memory pressure on browser.
 
-### wnttapp/public/signature.json
+### wnttapi/version.json
 
-    E.g. {"version":"1.32"}
-    Used to trigger wnttapp to reload when the version is out of date, when loading graph data.
-
-### wnttapp/.buildnum-dev, wnttapp/.buildnum-prod
-
-Contains a string, e.g. "1.32", which is used as follows:
-
--   It is passed to "docker build" as a --build-arg when building wnttapp, so Dockerfile can add VITE_BUILD_NUM to the React environment. The app can then display it on the About page.
--   It is used to populate the signature.json file (see above).
+    E.g. {"version":"1.32"} wnttapi reads this so it knows what version it is. It will reject any calls from wnttapp with a version that doesn not match.
 
 ## Building
 
