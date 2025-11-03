@@ -26,7 +26,6 @@ const stationIcon = (emoji) => {
     return L.divIcon({
         className: 'my-icon',
         html: emoji,
-        iconSize: [16, 16],
         iconAnchor: [8, 16],
     })
 }

@@ -411,7 +411,7 @@ def validate_dates(start: date, end: date):
         or end < earliest_date
     ):
         logger.error(
-            f"Invalidate range: {start} - {end} is not between {earliest_date} - {latest_date}"
+            f"Invalid range: {start} - {end} is not between {earliest_date} - {latest_date}"
         )
         # This will return a code 400
         raise ValidationError(
