@@ -8,7 +8,6 @@ services:
         container_name: app-c
         environment:
             NODE_ENV: production
-            VITE_GEOCODE_KEY: ${VITE_GEOCODE_KEY}
         ports:
             # host port : container port
             - 80:80
