@@ -7,7 +7,7 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
     const { clientIp } = useClientIp()
 
     // The main graph data api call.
-    const { isPending, data, error } = useQuery({
+    return useQuery({
         retry: false,
         queryKey: buildCacheKey(station.id, startDate, endDate, hiloMode),
         queryFn: async () => {
@@ -27,6 +27,4 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
         staleTime: 10_000,
         gcTime: 10_000,
     })
-
-    return { isPending, data, error }
 }

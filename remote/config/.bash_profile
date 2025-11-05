@@ -29,10 +29,10 @@ PATH=$PATH:/home/tides/bin
 
 alias d="docker"
 alias di="docker images"
-alias up="docker compose  -f ~/.docker-compose.yml up -d"
-alias down="docker compose  -f ~/.docker-compose.yml down"
-alias startapp="docker compose -f ~/.docker-compose.yml start app"
-alias stopapp="docker compose -f ~/.docker-compose.yml stop app"
+alias up="docker compose  -f ~/docker-compose.yml up -d"
+alias down="docker compose  -f ~/docker-compose.yml down"
+alias startapp="docker compose -f ~/docker-compose.yml start app"
+alias stopapp="docker compose -f ~/docker-compose.yml stop app"
 # tail logs
 alias logapp="docker logs -f app-c"
 alias logapi="docker logs -f api-c"
