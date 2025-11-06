@@ -21,6 +21,7 @@ const MinZoom = 8
 const MaxZoom = 18
 const WaterStationEmoji = '\u{1F537}'
 const WeatherStationEmoji = '\u{1F536}'
+const NoaaStationEmoji = '\u{1F53B}'
 
 const stationIcon = (emoji) => {
     return L.divIcon({
@@ -121,9 +122,15 @@ export default function Map() {
         return <>-</>
     }
 
-    const elevationTooltipContent = () => {
+    const stationMarker = (loc, symbol, title, name, id) => {
         return (
-            <>{ctx.markerElevationNav ? ctx.station.navd88ToMllw(ctx.markerElevationNav) : '-'}</>
+            <Marker draggable={false} position={loc} icon={stationIcon(symbol)}>
+                <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
+                    {title}
+                    <br />
+                    {name} ({id})
+                </LeafletTooltip>
+            </Marker>
         )
     }
 
@@ -240,25 +247,27 @@ export default function Map() {
                     <ChangeView center={ctx.mapCenter} zoom={ctx.zoom} />
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                     <MapClickHandler />
-                    <Marker
-                        draggable={false}
-                        position={ctx.station.swmpLocation}
-                        icon={stationIcon(WaterStationEmoji)}>
-                        <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
-                            Water Quality Station:
-                            <br />
-                            {ctx.station.waterStationName} ({ctx.station.id})
-                        </LeafletTooltip>
-                    </Marker>
-                    <Marker
-                        draggable={false}
-                        position={ctx.station.weatherLocation}
-                        icon={stationIcon(WeatherStationEmoji)}>
-                        <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
-                            Meterological Station:
-                            <br /> {ctx.station.weatherStationName} ({ctx.station.weatherStationId})
-                        </LeafletTooltip>
-                    </Marker>
+                    {stationMarker(
+                        ctx.station.swmpLocation,
+                        WaterStationEmoji,
+                        'Water Quality Station:',
+                        ctx.station.waterStationName,
+                        ctx.station.id
+                    )}
+                    {stationMarker(
+                        ctx.station.weatherLocation,
+                        WeatherStationEmoji,
+                        'Meteorological Station:',
+                        ctx.station.weatherStationName,
+                        ctx.station.weatherStationId
+                    )}
+                    {stationMarker(
+                        ctx.station.noaaStationLocation,
+                        NoaaStationEmoji,
+                        'NOAA Station:',
+                        ctx.station.noaaStationName,
+                        ctx.station.noaaStationId
+                    )}
                     {ctx.markerLocation && (
                         <Marker
                             draggable={true}
@@ -271,7 +280,10 @@ export default function Map() {
                                 opacity={0.75}
                                 direction={'right'}
                                 offset={[30, -27]}>
-                                Custom Elevation: {elevationTooltipContent()}
+                                Custom Elevation:{' '}
+                                {ctx.markerElevationNav
+                                    ? ctx.station.navd88ToMllw(ctx.markerElevationNav)
+                                    : '-'}
                             </LeafletTooltip>
                         </Marker>
                     )}
