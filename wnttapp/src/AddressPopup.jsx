@@ -15,8 +15,7 @@ export default function AddressPopup({ onClose, setAddressMarker, station }) {
 
     const onQueryFinished = useEffectEvent(() => {
         if (!isPending) {
-            // This is the only way I could get useQuery to NOT use cache. invalidateQueries
-            // does not work, it just forces a refetch and we get an endless loop.
+            // Force useQuery to not use cache for future queries.
             queryClient.removeQueries({ queryKey: ['geocode'] })
         }
     })

@@ -16,6 +16,7 @@ export default class Station {
         mapBounds,
         swmpLocation,
         weatherLocation,
+        noaaStationLocation,
         recordTideNavd88,
         recordTideDate, // string YYYY/MM/DD
         minDateOverride = null, // string YYYY/MM/DD to override default
@@ -34,6 +35,7 @@ export default class Station {
         this.mapBounds = mapBounds
         this.swmpLocation = swmpLocation
         this.weatherLocation = weatherLocation
+        this.noaaStationLocation = noaaStationLocation
         this.recordTideNavd88 = recordTideNavd88
         this.recordTideDate = recordTideDate
         this.minDate = minDateOverride
