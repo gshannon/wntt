@@ -2,41 +2,37 @@ import { useQuery } from '@tanstack/react-query'
 import { GeocodeUrl } from './utils'
 import axios from 'axios'
 
-const isInBounds = (mapBounds, lat, lon) => {
-    const minLat = Math.min(mapBounds[0][0], mapBounds[1][0])
-    const minLon = Math.min(mapBounds[0][1], mapBounds[1][1])
-    const maxLat = Math.max(mapBounds[0][0], mapBounds[1][0])
-    const maxLon = Math.max(mapBounds[0][1], mapBounds[1][1])
-    return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon
-}
-
 export default function useGeocode(station, search) {
     const lookupValue = search + ' USA'
     const encoded = lookupValue.replace(/\s+/gi, '+')
     const url = GeocodeUrl + '/search?q=' + encoded + '&api_key=' + import.meta.env.VITE_GEOCODE_KEY
+    const subKey = search ?? 'X'
 
-    const { isPending, data, error } = useQuery({
+    const { isLoading, data, error } = useQuery({
         retry: false,
         enabled: !!search,
-        queryKey: ['geocode'],
+        queryKey: ['geocode', subKey],
         queryFn: async () => {
-            const res = await axios.get(url).then((res) => {
-                if (res.data !== undefined && res.data[0] !== undefined) {
-                    const lat = res.data[0].lat
-                    const lon = res.data[0].lon
-                    if (!isInBounds(station.mapBounds, lat, lon)) {
-                        throw new Error('That address does not appear to be in the local area')
+            const res = await axios
+                .get(url, { timeout: 30000 })
+                .then((res) => {
+                    return { lat: res.data[0]?.lat ?? null, lng: res.data[0]?.lon ?? null }
+                })
+                .catch((error) => {
+                    // It'll be canceled if user clicks another point before this finishes, so
+                    // that's not considered an error, and nothing to do.
+                    if (error.name === 'CanceledError') {
+                        console.log('CANCELED')
+                        return null
                     }
-                    return res.data[0]
-                } else {
-                    throw new Error('That appears to be an invalid address')
-                }
-            })
+                    console.log(`with [${subKey}]: `, error)
+                    throw error
+                })
             return res
         },
         staleTime: 0,
         cacheTime: 0,
         gcTime: 0,
     })
-    return { isPending, data, error }
+    return { isLoading, data, error }
 }
