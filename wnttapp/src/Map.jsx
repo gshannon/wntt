@@ -122,10 +122,44 @@ export default function Map() {
         return <>-</>
     }
 
-    const stationMarker = (loc, symbol, title, name, id) => {
+    // Intelligently place the station marker tooltips to reduce the chance of overlap.
+    const buildTooltipLocations = () => {
+        const offsets = {
+            top: [9, -10],
+            left: [-10, 5],
+            right: [10, -5],
+            bottom: [9, 30],
+        }
+        // These are the locations of the 3 station markers.
+        const locs = [
+            { key: 'wq', val: ctx.station.swmpLocation },
+            { key: 'noaa', val: ctx.station.noaaStationLocation },
+            { key: 'met', val: ctx.station.weatherLocation },
+        ]
+        // We sort them by latitude, high to low (would be low to high in southern hemisphere)
+        locs.sort((a, b) => b.val.lat - a.val.lat)
+        const data = {}
+        // Highest latitude gets tooltip on top.
+        data[locs[0].key] = { dir: 'top', offset: offsets.top }
+        // Middle latitude gets tooltip on right if its longitude is greater (eastward), else left
+        const startRight = locs[1].val.lng > locs[0].val.lng
+        data[locs[1].key] = startRight
+            ? { dir: 'right', offset: offsets.right }
+            : { dir: 'left', offset: offsets.left }
+        // Lowest latitude gets tooltop on bottom.
+        data[locs[2].key] = { dir: 'bottom', offset: offsets.bottom }
+        return data
+    }
+    const toolTipCfg = buildTooltipLocations()
+
+    const stationMarker = (key, loc, symbol, title, name, id) => {
         return (
             <Marker draggable={false} position={loc} icon={stationIcon(symbol)}>
-                <LeafletTooltip opacity={0.75} direction={'right'} offset={[10, -15]}>
+                <LeafletTooltip
+                    permanent
+                    opacity={0.65}
+                    direction={toolTipCfg[key]['dir']}
+                    offset={toolTipCfg[key]['offset']}>
                     {title}
                     <br />
                     {name} ({id})
@@ -248,6 +282,7 @@ export default function Map() {
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                     <MapClickHandler />
                     {stationMarker(
+                        'wq',
                         ctx.station.swmpLocation,
                         WaterStationEmoji,
                         'Water Quality Station:',
@@ -255,6 +290,7 @@ export default function Map() {
                         ctx.station.id
                     )}
                     {stationMarker(
+                        'met',
                         ctx.station.weatherLocation,
                         WeatherStationEmoji,
                         'Meteorological Station:',
@@ -262,6 +298,7 @@ export default function Map() {
                         ctx.station.weatherStationId
                     )}
                     {stationMarker(
+                        'noaa',
                         ctx.station.noaaStationLocation,
                         NoaaStationEmoji,
                         'NOAA Station:',
@@ -275,11 +312,7 @@ export default function Map() {
                             icon={RedPinIcon}
                             eventHandlers={markerEventHandlers}
                             ref={markerRef}>
-                            <LeafletTooltip
-                                permanent
-                                opacity={0.75}
-                                direction={'right'}
-                                offset={[30, -27]}>
+                            <LeafletTooltip opacity={0.75} direction={'right'} offset={[30, -27]}>
                                 Custom Elevation:{' '}
                                 {ctx.markerElevationNav
                                     ? ctx.station.navd88ToMllw(ctx.markerElevationNav)
