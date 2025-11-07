@@ -1,40 +1,57 @@
 import './css/AddressPopup.css'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useState, useEffect, useEffectEvent } from 'react'
 import Modal from 'react-bootstrap/Modal'
 import { Form } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
 import useGeocode from './useGeocode'
-import { useQueryClient } from '@tanstack/react-query'
+import * as mu from './mapUtils'
+import { apiErrorResponse } from './utils'
 
-export default function AddressPopup({ onClose, setAddressMarker, station }) {
-    const queryClient = useQueryClient()
-    const [addressValue, setAddressValue] = useState('')
+export default function AddressPopup({ setPendingMarkerLocation, onClose, station }) {
+    const [addressValue, setAddressValue] = useState('') // persist between renders
 
-    const { isPending, data, error } = useGeocode(station, addressValue)
+    const { isLoading, data: location, error } = useGeocode(station, addressValue)
 
-    const onQueryFinished = useEffectEvent(() => {
-        if (!isPending) {
-            // Force useQuery to not use cache for future queries.
-            queryClient.removeQueries({ queryKey: ['geocode'] })
+    let markerLocation = null
+    let errorMessage = ''
+
+    if (!isLoading) {
+        if (error) {
+            errorMessage = apiErrorResponse(error)
+        } else {
+            if (location?.lat && location?.lng) {
+                if (mu.isInBounds(station.mapBounds, location)) {
+                    markerLocation = {
+                        lat: Number(location.lat),
+                        lng: Number(location.lng),
+                    }
+                } else {
+                    console.log(`(${location.lat},${location.lng}) is  not in map bounds`)
+                    errorMessage = 'That address does not appear to be within the map bounds.'
+                }
+            } else if (addressValue && !error) {
+                console.log('No error, but no data so must be invalid address')
+                errorMessage = 'That appears to be an invalid address.'
+            }
         }
-    })
-
-    useEffect(() => {
-        onQueryFinished()
-    }, [error?.message]) // TODO: Not sure why this works
-
-    useEffect(() => {
-        if (data) {
-            setAddressMarker({ lat: Number(data.lat), lng: Number(data.lon) })
-            onClose()
-        }
-    }, [data, setAddressMarker, onClose])
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault()
         setAddressValue(e.currentTarget.addressLookup.value)
     }
+
+    const onLocationSet = useEffectEvent(() => {
+        setPendingMarkerLocation(markerLocation)
+        onClose()
+    })
+
+    useEffect(() => {
+        if (markerLocation?.lat && markerLocation?.lng) {
+            onLocationSet()
+        }
+    }, [markerLocation?.lat, markerLocation?.lng])
 
     return (
         <Modal show={true} onHide={onClose}>
@@ -44,10 +61,10 @@ export default function AddressPopup({ onClose, setAddressMarker, station }) {
             <Modal.Body className='address-body'>
                 <Form onSubmit={(e) => handleSubmit(e)}>
                     <Form.Group className='mb-3' controlId='addressLookup'>
-                        {isPending && !!addressValue ? (
+                        {isLoading ? (
                             <Spinner animation='border' variant='primary' />
                         ) : (
-                            <p className='text-white'>{error?.message}</p>
+                            <p className='text-white'>{errorMessage}</p>
                         )}
                         <Form.Control
                             name='addr'
@@ -61,10 +78,7 @@ export default function AddressPopup({ onClose, setAddressMarker, station }) {
                             Must be in the local area. Include city and state.
                         </Form.Text>
                     </Form.Group>
-                    <Button
-                        variant='custom-primary'
-                        type='submit'
-                        disabled={isPending && !!addressValue}>
+                    <Button variant='custom-primary' type='submit' disabled={isLoading}>
                         Search
                     </Button>
                 </Form>

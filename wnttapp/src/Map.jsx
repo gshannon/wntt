@@ -1,7 +1,6 @@
 import './css/Map.css'
-import { useMemo, useRef, useContext, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useContext, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
 import { Form } from 'react-bootstrap'
@@ -11,62 +10,68 @@ import { Col, Row } from 'react-bootstrap'
 import { RedPinIcon } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
-import { Page } from './utils'
+import { Page, apiErrorResponse } from './utils'
 import { AppContext } from './AppContext'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
 import { getData } from './tutorials/map'
+import * as mu from './mapUtils'
+import * as storage from './storage'
+import useElevationData from './useElevationData'
 
-const MinZoom = 8
-const MaxZoom = 18
 const WaterStationEmoji = '\u{1F537}'
 const WeatherStationEmoji = '\u{1F536}'
 const NoaaStationEmoji = '\u{1F53B}'
 
-const stationIcon = (emoji) => {
-    return L.divIcon({
-        className: 'my-icon',
-        html: emoji,
-        iconAnchor: [8, 16],
-    })
-}
-// console.log(WaterStationIcon)
-
 export default function Map() {
     const ctx = useContext(AppContext)
+
+    const stationOptions = mu.getStationOptions(ctx.station)
+
+    // This is used when user clicks on the map, while we look up the elevation.
+    const [pendingMarkerLocation, setPendingMarkerLocation] = useState(null)
+    const [markerLocation, setMarkerLocation] = useState(stationOptions.markerLocation)
+    const [markerElevationNav, setMarkerElevationNav] = useState(stationOptions.markerElevationNav)
+    const [mapType, setMapType] = useState(stationOptions.mapType)
+    const [mapCenter, setMapCenter] = useState(stationOptions.mapCenter)
+    const [zoom, setZoom] = useState(stationOptions.zoom)
 
     const [showAddressPopup, setShowAddressPopup] = useState(false)
     const [showTut, setShowTut] = useState(false)
     const markerRef = useRef(null)
 
+    const { isLoading, data, error: queryError } = useElevationData(pendingMarkerLocation)
+
+    if (data) {
+        setMarkerLocation(pendingMarkerLocation)
+        setPendingMarkerLocation(null)
+        setMarkerElevationNav(data)
+    }
+
     const addtoGraph = () => {
-        ctx.setCustomElevationNav(ctx.markerElevationNav)
+        ctx.setCustomElevationNav(markerElevationNav)
         ctx.gotoPage(Page.Graph) // start tracking elevation, goto graph
     }
 
-    const openMap = {
-        attrib: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    }
-    const satelliteMap = {
-        attrib: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    }
-    const mapTile = ctx.mapType === 'basic' ? openMap : satelliteMap
+    const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
 
-    const setAddressMarker = (latlng) => {
-        ctx.setMarkerLatLng(latlng)
-        ctx.setMarkerElevationNav(null) // the old elevation is invalid now
-        ctx.setMapCenter(latlng)
-    }
     const removeMarker = () => {
-        ctx.setMarkerLatLng(null)
-        ctx.setMarkerElevationNav(null)
         ctx.setCustomElevationNav(null)
+        setMarkerLocation(null)
+        setMarkerElevationNav(null)
+        setPendingMarkerLocation(null)
     }
 
-    const handleChange = (event) => {
-        ctx.setMapType(event.target.value)
+    const handleMapTypeChange = (event) => {
+        setMapType(event.target.value)
+    }
+
+    // Set the map marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
+    const setMarkerLatLng = (latlngStrs) => {
+        if (latlngStrs) {
+            const { lat, lng } = latlngStrs
+            setPendingMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
+        }
     }
 
     const markerEventHandlers = useMemo(
@@ -74,25 +79,23 @@ export default function Map() {
             dragend() {
                 const marker = markerRef.current
                 if (marker != null) {
-                    ctx.setMarkerLatLng(marker.getLatLng())
-                    ctx.setMarkerElevationNav(null) // the old elevation is invalid now
+                    setMarkerLatLng(marker.getLatLng())
                 }
             },
         }),
-        [ctx]
+        []
     )
 
     const MapClickHandler = () => {
         useMapEvents({
             click: (e) => {
-                ctx.setMarkerLatLng(e.latlng)
-                ctx.setMarkerElevationNav(null)
+                setMarkerLatLng(e.latlng)
             },
             zoomend: (e) => {
-                ctx.setZoom(e.target.getZoom())
+                setZoom(e.target.getZoom())
             },
             dragend: (e) => {
-                ctx.setMapCenter(e.target.getCenter())
+                setMapCenter(e.target.getCenter())
             },
         })
         return null
@@ -103,58 +106,39 @@ export default function Map() {
         setShowTut(false)
     }
 
-    // A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
-    // so when this child component is mounted it can reset the view settings to current values.
-    const ChangeView = () => {
-        useMap().setView(ctx.mapCenter, ctx.zoom)
-    }
-
     const elevationLabelContent = () => {
-        if (ctx.markerElevationNav) {
-            return <>{ctx.station.navd88ToMllw(ctx.markerElevationNav) + ' ft MLLW'}</>
-        }
-        if (ctx.markerElevationError) {
-            return <>Error, please try again later.</>
-        }
-        if (ctx.markerLocation) {
+        if (isLoading) {
             return <BarLoader loading={true} color={'green'} />
+        }
+        if (markerElevationNav) {
+            return <>{ctx.station.navd88ToMllw(markerElevationNav) + ' ft MLLW'}</>
         }
         return <>-</>
     }
 
-    // Intelligently place the station marker tooltips to reduce the chance of overlap.
-    const buildTooltipLocations = () => {
-        const offsets = {
-            top: [9, -10],
-            left: [-10, 5],
-            right: [10, -5],
-            bottom: [9, 30],
-        }
-        // These are the locations of the 3 station markers.
-        const locs = [
-            { key: 'wq', val: ctx.station.swmpLocation },
-            { key: 'noaa', val: ctx.station.noaaStationLocation },
-            { key: 'met', val: ctx.station.weatherLocation },
-        ]
-        // We sort them by latitude, high to low (would be low to high in southern hemisphere)
-        locs.sort((a, b) => b.val.lat - a.val.lat)
-        const data = {}
-        // Highest latitude gets tooltip on top.
-        data[locs[0].key] = { dir: 'top', offset: offsets.top }
-        // Middle latitude gets tooltip on right if its longitude is greater (eastward), else left
-        const startRight = locs[1].val.lng > locs[0].val.lng
-        data[locs[1].key] = startRight
-            ? { dir: 'right', offset: offsets.right }
-            : { dir: 'left', offset: offsets.left }
-        // Lowest latitude gets tooltop on bottom.
-        data[locs[2].key] = { dir: 'bottom', offset: offsets.bottom }
-        return data
-    }
-    const toolTipCfg = buildTooltipLocations()
+    // Keep the local storage of permanent station options in sync.
+    // We own all the values except customElevationNav, so we leave that alone.
+    const onValueChange = useEffectEvent(() => {
+        const curOptions = mu.getStationOptions(ctx.station)
+        storage.setStationPermanentStorage(ctx.station.id, {
+            ...curOptions,
+            markerLocation,
+            markerElevationNav,
+            mapCenter,
+            mapType,
+            zoom,
+        })
+    })
+
+    useEffect(() => {
+        onValueChange()
+    }, [markerLocation, markerElevationNav, mapCenter, mapType, zoom])
+
+    const toolTipCfg = mu.buildTooltipLocations(ctx.station)
 
     const stationMarker = (key, loc, symbol, title, name, id) => {
         return (
-            <Marker draggable={false} position={loc} icon={stationIcon(symbol)}>
+            <Marker draggable={false} position={loc} icon={mu.stationIcon(symbol)}>
                 <LeafletTooltip
                     permanent
                     opacity={0.65}
@@ -168,6 +152,25 @@ export default function Map() {
         )
     }
 
+    // A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
+    // so when this child component is mounted it can reset the view settings to current values.
+    const ChangeView = () => {
+        useMap().setView(mapCenter, zoom)
+    }
+
+    const ErrorSection = () => {
+        if (queryError) {
+            return (
+                <Row>
+                    <Col className='d-flex justify-content-center text-warning bg-dark'>
+                        {apiErrorResponse(queryError)}
+                    </Col>
+                </Row>
+            )
+        } else {
+            return <></>
+        }
+    }
     return (
         <Container>
             <Row className='py-2'>
@@ -175,11 +178,11 @@ export default function Map() {
                     <div className='loc-container'>
                         <div className='loc-label'>Latitude:</div>
                         <div className='loc-data nowrap'>
-                            {ctx.markerLocation ? ctx.markerLocation.lat.toFixed(6) + ' º' : '-'}
+                            {markerLocation ? markerLocation.lat.toFixed(6) + ' º' : '-'}
                         </div>
                         <div className='loc-label'>Longitude:</div>
                         <div className='loc-data nowrap'>
-                            {ctx.markerLocation ? ctx.markerLocation.lng.toFixed(6) + ' º' : '-'}
+                            {markerLocation ? markerLocation.lng.toFixed(6) + ' º' : '-'}
                         </div>
                         <div className='loc-label'>Elevation:</div>
                         <div className='loc-data'>{elevationLabelContent()}</div>
@@ -198,9 +201,9 @@ export default function Map() {
                                         className='mt-2 mb-0 mx-1'
                                         onClick={() => addtoGraph()}
                                         disabled={
-                                            !ctx.markerElevationNav ||
-                                            ctx.markerElevationNav === ctx.customElevationNav ||
-                                            ctx.markerElevationNav >
+                                            !markerElevationNav ||
+                                            markerElevationNav === ctx.customElevationNav ||
+                                            markerElevationNav >
                                                 ctx.station.maxCustomElevationNavd88()
                                         }>
                                         Add to Graph
@@ -214,7 +217,7 @@ export default function Map() {
                                         variant='custom-primary'
                                         className='mt-2 mb-0'
                                         onClick={() => removeMarker()}
-                                        disabled={!ctx.markerLocation}>
+                                        disabled={!markerLocation}>
                                         Remove Marker
                                     </Button>
                                 }></Overlay>
@@ -230,8 +233,8 @@ export default function Map() {
                                 type='radio'
                                 label='Basic'
                                 value='basic'
-                                checked={ctx.mapType === 'basic'}
-                                onChange={handleChange}
+                                checked={mapType === 'basic'}
+                                onChange={handleMapTypeChange}
                             />
                         </Col>
                         <Col className='col-6'>
@@ -240,8 +243,8 @@ export default function Map() {
                                 type='radio'
                                 label='Satellite'
                                 value='sat'
-                                checked={ctx.mapType === 'sat'}
-                                onChange={handleChange}
+                                checked={mapType === 'sat'}
+                                onChange={handleMapTypeChange}
                             />
                         </Col>
                     </Row>
@@ -270,15 +273,16 @@ export default function Map() {
                     </Row>
                 </Col>
             </Row>
+            <ErrorSection />
             <Row className='justify-content-center mt-1'>
                 <MapContainer
-                    center={ctx.mapCenter}
+                    center={mapCenter}
                     maxBounds={ctx.station.mapBounds}
-                    zoom={ctx.zoom}
-                    minZoom={MinZoom}
-                    maxZoom={MaxZoom}
+                    zoom={zoom}
+                    minZoom={mu.MinZoom}
+                    maxZoom={mu.MaxZoom}
                     className='map-container'>
-                    <ChangeView center={ctx.mapCenter} zoom={ctx.zoom} />
+                    <ChangeView center={mapCenter} zoom={zoom} />
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                     <MapClickHandler />
                     {stationMarker(
@@ -305,17 +309,17 @@ export default function Map() {
                         ctx.station.noaaStationName,
                         ctx.station.noaaStationId
                     )}
-                    {ctx.markerLocation && (
+                    {markerLocation && (
                         <Marker
                             draggable={true}
-                            position={ctx.markerLocation}
+                            position={markerLocation}
                             icon={RedPinIcon}
                             eventHandlers={markerEventHandlers}
                             ref={markerRef}>
                             <LeafletTooltip opacity={0.75} direction={'right'} offset={[30, -27]}>
                                 Custom Elevation:{' '}
-                                {ctx.markerElevationNav
-                                    ? ctx.station.navd88ToMllw(ctx.markerElevationNav)
+                                {markerElevationNav
+                                    ? ctx.station.navd88ToMllw(markerElevationNav)
                                     : '-'}
                             </LeafletTooltip>
                         </Marker>
@@ -324,7 +328,7 @@ export default function Map() {
             </Row>
             {showAddressPopup && (
                 <AddressPopup
-                    setAddressMarker={setAddressMarker}
+                    setPendingMarkerLocation={setPendingMarkerLocation}
                     onClose={onModalClose}
                     station={ctx.station}
                 />

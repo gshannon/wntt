@@ -1,7 +1,6 @@
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
-export const DefaultMapZoom = 13
 
 // Are we on a touch screen?
 export const isTouchScreen =
@@ -189,10 +188,13 @@ export const getDefaultDateStrings = () => {
     }
 }
 
-export const NotAcceptable = 406 // version out of date
-// Use when a call to the API fails.
-export const apiErrorResponse = (status) => {
-    return status === NotAcceptable
+const NotAcceptable = 406 // version out of date
+
+// Use when a call to the API fails. Provides a standard message, and handles the
+// NotAcceptable code we're using when a call to the backend sees we need to update.
+// Arg: the AxiosError returned by axios. Note that not all AxiosErrors have a response section.
+export const apiErrorResponse = (error) => {
+    return error?.response?.status === NotAcceptable
         ? 'It looks like your version may be out of date. Please reload the page.'
         : 'There was a problem fetching the data. Please try again later.'
 }

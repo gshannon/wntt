@@ -42,7 +42,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 <br />
                 <br />
                 <br />
-                <br /> {apiErrorResponse(error.response.status)}
+                <br /> {apiErrorResponse(error)}
                 <br />
                 <br />
                 <br />
