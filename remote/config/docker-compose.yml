@@ -29,6 +29,7 @@ services:
             SECRET_KEY: ${DJANGO_KEY}
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
+            GEOCODE_KEY: ${GEOCODE_KEY}
             API_ALLOWED_HOST: api-c
         container_name: api-c
         # No port publishing, container will listen on 8001, but it's only accessible by nginx in the app container

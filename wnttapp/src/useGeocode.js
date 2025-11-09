@@ -1,11 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { GeocodeUrl } from './utils'
 import axios from 'axios'
 
-export default function useGeocode(station, search) {
-    const lookupValue = search + ' USA'
-    const encoded = lookupValue.replace(/\s+/gi, '+')
-    const url = GeocodeUrl + '/search?q=' + encoded + '&api_key=' + import.meta.env.VITE_GEOCODE_KEY
+export default function useGeocode(search) {
+    const address = search + ' USA'
+    const encoded = address.replace(/\s+/gi, '+')
     const subKey = search ?? 'X'
 
     const { isLoading, data, error } = useQuery({
@@ -14,9 +12,13 @@ export default function useGeocode(station, search) {
         queryKey: ['geocode', subKey],
         queryFn: async () => {
             const res = await axios
-                .get(url, { timeout: 30000 })
+                .post(import.meta.env.VITE_API_ADDRESS_URL, {
+                    search: encoded,
+                    app_version: import.meta.env.VITE_BUILD_NUM,
+                })
                 .then((res) => {
-                    return { lat: res.data[0]?.lat ?? null, lng: res.data[0]?.lon ?? null }
+                    console.log(res)
+                    return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }
                 })
                 .catch((error) => {
                     // It'll be canceled if user clicks another point before this finishes, so

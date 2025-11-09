@@ -20,6 +20,7 @@ services:
             SECRET_KEY: ${DJANGO_KEY}
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
+            GEOCODE_KEY: ${GEOCODE_KEY}
         ports:
             - 8000:8001
         restart: unless-stopped

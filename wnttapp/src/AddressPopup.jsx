@@ -11,7 +11,7 @@ import { apiErrorResponse } from './utils'
 export default function AddressPopup({ setPendingMarkerLocation, onClose, station }) {
     const [addressValue, setAddressValue] = useState('') // persist between renders
 
-    const { isLoading, data: location, error } = useGeocode(station, addressValue)
+    const { isLoading, data: location, error } = useGeocode(addressValue)
 
     let markerLocation = null
     let errorMessage = ''
