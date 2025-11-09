@@ -23,6 +23,7 @@ services:
             SECRET_KEY: ${DJANGO_KEY}
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
+            GEOCODE_KEY: ${GEOCODE_KEY}
 
             API_ALLOWED_HOST: api-c-staging
         container_name: api-c-staging

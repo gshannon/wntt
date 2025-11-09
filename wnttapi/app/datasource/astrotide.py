@@ -199,7 +199,7 @@ def pull_data(url) -> list:
 
 
 def extract_json(raw) -> list:
-    """Call the API and return the predictions as a json list."""
+    """Convert the response to a json list."""
 
     json_dict = json.loads(raw)
     # This is what content may look like if it's an invalid request.

@@ -1,7 +1,7 @@
-import hashlib
 import logging
 from datetime import datetime
 
+from app.datasource import address
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.views import APIView, Response
 
@@ -33,7 +33,7 @@ def verify_version(caller_version):
 
 class LatestInfoView(APIView):
     def post(self, request, format=None):
-        logger.info(f"LatestInfoView: {obfuscate(request.data)}")
+        logger.info(f"LatestInfoView: {request.data}")
         water_station = get_param(request.data, "water_station")
         weather_station = get_param(request.data, "weather_station")
         noaa_station_id = get_param(request.data, "noaa_station_id")
@@ -48,7 +48,7 @@ class LatestInfoView(APIView):
 class CreateGraphView(APIView):
     def post(self, request, format=None):
         # FYI, use the form request.META["HTTP_HOST"] to look at header fields.
-        logger.info(f"CreateGraphView: {obfuscate(request.data)}")
+        logger.info(f"CreateGraphView: {request.data}")
 
         start_date = datetime.strptime(
             get_param(request.data, "start_date"), "%m/%d/%Y"
@@ -74,12 +74,10 @@ class CreateGraphView(APIView):
         return Response(data=graph_data)
 
 
-def obfuscate(params):
-    # Obfuscate the IP address with 1-way hash
-    def hash(ip):
-        return hashlib.sha256(ip.encode()).hexdigest()
-
-    # Disabling this for now, as it does not seem necessary. We're doing nothing nefarious with the IPs, it's just
-    # for counting distinct users.
-    # return dict(map(lambda tup: (tup[0], hash(tup[1]) if tup[0] == 'ip' else tup[1]), params.items()))
-    return params
+class AddressView(APIView):
+    def post(self, request, format=None):
+        logger.info(f"ElevationView: {request.data}")
+        verify_version(get_param(request.data, "app_version"))
+        search = get_param(request.data, "search")
+        latlng = address.get_location(search)
+        return Response(data=latlng)
