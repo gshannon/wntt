@@ -11,28 +11,24 @@ export default function useElevationData(pendingMarkerLocation) {
         retry: false,
         enabled: !!pendingMarkerLocation,
         queryKey: ['marker', subKey],
-        queryFn: async () => {
-            const res = await axios
+        queryFn: async ({ signal }) => {
+            return await axios
                 // We'll allow 30 seconds to handle connection-related timeouts.
                 // If it times out, we'll get code of "ECONNABORTED", message "timeout of xxx exceeded"
                 .get(
                     `${EpqsUrl}?x=${pendingMarkerLocation.lng}&y=${pendingMarkerLocation.lat}` +
                         `&units=Feet&wkid=4326&includeDate=False`,
-                    { timeout: 30000 }
+                    { timeout: 30000, signal }
                 )
                 .then((res) => {
                     return roundTo(parseFloat(res.data.value), 2)
                 })
                 .catch((error) => {
-                    // It'll be canceled if user clicks another point before this finishes, so
-                    // that's not considered an error, and nothing to do.
-                    if (error.name === 'CanceledError') {
-                        console.log('CANCELED')
-                        return null
+                    if (error.name !== 'CanceledError') {
+                        console.log(error)
                     }
                     throw error
                 })
-            return res
         },
         staleTime: 0,
         cacheTime: 0,

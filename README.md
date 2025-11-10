@@ -27,7 +27,7 @@ Here are the configuration files needed during the build/deploy process.
     - DJANGO_KEY : A unique key used by Django
     - CDMO_USER : Username for CDMO API access
     - CDMO_PASSWORD : Password for CDMO API access
-    - VITE_GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
+    - GEOCODE_KEY : Key used to call geocode.maps.co to lookup lat/lon by address
 
 ### wnttapp/.env.development, wnttapp/.env.production
 
