@@ -252,10 +252,10 @@ export default function Map() {
                 <Col className='d-flex justify-content-center align-items-center'>
                     <Row>
                         <Col className='map-vertical-buttons'>
-                            <a href='#' onClick={() => setShowAddressPopup(true)}>
+                            <a className='pointer' onClick={() => setShowAddressPopup(true)}>
                                 Address&nbsp;Lookup
                             </a>
-                            <a href='#' className='my-1' onClick={() => ctx.gotoPage(Page.Graph)}>
+                            <a className='my-1 pointer' onClick={() => ctx.gotoPage(Page.Graph)}>
                                 Return&nbsp;to Graph
                             </a>
                             <Overlay

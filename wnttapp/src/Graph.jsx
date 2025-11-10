@@ -238,14 +238,14 @@ const JumpDates = (props) => {
         (props.dir === 'back' && props.start <= props.station.minGraphDate()) ||
         (props.dir === 'forward' && props.end >= maxGraphDate())
             ? 'disable-pointer'
-            : ''
+            : 'pointer'
     return (
         <Col className='col-1 px-0 jumpdate'>
             <Overlay
                 text={props.hoverText}
                 placement='top'
                 contents={
-                    <a href='#' onClick={props.action} className={anchorClass}>
+                    <a onClick={props.action} className={anchorClass}>
                         <img className='pic' src={props.image} alt={props.hoverText} />
                     </a>
                 }></Overlay>

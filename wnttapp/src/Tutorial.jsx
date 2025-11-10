@@ -25,7 +25,7 @@ export default function Tutorial(props) {
             <Modal.Body className='px-3 py-0'>
                 <Row className='align-items-center'>
                     <Col xs={1}>
-                        <a href='#' onClick={onPrevClick}>
+                        <a onClick={onPrevClick} className='pointer'>
                             <img src={arrowLeft} width={25} height={31} />
                         </a>
                     </Col>
@@ -57,7 +57,7 @@ export default function Tutorial(props) {
                         </Carousel>
                     </Col>
                     <Col xs={1}>
-                        <a href='#' onClick={onNextClick}>
+                        <a onClick={onNextClick} className='pointer'>
                             <img src={arrowRight} width={25} height={31} />
                         </a>
                     </Col>
