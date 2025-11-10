@@ -2,22 +2,17 @@ import { useQuery } from '@tanstack/react-query'
 import { ClientIpUrl } from './utils'
 
 export default function useClientIp() {
-    const { data: clientIp, error: ipError } = useQuery({
+    const { isLoading, data, error } = useQuery({
         queryKey: ['clientip'],
-        queryFn: async () => {
-            const resp = await fetch(ClientIpUrl)
+        queryFn: async ({ signal }) => {
+            const resp = await fetch(ClientIpUrl, { signal })
+            if (!resp.ok) {
+                console.log(resp)
+            }
             const data = await resp.json()
             return data.ip
         },
-        // This could only change if they switch VPNs maybe
         staleTime: 'static',
     })
-
-    if (ipError) {
-        console.error(ipError)
-    }
-
-    return { clientIp, ipError }
+    return { isLoading, data, error }
 }
-
-export { useClientIp }

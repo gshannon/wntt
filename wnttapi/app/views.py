@@ -76,7 +76,7 @@ class CreateGraphView(APIView):
 
 class AddressView(APIView):
     def post(self, request, format=None):
-        logger.info(f"ElevationView: {request.data}")
+        logger.info(f"AddressView: {request.data}")
         verify_version(get_param(request.data, "app_version"))
         search = get_param(request.data, "search")
         latlng = address.get_location(search)

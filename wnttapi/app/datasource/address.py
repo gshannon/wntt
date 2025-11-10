@@ -25,7 +25,7 @@ def get_location(search) -> dict:
         dict with { 'lat': '<latitude>', 'lng', '<longitude>' }, or empty dict if address was not found
     """
     url = base_url + "&q=" + search
-    logger.warning(f"url = {url}")
+    logger.debug(f"url = {url}")
 
     try:
         response = requests.get(url)

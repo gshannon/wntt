@@ -36,7 +36,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
     }
 
     if (error) {
-        console.error(error)
         return (
             <div>
                 <br />

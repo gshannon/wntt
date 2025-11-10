@@ -27,11 +27,10 @@ export default function AddressPopup({ setPendingMarkerLocation, onClose, statio
                         lng: Number(location.lng),
                     }
                 } else {
-                    console.log(`(${location.lat},${location.lng}) is  not in map bounds`)
                     errorMessage = 'That address does not appear to be within the map bounds.'
                 }
             } else if (addressValue && !error) {
-                console.log('No error, but no data so must be invalid address')
+                // No error, but no data so must be invalid address
                 errorMessage = 'That appears to be an invalid address.'
             }
         }
