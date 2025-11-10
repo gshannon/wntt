@@ -31,7 +31,7 @@ export default function Help() {
                     <iframe
                         className='video'
                         allow='fullscreen'
-                        referrerPolicy='no-referrer'
+                        referrerPolicy='strict-origin-when-cross-origin'
                         src='https://www.youtube.com/embed/wr2nfjE43Gg?autoplay=0'></iframe>
                 </Col>
             </Row>
