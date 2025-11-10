@@ -60,6 +60,11 @@ a:hover {
     color: var(--link-blue);
 }
 
+/* For making any element have a pointer cursor */
+.pointer {
+    cursor: pointer;
+}
+
 /* For Button variant, can say "variant=custom-primary" instead of using className... */
 .btn-custom-primary {
     color: white;

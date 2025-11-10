@@ -30,7 +30,7 @@ export default function SyzygyPopup({ code, onClose }) {
 const Help = ({ gotoPage }) => {
     return (
         <p>
-            <a href='#' className='my-1' onClick={() => gotoPage(Page.HelpSyzygy, Page.Graph)}>
+            <a className='my-1 pointer' onClick={() => gotoPage(Page.HelpSyzygy, Page.Graph)}>
                 More details...
             </a>{' '}
         </p>
