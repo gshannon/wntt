@@ -1,12 +1,17 @@
-import os.path
+import os
+
 from datetime import datetime
 from unittest import TestCase
 
 import app.datasource.moon as moon
 import app.tzutil as tz
 from app.timeline import GraphTimeline
+from django import setup
 
-path = os.path.dirname(os.path.abspath(__file__))
+csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/syzygy"
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
+setup()
 
 
 class TestMoon(TestCase):
@@ -16,7 +21,7 @@ class TestMoon(TestCase):
 
         # This is the last minute before the New Moon starts.
         asof = datetime(2025, 9, 21, 15, 53, tzinfo=zone)
-        data = moon.get_current_moon_phases(zone, asof)
+        data = moon.get_current_moon_phases(zone, asof, csv_location)
         expected = {
             "current": "LQ",
             "currentdt": datetime(2025, 9, 14, 6, 33, tzinfo=zone),
@@ -54,7 +59,7 @@ class TestMoon(TestCase):
         end_date = datetime(2026, 1, 4, tzinfo=zone)
         timeline = GraphTimeline(start_date, end_date, zone)
         expected = datetime(2026, 1, 1, 16, 45, tzinfo=zone)
-        self.assertEqual(expected, moon.get_perigee(timeline))
+        self.assertEqual(expected, moon.get_perigee(timeline, csv_location))
 
     def test_perihelion_over_year(self):
         """Able to get perihelion over year boundary"""
@@ -63,4 +68,4 @@ class TestMoon(TestCase):
         end_date = datetime(2026, 1, 4, tzinfo=zone)
         timeline = GraphTimeline(start_date, end_date, zone)
         expected = datetime(2026, 1, 3, 12, 16, tzinfo=zone)
-        self.assertEqual(expected, moon.get_perihelion(timeline))
+        self.assertEqual(expected, moon.get_perihelion(timeline, csv_location))

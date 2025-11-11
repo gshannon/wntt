@@ -1,28 +1,48 @@
 import './css/Home.css'
-import { Page } from './utils'
+import { useState } from 'react'
+import { Row, Col } from 'react-bootstrap'
 import Button from 'react-bootstrap/Button'
 import Dropdown from 'react-bootstrap/Dropdown'
-import { Row, Col } from 'react-bootstrap'
 import { Activity, useContext } from 'react'
 import { AppContext } from './AppContext'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
-import { AllStations } from './stations'
+import useStationSelection from './useStationSelection'
+import { apiErrorResponse, Page } from './utils'
 
 export default function Home() {
     const ctx = useContext(AppContext)
+    const [stationSelectionData, setStationSelectionData] = useState(null)
+    const { data, error } = useStationSelection(stationSelectionData == null)
 
-    const stationItems = Object.entries(AllStations).map(([id, stn]) => (
-        <Dropdown.Item
-            href='#'
-            key={id}
-            disabled={id === ctx.station.id}
-            onClick={() => {
-                ctx.setStationId(id)
-            }}>
-            {stn.reserveName}, {stn.waterStationName}
-        </Dropdown.Item>
-    ))
+    if (data != null && stationSelectionData == null) {
+        setStationSelectionData(data)
+    }
+
+    const stationItems = stationSelectionData
+        ? stationSelectionData.map((stn) => (
+              <Dropdown.Item
+                  className='pointer'
+                  key={stn.id}
+                  disabled={stn.id === ctx.station?.id}
+                  onClick={() => {
+                      ctx.setStationId(stn.id)
+                  }}>
+                  {stn.reserveName}, {stn.waterStationName}
+              </Dropdown.Item>
+          ))
+        : ''
+
+    const stationSelectionSection = error ? (
+        <div className='text-warning bg-dark'>{apiErrorResponse(error)}</div>
+    ) : (
+        <Dropdown>
+            <Dropdown.Toggle variant='primary' id='dropdown-basic'>
+                Select SWMP Station
+            </Dropdown.Toggle>
+            <Dropdown.Menu>{stationItems}</Dropdown.Menu>
+        </Dropdown>
+    )
 
     return (
         <div id='home' className='home'>
@@ -44,14 +64,7 @@ export default function Home() {
             </div>
             <Row>
                 <Activity mode={ctx.special ? 'visible' : 'hidden'}>
-                    <Col className='align-content-center'>
-                        <Dropdown>
-                            <Dropdown.Toggle variant='primary' id='dropdown-basic'>
-                                Select SWMP Station
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>{stationItems}</Dropdown.Menu>
-                        </Dropdown>
-                    </Col>
+                    <Col className='align-content-center'>{stationSelectionSection}</Col>
                 </Activity>
                 <Col className='mb-1'>
                     <Button
@@ -64,9 +77,7 @@ export default function Home() {
                     </Button>
                 </Col>
             </Row>
-            <Activity mode={ctx.station ? 'visible' : 'hidden'}>
-                <ConditionsSection station={ctx.station} />
-            </Activity>
+            {ctx.station && <ConditionsSection station={ctx.station} />}
         </div>
     )
 }

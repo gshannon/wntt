@@ -6,6 +6,7 @@ import requests
 from app import util
 from app.timeline import Timeline
 from rest_framework.exceptions import APIException
+from app.station import Station
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ base_url = (
 
 
 def get_astro_tides(
-    timeline: Timeline, max_observed_dt: datetime, noaa_station_id: str
+    station: Station, timeline: Timeline, max_observed_dt: datetime
 ) -> tuple[dict, dict]:
     """
     Fetch astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the
@@ -53,12 +54,12 @@ def get_astro_tides(
     # Part 1: pull 15-min predictions for the entire timeline. Even if we have a HiloTimeline for all future, where we show only
     begin_date = timeline.start_dt.strftime("%Y%m%d")
     end_date = timeline.end_dt.strftime("%Y%m%d")
-    url15min = f"{base_url}&interval=15&station={noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
+    url15min = f"{base_url}&interval=15&station={station.noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
     logger.debug(
         f"for timeline: {timeline.start_dt}-{timeline.end_dt}, url15min: {url15min}"
     )
     pred_json = pull_data(url15min)
-    preds15_dict = pred15_json_to_dict(pred_json, timeline, noaa_station_id)
+    preds15_dict = pred15_json_to_dict(pred_json, timeline, station)
 
     # Part 2: For the the more precise High/Low values, we'll use a different API call.
     if max_observed_dt is not None:
@@ -70,31 +71,18 @@ def get_astro_tides(
         start_date = hilo_start_dt.strftime("%Y%m%d")
         end_date = timeline.end_dt.strftime("%Y%m%d")
 
-        urlhilo = f"{base_url}&interval=hilo&station={noaa_station_id}&begin_date={start_date}&end_date={end_date}"
+        urlhilo = f"{base_url}&interval=hilo&station={station.noaa_station_id}&begin_date={start_date}&end_date={end_date}"
         logger.debug(f"for timeline: {start_date}-{end_date}, urlhilo: {urlhilo}")
 
         future_preds_json = pull_data(urlhilo)
         preds_hilo_dict = hilo_json_to_dict(
-            future_preds_json, timeline, hilo_start_dt, noaa_station_id
+            station, future_preds_json, timeline, hilo_start_dt
         )
 
     return preds15_dict, preds_hilo_dict
 
 
-def get_astro_highest_navd88(year, noaa_station_id) -> float:
-    """Calls the external API for all hilo tides for a year, and returns the highest found."""
-    begin_date = f"{year}0101"
-    end_date = f"{year}1231"
-    urlhilo = f"{base_url}&interval=hilo&station={noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(f"for {year}, urlhilo: {urlhilo}")
-
-    hilo_json_dict = pull_data(urlhilo)
-    return find_highest_navd88(hilo_json_dict)
-
-
-def pred15_json_to_dict(
-    pred_json: list, timeline: Timeline, noaa_station_id: str
-) -> dict:
+def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:
     """
     Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
     sparse dict of {dt: value} for all values that exist in the requested timeline. Converts NAVD88 to MLLW.
@@ -105,14 +93,12 @@ def pred15_json_to_dict(
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
         if timeline.within(dt):
             val = pred["v"]
-            reg_preds_dict[dt] = util.navd88_feet_to_mllw_feet(
-                float(val), noaa_station_id
-            )
+            reg_preds_dict[dt] = station.navd88_feet_to_mllw_feet(float(val))
     return reg_preds_dict
 
 
 def hilo_json_to_dict(
-    hilo_json: list, timeline: Timeline, hilo_start_dt: datetime, noaa_station_id: str
+    station: Station, hilo_json: list, timeline: Timeline, hilo_start_dt: datetime
 ) -> dict:
     """
     Convert json returned from the api call into a dict of high or low data values.
@@ -154,7 +140,7 @@ def hilo_json_to_dict(
             # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
             future_hilo_dict[util.round_to_quarter(dt)] = {
                 "real_dt": dt,
-                "value": util.navd88_feet_to_mllw_feet(float(val), noaa_station_id),
+                "value": station.navd88_feet_to_mllw_feet(float(val)),
                 "type": typ,
             }
 

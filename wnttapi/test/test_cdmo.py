@@ -3,14 +3,23 @@ from datetime import date, datetime, timedelta
 from unittest import TestCase
 
 import app.datasource.cdmo as cdmo
+import app.station as stn
 import app.tzutil as tz
 import app.util as util
 from app.timeline import GraphTimeline, Timeline
+from django import setup
 from rest_framework.exceptions import APIException
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
+setup()
+
+csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
+test_data_path = os.path.dirname(os.path.abspath(__file__))
+station = stn.get_station("welinwq", csv_location)
+
 
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
-noaa_station_id = "8419317"
 
 
 class TestCdmo(TestCase):
@@ -93,7 +102,7 @@ class TestCdmo(TestCase):
         """High/Low detetion works properly with complete day of data"""
         xml = self.load_xml("cdmo-level.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
-        converter = cdmo.make_navd88_level_converter("8419317")
+        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
         datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
         expected = {
             datetime(2025, 3, 31, 0, 45, tzinfo=self.tzone): "H",
@@ -101,13 +110,14 @@ class TestCdmo(TestCase):
             datetime(2025, 3, 31, 13, 15, tzinfo=self.tzone): "H",
             datetime(2025, 3, 31, 19, 0, tzinfo=self.tzone): "L",
         }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected)
+        actual = cdmo.find_hilos(timeline, datadict)
+        self.assertEqual(actual, expected)
 
     def test_calculate_hilos_with_hi_on_boundary(self):
         """High/Low detetion works properly with high at midnight"""
         xml = self.load_xml("cdmo-level-1d.xml")
         timeline = GraphTimeline(date(2025, 10, 22), date(2025, 10, 22), self.tzone)
-        converter = cdmo.make_navd88_level_converter("8419317")
+        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
         datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
         expected = {
             datetime(2025, 10, 22, 0, 0, tzinfo=self.tzone): "H",
@@ -125,7 +135,7 @@ class TestCdmo(TestCase):
         """High/Low detetion works properly with 1 hour missing"""
         xml = self.load_xml("cdmo-level-2d.xml")
         timeline = GraphTimeline(date(2025, 10, 21), date(2025, 10, 22), self.tzone)
-        converter = cdmo.make_navd88_level_converter("8419317")
+        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
         datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
         # Note extra highs at beginning and end, from the padding.
         expected = {
@@ -150,22 +160,22 @@ class TestCdmo(TestCase):
             cdmo.get_cdmo_data(timeline, xml, "anyparam", None)
 
     def test_handle_navd88(self):
-        converter = cdmo.make_navd88_level_converter("8419317")
+        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
         self.assertTrue(converter(None, None) is None)
         self.assertTrue(cdmo.handle_windspeed("nONE", None) is None)
         self.assertTrue(converter("", None) is None)
         self.assertTrue(converter("13s", None) is None)
         self.assertTrue(converter("\n\t", None) is None)
 
-        max_meters = util.mllw_feet_to_navd88_meters(cdmo.max_tide, noaa_station_id)
-        min_meters = util.mllw_feet_to_navd88_meters(cdmo.min_tide, noaa_station_id)
+        max_meters = station.mllw_feet_to_navd88_meters(cdmo.max_tide)
+        min_meters = station.mllw_feet_to_navd88_meters(cdmo.min_tide)
         self.assertTrue(converter(f"{max_meters + 1.0}", None) is None)
         self.assertTrue(converter(f"{max_meters - 1.0}", None) is not None)
         self.assertTrue(converter(f"{min_meters - 1.0}", None) is None)
         self.assertTrue(converter(f"{min_meters + 1.0}", None) is not None)
         self.assertEqual(
             converter("1.5", None),
-            util.navd88_meters_to_mllw_feet(1.5, noaa_station_id),
+            station.navd88_meters_to_mllw_feet(1.5),
         )
 
     def test_handle_windspeed(self):

@@ -10,6 +10,7 @@ from app.timeline import GraphTimeline, HiloTimeline
 from rest_framework.exceptions import ValidationError
 
 from . import config as cfg
+from . import station as stn
 from . import tzutil as tz
 
 """
@@ -35,12 +36,7 @@ time_zone = tz.eastern
 
 
 def get_graph_data(
-    start_date: date,
-    end_date: date,
-    hilo_mode: bool,
-    water_station: str,
-    weather_station: str,
-    noaa_station_id: str,
+    start_date: date, end_date: date, hilo_mode: bool, station: stn.Station
 ):
     """Generate plot data.
 
@@ -48,6 +44,7 @@ def get_graph_data(
         start_date (date): First day of data
         end_date (date): Last day of data (may be same as first). 00:00 of following day will be added automatically.
         hilo_mode (bool): If true, data will include only high and low tide data points.
+        station (Station): Station for which to get data
 
     Returns:
         dict: All data required for graph, suitable for json
@@ -66,9 +63,7 @@ def get_graph_data(
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    obs_dict, wind_dict = get_cdmo_data(
-        timeline, water_station, weather_station, noaa_station_id
-    )
+    obs_dict, wind_dict = get_cdmo_data(timeline, station)
 
     # Determine highs and lows from observed data.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
@@ -81,7 +76,7 @@ def get_graph_data(
         last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
 
     astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
-        timeline, last_recorded_dt, noaa_station_id
+        station, timeline, last_recorded_dt
     )
 
     if hilo_mode:
@@ -92,7 +87,7 @@ def get_graph_data(
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
     future_surge_dict = sg.get_future_surge_data(
-        timeline, noaa_station_id, last_recorded_dt
+        timeline, station.noaa_station_id, last_recorded_dt
     )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
@@ -145,8 +140,8 @@ def get_graph_data(
         "past_surge": past_surge_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
-        "highest_annual_prediction": cfg.get_astro_high_tide_mllw(
-            start_date.year, noaa_station_id
+        "highest_annual_prediction": stn.get_astro_high_tide_mllw(
+            station, start_date.year
         ),
         "start_date": start_date_str,
         "end_date": end_date_str,
@@ -156,16 +151,12 @@ def get_graph_data(
     }
 
 
-def get_cdmo_data(
-    timeline: GraphTimeline,
-    water_station: str,
-    weather_station: str,
-    noaa_station_id: str,
-) -> tuple[dict, dict]:
+def get_cdmo_data(timeline: GraphTimeline, station: stn.Station) -> tuple[dict, dict]:
     """Retrieve all cdmo historical data needed for the graph. We do these calls in parallel to save time.
 
     Args:
         timeline (GraphTimeline)
+        station (Station)
 
     Raises:
         APIException: if a call fails
@@ -180,14 +171,14 @@ def get_cdmo_data(
         APICall(
             "tide",
             cdmo.get_recorded_tides,
+            station,
             timeline,
-            {"water_station": water_station, "noaa_station_id": noaa_station_id},
         ),
         APICall(
             "wind",
             cdmo.get_recorded_wind_data,
+            station,
             timeline,
-            {"weather_station": weather_station},
         ),
     ]
 

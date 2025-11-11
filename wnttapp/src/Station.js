@@ -1,6 +1,30 @@
 import { defaultMinGraphDate, roundTo } from './utils'
+import { DefaultMapZoom } from './mapUtils'
 
 export default class Station {
+    static fromJson = (json) => {
+        return new Station({
+            id: json.id,
+            reserveName: json.reserveName,
+            reserveUrl: json.reserveUrl,
+            waterStationName: json.waterStationName,
+            weatherStationId: json.weatherStationId,
+            weatherStationName: json.weatherStationName,
+            noaaStationId: json.noaaStationId,
+            noaaStationName: json.noaaStationName,
+            noaaStationUrl: json.noaaStationUrl,
+            navd88ToMllwConversion: json.navd88ToMllwConversion,
+            meanHighWaterMllw: json.meanHighWaterMllw,
+            mapBounds: json.mapBounds,
+            swmpLocation: json.swmpLocation,
+            weatherLocation: json.weatherLocation,
+            noaaStationLocation: json.noaaStationLocation,
+            recordTideNavd88: json.recordTideNavd88,
+            recordTideDate: json.recordTideDate,
+            minDateOverride: json.minDateOverride,
+        })
+    }
+
     constructor({
         id,
         reserveName,
@@ -18,8 +42,8 @@ export default class Station {
         weatherLocation,
         noaaStationLocation,
         recordTideNavd88,
-        recordTideDate, // string YYYY/MM/DD
-        minDateOverride = null, // string YYYY/MM/DD to override default
+        recordTideDate, // string YYYY-MM-DD
+        minDateOverride = null, // string YYYY-MM-DD to override default
     }) {
         this.id = id
         this.reserveName = reserveName
@@ -39,6 +63,20 @@ export default class Station {
         this.recordTideNavd88 = recordTideNavd88
         this.recordTideDate = recordTideDate
         this.minDate = minDateOverride
+    }
+
+    stationOptionsWithDefaults = (options) => {
+        // Get station-specific fields from storage.  Will be {} if it's a first time user or storage was cleared.
+        // If we got {} back, fill in defaults.
+        if (Object.keys(options).length === 0) {
+            options.markerElevationNav = null
+            options.customElevationNav = null
+            options.markerLocation = null
+            options.mapCenter = this.swmpLocation
+            options.mapType = 'basic'
+            options.zoom = DefaultMapZoom
+        }
+        return options
     }
 
     recordTideMllw = () => {

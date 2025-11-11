@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
-export default function useGeocode(search) {
+export default function useAddressLookup(search) {
     const address = search + ' USA'
     const encoded = address.replace(/\s+/gi, '+')
     const subKey = search ?? 'X'

@@ -4,14 +4,14 @@ import Modal from 'react-bootstrap/Modal'
 import { Form } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
-import useGeocode from './useGeocode'
+import useAddressLookup from './useAddressLookup'
 import * as mu from './mapUtils'
 import { apiErrorResponse } from './utils'
 
 export default function AddressPopup({ setPendingMarkerLocation, onClose, station }) {
     const [addressValue, setAddressValue] = useState('') // persist between renders
 
-    const { isLoading, data: location, error } = useGeocode(addressValue)
+    const { isLoading, data: location, error } = useAddressLookup(addressValue)
 
     let markerLocation = null
     let errorMessage = ''
