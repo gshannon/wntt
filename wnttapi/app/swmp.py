@@ -5,15 +5,14 @@ from app import util
 from app.datasource import cdmo, moon
 from app.datasource.apiutil import APICall, run_parallel
 from app.timeline import Timeline
+from app.station import Station
 
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
 
 
-def get_latest_conditions(
-    water_station, weather_station, noaa_station_id, tzone=tz.eastern
-) -> dict:
+def get_latest_conditions(station: Station, tzone=tz.eastern) -> dict:
     """
     Pull the most recent wind, tide & temp readings from CDMO.
     We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
@@ -30,20 +29,20 @@ def get_latest_conditions(
         APICall(
             "wind",
             cdmo.get_recorded_wind_data,
+            station,
             timeline,
-            {"weather_station": weather_station},
         ),
         APICall(
             "tide",
             cdmo.get_recorded_tides,
+            station,
             timeline,
-            {"water_station": water_station, "noaa_station_id": noaa_station_id},
         ),
         APICall(
             "temp",
             cdmo.get_recorded_temps,
+            station,
             timeline,
-            {"water_station": water_station},
         ),
     ]
 

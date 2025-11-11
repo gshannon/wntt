@@ -1,24 +1,8 @@
 import L from 'leaflet'
-import * as storage from './storage'
 
 export const DefaultMapZoom = 13
 export const MinZoom = 8
 export const MaxZoom = 18
-
-export const getStationOptions = (station) => {
-    // Get station-specific fields from storage.  Will be {} if it's a first time user or storage was cleared.
-    const options = storage.getStationPermanentStorage(station.id)
-    // If we got {} back, fill in defaults.
-    if (Object.keys(options).length === 0) {
-        options.markerElevationNav = null
-        options.customElevationNav = null
-        options.markerLocation = null
-        options.mapCenter = station.swmpLocation
-        options.mapType = 'basic'
-        options.zoom = DefaultMapZoom
-    }
-    return options
-}
 
 export const stationIcon = (emoji) => {
     return L.divIcon({

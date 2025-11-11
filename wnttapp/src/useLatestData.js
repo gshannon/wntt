@@ -14,9 +14,7 @@ export default function useLatestData(station) {
                 .post(import.meta.env.VITE_API_LATEST_URL, {
                     signal,
                     ip: clientIp ?? 'unknown',
-                    water_station: station.id,
-                    weather_station: station.weatherStationId,
-                    noaa_station_id: station.noaaStationId,
+                    station_id: station.id,
                     time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     app_version: import.meta.env.VITE_BUILD_NUM,
                 })

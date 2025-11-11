@@ -26,7 +26,8 @@ const NoaaStationEmoji = '\u{1F53B}'
 export default function Map() {
     const ctx = useContext(AppContext)
 
-    const stationOptions = mu.getStationOptions(ctx.station)
+    const storedOptions = storage.getStationPermanentStorage(ctx.station.id)
+    const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
 
     // This is used when user clicks on the map, while we look up the elevation.
     const [pendingMarkerLocation, setPendingMarkerLocation] = useState(null)
@@ -42,7 +43,7 @@ export default function Map() {
 
     const { isLoading, data, error: queryError } = useElevationData(pendingMarkerLocation)
 
-    if (data) {
+    if (data != null) {
         setMarkerLocation(pendingMarkerLocation)
         setPendingMarkerLocation(null)
         setMarkerElevationNav(data)
@@ -110,7 +111,7 @@ export default function Map() {
         if (isLoading) {
             return <BarLoader loading={true} color={'green'} />
         }
-        if (markerElevationNav) {
+        if (markerElevationNav != null) {
             return <>{ctx.station.navd88ToMllw(markerElevationNav) + ' ft MLLW'}</>
         }
         return <>-</>
@@ -119,7 +120,8 @@ export default function Map() {
     // Keep the local storage of permanent station options in sync.
     // We own all the values except customElevationNav, so we leave that alone.
     const onValueChange = useEffectEvent(() => {
-        const curOptions = mu.getStationOptions(ctx.station)
+        const storedOptions = storage.getStationPermanentStorage(ctx.station.id)
+        const curOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
         storage.setStationPermanentStorage(ctx.station.id, {
             ...curOptions,
             markerLocation,

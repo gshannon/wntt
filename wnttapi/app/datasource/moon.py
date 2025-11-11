@@ -20,7 +20,9 @@ PERIHELION = "PH"
 APHELION = "AH"
 
 
-def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
+def get_current_moon_phases(
+    tzone, asof: datetime = None, data_dir: str = _default_file_dir
+) -> dict:
     """Get the current moon phase and the next moon phase.
 
     Args:
@@ -41,7 +43,7 @@ def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
 
     now_utc = now.astimezone(utc)
 
-    data = get_or_load_phase_data()
+    data = get_or_load_phase_data(data_dir)
 
     for utc, code in data.items():
         if utc <= now_utc:
@@ -63,7 +65,7 @@ def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
     }
 
 
-def get_syzygy_data(timeline: GraphTimeline) -> dict:
+def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> dict:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
     sorted by datetime.
 
@@ -74,7 +76,7 @@ def get_syzygy_data(timeline: GraphTimeline) -> dict:
         [ { <datetime>: <code> }, ... ]  sorted by datetime
     """
     data = []
-    phase_code, phase_dt = get_moon_phase(timeline)
+    phase_code, phase_dt = get_moon_phase(timeline, data_dir)
     if phase_dt:
         data.append({"code": phase_code, "dt": phase_dt})
     perigee_dt = get_perigee(timeline)
@@ -88,7 +90,9 @@ def get_syzygy_data(timeline: GraphTimeline) -> dict:
     return sorted(data, key=lambda d: d["dt"])
 
 
-def get_moon_phase(timeline: GraphTimeline) -> tuple[str, datetime]:
+def get_moon_phase(
+    timeline: GraphTimeline, data_dir: str = _default_file_dir
+) -> tuple[str, datetime]:
     """Find the moon phase that is within the timeline, if any.
 
     Args:
@@ -98,7 +102,7 @@ def get_moon_phase(timeline: GraphTimeline) -> tuple[str, datetime]:
         <phase-name>, <phase-datetime>
     """
 
-    data = get_or_load_phase_data()
+    data = get_or_load_phase_data(data_dir)
 
     for utc, code in data.items():
         if timeline.within(utc):
@@ -109,9 +113,9 @@ def get_moon_phase(timeline: GraphTimeline) -> tuple[str, datetime]:
     return None, None
 
 
-def get_perigee(timeline: GraphTimeline) -> datetime:
+def get_perigee(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> datetime:
     """Get the datetime of the Perigee that occurs in this timeline, if any."""
-    data = get_or_load_datetime_data("perigee")
+    data = get_or_load_datetime_data("perigee", data_dir)
     for utc in data:
         if timeline.within(utc):
             return utc.astimezone(timeline.time_zone)
@@ -120,9 +124,11 @@ def get_perigee(timeline: GraphTimeline) -> datetime:
     return None
 
 
-def get_perihelion(timeline: GraphTimeline) -> datetime:
+def get_perihelion(
+    timeline: GraphTimeline, data_dir: str = _default_file_dir
+) -> datetime:
     """Get the datetime of the Perihelion that occurs in this timeline, if any."""
-    data = get_or_load_datetime_data("perihelion")
+    data = get_or_load_datetime_data("perihelion", data_dir)
     for utc in data:
         if timeline.within(utc):
             return utc.astimezone(timeline.time_zone)

@@ -2,7 +2,7 @@
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Top from './Top'
 import Control from './Control'
@@ -10,8 +10,8 @@ import Control from './Control'
 import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page } from './utils'
-import { getStationConfig } from './stations'
-import * as mu from './mapUtils'
+import Station from './Station'
+import axios from 'axios'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -30,28 +30,9 @@ export default function App() {
 
     // Initial station will be the one stored, or Wells by default.
     const main = storage.getGlobalPermanentStorage()
-    const [station, setStation] = useState(getStationConfig(main.stationId ?? 'welinwq'))
-    const stationOptions = mu.getStationOptions(station)
-    const [customElevationNav, setCustomElevationNav] = useState(stationOptions.customElevationNav)
-
-    // Each station option needs to be in its own state variable so we can save them as they're updated.
-
-    /////////////////////////////////////////////
-    // Action handlers
-
-    /**
-     * Handles user selecting a different station. Writes the selected id to storage.
-     * @param {string} id : id of selected station, e.g. 'welinwq'
-     */
-    const setStationId = (id) => {
-        if (id !== station.id) {
-            const s = getStationConfig(id)
-            storage.setGlobalPermanentStorage({
-                stationId: id,
-            })
-            setStation(s) // This will trigger a render and effect.
-        }
-    }
+    const [stationId, setStationId] = useState(main.stationId ?? 'welinwq')
+    const [station, setStation] = useState(null)
+    const [customElevationNav, setCustomElevationNav] = useState(undefined)
 
     // temporary dev hack
     const toggleSpecial = () => {
@@ -72,12 +53,33 @@ export default function App() {
     }, [])
 
     useEffect(() => {
-        const curOptions = mu.getStationOptions(station)
-        storage.setStationPermanentStorage(station.id, {
-            ...curOptions,
-            customElevationNav: customElevationNav,
+        axios
+            .post(import.meta.env.VITE_API_STATION_DATA_URL, {
+                app_version: import.meta.env.VITE_BUILD_NUM,
+                station_id: stationId,
+            })
+            .then((res) => {
+                setStation(Station.fromJson(res.data))
+            })
+        storage.setGlobalPermanentStorage({
+            stationId: stationId,
         })
+    }, [stationId])
+
+    const onCustomChange = useEffectEvent((newElevation) => {
+        if (newElevation !== undefined && station != null) {
+            const storedOptions = storage.getStationPermanentStorage(station.id)
+            const options = station.stationOptionsWithDefaults(storedOptions)
+            storage.setStationPermanentStorage(station.id, {
+                ...options,
+                customElevationNav: newElevation,
+            })
+        }
     })
+
+    useEffect(() => {
+        onCustomChange(customElevationNav)
+    }, [customElevationNav])
 
     return (
         <QueryClientProvider client={queryClient}>

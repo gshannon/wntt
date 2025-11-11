@@ -94,6 +94,7 @@ export default function Top({ page, gotoPage }) {
                             contents={
                                 <div
                                     className='conditions-container mx-md-2'
+                                    disabled={ctx.station == null}
                                     onClick={() => setShowConditions(true)}>
                                     <img
                                         className='conditions-img'
