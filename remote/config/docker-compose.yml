@@ -35,5 +35,5 @@ services:
         # No port publishing, container will listen on 8001, but it's only accessible by nginx in the app container
         restart: unless-stopped
         volumes:
-            - /home/tides/surge/data:/surgedata
+            - /home/tides/datamount:/data
             - /var/log/wntt:/var/log/wntt

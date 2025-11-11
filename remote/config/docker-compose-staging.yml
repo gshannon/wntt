@@ -30,5 +30,5 @@ services:
         # No ports. container will listen on 8081, but it's only accessible via the proxy
         restart: unless-stopped
         volumes:
-            - /home/tides/surge/data:/surgedata
+            - /home/tides/datamount:/data
             - /var/log/wntt-staging:/var/log/wntt

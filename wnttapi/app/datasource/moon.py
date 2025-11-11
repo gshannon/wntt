@@ -1,20 +1,13 @@
-import json
+import csv
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import requests
 from app.timeline import GraphTimeline
-from rest_framework.exceptions import APIException
-
-from . import syzygy_data as data
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
-
-# The Navy API requests we use a ID string so they can track usage metrics.
-# Example: curl "https://aa.usno.navy.mil/api/moon/phases/date?date=2025-09-29&nump=2"
-# base_url = "https://aa.usno.navy.mil/api/moon/phases/date?id=wellsreserve"
-
+_default_file_dir = "/data/syzygy"
 utc = ZoneInfo("UTC")
 
 NEW_MOON = "NM"
@@ -32,12 +25,11 @@ def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
 
     Args:
         tzone (ZoneInfo): Time zone to return results in.
+        asof (datetime, optional): For testing. If given, use this datetime as the "now" time.
 
     Returns:
         dict: {"current": "phase", currentdt: datetime, "nextphase": "phase", "nextdt": datetime}
     """
-    # Calculate start date in UTC. To make sure we get both the current phase and next phase, we
-    # need to go back 9 days and get 3 phases.
     current_phase_code = None
     current_phase_utc = None
     next_phase_code = None
@@ -49,7 +41,9 @@ def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
 
     now_utc = now.astimezone(utc)
 
-    for utc, code in data.phase_data.items():
+    data = get_or_load_phase_data()
+
+    for utc, code in data.items():
         if utc <= now_utc:
             current_phase_code = code
             current_phase_utc = utc
@@ -59,18 +53,19 @@ def get_current_moon_phases(tzone, asof: datetime = None) -> dict:
             break
 
     if current_phase_code is None or next_phase_code is None:
-        logger.error(f"Could not find current phase. asof={asof}")
+        logger.error(f"Could not find current or next phase asof={asof}")
 
     return {
         "current": current_phase_code,
-        "currentdt": current_phase_utc.astimezone(tzone),
+        "currentdt": current_phase_utc.astimezone(tzone) if current_phase_utc else None,
         "nextphase": next_phase_code,
-        "nextdt": next_phase_utc.astimezone(tzone),
+        "nextdt": next_phase_utc.astimezone(tzone) if next_phase_utc else None,
     }
 
 
 def get_syzygy_data(timeline: GraphTimeline) -> dict:
-    """Get moon phase, moon perigee and sun perihelion that occur within this timeline, if any.
+    """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
+    sorted by datetime.
 
     Args:
         timeline
@@ -103,66 +98,88 @@ def get_moon_phase(timeline: GraphTimeline) -> tuple[str, datetime]:
         <phase-name>, <phase-datetime>
     """
 
-    for utc, code in data.phase_data.items():
+    data = get_or_load_phase_data()
+
+    for utc, code in data.items():
         if timeline.within(utc):
             return code, utc.astimezone(timeline.time_zone)
+        if utc > timeline.end_dt:
+            break
 
     return None, None
 
 
 def get_perigee(timeline: GraphTimeline) -> datetime:
     """Get the datetime of the Perigee that occurs in this timeline, if any."""
-    for utc in data.perigee_utc:
+    data = get_or_load_datetime_data("perigee")
+    for utc in data:
         if timeline.within(utc):
             return utc.astimezone(timeline.time_zone)
+        if utc > timeline.end_dt:
+            break
     return None
 
 
 def get_perihelion(timeline: GraphTimeline) -> datetime:
     """Get the datetime of the Perihelion that occurs in this timeline, if any."""
-    for utc in data.perihelion_utc:
+    data = get_or_load_datetime_data("perihelion")
+    for utc in data:
         if timeline.within(utc):
             return utc.astimezone(timeline.time_zone)
+        if utc > timeline.end_dt:
+            break
     return None
 
 
-def pull_data(url: str) -> dict:
-    """Use this if/when we need to programatically call the API."""
-    try:
-        response = requests.get(url)
-    except Exception as e:
-        logger.error(f"Url: {url} Response: {response}", exc_info=e)
-        raise APIException()
+def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> list:
+    """Get from cache a list of datetimes. Load from disk to cache first if necessary."""
+    cache_key = f"{type}_data"
+    data = cache.get(cache_key)
+    if data is not None:
+        logger.debug(f"Cache hit for {cache_key}")
+        return data
 
-    if response.status_code != 200:
-        logger.error(f"status {response.status_code} calling {url}")
-        raise APIException()
-
-    try:
-        return json.loads(response.text)
-
-    except ValueError as e:
-        logger.error(f"Error calling {url}: {e}")
-        raise APIException(e)
-
-
-def parse_json_year(phase_json: dict, year: int) -> list:
-    """Parse the JSON returned by the moon phase API.
-    Use this if/when we need to programatically call the API.
-    """
-
-    phases = phase_json["phasedata"]
-    utc = ZoneInfo("UTC")
     data = []
-    start = datetime(year, 1, 1, tzinfo=utc)
-    end = datetime(year, 12, 31, 23, 59, tzinfo=utc)
+    filepath = f"{data_dir}/{type}.csv"
 
-    for entry in phases:
-        phase = entry["phase"]
-        dt_str = (
-            f"{entry['year']}-{entry['month']:02d}-{entry['day']:02d} {entry['time']}"
-        )
-        dt_utc = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=utc)
-        if start <= dt_utc <= end:
-            data.append({dt_utc: phase})
+    with open(filepath, newline="") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            try:
+                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
+                data.append(dt_utc)
+            except Exception as e:
+                logger.error(f"Bad datetime in {filepath}: {row[0]}", exc_info=e)
+
+    logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
+    cache.set(cache_key, data, timeout=None)  # unlimited timeout
+    return data
+
+
+def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
+    """Get from cache a dict of moon phases. Load from disk to cache first if necessary."""
+    cache_key = "phase_data"
+    data = cache.get(cache_key)
+    if data is not None:
+        logger.debug(f"Cache hit for {cache_key}")
+        return data
+
+    data = {}
+    filepath = f"{data_dir}/phases.csv"
+
+    with open(filepath, newline="") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            try:
+                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
+                type = row[1]
+                if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
+                    logger.error(f"Bad type in {filepath} for {dt_utc}: {type}")
+                    raise ValueError(f"Bad type: {type}")
+                data[dt_utc] = type
+            except Exception as e:
+                logger.error(f"Bad datetime in {filepath}: {row[0]}", exc_info=e)
+
+    logger.debug(f"Loaded {len(data)} moon phases from {filepath}")
+    cache.set(cache_key, data, timeout=None)  # unlimited timeout
     return data
