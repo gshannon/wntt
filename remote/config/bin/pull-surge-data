@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 cwd=$(pwd)
-rootdir=$HOME/surge
+rootdir=$HOME/datamount/surge
 workdir=$rootdir/tmp
 archive=$rootdir/archive
 datadir=$rootdir/data

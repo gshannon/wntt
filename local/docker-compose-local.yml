@@ -25,4 +25,4 @@ services:
             - 8000:8001
         restart: unless-stopped
         volumes:
-            - /Users/gshannon/surge/data:/surgedata
+            - /Users/gshannon/dev/work/docker/wntt/datamount:/data

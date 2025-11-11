@@ -11,7 +11,7 @@ from app import tzutil as tz
 from app.timeline import Timeline
 
 # /surgedata is a mount defined in docker-compose.yml
-_default_surge_file_dir = "/surgedata"
+_default_surge_file_dir = "/data/surge/data"
 _max_surge = 20
 _min_surge = -20
 
