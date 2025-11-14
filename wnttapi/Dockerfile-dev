@@ -1,5 +1,5 @@
 
-FROM python:3.13.0b4-slim AS base
+FROM python:3.13.9-slim AS base
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Run the application.
-CMD ["gunicorn", "--bind=0.0.0.0:8001", "-w 2", "project.wsgi"]
+CMD ["gunicorn", "--bind=0.0.0.0:8001", "-w 1", "project.wsgi"]
 ARG GITBRANCH=?
 ARG GITSHA=?
 LABEL gitbranch=$GITBRANCH gitsha=$GITSHA

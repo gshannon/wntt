@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/app/.npm \
     npm set cache /app/.npm && \
     npm install
 
-COPY index.html eslint.config.js vite.config.js .env.production ./
+COPY index.html vite.config.js .env.production ./
 ARG BUILDNUM=?
 ENV VITE_BUILD_NUM=${BUILDNUM}
 COPY src ./src/
