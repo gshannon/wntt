@@ -40,6 +40,20 @@ Here are the configuration files needed during the build/deploy process.
 
     E.g. {"version":"1.32"} wnttapi reads this so it knows what version it is. It will reject any calls from wnttapp with a version that doesn not match.
 
+### Runtime Data Files
+
+    On the hosting server there is a directory that is mounted by the API Docker image which contains configuration and astronomical data files required by the application.  See the _volumes_ section in docker-compose.yml for the definition. These files can be edited on the server and then put into immediate use by by restarting the API.
+
+    - stations/
+        - stations.json - configuration details of all supported SWMP stations
+        - annual_highs_navd88.json - predicted highs of all supported years for all referenced NOAA stations
+    - surge/data/
+        - 1 csv file for each referenced NOAA station; downloaded with cron job
+    - syzygy/
+        - perigee.csv : UTC datetimes of moon perigee for the supported date range
+        - perihelion.csv : UTC datetimes of earth-sun perihelion for the supported date range
+        - phases.csv : UTC datetimes and phase code (NM, FQ, FM, LQ) for moon phases in supported date range
+
 ## Building
 
 Note: Git branch and sha are added to Docker images as labels for debugging purposes. On the host, they can be retrieved like this:
