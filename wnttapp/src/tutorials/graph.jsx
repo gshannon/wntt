@@ -97,8 +97,7 @@ export const getData = (station) => {
                         For several days in the the future, you will see the Projected Storm Tide
                         value, which is the sum of the Predicted Tide (astronomical) and the
                         Projected Storm Surge. This surge value comes from an experimental project
-                        by NOAA, and is the best known estimate for the Wells harbor, updated every
-                        6 hours.
+                        by NOAA, and is updated every 6 hours.
                     </span>
                 )
             },
@@ -111,7 +110,7 @@ export const getData = (station) => {
                       render: () => {
                           return (
                               <span>
-                                  In the legend, {clickOrTap} any data line to toggle its
+                                  In the legend, {clickOrTap} certain data lines to toggle their
                                   visibility.
                               </span>
                           )

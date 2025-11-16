@@ -5,6 +5,7 @@ import Button from 'react-bootstrap/Button'
 import Dropdown from 'react-bootstrap/Dropdown'
 import { Activity, useContext } from 'react'
 import { AppContext } from './AppContext'
+import { Link } from './Links'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
 import useStationSelection from './useStationSelection'
@@ -38,21 +39,43 @@ export default function Home() {
     ) : (
         <Dropdown>
             <Dropdown.Toggle variant='primary' id='dropdown-basic'>
-                Select SWMP Station
+                Select Station
             </Dropdown.Toggle>
             <Dropdown.Menu>{stationItems}</Dropdown.Menu>
         </Dropdown>
     )
 
+    const text1 = () => {
+        if (ctx.special) {
+            return (
+                <>
+                    Here you can view historical tide and wind data, as well as predicted tides and
+                    storm surge, for certain members of the{' '}
+                    <Link
+                        href='https://coast.noaa.gov/nerrs/'
+                        text='National Estuarine Research Reserve System'
+                    />
+                    . You can also obtain the elevation of any location in general vicinity of the
+                    reserve in order to assess the flood risk at that location.
+                </>
+            )
+        } else {
+            return (
+                <>
+                    Here you can view historical tide and wind data, as well as predicted tides and
+                    storm surge. You can also obtain the elevation of any location within our
+                    boundaries (Kennebunk to Ogunquit), to assess the flood risk at that location.
+                </>
+            )
+        }
+    }
+
     return (
         <div id='home' className='home'>
             <div className='welcome p-2 my-3'>
                 <p>
-                    Welcome to the Wells National Estuarine Research Reserve Tide Tracker. Here you
-                    can view historical tide and wind data, as well as predicted tides and storm
-                    surge. You can also obtain the elevation of any location within our boundaries
-                    (Kennebunk to Ogunquit), to assess the flood risk at that location. To learn
-                    more, watch this{' '}
+                    Welcome to the Wells National Estuarine Research Reserve Tide Tracker. {text1()}{' '}
+                    To learn more, watch this{' '}
                     <a
                         target='_blank'
                         rel='noopener noreferrer'
@@ -85,9 +108,6 @@ export default function Home() {
 const ConditionsSection = ({ station }) => {
     const { data, error } = useLatestData(station)
 
-    if (error) {
-        console.error(error)
-    }
     return (
         <div className='conditions'>
             <div className='title'>Latest Conditions -- {station.reserveName}</div>

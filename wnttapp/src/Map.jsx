@@ -194,8 +194,8 @@ export default function Map() {
                     <Row className='mx-0'>
                         <Col className='col-12 text-center'>
                             <Overlay
-                                text='Add or replace your custom elevation to the graph and return
-                                        to the Graph.'
+                                text='Add your custom elevation to the graph and return
+                                        to the graph page.'
                                 placement='top'
                                 contents={
                                     <Button

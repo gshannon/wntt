@@ -40,6 +40,12 @@ export default function Glossary() {
                     />
                     . It is a network of 30 coastal sites established by a partnership between NOAA
                     and the coastal states. Its goals are to support estuary health and education.
+                    See also{' '}
+                    <Link
+                        href='https://www.nerra.org/'
+                        text='NERRA - National Estuarine Research Reserve Association'
+                    />
+                    .
                 </Entry>
                 <Entry title='MLLW (Mean Lower Low Water)'>
                     MLLW is the average of all lowest daily tides observed over the{' '}
