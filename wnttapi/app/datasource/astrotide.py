@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 
 import requests
 from app import util
+from app.station import Station
 from app.timeline import Timeline
 from rest_framework.exceptions import APIException
-from app.station import Station
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -
     for pred in pred_json:
         dts = pred["t"]
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
-        if timeline.within(dt):
+        if timeline.contains(dt):
             val = pred["v"]
             reg_preds_dict[dt] = station.navd88_feet_to_mllw_feet(float(val))
     return reg_preds_dict
@@ -145,22 +145,6 @@ def hilo_json_to_dict(
             }
 
     return future_hilo_dict
-
-
-def find_highest_navd88(hilo_json_dict) -> float:
-    """Searches through the json and returns the highest NAVD88 high tide value found."""
-    highest = None
-
-    for pred in hilo_json_dict:
-        val = round(float(pred["v"]), 2)
-        typ = pred["type"]  # should be 'H' or 'L'
-        if typ not in ["H", "L"]:
-            logger.error(f"Unknown type {typ}: {pred}")
-            raise APIException()
-        if typ == "H" and (highest is None or val > highest):
-            highest = val
-
-    return highest
 
 
 def pull_data(url) -> list:
