@@ -105,7 +105,7 @@ def get_moon_phase(
     data = get_or_load_phase_data(data_dir)
 
     for utc, code in data.items():
-        if timeline.within(utc):
+        if timeline.contains(utc):
             return code, utc.astimezone(timeline.time_zone)
         if utc > timeline.end_dt:
             break
@@ -117,7 +117,7 @@ def get_perigee(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> d
     """Get the datetime of the Perigee that occurs in this timeline, if any."""
     data = get_or_load_datetime_data("perigee", data_dir)
     for utc in data:
-        if timeline.within(utc):
+        if timeline.contains(utc):
             return utc.astimezone(timeline.time_zone)
         if utc > timeline.end_dt:
             break
@@ -130,7 +130,7 @@ def get_perihelion(
     """Get the datetime of the Perihelion that occurs in this timeline, if any."""
     data = get_or_load_datetime_data("perihelion", data_dir)
     for utc in data:
-        if timeline.within(utc):
+        if timeline.contains(utc):
             return utc.astimezone(timeline.time_zone)
         if utc > timeline.end_dt:
             break

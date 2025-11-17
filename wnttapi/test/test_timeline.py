@@ -129,7 +129,7 @@ class TestGraphTimeline(TestCase):
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
         timeline.add_time(adder)
         self.assertEqual(timeline.length_requested(), len1 + 1)
-        self.assertTrue(timeline.within(adder))
+        self.assertTrue(timeline.contains(adder))
 
 
 class TestHiloTimeline(TestCase):
@@ -200,4 +200,4 @@ class TestHiloTimeline(TestCase):
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
         timeline.add_time(adder)
         self.assertEqual(timeline.length_requested(), len1 + 1)
-        self.assertTrue(timeline.within(adder))
+        self.assertTrue(timeline.contains(adder))

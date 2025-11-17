@@ -100,6 +100,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         hoversubplots: 'axis', // to include wind hovers in upper graph
         legend: {
             groupclick: 'toggleitem',
+            itemdoubleclick: false, // disable "isolate this plot" on double-click
             title: {
                 text: '<b>Click lines below to toggle visibility.<br>See Help for details.</b>',
             },
@@ -127,7 +128,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             title: { text: 'Wind MPH', font: { size: 15 } },
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
-            // For wind, we prefer a tick interval of 2, for greater precistion, but if the range
+            // For wind, we prefer a tick interval of 2, for greater precision, but if the range
             // is too high, it gets very cluttered, so we bump it to 5.
             dtick:
                 data.wind_speeds !== null &&
@@ -228,7 +229,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             color: PredictedTideColor,
             hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
-            disableToggle: true,
+            disableToggle: false,
         }),
         ...(data.past_surge !== null
             ? [

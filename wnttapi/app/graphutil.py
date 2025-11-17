@@ -190,7 +190,7 @@ def get_cdmo_data(timeline: GraphTimeline, station: stn.Station) -> tuple[dict, 
 def build_hist_tide_plot(
     timeline: GraphTimeline, obs_dict: dict, obs_hilo_dict: dict
 ) -> tuple[list, list]:
-    """Build historical tide plot and high or low tide labels. For timeslines entirely in the future,
+    """Build historical tide plot and high or low tide labels. For timelines entirely in the future,
     each callback would return None, so we can just return None for both lists.
 
     Args:

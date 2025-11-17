@@ -29,7 +29,7 @@ export default function Map() {
     const storedOptions = storage.getStationPermanentStorage(ctx.station.id)
     const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
 
-    // This is used when user clicks on the map, while we look up the elevation.
+    // This is used when user clicks on the map or finds by address, while we look up the elevation.
     const [pendingMarkerLocation, setPendingMarkerLocation] = useState(null)
     const [markerLocation, setMarkerLocation] = useState(stationOptions.markerLocation)
     const [markerElevationNav, setMarkerElevationNav] = useState(stationOptions.markerElevationNav)

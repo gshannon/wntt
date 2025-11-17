@@ -57,7 +57,7 @@ class Timeline:
         """Return the number of times in the requested timeline."""
         return len(self._requested_times)
 
-    def within(self, dt: datetime) -> bool:
+    def contains(self, dt: datetime) -> bool:
         """Returns whether the given datetime is within the boundries of the requested timeline."""
         return dt and self.start_dt <= dt <= self.end_dt
 
@@ -153,7 +153,7 @@ class GraphTimeline(Timeline):
         Raises:
             ValueError: if the time is out of bounds.
         """
-        if not self.within(dt):
+        if not self.contains(dt):
             raise ValueError(f"{dt} is outside of timeline boundaries")
         if dt not in self._requested_times:
             self._requested_times.append(dt)
@@ -239,7 +239,7 @@ class HiloTimeline(GraphTimeline):
         self._hilo_timeline = list(
             set(
                 [self.start_dt]
-                + list(filter(lambda dt: self.within(dt), hilo_dts))
+                + list(filter(lambda dt: self.contains(dt), hilo_dts))
                 + [self.end_dt]
             )
         )
