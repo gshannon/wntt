@@ -6,8 +6,8 @@ COPY package.json package-lock.json .
 RUN npm ci   # run clean install
 
 COPY index.html eslint.config.js vite.config.js .env.development ./
-ARG BUILDNUM=?
-ENV VITE_BUILD_NUM=${BUILDNUM}
+ARG VERSION=?
+ENV VITE_APP_VERSION=${VERSION}
 # This is not necessary if we're mounting the src directory in the compose file, for hot module replacement (HMR)
 # COPY src ./src/
 COPY public ./public/

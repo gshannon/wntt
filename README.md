@@ -14,11 +14,11 @@ features are:
 
 Here are the configuration files needed during the build/deploy process.
 
-### .buildnum-dev, .buildnum-prod
+### .version-dev, .version-prod
 
     They contain the build number. Update them before building for release.  E.g. 2.03.
 
-    - Its contents are passed to "docker build" using --build-arg, so Dockerfile can add VITE_BUILD_NUM to the React environment. wnttapp passes it as a parameter to all calls to wnttapi as a version check.
+    - Its contents are passed to "docker build" using --build-arg, so Dockerfile can add VITE_APP_VERSION to the React environment. wnttapp passes it as a parameter to all calls to wnttapi as a version check.
 
 ### local/.env, remote/config/.env
 

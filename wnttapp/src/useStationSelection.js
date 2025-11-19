@@ -13,7 +13,7 @@ export default function useStationSelection(enabled) {
                 .post(import.meta.env.VITE_API_STATION_SELECTION_URL, {
                     signal,
                     ip: clientIp ?? 'unknown',
-                    app_version: import.meta.env.VITE_BUILD_NUM,
+                    app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {
                     return res.data

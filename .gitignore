@@ -5,7 +5,7 @@
 *.bin
 *.ipynb
 *.tar
-.buildnum-dev
+.version-dev
 .env
 .env.*
 .astro
@@ -24,7 +24,6 @@ surge-data/
 .venv/
 __pycache__
 __init__.py
-wnttapi/version.json
 dist
 .DS_Store
 FileVaultMaster.*

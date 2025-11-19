@@ -1,17 +1,17 @@
 import logging
+import os
 from datetime import datetime
 
 from app.datasource import address
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.views import APIView, Response
 
-from . import config as cfg
 from . import graphutil as gr
 from . import swmp
 from . import station as stn
 
 logger = logging.getLogger(__name__)
-version = cfg.get_version()
+version = os.getenv("APP_VERSION", "set-me")
 
 
 class StationSelectionView(APIView):

@@ -9,7 +9,6 @@ from app.datasource.apiutil import APICall, run_parallel
 from app.timeline import GraphTimeline, HiloTimeline
 from rest_framework.exceptions import ValidationError
 
-from . import config as cfg
 from . import station as stn
 from . import tzutil as tz
 
@@ -393,8 +392,8 @@ def validate_dates(start: date, end: date):
     Raises:
         ValidationError: If date range is too big, or end < start.
     """
-    earliest_date = date(cfg.get_supported_years()[0], 1, 1)
-    latest_date = date(cfg.get_supported_years()[-1], 12, 31)
+    earliest_date = date(stn.get_supported_years()[0], 1, 1)
+    latest_date = date(stn.get_supported_years()[-1], 12, 31)
     if (
         start > latest_date
         or start < earliest_date
