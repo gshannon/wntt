@@ -15,7 +15,7 @@ export default function useAddressLookup(search) {
                 .post(import.meta.env.VITE_API_ADDRESS_URL, {
                     signal,
                     search: encoded,
-                    app_version: import.meta.env.VITE_BUILD_NUM,
+                    app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {
                     return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }

@@ -49,13 +49,13 @@ export default function App() {
     // Effects
 
     useEffect(() => {
-        console.log(`WNTT Startup, build ${import.meta.env.VITE_BUILD_NUM}`)
+        console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
     }, [])
 
     useEffect(() => {
         axios
             .post(import.meta.env.VITE_API_STATION_DATA_URL, {
-                app_version: import.meta.env.VITE_BUILD_NUM,
+                app_version: import.meta.env.VITE_APP_VERSION,
                 station_id: stationId,
             })
             .then((res) => {

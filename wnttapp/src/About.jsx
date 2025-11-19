@@ -197,7 +197,7 @@ export default function About() {
             </Accordion>
 
             <div className='p-3' style={{ fontSize: '.7em', float: 'right' }}>
-                <a onClick={() => toggle()}>Version </a> {import.meta.env.VITE_BUILD_NUM ?? '?'} W
+                <a onClick={() => toggle()}>Version </a> {import.meta.env.VITE_APP_VERSION ?? '?'} W
                 {window.innerWidth}.{window.outerWidth} H{window.innerHeight}.{window.outerHeight}
             </div>
         </Container>

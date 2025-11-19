@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from datetime import date
 
 from app import util
 from django.core.cache import cache
@@ -69,6 +70,15 @@ def get_station_selection_data(data_dir=_default_file_dir) -> list:
             }
         )
     return selection_data
+
+
+def get_supported_years() -> list:
+    """
+    Get the years the API supports, in order. By default this means the last 2 years, the current year,
+    plus the next 2 years.
+    """
+    year = date.today().year
+    return [y for y in range(year - 2, year + 3)]
 
 
 # Get a Station object for a given station id.  The station id is actually the water quality station id,

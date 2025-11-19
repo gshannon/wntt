@@ -8,8 +8,8 @@ RUN --mount=type=cache,target=/app/.npm \
     npm install
 
 COPY index.html vite.config.js .env.production ./
-ARG BUILDNUM=?
-ENV VITE_BUILD_NUM=${BUILDNUM}
+ARG VERSION=?
+ENV VITE_APP_VERSION=${VERSION}
 COPY src ./src/
 COPY public ./public/
 RUN npm run build
