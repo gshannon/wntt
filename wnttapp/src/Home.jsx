@@ -11,6 +11,14 @@ import useLatestData from './useLatestData'
 import useStationSelection from './useStationSelection'
 import { apiErrorResponse, Page } from './utils'
 
+const StationSelection = (props) => {
+    return props.error ? (
+        <div className='text-warning bg-dark'>{apiErrorResponse(props.error)}</div>
+    ) : (
+        <>{props.children}</>
+    )
+}
+
 export default function Home() {
     const ctx = useContext(AppContext)
     const [stationSelectionData, setStationSelectionData] = useState(null)
@@ -23,8 +31,7 @@ export default function Home() {
     const stationItems = stationSelectionData
         ? stationSelectionData.map((stn) => (
               <Dropdown.Item
-                  className='pointer'
-                  key={stn.id}
+                  key={stn.id} // Anything unique
                   disabled={stn.id === ctx.station?.id}
                   onClick={() => {
                       ctx.setStationId(stn.id)
@@ -33,17 +40,6 @@ export default function Home() {
               </Dropdown.Item>
           ))
         : ''
-
-    const stationSelectionSection = error ? (
-        <div className='text-warning bg-dark'>{apiErrorResponse(error)}</div>
-    ) : (
-        <Dropdown>
-            <Dropdown.Toggle variant='primary' id='dropdown-basic'>
-                Select Station
-            </Dropdown.Toggle>
-            <Dropdown.Menu>{stationItems}</Dropdown.Menu>
-        </Dropdown>
-    )
 
     const text1 = () => {
         if (ctx.special) {
@@ -71,7 +67,7 @@ export default function Home() {
     }
 
     return (
-        <div id='home' className='home'>
+        <div id='home' className={'home ' + ctx.bgClass}>
             <div className='welcome p-2 my-3'>
                 <p>
                     Welcome to the Wells National Estuarine Research Reserve Tide Tracker. {text1()}{' '}
@@ -87,11 +83,22 @@ export default function Home() {
             </div>
             <Row>
                 <Activity mode={ctx.special ? 'visible' : 'hidden'}>
-                    <Col className='align-content-center'>{stationSelectionSection}</Col>
+                    <Col className='align-content-center'>
+                        <StationSelection error={error}>
+                            <Dropdown>
+                                <Dropdown.Toggle
+                                    variant='custom-primary'
+                                    className='home-screen-btn fs-6'>
+                                    Change Station
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>{stationItems}</Dropdown.Menu>
+                            </Dropdown>
+                        </StationSelection>
+                    </Col>
                 </Activity>
                 <Col className='mb-1'>
                     <Button
-                        className='get-started m-1'
+                        className='home-screen-btn fw-bold'
                         disabled={ctx.station == null}
                         variant='custom-primary'
                         onClick={() => ctx.gotoPage(Page.Graph)}>

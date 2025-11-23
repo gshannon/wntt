@@ -16,6 +16,13 @@
     color: var(--deep-blue);
 }
 
+.current-station {
+    font-size: 0.9rem;
+    color: var(--federal-blue);
+    color: white;
+    background-color: var(--dusk-blue);
+}
+
 .main-title .tide-tracker {
     line-height: 0.9;
     font-style: italic;

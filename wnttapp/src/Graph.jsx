@@ -141,9 +141,6 @@ export default function Graph() {
         stationDaily.start == undefined &&
         (startDateStr, endDateStr) != (defaultStartStr, defaultEndStr)
     ) {
-        console.log(
-            `stationDaily is empty, resetting range from (${startDateStr}-${endDateStr}) to default.`
-        )
         resetDateControls()
     }
 
