@@ -13,6 +13,10 @@ import { Page } from './utils'
 import Station from './Station'
 import axios from 'axios'
 
+const WELLS_STATION_ID = 'welinwq'
+const WELLS_BG_CLASS = 'wells-bg'
+const OTHER_BG_CLASS = 'other-bg'
+
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -30,8 +34,9 @@ export default function App() {
 
     // Initial station will be the one stored, or Wells by default.
     const main = storage.getGlobalPermanentStorage()
-    const [stationId, setStationId] = useState(main.stationId ?? 'welinwq')
+    const [stationId, setStationId] = useState(main.stationId ?? WELLS_STATION_ID)
     const [station, setStation] = useState(null)
+    const [bgClass, setBgClass] = useState(WELLS_BG_CLASS)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
 
     // temporary dev hack
@@ -60,11 +65,12 @@ export default function App() {
             })
             .then((res) => {
                 setStation(Station.fromJson(res.data))
+                setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
             })
         storage.setGlobalPermanentStorage({
             stationId: stationId,
         })
-    }, [stationId])
+    }, [stationId, bgClass])
 
     const onCustomChange = useEffectEvent((newElevation) => {
         if (newElevation !== undefined && station != null) {
@@ -87,6 +93,7 @@ export default function App() {
                 value={{
                     station: station,
                     setStationId: setStationId,
+                    bgClass: bgClass,
                     gotoPage: gotoPage,
                     customElevationNav: customElevationNav,
                     setCustomElevationNav: setCustomElevationNav,

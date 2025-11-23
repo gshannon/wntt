@@ -8,6 +8,7 @@
     --med-blue: hsla(215, 34%, 54%, 0.815);
     --link-blue: #000dff;
     --ocean-blue: #3dd0e0;
+    --dusk-blue: #3d5a7b;
 }
 
 html {
@@ -74,7 +75,7 @@ a:hover {
 
 .btn-custom-primary:hover {
     color: white;
-    background: var(--steel-blue);
+    background: var(--dusk-blue);
 }
 
 /* For text you don't want to wrap */

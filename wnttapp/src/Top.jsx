@@ -116,6 +116,11 @@ export default function Top({ page, gotoPage }) {
                     </Col>
                 </Row>
             </Container>
+            {ctx.special && ctx.station ? (
+                <Row className='current-station justify-content-center py-1 my-0 mx-0'>
+                    Station: {ctx.station.reserveName}, {ctx.station.waterStationName}
+                </Row>
+            ) : null}
             {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
         </div>
     )
