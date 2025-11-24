@@ -29,10 +29,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const isNarrow = isSmallScreen()
     const tideMarkerSize = 8
     const windMarkerSize = 11
-    const [showHelp, setShowHelp] = useState(-1)
+    const [helpIndex, setHelpIndex] = useState(-1)
 
     const onModalClose = () => {
-        setShowHelp(-1)
+        setHelpIndex(-1)
     }
 
     if (error) {
@@ -347,7 +347,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }}
                 onClickAnnotation={(data) => {
                     // data.index will be 0-based index into displayedCodes[]
-                    setShowHelp(data.index)
+                    setHelpIndex(data.index)
                 }}
                 onLegendClick={(e) => {
                     // return false to disable toggle
@@ -360,11 +360,13 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }}
             />
             <p style={{ fontSize: '.95em', fontWeight: 700, textAlign: 'center' }}>
+                Times are shown in station local time ({ctx.station.timeZone}).
+                <br />
                 Tide and wind observation data may be missing due to equipment maintenance,
                 equipment failure or power failure.
             </p>
-            {showHelp >= 0 && (
-                <SyzygyPopup code={displayedCodes[showHelp]} onClose={onModalClose} />
+            {helpIndex >= 0 && (
+                <SyzygyPopup code={displayedCodes[helpIndex]} onClose={onModalClose} />
             )}
         </>
     )
