@@ -29,6 +29,7 @@ export default class Station {
     constructor({
         id,
         reserveName,
+        timeZone,
         reserveUrl,
         waterStationName,
         weatherStationId,
@@ -48,6 +49,7 @@ export default class Station {
     }) {
         this.id = id
         this.reserveName = reserveName
+        this.timeZone = timeZone
         this.reserveUrl = reserveUrl
         this.waterStationName = waterStationName
         this.weatherStationId = weatherStationId
