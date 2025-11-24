@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import date
+from zoneinfo import ZoneInfo
 
 from app import util
 from django.core.cache import cache
@@ -24,6 +25,7 @@ class Station:
             weather_station_id=data["weatherStationId"],
             noaa_station_id=data["noaaStationId"],
             navd88_to_mllw=data["navd88ToMllwConversion"],
+            time_zone=ZoneInfo(data["timeZone"]),
         )
 
     def __init__(
@@ -32,11 +34,13 @@ class Station:
         weather_station_id: str,
         noaa_station_id: str,
         navd88_to_mllw: float,
+        time_zone: ZoneInfo,
     ):
         self.id = id
         self.weather_station_id = weather_station_id
         self.noaa_station_id = noaa_station_id
         self.mllw_conversion = navd88_to_mllw
+        self.time_zone = time_zone
 
     def navd88_feet_to_mllw_feet(self, in_value: float) -> float:
         return round(in_value + self.mllw_conversion, 2)
