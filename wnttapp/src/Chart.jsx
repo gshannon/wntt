@@ -107,7 +107,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
         },
         margin: { t: 70, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
         // Override default date format to more readable, with 12-hour clock.
-        xaxis: { gridcolor: 'black', hoverformat: '%b %d, %Y %I:%M %p' },
+        // See https://github.com/d3/d3-time-format/tree/v2.2.3#locale_format
+        xaxis: { gridcolor: 'black', hoverformat: '%a, %b %-e, %Y %-I:%M %p' },
         xaxis2: { gridcolor: 'black' },
         yaxis: {
             title: {
