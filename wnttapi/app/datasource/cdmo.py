@@ -268,8 +268,8 @@ def compute_cdmo_request_dates(
     start_time: datetime, end_time: datetime
 ) -> tuple[date, date]:
     """
-    CDMO will give us only full days of data, using LST of the time zone of the requesting station. It
-    does not honor DST. So we may have to adjust the start date and/or the end date, to avoid missing data
+    CDMO will give us only full days of data, using LST of the time zone of the requesting station. LST
+    does not honor DST, so we may have to adjust the start date and/or the end date, to avoid missing data
     or getting too much data. We depend on the timeline being chronologically ordered. Here is the logic:
 
     - Start date: If timeline starts in standard time, no change.  Else if timeline starts in DST and

@@ -86,7 +86,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-# We do not need this because we do all date/time logic based on the time zone of the request.
+# We do not need this because we do all date/time logic based on the time zone of the swmp station.
 # TIME_ZONE = "US/Eastern"
 
 # This is not useful with the way we handle datetimes, so we don't use it.
@@ -109,5 +109,6 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "/var/tmp/django_cache",
+        "TIMEOUT": None,
     }
 }

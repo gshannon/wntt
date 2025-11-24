@@ -10,7 +10,6 @@ from app.timeline import GraphTimeline, HiloTimeline
 from rest_framework.exceptions import ValidationError
 
 from . import station as stn
-from . import tzutil as tz
 
 """
 Utility functions for plotting. 
@@ -28,10 +27,6 @@ dictionaries of data keyed on datetime objects would entail a lot of bandwidth a
 """
 
 logger = logging.getLogger(__name__)
-
-# For now this is all we support.  But someday if we support multiple reserves in multiple zones,
-# there will be others to support, so we'll probably pull this from the http client request.
-time_zone = tz.eastern
 
 
 def get_graph_data(
@@ -52,9 +47,9 @@ def get_graph_data(
     validate_dates(start_date, end_date)
 
     if hilo_mode:
-        timeline = HiloTimeline(start_date, end_date, time_zone)
+        timeline = HiloTimeline(start_date, end_date, station.time_zone)
     else:
-        timeline = GraphTimeline(start_date, end_date, time_zone)
+        timeline = GraphTimeline(start_date, end_date, station.time_zone)
 
     # Get moon/sun tide data
     syzygy_data = moon.get_syzygy_data(timeline)

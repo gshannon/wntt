@@ -12,7 +12,7 @@ from . import tzutil as tz
 logger = logging.getLogger(__name__)
 
 
-def get_latest_conditions(station: Station, tzone=tz.eastern) -> dict:
+def get_latest_conditions(station: Station) -> dict:
     """
     Pull the most recent wind, tide & temp readings from CDMO.
     We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
@@ -20,7 +20,7 @@ def get_latest_conditions(station: Station, tzone=tz.eastern) -> dict:
     We'll probably get time zone from the request later.
     """
 
-    end_dt = util.round_to_quarter(tz.now(tzone))
+    end_dt = util.round_to_quarter(tz.now(station.time_zone))
     # Find recent data. If it's not in this time window, it's not current enough to display.
     start_dt = end_dt - timedelta(hours=4)
     timeline = Timeline(start_dt, end_dt)
@@ -48,7 +48,7 @@ def get_latest_conditions(station: Station, tzone=tz.eastern) -> dict:
 
     run_parallel(cdmo_calls)
 
-    moon_dict = moon.get_current_moon_phases(tzone)
+    moon_dict = moon.get_current_moon_phases(station.time_zone)
 
     return extract_data(
         cdmo_calls[0].data, cdmo_calls[1].data, cdmo_calls[2].data, moon_dict

@@ -26,9 +26,8 @@ def get_astro_tides(
     """
     Fetch astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the
     tides & currents API, we use:
-        - time_zone=lst-ldt, which means Local Standard Time, adjusted for daylight savings time. The timezone
-            of the requested station will be used, and that should always match the timezone in the timeline,
-            though there's no way to enforce that since the api call doesn't return the timezone.
+        - time_zone=lst-ldt, which means Local Standard Time, as if there were no daylight savings time.
+            This will always be relative to the timezone of the station, which will match the timeline.
         - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
             MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
 

@@ -6,6 +6,7 @@ export default class Station {
         return new Station({
             id: json.id,
             reserveName: json.reserveName,
+            timeZone: json.timeZone,
             reserveUrl: json.reserveUrl,
             waterStationName: json.waterStationName,
             weatherStationId: json.weatherStationId,
