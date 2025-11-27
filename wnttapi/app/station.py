@@ -159,11 +159,15 @@ def get_or_load_annual_highs(
     if data is not None:
         return data
 
-    filepath = os.path.join(data_dir, "annual_highs_navd88.json")
-    contents = util.read_file(filepath)
-    data = json.loads(contents)
-    cache.set(cache_key, data, timeout=None)  # Cache forever
-    logger.debug(
-        f"Loaded {len(data)} annual highs from disk and cached with key {cache_key}"
-    )
-    return data
+    try:
+        filepath = os.path.join(data_dir, "annual_highs_navd88.json")
+        contents = util.read_file(filepath)
+        data = json.loads(contents)
+        cache.set(cache_key, data, timeout=None)  # Cache forever
+        logger.debug(
+            f"Loaded {len(data)} annual highs from disk and cached with key {cache_key}"
+        )
+        return data
+    except Exception as e:
+        logger.error(f"Error loading annual highs from {filepath}", exc_info=e)
+        return {}

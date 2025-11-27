@@ -17,7 +17,7 @@ node_modules/
 .ipyb_checkpoints/
 staticfiles/
 coverage/
-scripts/
+mytools/
 surge-data/
 .DS_Store
 .idea/

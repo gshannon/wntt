@@ -103,7 +103,7 @@ def hilo_json_to_dict(
     Convert json returned from the api call into a dict of high or low data values.
     Args:
         hilo_json (string): json content
-        timeline (Timeline): the requested timeline. Could be GraphTimeline or HiloTimeline.
+        timeline (Timeline): the requested timeline.
         hilo_start_dt: Meant to be 15 min past the latest observed tide, or None if that doesn't
           exit. Data from times before this are ignored, even if part of timeline.
 

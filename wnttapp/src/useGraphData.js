@@ -19,7 +19,6 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                     hilo_mode: hiloMode,
                     station_id: station.id,
                     ip: clientIp ?? 'unknown',
-                    time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => res.data)
