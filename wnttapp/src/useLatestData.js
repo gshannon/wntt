@@ -15,7 +15,6 @@ export default function useLatestData(station) {
                     signal,
                     ip: clientIp ?? 'unknown',
                     station_id: station.id,
-                    time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => res.data)

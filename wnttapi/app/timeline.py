@@ -112,13 +112,15 @@ class GraphTimeline(Timeline):
         # the timeline extensions used for that purpose.
         self._start_padding = []
         self._end_padding = []
-        # Do nothing if the timeline entire timeline is in the future.
+        # Pad the start if any part of the timeline is in the past.
         if self.start_dt < self.now:
             utc_cur = self.start_dt.astimezone(tz.utc)
             for _ in range(self._padding_points):
                 utc_cur -= timedelta(minutes=15)
                 self._start_padding.insert(0, utc_cur.astimezone(self.time_zone))
 
+        # Pad the end, limiting to the past.
+        if self.end_dt < self.now:
             utc_cur = self.end_dt.astimezone(tz.utc)
             for _ in range(self._padding_points):
                 utc_cur += timedelta(minutes=15)
