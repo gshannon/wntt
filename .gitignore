@@ -7,7 +7,6 @@
 *.tar
 .version-dev
 .env
-.env.*
 .astro
 .vscode/
 datamount/
