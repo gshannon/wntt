@@ -16,7 +16,7 @@ version = os.getenv("APP_VERSION", "set-me")
 
 class StationSelectionView(APIView):
     def post(self, request, format=None):
-        logger.info(f"StationSelectionView: {request.data}")
+        log_request("StationSelectionView", request.data)
         verify_version(request.data)
         stations = stn.get_station_selection_data()
         return Response(data=stations)
@@ -24,7 +24,7 @@ class StationSelectionView(APIView):
 
 class StationDataView(APIView):
     def post(self, request, format=None):
-        logger.info(f"StationDataView: {request.data}")
+        log_request("StationDataView", request.data)
         verify_version(request.data)
         station_id = get_param(request.data, "station_id")
         station_data = stn.get_station_data(station_id)
@@ -33,7 +33,7 @@ class StationDataView(APIView):
 
 class LatestInfoView(APIView):
     def post(self, request, format=None):
-        logger.info(f"LatestInfoView: {request.data}")
+        log_request("LatestInfoView", request.data)
         verify_version(request.data)
         swmp_station_id = get_param(request.data, "station_id")
         station = stn.get_station(swmp_station_id)
@@ -45,7 +45,7 @@ class LatestInfoView(APIView):
 class CreateGraphView(APIView):
     def post(self, request, format=None):
         # FYI, use the form request.META["HTTP_HOST"] to look at header fields.
-        logger.info(f"CreateGraphView: {request.data}")
+        log_request("CreateGraphView", request.data)
         verify_version(request.data)
         start_date = datetime.strptime(
             get_param(request.data, "start_date"), "%m/%d/%Y"
@@ -64,11 +64,16 @@ class CreateGraphView(APIView):
 
 class AddressView(APIView):
     def post(self, request, format=None):
-        logger.info(f"AddressView: {request.data}")
+        log_request("AddressView", request.data)
         verify_version(request.data)
         search = get_param(request.data, "search")
         latlng = address.get_location(search)
         return Response(data=latlng)
+
+
+def log_request(name, data):
+    cleaned = {k: v for k, v in data.items() if k != "signal"}
+    logger.info(f"{name}: {cleaned}")
 
 
 # Try to get a param from the request. If not there, raise
