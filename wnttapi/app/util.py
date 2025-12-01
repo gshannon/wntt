@@ -28,6 +28,8 @@ def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:
 
 def round_to_quarter(dt: datetime) -> datetime:
     """round a datetime to nearest quarter-hour"""
+    if dt.minute % 15 == 0:
+        return dt
     m15 = timedelta(minutes=15)
     floor_mins = (dt.minute // 15) * 15
     floor = datetime(dt.year, dt.month, dt.day, dt.hour, floor_mins, tzinfo=dt.tzinfo)

@@ -34,12 +34,12 @@ class Timeline:
         self.end_dt = end_dt
         self.time_zone = start_dt.tzinfo
         self.now = tz.now(self.time_zone) if now is None else now
+        if self.start_dt.tzinfo is None or self.end_dt.tzinfo is None:
+            raise ValueError("datetimes cannot be naive")
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
-            logger.error(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
-            raise ValueError()
+            raise ValueError(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
         if self.end_dt <= self.start_dt:
-            logger.error("end must be greater than start")
-            raise ValueError()
+            raise ValueError("end must be greater than start")
 
         # timedelta is broken when crossing DST boundaries in tz's which honor DST, so
         # we'll do all datetime arithmetic in UTC in modern Python.
@@ -106,6 +106,7 @@ class GraphTimeline(Timeline):
             ),
             now,
         )
+
         # For determining highs and lows for CDMO data, which is by definition only in the
         # past (before "self.now"), we need to look a bit beyond the requested timeline in case
         # there is a high or low near or on the first or last displayed time. Here we define
