@@ -152,6 +152,10 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
 
     CDMO returns dates in LST (local standard time), which is not sensitive to DST.
     """
+    if timeline.start_dt.minute % 15 > 0 or timeline.end_dt.minute % 15 > 0:
+        # CDMO data is always on 15-minute intervals.
+        raise ValueError("datetimes must be on 15-minute intervals")
+
     xml = get_cdmo_xml(timeline, station_id, param)
     data = get_cdmo_data(timeline, xml, param, converter)
     return data

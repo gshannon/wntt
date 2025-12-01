@@ -21,7 +21,7 @@ base_url = (
 
 
 def get_astro_tides(
-    station: Station, timeline: Timeline, max_observed_dt: datetime
+    station: Station, timeline: Timeline, max_observed_dt: datetime = None
 ) -> tuple[dict, dict]:
     """
     Fetch astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the

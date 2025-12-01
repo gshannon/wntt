@@ -22,6 +22,9 @@ This will first assume the naive datetime is machine timezone, then convert it t
 Convert between aware timezones:
 datetime(2024,6,18,10,14,tzinfo=ZoneInfo('UTC')).astimezone(ZoneInfo('US/Eastern'))
 
+Is a datetime tz aware?
+dt.tzinfo is not None
+
 Is an aware datetime in DST?
 dst() returns None if dt is naive
 dst() returns datetime.timedelta(seconds=0) if aware and not in DST

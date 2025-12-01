@@ -3,13 +3,31 @@ from unittest import TestCase
 
 import app.graphutil as gu
 import app.tzutil as tz
-from app.timeline import GraphTimeline, HiloTimeline
+from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
 spring_date = date(2024, 3, 10)
 fall_date = date(2024, 11, 3)
 
 
 class TestGraphTimeline(TestCase):
+    def test_construction_failures(self):
+        # Base timeline construction error handling
+
+        start_dt = datetime(2025, 5, 2, 8, 0, 0, tzinfo=tz.central)
+        end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.central)
+        with self.assertRaisesRegex(ValueError, "greater than start"):
+            Timeline(start_dt, end_dt)
+
+        start_dt = datetime(2025, 5, 1, 8, 0, 0, tzinfo=tz.eastern)
+        end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.pacific)
+        with self.assertRaisesRegex(ValueError, "zone mismatch"):
+            Timeline(start_dt, end_dt)
+
+        start_dt = datetime(2025, 5, 1, 8, 0, 0)
+        end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.pacific)
+        with self.assertRaisesRegex(ValueError, "cannot be naive"):
+            Timeline(start_dt, end_dt)
+
     def test_handles_dst(self):
         # GraphTimeline creates correct timeline for days where Daylight Savings Time starts or end.
         zone = tz.eastern

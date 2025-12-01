@@ -13,6 +13,14 @@ export default function Conditions({ data, error }) {
         return `${Months[dt.getMonth()]} ${dt.getDate()} ${tm}`
     }
 
+    // Same as format_dt but only time portion
+    const format_tm = (dts) => {
+        const dt = new Date(dts)
+        const re = /:\d\d /
+        const tm = dt.toLocaleTimeString('en-US').replace(re, ' ')
+        return tm
+    }
+
     if (error) {
         return <div className='text-center text-white'>{apiErrorResponse(error)}</div>
     }
@@ -27,6 +35,18 @@ export default function Conditions({ data, error }) {
 
     return (
         <div className='cond-container'>
+            <div className='cond-label'>Tide Level</div>
+            <div className='cond-data'>
+                {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
+            </div>
+            <div className='cond-time'>{data.tide_time ? format_dt(data.tide_time) : noData}</div>
+
+            <div className='cond-label'>Next High Tide</div>
+            <div className='cond-data'>
+                {data.next_high_tide ? format_tm(data.next_high_tide) : noData}
+            </div>
+            <div className='cond-time'>{format_dt(new Date())}</div>
+
             <div className='cond-label'>Wind Speed</div>
             <div className='cond-data'>
                 {data.wind_speed == null ? noData : `${data.wind_speed} mph from ${data.wind_dir}`}
@@ -38,12 +58,6 @@ export default function Conditions({ data, error }) {
                 {data.wind_gust == null ? noData : `${data.wind_gust} mph`}
             </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
-
-            <div className='cond-label'>Tide Level</div>
-            <div className='cond-data'>
-                {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
-            </div>
-            <div className='cond-time'>{data.tide_time ? format_dt(data.tide_time) : noData}</div>
 
             <div className='cond-label'>Water Temp</div>
             <div className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</div>
