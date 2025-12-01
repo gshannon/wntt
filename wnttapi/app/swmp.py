@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 
 def get_latest_conditions(station: Station) -> dict:
     """
-    Pull the most recent wind, tide & temp readings from CDMO.
-    We'll build a timeline that covers the last several hours, since for tide data we only need 2, and
-    only 1 for the others.  Most of the time, this will result in only 1 day being requested from CDMO.
-    For the next high tide prediction, we'll build a separate timeline that goes out 36 hours to cover
-    diurnal locales.
+    Pull the most recent wind, tide & temp readings from CDMO, some tide predictions and moon phase data.
+    These API calls are done in parallel.
+    Args:
+        station (Station): the station
+    Returns:
+        a dict with all the data needed for the latest conditions display.
     """
 
     # Find recent cdmo data. If it's not in this time window, it's not current enough to display.
@@ -28,7 +29,7 @@ def get_latest_conditions(station: Station) -> dict:
     # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
     future_start_dt = tz.now(station.time_zone) + timedelta(minutes=1)
     future_astro_timeline = Timeline(
-        future_start_dt, future_start_dt + timedelta(hours=36)
+        future_start_dt, future_start_dt + timedelta(hours=15)
     )
 
     cdmo_calls = [
@@ -83,12 +84,13 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dicts, moon_dict) -> dic
     else:
         latest_temp_dt = temp_str = None
 
-    # These are all from the future. Extract the minimum actual time with type H, which is the next high tide.
-    highs = {key: val for key, val in astro_dicts[1].items() if val["type"] == "H"}
-    high_dts = list(map(lambda d: d["real_dt"], highs.values()))
-    next_high_dt = min(high_dts) if len(high_dts) > 0 else None
-    if next_high_dt is None:
-        logger.error(f"No future high tide found in astro tide data: {astro_dicts[1]}")
+    # Get the time and type of the next high or low tide prediction
+    vals = list(astro_dicts[1].values())
+    vals.sort(key=lambda d: d["real_dt"])
+    next_tide_dt, next_tide_type = (
+        vals[0]["real_dt"],
+        vals[0]["type"] if len(vals) > 0 else None,
+    )
 
     return {
         "wind_speed": wind_speed_str,
@@ -104,7 +106,8 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dicts, moon_dict) -> dic
         "phase_dt": moon_dict["currentdt"],
         "next_phase": moon_dict["nextphase"],
         "next_phase_dt": moon_dict["nextdt"],
-        "next_high_tide": next_high_dt,
+        "next_tide_dt": next_tide_dt,
+        "next_tide_type": next_tide_type,
     }
 
 
