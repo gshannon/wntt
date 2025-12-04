@@ -59,14 +59,17 @@ def get_graph_data(
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
     obs_dict, wind_dict = get_cdmo_data(timeline, station)
 
-    # Determine highs and lows from observed data.
+    # Determine observed highs and lows.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
 
-    # When pulling predicted tides, we need to know the last observed tide time so we don't
-    # pull predicted highs and lows for times we already have observed data for.
-    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
+    # Get 15-minute interval astronomical tide predictions for the entire timeline.
+    astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
 
-    astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
+    # For annotating High and Low tides, observed data takes precedence over predicted, so we
+    # don't bother pulling predictions for the part of the timeline in the past, apart from the data lag
+    # period -- between the last observed data and the present.
+    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
+    astro_later_hilo_dict = astro.get_hilo_astro_tides(
         station, timeline, last_recorded_dt
     )
 
