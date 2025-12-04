@@ -28,17 +28,13 @@ def get_latest_conditions(station: Station) -> dict:
 
     # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
     future_start_dt = tz.now(station.time_zone) + timedelta(minutes=1)
-    future_astro_timeline = Timeline(
-        future_start_dt, future_start_dt + timedelta(hours=15)
-    )
+    future_timeline = Timeline(future_start_dt, future_start_dt + timedelta(hours=15))
 
     cdmo_calls = [
         APICall("wind", cdmo.get_recorded_wind_data, station, cdmo_timeline),
         APICall("tide", cdmo.get_recorded_tides, station, cdmo_timeline),
         APICall("temp", cdmo.get_recorded_temps, station, cdmo_timeline),
-        APICall(
-            "next_high_tide", astrotide.get_astro_tides, station, future_astro_timeline
-        ),
+        APICall("nexttide", astrotide.get_hilo_astro_tides, station, future_timeline),
     ]
 
     run_parallel(cdmo_calls)
@@ -54,7 +50,7 @@ def get_latest_conditions(station: Station) -> dict:
     )
 
 
-def extract_data(wind_dict, tide_dict, temp_dict, astro_dicts, moon_dict) -> dict:
+def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict:
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
     # we don't have to worry about missing data.  All dict keys are in chronological order.
     if len(tide_dict) > 0:
@@ -85,7 +81,7 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dicts, moon_dict) -> dic
         latest_temp_dt = temp_str = None
 
     # Get the time and type of the next high or low tide prediction
-    vals = list(astro_dicts[1].values())
+    vals = list(astro_dict.values())
     vals.sort(key=lambda d: d["real_dt"])
     next_tide_dt, next_tide_type = (
         vals[0]["real_dt"],

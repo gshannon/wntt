@@ -20,11 +20,9 @@ base_url = (
 )
 
 
-def get_astro_tides(
-    station: Station, timeline: Timeline, max_observed_dt: datetime = None
-) -> tuple[dict, dict]:
+def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
     """
-    Fetch astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the
+    Fetchx astronomical tide level predictions for the desired timeline. All values returned are MLLW. When we call the
     tides & currents API, we use:
         - time_zone=lst-ldt, which means Local Standard Time, as if there were no daylight savings time.
             This will always be relative to the timezone of the station, which will match the timeline.
@@ -32,36 +30,43 @@ def get_astro_tides(
             MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
 
     Args:
+        station (Station): the SWMP station
+        timeline (Timeline): the timeline
+
+    Returns:
+        - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
+    """
+    begin_date = timeline.start_dt.strftime("%Y%m%d")
+    end_date = timeline.end_dt.strftime("%Y%m%d")
+    pred_json = pull_data(station.noaa_station_id, "15", begin_date, end_date)
+    return pred15_json_to_dict(pred_json, timeline, station)
+
+
+def get_hilo_astro_tides(
+    station: Station, timeline: Timeline, max_observed_dt: datetime = None
+) -> tuple[dict, dict]:
+    """
+    Fetch high/low astronomical tide predictions for the timeline. All values returned are MLLW. See
+    get_15m_astro_tides() for details on the API call.
+
+    Args:
+        station (Station): the SWMP station
         timeline (Timeline): the timeline
         max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines.
             When we have observed data, we annotate those as highs/lows, not the predicted values. This datetime is
             used to prevent requesting high/low predictions for times where we have observed data.
 
     Returns:
-        tuple[dict, dict]:
-        - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
-        - dict of 15-min interval predictions for highs and lows only.
+        dict of 15-min interval predictions for highs and lows only.
           Structure is: {timeline_dt: {'real_dt': dt, 'value': level, 'type': 'H' or 'L'}}
-          The time range will begin with the timeline start, or 15 minutes after the last max_observed_dt,
-          which should be the most recent High or Low tide if we have a HiloTimeline. This means that the
-          earliest predicted value returned could be in the past. This is desirable as there's generally
-          a 30-90 minute latency between observation time and its availability from the API and we don't want gaps.
+          The time range will begin with the timeline start, or 15 minutes after the last max_observed_dt.
+          This means the returned dict will be empty if the entire timeline has already been observed.
+          The earliest predicted value returned could be in the past. This is desirable as
+          there's generally a 30-90 minute latency between observation time and its availability from the API
+          and we don't want gaps.
     """
 
-    preds15_dict = {}
     preds_hilo_dict = {}
-
-    # Part 1: pull 15-min predictions for the entire timeline. Even if we have a HiloTimeline for all future, where we show only
-    begin_date = timeline.start_dt.strftime("%Y%m%d")
-    end_date = timeline.end_dt.strftime("%Y%m%d")
-    url15min = f"{base_url}&interval=15&station={station.noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(
-        f"for timeline: {timeline.start_dt}-{timeline.end_dt}, url15min: {url15min}"
-    )
-    pred_json = pull_data(url15min)
-    preds15_dict = pred15_json_to_dict(pred_json, timeline, station)
-
-    # Part 2: For the the more precise High/Low values, we'll use a different API call.
     hilo_start_dt = (
         max_observed_dt + timedelta(minutes=15)
         if max_observed_dt is not None
@@ -72,15 +77,14 @@ def get_astro_tides(
         start_date = hilo_start_dt.strftime("%Y%m%d")
         end_date = timeline.end_dt.strftime("%Y%m%d")
 
-        urlhilo = f"{base_url}&interval=hilo&station={station.noaa_station_id}&begin_date={start_date}&end_date={end_date}"
-        logger.debug(f"for timeline: {start_date}-{end_date}, urlhilo: {urlhilo}")
-
-        future_preds_json = pull_data(urlhilo)
+        future_preds_json = pull_data(
+            station.noaa_station_id, "hilo", start_date, end_date
+        )
         preds_hilo_dict = hilo_json_to_dict(
             station, future_preds_json, timeline, hilo_start_dt
         )
 
-    return preds15_dict, preds_hilo_dict
+    return preds_hilo_dict
 
 
 def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:
@@ -89,6 +93,8 @@ def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -
     sparse dict of {dt: value} for all values that exist in the requested timeline. Converts NAVD88 to MLLW.
     """
     reg_preds_dict = {}  # {dt: value}
+    if len(pred_json) == 0:
+        return reg_preds_dict
     for pred in pred_json:
         dts = pred["t"]
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
@@ -104,26 +110,18 @@ def hilo_json_to_dict(
     """
     Convert json returned from the api call into a dict of high or low data values.
     Args:
-        hilo_json (string): json content
+        hilo_json (string): json content: list of high/low predictions like
+            {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}
         timeline (Timeline): the requested timeline.
         hilo_start_dt: Meant to be 15 min past the latest observed tide, or None if that doesn't
           exit. Data from times before this are ignored, even if part of timeline.
 
     Returns:
-        dict: The key is the closest datetime that appears in the raw timeline, and the
-        value is a dict describing the actual high or low values.
-        Inner dict elements are "real_dt" (actual time), "value" (pred) and "type" ('H' or 'L').
+        A sparse dict of {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} for all values that
+        exist in the requested timeline and are greater than the last observed tide time. Converts NAVD88 to MLLW.
 
     Raises:
         APIException: Invalid data from API
-
-    """
-    """
-    Params:
-
-    Given a list of high/low predictions like {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}, return
-    a sparse dict of {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} for all values that
-    exist in the requested timeline and are greater than the last observed tide time. Converts NAVD88 to MLLW.
     """
     future_hilo_dict = {}
     for pred in hilo_json:
@@ -148,19 +146,23 @@ def hilo_json_to_dict(
     return future_hilo_dict
 
 
-def pull_data(url) -> list:
-    """Call the API and return the predictions as a json list of dictionaries in the form
-    { "t": "2025-05-06 05:07", "v": "-3.630", "type": "L" },
+def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
+    """Call the API and return the predictions as a json list of dictionaries in these forms:
+    For interval=hilo:
+        { "t": "2025-05-06 05:07", "v": "-3.630", "type": "L" },
+    For interval=15:
+        { "t": "2025-05-06 01:00", "v": "-3.624" },
     """
+
+    url = f"{base_url}&interval={interval}&station={noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
+
     try:
         response = requests.get(url)
     except Exception as e:
-        logger.error(f"Url: {url} Response: {response}", exc_info=e)
-        raise APIException()
+        raise APIException(f"Url: {url}", e)
 
     if response.status_code != 200:
-        logger.error(f"status {response.status_code} calling {url}")
-        raise APIException()
+        raise APIException(f"status {response.status_code} calling {url}")
 
     try:
         return extract_json(response.text)
