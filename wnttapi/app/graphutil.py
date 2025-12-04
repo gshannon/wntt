@@ -62,12 +62,9 @@ def get_graph_data(
     # Determine highs and lows from observed data.
     obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
 
-    # For astronomical tides, we need to know the last observed high or low tide,
-    # if we're showing only highs and lows. Otherwise, we just need the last observed tide.
-    if hilo_mode:
-        last_recorded_dt = max(obs_hilo_dict) if len(obs_hilo_dict) > 0 else None
-    else:
-        last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
+    # When pulling predicted tides, we need to know the last observed tide time so we don't
+    # pull predicted highs and lows for times we already have observed data for.
+    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
 
     astro_preds15_dict, astro_later_hilo_dict = astro.get_astro_tides(
         station, timeline, last_recorded_dt
