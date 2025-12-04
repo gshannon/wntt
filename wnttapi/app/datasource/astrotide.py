@@ -34,7 +34,8 @@ def get_astro_tides(
     Args:
         timeline (Timeline): the timeline
         max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines.
-        For HiloTimelines, this is the latest time that has a recorded tide known to be a high or low tide.
+            When we have observed data, we annotate those as highs/lows, not the predicted values. This datetime is
+            used to prevent requesting high/low predictions for times where we have observed data.
 
     Returns:
         tuple[dict, dict]:
@@ -61,10 +62,11 @@ def get_astro_tides(
     preds15_dict = pred15_json_to_dict(pred_json, timeline, station)
 
     # Part 2: For the the more precise High/Low values, we'll use a different API call.
-    if max_observed_dt is not None:
-        hilo_start_dt = max_observed_dt + timedelta(minutes=15)
-    else:
-        hilo_start_dt = timeline.start_dt
+    hilo_start_dt = (
+        max_observed_dt + timedelta(minutes=15)
+        if max_observed_dt is not None
+        else timeline.start_dt
+    )
 
     if hilo_start_dt <= timeline.end_dt:
         start_date = hilo_start_dt.strftime("%Y%m%d")
