@@ -6,8 +6,8 @@ from datetime import date, datetime, timedelta
 from app import tzutil as tz
 from app import util
 from app.datasource.custom_transport import CustomTransport
-from app.timeline import Timeline
 from app.station import Station
+from app.timeline import Timeline
 from rest_framework.exceptions import APIException
 from suds.client import Client
 
@@ -54,6 +54,9 @@ def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
         tide level in MLLW feet.
     """
+    logger.debug(
+        f"station.id={station.id} fetching tides for {timeline.start_dt} to {timeline.end_dt}"
+    )
     if timeline.is_all_future():
         # Nothing to fetch
         return {}
@@ -234,6 +237,7 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
         dt_in_local = in_utc.astimezone(timeline.time_zone)
         # Since we query more data than we need, only save the data that is in the requested timeline.
         if dt_in_local not in padded_timeline:
+            logger.debug(f"Skipping {param} for {dt_in_local}, not in timeline")
             skipped += 1
             continue
         data_str = reading.find(f"./{param}").text
@@ -246,10 +250,14 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
         except (TypeError, ValueError):
             logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
 
-    logger.debug(f"read={records} skipped={skipped} nodata={nodata}")
-
     if len(datadict) == 0:
-        logger.warning(f"Got no {param} data from {records} records read")
+        logger.warning(
+            f"No {param} for {len(padded_timeline)} times ending {padded_timeline[-1]}! read={records} skipped={skipped} nodata={nodata}"
+        )
+    else:
+        logger.debug(
+            f"For {len(padded_timeline)} times ending {padded_timeline[-1]}: fnd={len(datadict)} read={records} skipped={skipped} nodata={nodata}"
+        )
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
