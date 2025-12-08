@@ -49,6 +49,9 @@ class Timeline:
             self._requested_times.append(utc_cur.astimezone(self.time_zone))
             utc_cur += timedelta(minutes=15)
 
+    def is_future(self, dt):
+        return dt > self.now
+
     def is_all_future(self):
         """Returns whether the start time is in the future."""
         return self.start_dt > self.now
@@ -62,7 +65,7 @@ class Timeline:
         return dt and self.start_dt <= dt <= self.end_dt
 
     def get_all_past(self) -> list:
-        """Return all datetimes in the initial timeline that are before now, including."""
+        """Return all datetimes in the initial timeline that are before now."""
         return list(filter(lambda dt: dt < self.now, self._requested_times))
 
     def get_min_with_padding(self) -> datetime:
@@ -175,7 +178,7 @@ class GraphTimeline(Timeline):
         """
         return list(map(callback, self._requested_times))
 
-    def get_final_times(self, change_dict: dict):
+    def get_final_times(self, corrections: dict):
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
 
         Args:
@@ -187,7 +190,7 @@ class GraphTimeline(Timeline):
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
         return [
-            change_dict[dt] if dt in change_dict else dt for dt in self._requested_times
+            corrections[dt] if dt in corrections else dt for dt in self._requested_times
         ]
 
 

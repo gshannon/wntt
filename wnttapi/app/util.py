@@ -98,11 +98,14 @@ def read_file(filepath):
     return contents
 
 
-def dump_xml(xml, filename):
+def dump_xml(xml, filename=None):
     decoded = bytes.fromhex(xml.hex()).decode("ASCII")
-    f = open(filename, "w")
-    f.write(decoded)
-    f.close()
+    if filename is None:
+        print(decoded)
+    else:
+        f = open(filename, "w")
+        f.write(decoded)
+        f.close()
 
 
 def pply(fig, data=False):

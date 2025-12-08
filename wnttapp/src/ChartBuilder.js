@@ -24,6 +24,7 @@ export const buildPlot = ({
     hovertemplate = null, // if given, hoverinfo is ignored.
     yaxis = 'y', // use 'y2' for 2nd graph (wind)
     disableToggle = false, // for use by event handlers
+    connectgaps = true,
 } = {}) => {
     const p = {
         name: name,
@@ -33,7 +34,7 @@ export const buildPlot = ({
         visible: legendOnly ? 'legendonly' : true,
         type: 'scatter',
         legendgroup: 'grp1',
-        connectgaps: true, // This needs to on for most/all of the plots due to moon phase being there at exact times
+        connectgaps: connectgaps,
         hoverinfo: hoverinfo,
         // hovertemplate overrides hoverinfo, so we must set it to empty if we want no hover text.
         // Otherwise we can use it to override the default template of "{name} : %{y}".

@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from app import tzutil as tz
 from app import util
 from app.datasource.custom_transport import CustomTransport
+from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import Timeline
 from rest_framework.exceptions import APIException
@@ -22,7 +23,7 @@ windgust_param = "MaxWspd"
 winddir_param = "Wdir"
 tide_param = "Level"
 temp_param = "Temp"
-min_tide = -2.0  # any mllw/feet tide reading lower than this is considered bad data
+min_tide = -5.0  # any mllw/feet tide reading lower than this is considered bad data
 max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad data
 max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
 
@@ -140,7 +141,10 @@ def get_recorded_temps(station: Station, timeline: Timeline) -> dict:
 def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
-    Returns a dense dict of tide levels, key = dt, value = level
+    As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
+    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
+    data points starting from the MOST RECENT data, not the latest.  So care should be taken not to ask for too much,
+    else data at the beginning of the graph will be missing.
 
     Parameters:
     timeline : datetimes (tz aware) requested by the user, in ordered 15-minute intervals
@@ -148,14 +152,12 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
     param : name of the data parameter being requested
     converter : a function to convert a data point into the desired type, e.g. float or int, or unit conversion
 
-    As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
-    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
-    data points starting from the MOST RECENT data, not the latest.  So care should be taken not to ask for too much,
-    else data at the beginning of the graph will be missing.
+    Returns:
+        dense dict of tide levels, {datetime: level}
 
-    CDMO returns dates in LST (local standard time), which is not sensitive to DST.
     """
-    if timeline.start_dt.minute % 15 > 0 or timeline.end_dt.minute % 15 > 0:
+    # validate that timeline datetimes are on 15-minute intervals and seconds=0
+    if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
         # CDMO data is always on 15-minute intervals.
         raise ValueError("datetimes must be on 15-minute intervals")
 
@@ -223,7 +225,7 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
     records = skipped = nodata = 0
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
-        # we use the utc stamp, not the DateTimeStamp because the latter is in LST, sensitive to DST.
+        # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
         date_str = reading.find("./utcStamp").text
         try:
             naive_utc = datetime.strptime(date_str, "%m/%d/%Y %H:%M")
@@ -256,7 +258,7 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
         )
     else:
         logger.debug(
-            f"For {len(padded_timeline)} times ending {padded_timeline[-1]}: fnd={len(datadict)} read={records} skipped={skipped} nodata={nodata}"
+            f"For {len(padded_timeline)} {param} times ending {padded_timeline[-1]}: fnd={len(datadict)} read={records} skipped={skipped} nodata={nodata}"
         )
 
     # XML data is returned in reverse chronological order. Reverse it here.
@@ -314,129 +316,66 @@ def compute_cdmo_request_dates(
     return requested_start_date, requested_end_date
 
 
-def find_hilos(timeline: Timeline, obs_dict: dict) -> dict:
-    """Given a key-ordered timeline and dense dict of tide readings {datetime: level}, return a dense dict of
-    {dt: 'H' or 'L'} indicating which of the datetimes correspond to a high or low tide. We only return
-    datetimes that are definitively high or low tides, and do not include any that are ambiguous.
+def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) -> dict:
+    """Build a dense dict of high and low tides times from observed and predicted tide data. If there is missing
+    observed data that makes it impossible to determine a high or low observed tide, we'll substitute the
+    predicted value, so it can be labelled on the graph, and still appear in HiLo mode.
 
-    In this function, an "arc" is a series of consecutive tide readings which may may contain a high or low
-    tide. Values above the mid-tide level are a potential high tide arc, and below it, a low tide arc.
-    We take the max/min value from each arc to look for the high/low tide.  Mid-tide is defined
-    as the average of the highest and lowest value seen in the data, with a minimum allowable
-    value in case of lots of missing data. Since we may have missing data for some datetimes, in which
-    case the value will be None, we take a conservative approach and prefer false negatives (not
-    identifying a high or low tide) to false positives (identifying a high or low tide that is not
-    necessarily one).
+    Args:
+    - timeline: key-ordered Timeline of datetimes for the graph
+    - obs_dict: dense dict of observed tide readings {datetime: level}
+    - astro_pred_dict: dense dict of predicted high and low tides covering the timeline.
+        {timeline_dt: PredictedHighOrLow}
 
-    We are expecting a timeline with full days, at 96 per day, so whether we are dealing with a diurnal
-    or semidiurnal station, there should be at least 1 high and 1 low per day.  Peaks and troughs are
-    identified by consecutive values like [9.5, 10.1, 9.9] and [2.5, 2.1, 2.1, 2.1, 2.3]. Up to 4 missing
-    values will be tolerated, so [7, 8, None, None, None, None, 7] would yield a peak of 8.  More than 4
-    will cause the arced to be skipped for fear they are disguising the actual peak or trough.
+    Returns:
+        sparse dict of {dt: HighOrLow} indicating which datetimes are high or low tides.
     """
 
-    # In feet. If range is less than this, there's likely a lot of missing data.
-    MIN_TIDAL_RANGE = 4
-    (HIGH_ARC, LOW_ARC) = ("H", "L")
-    hilomap = {}  # {dt: 'H' or 'L'}
+    hilomap = {}  # {dt: HighLowEvent}
 
     if len(obs_dict) == 0:
         return hilomap  # nothing to do
 
-    padded_timeline = timeline.get_all_past()
+    past_padded_timeline = timeline.get_all_past()
 
-    highest = max(obs_dict.values())
-    lowest = min(obs_dict.values())
-    if highest - lowest < MIN_TIDAL_RANGE:
-        # This could happen if the equipment malfunctions for a long period of time.
-        logger.warning(
-            f"Tidal range too small: {highest - lowest}, high={highest} low={lowest}"
-        )
-        return hilomap
-
-    midtide = round((highest + lowest) / 2, 1)
-    logger.debug(f"hi={highest} low={lowest} midtide={midtide} points={len(obs_dict)}")
-
-    # Phase 1: Walk through the timeline and identify arcs.  An arc is a half-cycle of the wave --
-    # above or below the midline -- each of which may contain a high or low tide.
-    arcs = []  # [{position: H/L, datadict: {dt: level}}]  datadict is dense and key-ordered
-
-    cur_arc = None
-    for dt in padded_timeline:
-        val = obs_dict.get(dt, None)
-        if val is not None:
-            position = HIGH_ARC if val > midtide else LOW_ARC
-            if cur_arc is None:
-                cur_arc = {"position": position, "datadict": {dt: val}}
-            else:
-                if cur_arc["position"] != position:
-                    # We've moved across the mid line. Save the arc we were working on.
-                    arcs.append(cur_arc)
-                    cur_arc = {"position": position, "datadict": {dt: val}}
-                else:
-                    cur_arc["datadict"][dt] = val
-
-    arcs.append(cur_arc)  # save the last one we were working on
-
-    # Phase 2: Walk through arcs and look for valid ones.
-    for arc in arcs:
-        position = arc["position"]
-        datadict = arc["datadict"]
-        logger.debug(
-            f"Arc pos={position} values={len(datadict)} timedelta={max(datadict) - min(datadict)} "
-        )
-
-        # The shortest possible peak or trough is 3 consecutive data points, e.g. [8,9,8], with the rest Nones.
-        if len(datadict) < 3:
+    # Use the sparse predicted highs/lows to drive the logic. Since actual highs/lows will occur fairly close
+    # to the predicted, this way we can simplify the identification of observed highs and lows, which may contain
+    # missing data, and sometimes move erratically. Here, we just use the highest or lowest observed value in
+    # a range of times surrounding the predicted value.
+    # TODO: Handle edge case where observed high or low is missing and we falsely report a nearby value instead.
+    for dt, pred in astro_pred_dict.items():
+        logger.debug(f"Considering predicted {pred} at {dt}")
+        if dt > past_padded_timeline[-1]:
+            hilomap[dt] = pred
             continue
-
-        hilo_dt = (
-            max(datadict, key=datadict.get)
-            if position == HIGH_ARC
-            else min(datadict, key=datadict.get)
+        # Find the time with the highest or lowest observed value within 1 hour of the predicted time.
+        search_start = dt - timedelta(minutes=60)
+        search_end = dt + timedelta(minutes=60)
+        candidate_times = list(
+            filter(lambda t: search_start <= t <= search_end, past_padded_timeline)
         )
-        hilo_val = datadict.get(hilo_dt)
-
-        arc_timeline = list(
-            filter(
-                lambda dt: min(datadict) <= dt <= max(datadict),
-                padded_timeline,
-            )
-        )
-        sparse_vals = [datadict.get(dt, None) for dt in arc_timeline]
-        # The first and last values are not candidates for high or low tide, since there's no value on the other
-        # side to prove it.
-        if sparse_vals[0] == hilo_val or sparse_vals[-1] == hilo_val:
-            logger.debug(
-                f"hi/lo {hilo_val} found at beginning or end of arc beginning at {arc_timeline[0]}"
-            )
-            continue
-        # We need to see a peak or trough with no None's breaking it up. E.g. [7,8,7] or [3,2,2,3] Not [7,8,None,7]
-        ndx = sparse_vals.index(hilo_val)  # returns the 1st instance of the high/low.
-        if sparse_vals[ndx - 1] is None:
-            logger.debug(
-                f"None found before hi/lo {hilo_val} in arc beginning at {arc_timeline[0]}"
-            )
-            continue
-        # Finally check the right side. Any number of repeats are allowed, but must end with a different value.
-        accepted = False
-        nonesSkipped = 0
-        for val in sparse_vals[ndx + 1 :]:
-            if val is None:
+        observed = {t: obs_dict.get(t, None) for t in candidate_times}
+        observed = {k: v for k, v in observed.items() if v is not None}
+        if len(observed) > 0:
+            if pred.hilo == Hilo.HIGH:
+                observed_hilo_dt = max(observed, key=observed.get)
                 logger.debug(
-                    f"None found after {hilo_val} in arc beginning at {arc_timeline[0]}"
+                    f"Highest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
                 )
-                # We'll allow up to 4 None's.
-                nonesSkipped += 1
-                if nonesSkipped > 4:
-                    break
-            elif val != hilo_val:
-                accepted = True
-                break
-
-        if accepted:
-            logger.debug(f"Accepted as {position}: {hilo_dt} - {hilo_val} ft")
-            hilomap[hilo_dt] = position
+            else:
+                observed_hilo_dt = min(observed, key=observed.get)
+                logger.debug(
+                    f"Lowest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
+                )
+            hilomap[observed_hilo_dt] = ObservedHighOrLow(
+                observed[observed_hilo_dt], pred.hilo
+            )
+        else:
+            # No observed data near this predicted high/low. Just use the predicted time.
+            logger.debug(
+                f"No observed data near predicted {pred.hilo} at {dt}, using predicted time"
+            )
+            hilomap[dt] = pred
 
     return hilomap
 
@@ -465,7 +404,7 @@ def handle_navd88_level(
 ) -> float:
     """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
     if level_str is None or len(level_str.strip()) == 0:
-        logger.warning(f"skipping [{level_str}]")
+        logger.warning(f"skipping [{level_str}] at {local_dt}")
         return None
     try:
         read_level = float(level_str)

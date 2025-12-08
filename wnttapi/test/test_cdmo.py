@@ -2,10 +2,12 @@ import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
 
+import app.datasource.astrotide as astro
 import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
+from app.hilo import ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, Timeline
 from django import setup
 from rest_framework.exceptions import APIException
@@ -25,133 +27,36 @@ dst_end_date = date(2024, 11, 3)
 class TestCdmo(TestCase):
     tzone = tz.eastern  # Do not change, tests use hard-coded times
 
-    def test_calculate_hilos_simple(self):
-        """High/Low detection works properly with small data sets"""
+    def test_hilos_with_missing_data(self):
+        # With seven hours of missing observed data, make sure all highs and lows are still found.
+        timeline = GraphTimeline(date(2025, 12, 4), date(2025, 12, 5), self.tzone)
 
-        def build_test_data(tides, start_date=date(2025, 1, 1)):
-            end_date = start_date + timedelta(days=(int(len(tides) / 96)))
-            timeline = GraphTimeline(start_date, end_date, self.tzone)
-            d = dict(zip(timeline._requested_times, tides))  # no None's in datadict
-            datadict = {key: val for key, val in d.items() if val is not None}
-            return timeline, datadict
+        # Get astro predictions for the timeline
+        raw = util.read_file(f"{test_data_path}/data/astro-hilo-120405.json")
+        contents = astro.extract_json(raw)
+        preds_dict = astro.hilo_json_to_dict(station, contents, timeline)
 
-        # Single data value
-        tides = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        timeline, _ = build_test_data(tides)
-        datadict = {datetime(2025, 1, 1): 8}
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
-
-        # Minimal Low only
-        tides = [None, 4, 3, 4, None, 10]
-        timeline, datadict = build_test_data(tides)
-        expected_hilos = {
-            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "L",
-        }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
-
-        # Minimal High only
-        tides = [None, 9, 10, 9, None, 3]
-        timeline, datadict = build_test_data(tides)
-        expected_hilos = {
-            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "H",
-        }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
-
-        # Minimal high and low
-        tides = [None, 4, 3, 4, None, 9, 10, 9, None]
-        timeline, datadict = build_test_data(tides)
-        expected_hilos = {
-            datetime(2025, 1, 1, 0, 30, tzinfo=self.tzone): "L",
-            datetime(2025, 1, 1, 1, 30, tzinfo=self.tzone): "H",
-        }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
-
-        # Highs and lows are on the edge, no opposite direction detected
-        tides = [3, 4, 5, 6, 7, 8, 9, 10]
-        timeline, datadict = build_test_data(tides)
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
-
-        # high and low both compromised by None
-        # fmt: off
-        tides = [8, 9, 10, 10, None, None, None, None, None, 9, 8, 7, 5, 4, 3, None, None, None, None, None, 2, 2, 3, 4]
-        # fmt: on
-        timeline, datadict = build_test_data(tides)
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), {})
-
-        # actual data from 3/1/2025
-        # fmt: off
-        tides = [
-            9.8, 9.62, 9.371, 9.01, 8.58, 8.12, 7.57, 6.975, 6.31, 5.66, 4.975, 4.25, 3.524, 2.78, 2.09,
-            1.427, 0.8701, 0.2175, -0.010675, -0.3701, -0.7002, -0.8301, -0.8301, -0.9306, -0.8301, -0.47064, -0.2402,
-            0.0886, 0.5801, 1.137, 1.697, 2.286, 2.935, 3.657, 4.31, 5.10, 5.725, 6.44, 7.17, 7.85, 8.42, 8.98,
-            9.34, 9.7, 10, 10.29, 10.52, 10.621, 10.68, 10.64, 10.48, 10.26, 9.89, 9.54, 9.14, 8.58, 7.95, 7.27,
-            6.52, 5.76, 5.01, 4.29, 3.564, 2.738, 2.016, 1.266, 0.806, 0.185, -0.11032, -0.5, -0.7705, -0.7304, -1.1904,
-            -0.7002, -0.7304, -0.47064, -0.11032, 0.1201, 0.677, 1.064, 1.657, 2.32, 2.907, 3.697, 4.29, 4.88, 5.52,
-            6.35, 7.03, 7.725, 8.26, 8.71, 9.14, 9.41, 9.7, 9.86, 9.93
-        ]
-        # fmt: on
-        timeline, datadict = build_test_data(tides, date(2025, 3, 1))
-        expected_hilos = {
-            datetime(2025, 3, 1, 5, 45, tzinfo=self.tzone): "L",
-            datetime(2025, 3, 1, 12, 0, tzinfo=self.tzone): "H",
-            datetime(2025, 3, 1, 18, 0, tzinfo=self.tzone): "L",
-        }
-        self.assertEqual(cdmo.find_hilos(timeline, datadict), expected_hilos)
-
-    def test_calculate_hilos_full(self):
-        """High/Low detetion works properly with complete day of data"""
-        xml = self.load_xml("cdmo-level.xml")
-        timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
+        # Get observed tides from CDMO for the timeline
+        with open(f"{test_data_path}/data/cdmo-120405.xml", "r") as file:
+            xml = file.read()
         converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
-        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
-        expected = {
-            datetime(2025, 3, 31, 0, 45, tzinfo=self.tzone): "H",
-            datetime(2025, 3, 31, 7, 0, tzinfo=self.tzone): "L",
-            datetime(2025, 3, 31, 13, 15, tzinfo=self.tzone): "H",
-            datetime(2025, 3, 31, 19, 0, tzinfo=self.tzone): "L",
-        }
-        actual = cdmo.find_hilos(timeline, datadict)
-        self.assertEqual(actual, expected)
+        obs_dict = cdmo.get_cdmo_data(timeline, xml, "Level", converter)
 
-    def test_calculate_hilos_with_hi_on_boundary(self):
-        """High/Low detetion works properly with high at midnight"""
-        xml = self.load_xml("cdmo-level-1d.xml")
-        timeline = GraphTimeline(date(2025, 10, 22), date(2025, 10, 22), self.tzone)
-        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
-        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
-        expected = {
-            datetime(2025, 10, 22, 0, 0, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 22, 6, 15, tzinfo=self.tzone): "L",
-            datetime(2025, 10, 22, 12, 30, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 22, 18, 30, tzinfo=self.tzone): "L",
-            # This last one is outside the timeline, but was retrieve as padding. It's
-            # silently ignored.
-            datetime(2025, 10, 23, 0, 45, tzinfo=self.tzone): "H",
-        }
-        actual = cdmo.find_hilos(timeline, datadict)
-        self.assertEqual(actual, expected)
+        # Find the hilos in the observed data.
+        hilos = cdmo.find_all_hilos(timeline, obs_dict, preds_dict)
+        self.assertEqual(len(hilos), len(preds_dict))
+        missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.tzone)
+        self.assertNotIn(missing_obs, obs_dict)
+        self.assertIsInstance(hilos[missing_obs], PredictedHighOrLow)
+        for dt, event in hilos.items():
+            if dt != missing_obs:
+                self.assertIsInstance(event, ObservedHighOrLow)
 
-    def test_calculate_hilos_with_nones(self):
-        """High/Low detetion works properly with 1 hour missing"""
-        xml = self.load_xml("cdmo-level-2d.xml")
-        timeline = GraphTimeline(date(2025, 10, 21), date(2025, 10, 22), self.tzone)
-        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
-        datadict = cdmo.get_cdmo_data(timeline, xml, cdmo.tide_param, converter)
-        # Note extra highs at beginning and end, from the padding.
-        expected = {
-            datetime(2025, 10, 20, 23, 30, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 21, 5, 45, tzinfo=self.tzone): "L",
-            datetime(2025, 10, 21, 11, 45, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 21, 18, 0, tzinfo=self.tzone): "L",
-            # This high had 4 Nones next to it.
-            datetime(2025, 10, 22, 0, 0, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 22, 6, 15, tzinfo=self.tzone): "L",
-            datetime(2025, 10, 22, 12, 30, tzinfo=self.tzone): "H",
-            datetime(2025, 10, 22, 18, 30, tzinfo=self.tzone): "L",
-            datetime(2025, 10, 23, 0, 45, tzinfo=self.tzone): "H",
-        }
-        actual = cdmo.find_hilos(timeline, datadict)
-        self.assertEqual(actual, expected)
+        for dt, val in hilos.items():
+            if isinstance(val, ObservedHighOrLow):
+                self.assertIn(dt, obs_dict)
+            else:
+                self.assertEqual(val.value, preds_dict[dt].value)
 
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")

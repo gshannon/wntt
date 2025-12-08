@@ -1,9 +1,10 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import requests
 from app import util
+from app.hilo import Hilo, PredictedHighOrLow
 from app.station import Station
 from app.timeline import Timeline
 from rest_framework.exceptions import APIException
@@ -37,46 +38,25 @@ def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
     return pred15_json_to_dict(pred_json, timeline, station)
 
 
-def get_hilo_astro_tides(
-    station: Station, timeline: Timeline, max_observed_dt: datetime = None
-) -> tuple[dict, dict]:
+def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, dict]:
     """
     Fetch high/low astronomical tide predictions for the timeline.
 
     Args:
         station (Station): the SWMP station
         timeline (Timeline): the timeline
-        max_observed_dt: the latest time in the timeline that has recorded tide data, or None for future timelines.
-            Where we have observed data, we annotate those as highs/lows, rather than the predicted tides. This datetime is
-            used to prevent requesting high/low predictions for times where we have observed data.
 
     Returns:
         dict of 15-min interval predictions for highs and lows only.
-          Structure is: {timeline_dt: {'real_dt': dt, 'value': level, 'type': 'H' or 'L'}}
-          The time range will begin with the timeline start, or 15 minutes after the last observed tide.
-          This means the returned dict will be empty if the entire timeline has already been observed.
-          The earliest predicted value returned could be in the past. This is desirable as
-          there's generally a 30-90 minute latency between observation time and its availability from the API
-          and we don't want gaps.
+        {timeline_dt: PredictedHighOrLow}
     """
 
     preds_hilo_dict = {}
-    hilo_start_dt = (
-        max_observed_dt + timedelta(minutes=15)
-        if max_observed_dt is not None
-        else timeline.start_dt
-    )
+    start_date = timeline.start_dt.strftime("%Y%m%d")
+    end_date = timeline.end_dt.strftime("%Y%m%d")
 
-    if hilo_start_dt <= timeline.end_dt:
-        start_date = hilo_start_dt.strftime("%Y%m%d")
-        end_date = timeline.end_dt.strftime("%Y%m%d")
-
-        future_preds_json = pull_data(
-            station.noaa_station_id, "hilo", start_date, end_date
-        )
-        preds_hilo_dict = hilo_json_to_dict(
-            station, future_preds_json, timeline, hilo_start_dt
-        )
+    future_preds_json = pull_data(station.noaa_station_id, "hilo", start_date, end_date)
+    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, timeline)
 
     return preds_hilo_dict
 
@@ -99,21 +79,17 @@ def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -
     return reg_preds_dict
 
 
-def hilo_json_to_dict(
-    station: Station, hilo_json: list, timeline: Timeline, hilo_start_dt: datetime
-) -> dict:
+def hilo_json_to_dict(station: Station, hilo_json: list, timeline: Timeline) -> dict:
     """
     Convert json returned from the api call into a dict of high or low data values.
     Args:
         hilo_json (string): json content: list of high/low predictions like
             {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}
         timeline (Timeline): the requested timeline.
-        hilo_start_dt: Meant to be 15 min past the latest observed tide, or None if that doesn't
-          exit. Data from times before this are ignored, even if part of timeline.
 
     Returns:
-        A sparse dict of {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} for all values that
-        exist in the requested timeline and are greater than the last observed tide time. Converts NAVD88 to MLLW.
+        A sparse dict of {timeline_dt: PredictedHighOrLow} for all values that
+        exist in the requested timeline. Converts NAVD88 to MLLW.
 
     Raises:
         APIException: Invalid data from API
@@ -125,25 +101,23 @@ def hilo_json_to_dict(
         # If we know the time of the last observation, use that as the cutoff instead of current time, since
         # there's a ~1 hour latency for observed data, and it's better to show the most accurate predictions
         # when we can. Remember hi/lo prediction dates are exact minutes, not aligned with 15-min intervals.
-        if hilo_start_dt <= dt <= timeline.end_dt:
+        if timeline.contains(dt):
             val = pred["v"]
-            typ = pred["type"]  # should be 'H' or 'L'
-            if typ not in ["H", "L"]:
-                logger.error(f"Unknown type {typ} for date {dts}")
+            if pred["type"] not in ["H", "L"]:
+                logger.error(f"Unknown type {pred['type']} for date {dts}")
                 raise APIException()
+            hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
             # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
-            future_hilo_dict[util.round_to_quarter(dt)] = {
-                "real_dt": dt,
-                "value": station.navd88_feet_to_mllw_feet(float(val)),
-                "type": typ,
-            }
+            future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
+                station.navd88_feet_to_mllw_feet(float(val)), hilo, dt
+            )
 
     return future_hilo_dict
 
 
 def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
     """Call the tides&currents API, using:
-        - time_zone=lst-ldt, which means Local Standard Time, as if there were no daylight savings time.
+        - time_zone=lst-ldt, which means local time, adjusted as appropriate for daylight savings time.
             This will always be relative to the timezone of the station, which will match the timeline.
         - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
             MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.

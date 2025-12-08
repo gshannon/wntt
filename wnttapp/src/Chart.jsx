@@ -218,6 +218,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       hovertext: data.hist_hilo_labels,
                       hovertemplate: '%{y} %{hovertext}',
                       disableToggle: true,
+                      connectgaps: false,
                   }),
               ]
             : []),
@@ -231,6 +232,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
             disableToggle: false,
+            connectgaps: false,
         }),
         ...(data.past_surge !== null
             ? [

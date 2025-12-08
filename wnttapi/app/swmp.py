@@ -6,6 +6,7 @@ from app.datasource import astrotide, cdmo, moon
 from app.datasource.apiutil import APICall, run_parallel
 from app.station import Station
 from app.timeline import Timeline
+from app.hilo import Hilo
 
 from . import tzutil as tz
 
@@ -82,10 +83,11 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict
 
     # Get the time and type of the next high or low tide prediction
     vals = list(astro_dict.values())
-    vals.sort(key=lambda d: d["real_dt"])
-    next_tide_dt, next_tide_type = (
-        vals[0]["real_dt"],
-        vals[0]["type"] if len(vals) > 0 else None,
+    vals.sort(key=lambda d: d.real_dt)
+
+    next_tide_dt = vals[0].real_dt
+    next_tide_type = (
+        ("H" if vals[0].hilo == Hilo.HIGH else "L") if len(vals) > 0 else None
     )
 
     return {
@@ -107,5 +109,5 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict
     }
 
 
-def ftime(dt):
-    return dt.strftime("%b %d %Y %I:%M %p")
+# def ftime(dt):
+#     return dt.strftime("%b %d %Y %I:%M %p")
