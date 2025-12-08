@@ -10,15 +10,17 @@ $ astro-highs.py -s <stationid> -y <year>
 
 """
 
-from django.core.wsgi import get_wsgi_application
 import argparse
-import sys
 import os
+import sys
+
+from django.core.wsgi import get_wsgi_application
 
 base = os.environ.get("WNTT")
 sys.path.append(f"{base}/wnttapi")
 os.environ["DJANGO_SETTINGS_MODULE"] = "project.settings.dev"
 import app.datasource.astrotide as astro
+from app.hilo import Hilo
 
 # This seems to necessary sometimes.
 application = get_wsgi_application()
@@ -54,11 +56,8 @@ def find_highest_navd88(hilo_json_dict) -> float:
 
     for pred in hilo_json_dict:
         val = round(float(pred["v"]), 2)
-        typ = pred["type"]  # should be 'H' or 'L'
-        if typ not in ["H", "L"]:
-            print(f"Unknown type {typ}: {pred}")
-            raise RuntimeError(f"Unknown type {typ} in {pred}")
-        if typ == "H" and (highest is None or val > highest):
+        # typ = pred.hilo  # should be 'H' or 'L'
+        if pred.hilo == Hilo.HIGH and (highest is None or val > highest):
             highest = val
 
     return highest

@@ -6,6 +6,7 @@ from app.datasource import astrotide as astro
 from app.datasource import cdmo, moon
 from app.datasource import surge as sg
 from app.datasource.apiutil import APICall, run_parallel
+from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
 from rest_framework.exceptions import ValidationError
 
@@ -59,43 +60,37 @@ def get_graph_data(
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
     obs_dict, wind_dict = get_cdmo_data(timeline, station)
 
-    # Determine observed highs and lows.
-    obs_hilo_dict = cdmo.find_hilos(timeline, obs_dict)
-
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
 
-    # For annotating High and Low tides, observed data takes precedence over predicted, so we
-    # don't bother pulling predictions for the part of the timeline in the past, apart from the data lag
-    # period -- between the last observed data and the present.
-    last_recorded_dt = max(obs_dict) if len(obs_dict) > 0 else None
-    astro_later_hilo_dict = astro.get_hilo_astro_tides(
-        station, timeline, last_recorded_dt
-    )
+    # Pull all predicted high & low tides for the timeline.
+    astro_all_hilo_dict = astro.get_hilo_astro_tides(station, timeline)
+
+    # Determine all highs and lows, whether observed or predicted.
+    hilo_event_dict = cdmo.find_all_hilos(timeline, obs_dict, astro_all_hilo_dict)
 
     if hilo_mode:
         # The HiloTimeline needs to keep track of these for later processing.
-        timeline.register_hilo_times(
-            list(obs_hilo_dict.keys()) + list(astro_later_hilo_dict.keys())
-        )
+        timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
     future_surge_dict = sg.get_future_surge_data(
-        timeline, station.noaa_station_id, last_recorded_dt
+        timeline, station.noaa_station_id, max(obs_dict) if len(obs_dict) > 0 else None
     )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
     hist_tides_plot, hist_hilo_labels = build_hist_tide_plot(
-        timeline, obs_dict, obs_hilo_dict
+        timeline, obs_dict, hilo_event_dict
     )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
         timeline, wind_dict
     )
+
     astro_tides_plot, astro_hilo_labels = build_astro_plot(
-        timeline, astro_preds15_dict, astro_later_hilo_dict
+        timeline, astro_preds15_dict, hilo_event_dict
     )
 
     past_surge_plot = (
@@ -104,16 +99,22 @@ def get_graph_data(
         else None
     )
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
-        timeline, future_surge_dict, astro_preds15_dict, astro_later_hilo_dict
+        timeline, future_surge_dict, astro_preds15_dict, astro_all_hilo_dict
     )
 
     # If we've prepared any predicted high or low tides times, which have actual times rather than the nearest
     # 15-min time, we want to replace those timeline times with the real times, so they show accurately on the graph.
     # Since the timeline is just a list of datetimes and the plots are a list of data values or None, all we have to
     # do is replace those values in the timeline, and then return the timeline with the plots.
-    if len(astro_later_hilo_dict) > 0:
+    if len(hilo_event_dict) > 0:
         final_timeline = timeline.get_final_times(
-            {key: val["real_dt"] for key, val in astro_later_hilo_dict.items()}
+            {
+                key: val.real_dt
+                for key, val in hilo_event_dict.items()
+                # This means there was no observed value, else it would have been an ObservedHighOrLow.
+                # So we'll use the actual prediction time even if it's in the past.
+                if isinstance(val, PredictedHighOrLow)
+            }
         )
     else:
         final_timeline = timeline.get_final_times({})
@@ -182,7 +183,7 @@ def get_cdmo_data(timeline: GraphTimeline, station: stn.Station) -> tuple[dict, 
 
 
 def build_hist_tide_plot(
-    timeline: GraphTimeline, obs_dict: dict, obs_hilo_dict: dict
+    timeline: GraphTimeline, obs_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """Build historical tide plot and high or low tide labels. For timelines entirely in the future,
     each callback would return None, so we can just return None for both lists.
@@ -190,7 +191,7 @@ def build_hist_tide_plot(
     Args:
         timeline (GraphTimeline): the timeline
         obs_dict (dict): observed tides {dt: height MLLW feet}
-        obs_hilo_dict (dict): {dt: 'H' or 'L'} for high or low tide, keyed by datetime
+        hilo_event_dict: dense dict of all high/low tides, {timeline_dt: HighOrLow}
 
     Returns:
         tuple[list, list]:
@@ -202,8 +203,10 @@ def build_hist_tide_plot(
         return None, None
 
     def get_hilo_label(dt: datetime):
-        if dt in obs_hilo_dict:
-            return "(HIGH)" if obs_hilo_dict[dt] == "H" else "(LOW)"
+        if dt in hilo_event_dict:
+            event = hilo_event_dict[dt]
+            if isinstance(event, ObservedHighOrLow):
+                return "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)"
         return ""
 
     hist_tides_plot = timeline.build_plot(lambda dt: obs_dict.get(dt, None))
@@ -225,7 +228,7 @@ def build_future_surge_plots(
         timeline: list of datetimes
         future_surge_dict: {dt: surge_value}
         reg_preds_dict: {dt: value}
-        future_hilo_dict: {timeline_dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}}
+        future_hilo_dict: {timeline_dt: HighLowEvent}
     """
     if len(future_surge_dict) == 0:
         # No future surge data, so return None for both plots.
@@ -250,7 +253,7 @@ def build_future_surge_plots(
         if surge_val is None:
             return None, None
         hilo_pred = (
-            astro_hilo_dict.get(dt)["value"]
+            astro_hilo_dict.get(dt).value
             if dt in astro_hilo_dict
             else reg_preds_dict.get(dt, None)
         )
@@ -282,7 +285,7 @@ def build_future_surge_plots(
 
 
 def build_astro_plot(
-    timeline: GraphTimeline, reg_preds_dict: dict, later_hilo_dict: dict
+    timeline: GraphTimeline, reg_preds_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """
     Builds plots for the astronomical tide data. We essentially merge the regular 15-min predictions and the
@@ -291,7 +294,7 @@ def build_astro_plot(
     Args:
         timeline (GraphTimeline): the time line
         reg_preds_dict (dict): {dt: value} for 15-min predictions over entire timeline
-        later_hilo_dict (dict): {dt: {'real_dt': dt, 'value': val, 'type': 'H' or 'L'}} High/Low predictions after last observed.
+        hilo_event_dict (dict): {dt: HighOrLow} High/Low predictions after last observed.
 
     Returns:
         tuple[list, list, list]:
@@ -300,25 +303,23 @@ def build_astro_plot(
         - List of the matching high/low tide labels ('H' or 'L'), for convenience of the app
     """
 
-    def check_later(dt, key):
-        if dt in later_hilo_dict:
-            return later_hilo_dict[dt].get(key, None)
-        else:
-            return None
-
     def get_value(dt):
         # For value, prefer the later_hilo_dict value if present, else use the regular predictions.
-        val = check_later(dt, "value")
-        return val or reg_preds_dict.get(dt, None)
+        if dt in hilo_event_dict:
+            event = hilo_event_dict[dt]
+            if isinstance(event, PredictedHighOrLow):
+                return event.value
+        return reg_preds_dict.get(dt, None)
 
-    def get_type(dt):
-        type = check_later(dt, "type")
-        if type is None:
-            return ""
-        return "(HIGH)" if type == "H" else "(LOW)"
+    def get_label(dt):
+        if dt in hilo_event_dict:
+            event = hilo_event_dict[dt]
+            if isinstance(event, PredictedHighOrLow):
+                return "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)"
+        return ""
 
     astro_tides_plot = timeline.build_plot(get_value)
-    astro_hilo_labels = timeline.build_plot(get_type)
+    astro_hilo_labels = timeline.build_plot(get_label)
 
     return astro_tides_plot, astro_hilo_labels
 
