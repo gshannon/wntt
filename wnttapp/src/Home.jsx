@@ -46,7 +46,7 @@ export default function Home() {
             return (
                 <>
                     Here you can view historical tide and wind data, as well as predicted tides and
-                    storm surge, for certain members of the{' '}
+                    storm surge, for certain sites within the{' '}
                     <Link
                         href='https://coast.noaa.gov/nerrs/'
                         text='National Estuarine Research Reserve System'
@@ -89,7 +89,7 @@ export default function Home() {
                                 <Dropdown.Toggle
                                     variant='custom-primary'
                                     className='home-screen-btn fs-6'>
-                                    Change Station
+                                    Choose Reserve
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>{stationItems}</Dropdown.Menu>
                             </Dropdown>

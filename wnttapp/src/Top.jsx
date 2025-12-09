@@ -102,7 +102,7 @@ export default function Top({ page, gotoPage }) {
                                         width={75}
                                         alt='Latest conditions'
                                     />
-                                    <div className='conditions-centered'>Current Conditions</div>
+                                    <div className='conditions-centered'>Latest Conditions</div>
                                 </div>
                             }></Overlay>
                     </Col>
