@@ -218,11 +218,11 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
 
     # We need to pull data for the padded timeline, for hi/lo functionality, not just
     # display times. No sense looking for future, these are observations.
-    padded_timeline = timeline.get_all_past()
+    past_timeline = timeline.get_all_past()
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
     text_error_check(root.find(".//data"))
-    records = skipped = nodata = 0
+    records = ignored = none_or_bad = 0
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
@@ -238,28 +238,32 @@ def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
         # Now convert to requested tzone, so DST is handled properly
         dt_in_local = in_utc.astimezone(timeline.time_zone)
         # Since we query more data than we need, only save the data that is in the requested timeline.
-        if dt_in_local not in padded_timeline:
+        if dt_in_local not in past_timeline:
             logger.debug(f"Skipping {param} for {dt_in_local}, not in timeline")
-            skipped += 1
+            ignored += 1
             continue
         data_str = reading.find(f"./{param}").text
         try:
             value = converter(data_str, dt_in_local)
             if value is None:
-                nodata += 1
+                none_or_bad += 1
             else:
                 datadict[dt_in_local] = value
         except (TypeError, ValueError):
             logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
 
-    if len(datadict) == 0:
-        logger.warning(
-            f"No {param} for {len(padded_timeline)} times ending {padded_timeline[-1]}! read={records} skipped={skipped} nodata={nodata}"
-        )
+    missing = len(past_timeline) - len(datadict)
+    failure_rate = int(round((missing + none_or_bad) / len(past_timeline), 2) * 100)
+    message = (
+        f"For {param}, got {len(datadict)} values, failrate={failure_rate}% "
+        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] (len={len(past_timeline)}) "
+        + f"read={records} ignored={ignored} none+bad={none_or_bad} missing={missing}"
+    )
+
+    if failure_rate > 20:
+        logger.warning(message)
     else:
-        logger.debug(
-            f"For {len(padded_timeline)} {param} times ending {padded_timeline[-1]}: fnd={len(datadict)} read={records} skipped={skipped} nodata={nodata}"
-        )
+        logger.debug(message)
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
@@ -404,7 +408,7 @@ def handle_navd88_level(
 ) -> float:
     """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
     if level_str is None or len(level_str.strip()) == 0:
-        logger.warning(f"skipping [{level_str}] at {local_dt}")
+        logger.debug(f"skipping [{level_str}] at {local_dt}")
         return None
     try:
         read_level = float(level_str)

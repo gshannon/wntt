@@ -243,6 +243,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       lineType: 'solid',
                       markerSize: hiloMode ? tideMarkerSize : 0,
                       color: RecordedStormSurgeColor,
+                      connectgaps: false,
                   }),
               ]
             : []),
