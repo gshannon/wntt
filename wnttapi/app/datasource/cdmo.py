@@ -63,12 +63,14 @@ def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
         return {}
 
     # Note that CDMO records water level in meters relative to NAVD88, so we use a converter.
-    return get_cdmo(
+    tide_dict = get_cdmo(
         timeline,
         station.id,
         tide_param,
         converter=make_navd88_level_converter(station.navd88_meters_to_mllw_feet),
     )
+    # Clean the data of bogus zeros, i.e. any 0 that is more than 1 hour after the previous data.
+    return clean_water_data(tide_dict, station)
 
 
 def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
@@ -148,7 +150,7 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
 
     Parameters:
     timeline : datetimes (tz aware) requested by the user, in ordered 15-minute intervals
-    station : name of the station that is the data source
+    station_id : id of water or weather station
     param : name of the data parameter being requested
     converter : a function to convert a data point into the desired type, e.g. float or int, or unit conversion
 
@@ -162,7 +164,7 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
         raise ValueError("datetimes must be on 15-minute intervals")
 
     xml = get_cdmo_xml(timeline, station_id, param)
-    data = get_cdmo_data(timeline, xml, param, converter)
+    data = parse_cdmo_xml(timeline, xml, param, converter)
     return data
 
 
@@ -201,7 +203,7 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
     return xml
 
 
-def get_cdmo_data(timeline: Timeline, xml: str, param: str, converter) -> dict:
+def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
     """
     Parse the data returned from CDMO for the requested timeline. Returns a dense, key-ordered
     dict of {dt: value} where dt=datetime matching an element of the timeline and value = the data value.
@@ -382,6 +384,39 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
             hilomap[dt] = pred
 
     return hilomap
+
+
+def clean_water_data(in_dict, station: Station) -> dict:
+    """Strip out one kind of known data error from CDMO. Sometimes we see a period of no data, immediately followed
+    by 1 or 2 zero values, which are bogus. Here we identify those 0 NAVD88 values and strip them out.
+    We require a minimum of 1 hour of missing data, but that should be adjusted up or down as necessary.
+    TODO: Remove this when this issue is addressed.
+
+    Args:
+        in_dict: the dt:val dict in chronological order
+        station (Station): The station object, so we can access the MLLW conversion
+
+    Returns:
+        dict: Same as passed in dict, with bad data removed.
+    """
+    last_dt = None
+
+    def check_one(dt, val):
+        nonlocal last_dt
+        if (
+            val
+            == station.mllw_conversion  # values are already converted to mllw, so convert back to navd88
+            and last_dt is not None
+            and dt - last_dt > timedelta(hours=1)
+        ):
+            logger.warning(
+                f"Rejecting {dt} with value {val} (navd88 0) with most recent data at {last_dt}"
+            )
+            return False
+        last_dt = dt
+        return True
+
+    return {dt: val for dt, val in in_dict.items() if check_one(dt, val)}
 
 
 def handle_float(data_str: str, local_dt: datetime):
