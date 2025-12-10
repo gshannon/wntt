@@ -27,6 +27,29 @@ dst_end_date = date(2024, 11, 3)
 class TestCdmo(TestCase):
     tzone = tz.eastern  # Do not change, tests use hard-coded times
 
+    def test_xml_parse_with_bad_zero_problem(self):
+        # Strip out bogus zero level data from cdmo.
+        timeline = Timeline(
+            datetime(2025, 12, 8, 0, tzinfo=self.tzone),
+            datetime(2025, 12, 8, 3, tzinfo=self.tzone),
+            datetime(2025, 12, 9, 0, tzinfo=self.tzone),
+        )
+        # Create test dict for timeline, setting all values to any non-zero value.
+        full_dict = dict.fromkeys(timeline.get_all_past(), 2.7)
+        # Remove all 1 o'clock data and set 2:00, 2:15 and 2:45 to 0
+        test_dict = {k: v for k, v in full_dict.items() if k.hour != 1}
+        bad_date1 = datetime(2025, 12, 8, 2, 0, tzinfo=self.tzone)
+        bad_date2 = datetime(2025, 12, 8, 2, 15, tzinfo=self.tzone)
+        ok_zero_date = datetime(2025, 12, 8, 2, 45, tzinfo=self.tzone)
+        test_dict[bad_date1] = test_dict[bad_date2] = test_dict[ok_zero_date] = (
+            station.mllw_conversion
+        )
+        # clean it. It should remove only the 2 zero elements following the data gap.
+        cleaned = cdmo.clean_water_data(test_dict, station)
+        self.assertEqual(len(cleaned), len(test_dict) - 2)
+        self.assertNotIn(bad_date1, cleaned)
+        self.assertNotIn(bad_date2, cleaned)
+
     def test_hilos_with_missing_data(self):
         # With seven hours of missing observed data, make sure all highs and lows are still found.
         timeline = GraphTimeline(date(2025, 12, 4), date(2025, 12, 5), self.tzone)
@@ -40,7 +63,7 @@ class TestCdmo(TestCase):
         with open(f"{test_data_path}/data/cdmo-120405.xml", "r") as file:
             xml = file.read()
         converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
-        obs_dict = cdmo.get_cdmo_data(timeline, xml, "Level", converter)
+        obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
 
         # Find the hilos in the observed data.
         hilos = cdmo.find_all_hilos(timeline, obs_dict, preds_dict)
@@ -62,7 +85,7 @@ class TestCdmo(TestCase):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         with self.assertRaisesRegex(APIException, "^Invalid ip"):
-            cdmo.get_cdmo_data(timeline, xml, "anyparam", None)
+            cdmo.parse_cdmo_xml(timeline, xml, "anyparam", None)
 
     def test_handle_navd88(self):
         converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
