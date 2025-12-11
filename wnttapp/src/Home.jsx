@@ -88,7 +88,7 @@ export default function Home() {
                             <Dropdown>
                                 <Dropdown.Toggle
                                     variant='custom-primary'
-                                    className='home-screen-btn fs-6'>
+                                    className='home-screen-btn'>
                                     Choose Reserve
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>{stationItems}</Dropdown.Menu>
@@ -96,7 +96,7 @@ export default function Home() {
                         </StationSelection>
                     </Col>
                 </Activity>
-                <Col className='mb-1'>
+                <Col>
                     <Button
                         className='home-screen-btn fw-bold'
                         disabled={ctx.station == null}
@@ -107,7 +107,7 @@ export default function Home() {
                     </Button>
                 </Col>
             </Row>
-            {ctx.station && <ConditionsSection station={ctx.station} />}
+            <Row className='mt-3'>{ctx.station && <ConditionsSection station={ctx.station} />}</Row>
         </div>
     )
 }

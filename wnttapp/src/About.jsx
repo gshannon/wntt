@@ -78,34 +78,43 @@ export default function About() {
                         </p>
                     </Accordion.Body>
                 </Accordion.Item>
-                <Accordion.Item>
-                    <Accordion.Header>Selected SWMP Station</Accordion.Header>
-                    <Accordion.Body>
-                        <p>
-                            You have selected the <b>{ctx.station.waterStationName}</b> water
-                            quality station for recorded tides and temperature, in the{' '}
-                            <Link href={ctx.station.reserveUrl} text={ctx.station.reserveName} />{' '}
-                            reserve. Wind data is from the <b>{ctx.station.weatherStationName}</b>{' '}
-                            weather station. Tide predictions come from NOAA&apos;s{' '}
-                            <Link
-                                href={ctx.station.noaaStationUrl}
-                                text={ctx.station.noaaStationName}
-                            />{' '}
-                            station.
-                        </p>
-                    </Accordion.Body>
-                </Accordion.Item>
                 <Accordion.Item eventKey='3'>
                     <Accordion.Header>Sources</Accordion.Header>
                     <Accordion.Body>
                         <ol className='list-group list-group-numbered'>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
                                 <div className='ms-2 me-auto'>
-                                    <div className='fw-bold'>Historical tides and wind data</div>
+                                    <div className='fw-bold'>Tide and wind observation data</div>
                                     <div>
-                                        National Estuarine Research Reserve System, Centralized Data
-                                        Management Office (Web Services):{' '}
-                                        <SimpleLink href='https://cdmo.baruch.sc.edu' />{' '}
+                                        Tide and wind data is gathered by the{' '}
+                                        <Link
+                                            href={ctx.station.reserveUrl}
+                                            text={`reserve (${ctx.station.reserveName}).`}
+                                        />{' '}
+                                    </div>
+                                    <div>
+                                        Data is then made available by the{' '}
+                                        <Link
+                                            href='https://cdmo.baruch.sc.edu/dges/'
+                                            text='Centralized Data Management Office (CDMO)'
+                                        />
+                                        , part of the National Estuarine Research Reserve System.
+                                    </div>
+                                    <div>
+                                        <ul>
+                                            <li>
+                                                <Link
+                                                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
+                                                    text={`Water data from ${ctx.station.waterStationName}`}
+                                                />{' '}
+                                            </li>
+                                            <li>
+                                                <Link
+                                                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
+                                                    text={`Weather data from ${ctx.station.weatherStationName}`}
+                                                />{' '}
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
                             </li>
@@ -113,40 +122,58 @@ export default function About() {
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Astronomical Tide Predictions</div>
                                     <div>
-                                        Main site:{' '}
-                                        <SimpleLink href='https://tidesandcurrents.noaa.gov/tide_predictions.html' />
+                                        Tide predictions come from the{' '}
+                                        <Link
+                                            href='https://tidesandcurrents.noaa.gov/tide_predictions.html'
+                                            text={`National Oceanic and Atmospheric Administration (NOAA)`}
+                                        />
+                                        .
                                     </div>
                                     <div>
-                                        API:{' '}
-                                        <SimpleLink href='https://api.tidesandcurrents.noaa.gov/api/prod/' />
+                                        <ul>
+                                            <li>
+                                                Station page:{' '}
+                                                <Link
+                                                    href={ctx.station.noaaStationUrl}
+                                                    text={`National Oceanic and Atmospheric Administration (NOAA)`}
+                                                />
+                                            </li>
+                                            <li>
+                                                API:{' '}
+                                                <SimpleLink href='https://api.tidesandcurrents.noaa.gov/api/prod/' />
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
                                 <div className='ms-2 me-auto'>
-                                    <div className='fw-bold'>Future Storm Surge</div>
+                                    <div className='fw-bold'>Future Storm Surge Projections</div>
                                     <div>
-                                        Main site:{' '}
-                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo' />
+                                        <Link
+                                            href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo'
+                                            text={`Probabilistic Extra-Tropical Storm Surge (NOAA)`}
+                                        />
                                     </div>
                                     <div>
-                                        Disclaimer:{' '}
-                                        <SimpleLink href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php' />
+                                        Station page for{' '}
+                                        <Link
+                                            href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0'
+                                            text={ctx.station.noaaStationName}
+                                        />
                                     </div>
                                 </div>
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>
-                                        The National Map Elevation Point Query Service
+                                        Translation of Latitude/Longitude to Elevation
                                     </div>
                                     <div>
-                                        Main Site:{' '}
-                                        <SimpleLink href='https://apps.nationalmap.gov/epqs/' />
-                                    </div>
-                                    <div>
-                                        Accuracy Information:{' '}
-                                        <SimpleLink href='https://www.usgs.gov/faqs/how-accurate-are-elevations-generated-elevation-point-query-service-national-map' />
+                                        <Link
+                                            href='https://apps.nationalmap.gov/epqs/'
+                                            text='The USGS National Map Elevation Point Query Service'
+                                        />
                                     </div>
                                 </div>
                             </li>
@@ -154,8 +181,10 @@ export default function About() {
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Moon phase data</div>
                                     <div>
-                                        U.S. Navy Astronomical Applications Department:{' '}
-                                        <SimpleLink href='https://aa.usno.navy.mil/data/api' />
+                                        <Link
+                                            href='https://aa.usno.navy.mil/data/api'
+                                            text='U.S. Navy Astronomical Applications Department'
+                                        />
                                     </div>
                                 </div>
                             </li>
