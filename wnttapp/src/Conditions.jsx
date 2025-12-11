@@ -1,8 +1,12 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
+import { Link } from './Links'
 import { apiErrorResponse, Months, SyzygyInfo } from './utils'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 export default function Conditions({ data, error }) {
+    const ctx = useContext(AppContext)
     const noData = '--'
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here. Ah, javascript.
@@ -35,6 +39,10 @@ export default function Conditions({ data, error }) {
 
     return (
         <div className='cond-container'>
+            <div className='cond-col-header'>Metric</div>
+            <div className='cond-col-header'>Value</div>
+            <div className='cond-col-header'>As of</div>
+            <div className='horizontal-line'></div>
             <div className='cond-label'>Tide Level</div>
             <div className='cond-data'>
                 {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
@@ -79,6 +87,19 @@ export default function Conditions({ data, error }) {
             </div>
             <div className='cond-time'>
                 {data.next_phase_dt ? format_dt(data.next_phase_dt) : noData}
+            </div>
+            <div className='horizontal-line'></div>
+            <div className='links'>
+                Source of this data, plus more data:&nbsp; &nbsp;
+                <Link
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
+                    text='Water'
+                />
+                &nbsp; &nbsp;
+                <Link
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
+                    text='Weather'
+                />
             </div>
         </div>
     )
