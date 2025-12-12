@@ -45,7 +45,12 @@ export default function Home() {
         if (ctx.special) {
             return (
                 <>
-                    Here you can view historical tide and wind data, as well as predicted tides and
+                    This system uses data collected by the{' '}
+                    <Link
+                        href='https://coast.noaa.gov/nerrs/research/'
+                        text='System Wide Monitoring Program'
+                    />{' '}
+                    (SWMP) to view historical tide and wind data, as well as predicted tides and
                     storm surge, for certain sites within the{' '}
                     <Link
                         href='https://coast.noaa.gov/nerrs/'
@@ -70,8 +75,8 @@ export default function Home() {
         <div id='home' className={'home ' + ctx.bgClass}>
             <div className='welcome p-2 my-3'>
                 <p>
-                    Welcome to the Wells National Estuarine Research Reserve Tide Tracker. {text1()}{' '}
-                    To learn more, watch this{' '}
+                    Welcome to the {ctx.special ? '' : 'Wells'} National Estuarine Research Reserve
+                    Tide Tracker. {text1()} To learn more, watch this{' '}
                     <a
                         target='_blank'
                         rel='noopener noreferrer'

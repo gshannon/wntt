@@ -90,7 +90,7 @@ export default function Conditions({ data, error }) {
             </div>
             <div className='horizontal-line'></div>
             <div className='links'>
-                Source of this data, plus more data:&nbsp; &nbsp;
+                Source of this data, and more:&nbsp; &nbsp;
                 <Link
                     href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
                     text='Water'
