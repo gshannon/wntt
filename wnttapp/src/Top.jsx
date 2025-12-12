@@ -104,15 +104,27 @@ export default function Top({ page, gotoPage }) {
                                     />
                                     <div className='conditions-centered'>Latest Conditions</div>
                                 </div>
-                            }></Overlay>
+                            }
+                        />
                     </Col>
                     <Col className='px-1'>
-                        <a
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            href='https://wellsreserve.org'>
-                            <img className='logo' src={Logo} width={130} alt='Wells Reserve Logo' />
-                        </a>
+                        <Overlay
+                            text='View the Wells Reserve web site'
+                            placement='bottom'
+                            contents={
+                                <a
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    href='https://wellsreserve.org'>
+                                    <img
+                                        className='logo'
+                                        src={Logo}
+                                        width={130}
+                                        alt='Wells Reserve Logo'
+                                    />
+                                </a>
+                            }
+                        />
                     </Col>
                 </Row>
             </Container>

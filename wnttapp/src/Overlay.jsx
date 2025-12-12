@@ -18,13 +18,7 @@ export default function Overlay(props) {
         return <> {contents}</>
     } else {
         return (
-            <OverlayTrigger
-                placement={placement}
-                // Dflt trigger includes 'focus' which causes display problems. I'd like to
-                // just trigger on hover but then it spams the console. This is a workaround.
-                // https://github.com/react-bootstrap/react-bootstrap/issues/5027
-                trigger={['hover', 'hover']}
-                overlay={<Tooltip>{text}</Tooltip>}>
+            <OverlayTrigger placement={placement} overlay={<Tooltip>{text}</Tooltip>}>
                 {contents}
             </OverlayTrigger>
         )
