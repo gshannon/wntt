@@ -254,15 +254,18 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
         except (TypeError, ValueError):
             logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
 
-    missing = len(past_timeline) - len(datadict)
+    timeline_len = len(past_timeline)
+    missing = timeline_len - len(datadict)
     failure_rate = int(round((missing + none_or_bad) / len(past_timeline), 2) * 100)
     message = (
         f"For {param}, got {len(datadict)} values, failrate={failure_rate}% "
-        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] (len={len(past_timeline)}) "
+        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] (len={timeline_len}) "
         + f"read={records} ignored={ignored} none+bad={none_or_bad} missing={missing}"
     )
 
-    if failure_rate > 20:
+    if (timeline_len >= 96 and failure_rate > 20) or (
+        timeline_len < 96 and failure_rate > 95
+    ):
         logger.warning(message)
     else:
         logger.debug(message)

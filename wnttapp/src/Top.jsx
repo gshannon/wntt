@@ -29,10 +29,16 @@ export default function Top({ page, gotoPage }) {
                 <NavLink onClick={() => gotoPage(Page.Home)} active={page === Page.Home}>
                     Home
                 </NavLink>
-                <NavLink onClick={() => gotoPage(Page.Graph)} active={page === Page.Graph}>
+                <NavLink
+                    disabled={ctx.station == null}
+                    onClick={() => gotoPage(Page.Graph)}
+                    active={page === Page.Graph}>
                     Graph
                 </NavLink>
-                <NavLink onClick={() => gotoPage(Page.Map)} active={page === Page.Map}>
+                <NavLink
+                    disabled={ctx.station == null}
+                    onClick={() => gotoPage(Page.Map)}
+                    active={page === Page.Map}>
                     Map
                 </NavLink>
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
@@ -53,13 +59,22 @@ export default function Top({ page, gotoPage }) {
                 <NavDropdown.Item onClick={() => gotoPage(Page.Home)} active={page === Page.Home}>
                     Home
                 </NavDropdown.Item>
-                <NavDropdown.Item onClick={() => gotoPage(Page.Graph)} active={page === Page.Graph}>
+                <NavDropdown.Item
+                    onClick={() => gotoPage(Page.Graph)}
+                    active={page === Page.Graph}
+                    disabled={ctx.station != null}>
                     Graph
                 </NavDropdown.Item>
-                <NavDropdown.Item onClick={() => gotoPage(Page.Map)} active={page === Page.Map}>
+                <NavDropdown.Item
+                    onClick={() => gotoPage(Page.Map)}
+                    active={page === Page.Map}
+                    disabled={ctx.station != null}>
                     Map
                 </NavDropdown.Item>
-                <NavDropdown.Item onClick={() => gotoPage(Page.About)} active={page === Page.About}>
+                <NavDropdown.Item
+                    onClick={() => gotoPage(Page.About)}
+                    active={page === Page.About}
+                    disabled={ctx.station != null}>
                     About
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
@@ -94,8 +109,7 @@ export default function Top({ page, gotoPage }) {
                             contents={
                                 <div
                                     className='conditions-container mx-md-2'
-                                    disabled={ctx.station == null}
-                                    onClick={() => setShowConditions(true)}>
+                                    onClick={() => setShowConditions(ctx.station != null)}>
                                     <img
                                         className='conditions-img'
                                         src={Wave}
