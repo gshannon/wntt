@@ -48,7 +48,7 @@ export default function Home() {
                     This system uses data collected by the{' '}
                     <Link
                         href='https://coast.noaa.gov/nerrs/research/'
-                        text='System Wide Monitoring Program'
+                        text='System-Wide Monitoring Program'
                     />{' '}
                     (SWMP) to view historical tide and wind data, as well as predicted tides and
                     storm surge, for certain sites within the{' '}
@@ -56,8 +56,8 @@ export default function Home() {
                         href='https://coast.noaa.gov/nerrs/'
                         text='National Estuarine Research Reserve System'
                     />
-                    . You can also obtain the elevation of any location in general vicinity of the
-                    reserve in order to assess the flood risk at that location.
+                    . You can also obtain the elevation of any location in the general vicinity of
+                    the reserve in order to assess the flood risk at that location.
                 </>
             )
         } else {
@@ -71,6 +71,16 @@ export default function Home() {
         }
     }
 
+    const text2 = () => {
+        if (ctx.special) {
+            if (ctx.station) {
+                return <>You can change the reserve you are interested in at any time.</>
+            } else {
+                return <>Choose a reserve to get started.</>
+            }
+        }
+    }
+
     return (
         <div id='home' className={'home ' + ctx.bgClass}>
             <div className='welcome p-2 my-3'>
@@ -81,9 +91,9 @@ export default function Home() {
                         target='_blank'
                         rel='noopener noreferrer'
                         href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
-                        tutorial video
+                        tutorial video.
                     </a>{' '}
-                    on Youtube, or click the button below.
+                    {text2()}
                 </p>
             </div>
             <Row>
@@ -101,16 +111,18 @@ export default function Home() {
                         </StationSelection>
                     </Col>
                 </Activity>
-                <Col>
-                    <Button
-                        className='home-screen-btn fw-bold'
-                        disabled={ctx.station == null}
-                        variant='custom-primary'
-                        onClick={() => ctx.gotoPage(Page.Graph)}>
-                        {' '}
-                        Get Started
-                    </Button>
-                </Col>
+                {ctx.station != null && (
+                    <Col>
+                        <Button
+                            className='home-screen-btn fw-bold'
+                            disabled={ctx.station == null}
+                            variant='custom-primary'
+                            onClick={() => ctx.gotoPage(Page.Graph)}>
+                            {' '}
+                            Get Started
+                        </Button>
+                    </Col>
+                )}
             </Row>
             <Row className='mt-3'>{ctx.station && <ConditionsSection station={ctx.station} />}</Row>
         </div>

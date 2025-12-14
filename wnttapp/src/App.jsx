@@ -28,15 +28,19 @@ const queryClient = new QueryClient({
 export default function App() {
     /////////////////////////////////////////////
     // Set up state.
-    const [special, setSpecial] = useState(import.meta.env.VITE_SPECIAL ?? '0' === '1') // temporary dev hack
+    const isSpecial = import.meta.env.VITE_SPECIAL ?? '0' === '1'
+    const [special, setSpecial] = useState(isSpecial) // temporary dev hack
     const [curPage, setCurPage] = useState(Page.Home)
     const [returnPage, setReturnPage] = useState(null)
 
-    // Initial station will be the one stored, or Wells by default.
+    // Initial station will be the one stored, or null by default.
     const main = storage.getGlobalPermanentStorage()
-    const [stationId, setStationId] = useState(main.stationId ?? WELLS_STATION_ID)
+    // In multi-reserve mode, there is no default station.
+    const [stationId, setStationId] = useState(
+        main.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
+    )
     const [station, setStation] = useState(null)
-    const [bgClass, setBgClass] = useState(WELLS_BG_CLASS)
+    const [bgClass, setBgClass] = useState(OTHER_BG_CLASS)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
 
     // temporary dev hack
@@ -58,18 +62,20 @@ export default function App() {
     }, [])
 
     useEffect(() => {
-        axios
-            .post(import.meta.env.VITE_API_STATION_DATA_URL, {
-                app_version: import.meta.env.VITE_APP_VERSION,
-                station_id: stationId,
+        if (stationId) {
+            axios
+                .post(import.meta.env.VITE_API_STATION_DATA_URL, {
+                    app_version: import.meta.env.VITE_APP_VERSION,
+                    station_id: stationId,
+                })
+                .then((res) => {
+                    setStation(Station.fromJson(res.data))
+                    setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
+                })
+            storage.setGlobalPermanentStorage({
+                stationId: stationId,
             })
-            .then((res) => {
-                setStation(Station.fromJson(res.data))
-                setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
-            })
-        storage.setGlobalPermanentStorage({
-            stationId: stationId,
-        })
+        }
     }, [stationId, bgClass])
 
     const onCustomChange = useEffectEvent((newElevation) => {

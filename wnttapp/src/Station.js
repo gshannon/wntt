@@ -13,7 +13,6 @@ export default class Station {
             weatherStationName: json.weatherStationName,
             noaaStationId: json.noaaStationId,
             noaaStationName: json.noaaStationName,
-            noaaStationUrl: json.noaaStationUrl,
             navd88ToMllwConversion: json.navd88ToMllwConversion,
             meanHighWaterMllw: json.meanHighWaterMllw,
             mapBounds: json.mapBounds,
@@ -36,7 +35,6 @@ export default class Station {
         weatherStationName,
         noaaStationId,
         noaaStationName,
-        noaaStationUrl,
         navd88ToMllwConversion,
         meanHighWaterMllw,
         mapBounds,
@@ -56,7 +54,6 @@ export default class Station {
         this.weatherStationName = weatherStationName
         this.noaaStationId = noaaStationId
         this.noaaStationName = noaaStationName
-        this.noaaStationUrl = noaaStationUrl
         this.navd88ToMllwConversion = navd88ToMllwConversion
         this.meanHighWaterMllw = meanHighWaterMllw
         this.mapBounds = mapBounds

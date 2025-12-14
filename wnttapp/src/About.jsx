@@ -4,6 +4,7 @@ import Accordion from 'react-bootstrap/Accordion'
 import { SimpleLink, Link } from './Links'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
+import { getStormSurgeUrl, TidesAndCurrentsUrl } from './utils'
 
 export default function About() {
     const ctx = useContext(AppContext)
@@ -86,36 +87,50 @@ export default function About() {
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Tide and wind observation data</div>
                                     <div>
-                                        Tide and wind data is gathered by the{' '}
+                                        Tide and wind data is gathered by the reserve{' '}
+                                        {ctx.station && (
+                                            <Link
+                                                href={ctx.station.reserveUrl}
+                                                text={`(${ctx.station.reserveName})`}
+                                            />
+                                        )}{' '}
+                                        as part of the{' '}
                                         <Link
-                                            href={ctx.station.reserveUrl}
-                                            text={`reserve (${ctx.station.reserveName}).`}
-                                        />{' '}
-                                    </div>
-                                    <div>
-                                        Data is then made available by the{' '}
+                                            href='https://coast.noaa.gov/nerrs/research/'
+                                            text='System-Wide Monitoring Program (SWMP)'
+                                        />
+                                        . Data is made available by the{' '}
                                         <Link
                                             href='https://cdmo.baruch.sc.edu/dges/'
                                             text='Centralized Data Management Office (CDMO)'
                                         />
-                                        , part of the National Estuarine Research Reserve System.
+                                        , part of the{' '}
+                                        <Link
+                                            href='https://coast.noaa.gov/nerrs/'
+                                            text='National Estuarine Research Reserve System'
+                                        />
+                                        .
                                     </div>
-                                    <div>
-                                        <ul>
-                                            <li>
-                                                <Link
-                                                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
-                                                    text={`Water data from ${ctx.station.waterStationName}`}
-                                                />{' '}
-                                            </li>
-                                            <li>
-                                                <Link
-                                                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
-                                                    text={`Weather data from ${ctx.station.weatherStationName}`}
-                                                />{' '}
-                                            </li>
-                                        </ul>
-                                    </div>
+                                    {ctx.station && (
+                                        <div>
+                                            <ul>
+                                                <li>
+                                                    Water data from{' '}
+                                                    <Link
+                                                        href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
+                                                        text={ctx.station.waterStationName}
+                                                    />{' '}
+                                                </li>
+                                                <li>
+                                                    Weather data from{' '}
+                                                    <Link
+                                                        href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
+                                                        text={ctx.station.weatherStationName}
+                                                    />{' '}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
@@ -131,13 +146,15 @@ export default function About() {
                                     </div>
                                     <div>
                                         <ul>
-                                            <li>
-                                                Station page:{' '}
-                                                <Link
-                                                    href={ctx.station.noaaStationUrl}
-                                                    text={`National Oceanic and Atmospheric Administration (NOAA)`}
-                                                />
-                                            </li>
+                                            {ctx.station && (
+                                                <li>
+                                                    Station page for{' '}
+                                                    <Link
+                                                        href={`${TidesAndCurrentsUrl}${ctx.station.noaaStationId}`}
+                                                        text={ctx.station.noaaStationName}
+                                                    />
+                                                </li>
+                                            )}
                                             <li>
                                                 API:{' '}
                                                 <SimpleLink href='https://api.tidesandcurrents.noaa.gov/api/prod/' />
@@ -150,18 +167,25 @@ export default function About() {
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Future Storm Surge Projections</div>
                                     <div>
+                                        Storm surge projections come from{' '}
                                         <Link
                                             href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo'
                                             text={`Probabilistic Extra-Tropical Storm Surge (NOAA)`}
                                         />
                                     </div>
-                                    <div>
-                                        Station page for{' '}
-                                        <Link
-                                            href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0'
-                                            text={ctx.station.noaaStationName}
-                                        />
-                                    </div>
+                                    {ctx.station && (
+                                        <ul>
+                                            <li>
+                                                Station page for{' '}
+                                                <Link
+                                                    href={getStormSurgeUrl(
+                                                        ctx.station.noaaStationId
+                                                    )}
+                                                    text={ctx.station.noaaStationName}
+                                                />
+                                            </li>
+                                        </ul>
+                                    )}
                                 </div>
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>

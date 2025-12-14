@@ -1,6 +1,9 @@
 import { Col, Row, Stack } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 import { Link } from './Links'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
+import { getStormSurgeUrl, TidesAndCurrentsUrl } from './utils'
 
 const Entry = (props) => {
     return (
@@ -14,6 +17,7 @@ const Entry = (props) => {
 }
 
 export default function Glossary() {
+    const ctx = useContext(AppContext)
     return (
         <Container>
             <Row className='justify-content-center fs-4 fw-bold'>Glossary</Row>
@@ -60,7 +64,7 @@ export default function Glossary() {
                     (point of reference) used by this application for all land and sea elevations.
                     See{' '}
                     <Link
-                        href='https://tidesandcurrents.noaa.gov/datums.html?id=8419317'
+                        href={`https://tidesandcurrents.noaa.gov/datums.html?id=${ctx.station.noaaStationId}`}
                         text='here'
                     />{' '}
                     for more information about datums.
@@ -89,11 +93,7 @@ export default function Glossary() {
                 </Entry>
                 <Entry title='MHW (Mean High Water)'>
                     The average of all the high water heights, relative to MLLW, observed over the{' '}
-                    <b>National Tidal Datum Epoch</b>, i.e. between 1983 and 2001. Source:{' '}
-                    <Link
-                        href='https://tidesandcurrents.noaa.gov/datums.html?id=8419317'
-                        text='https://tidesandcurrents.noaa.gov/datums.html?id=8419317'
-                    />
+                    <b>National Tidal Datum Epoch</b>, i.e. between 1983 and 2001.
                 </Entry>
                 <Entry title='Observed Tide'>
                     Recorded tide level relative to MLLW. Data is captured every 15 minutes, and
@@ -103,10 +103,7 @@ export default function Glossary() {
                 <Entry title='Predicted Tide'>
                     The predicted astronomical tide level relative to MLLW based on the gravity of
                     the Moon and the relative motion of the Earth, Sun and Moon, as published by{' '}
-                    <Link
-                        href='https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317'
-                        text='NOAA'
-                    />
+                    <Link href={`${TidesAndCurrentsUrl}${ctx.station.noaaStationId}`} text='NOAA' />
                     . Such predictions do not consider any atmospheric or meteorological events.
                 </Entry>
                 <Entry title='Recorded Storm Surge'>
@@ -120,7 +117,7 @@ export default function Glossary() {
                     A computer model-generated estimate of adjustments to Predicted Tide levels in
                     the near future (about 4 days), based on NOAA&apos;s{' '}
                     <Link
-                        href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0'
+                        href={getStormSurgeUrl(ctx.station.noaaStationId)}
                         text='Probabilistic Extra-Tropical Storm Surge'
                     />{' '}
                     data.{' '}
