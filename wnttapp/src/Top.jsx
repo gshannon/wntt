@@ -23,6 +23,8 @@ export default function Top({ page, gotoPage }) {
         setShowConditions(false)
     }
 
+    const stationSelected = ctx.station != null
+
     const expandedMenu = (
         <Col className='expanded-menu px-1'>
             <Nav>
@@ -30,13 +32,13 @@ export default function Top({ page, gotoPage }) {
                     Home
                 </NavLink>
                 <NavLink
-                    disabled={ctx.station == null}
+                    className={stationSelected ? '' : 'disabled'}
                     onClick={() => gotoPage(Page.Graph)}
                     active={page === Page.Graph}>
                     Graph
                 </NavLink>
                 <NavLink
-                    disabled={ctx.station == null}
+                    className={stationSelected ? '' : 'disabled'}
                     onClick={() => gotoPage(Page.Map)}
                     active={page === Page.Map}>
                     Map
@@ -60,21 +62,18 @@ export default function Top({ page, gotoPage }) {
                     Home
                 </NavDropdown.Item>
                 <NavDropdown.Item
+                    className={stationSelected ? '' : 'disabled'}
                     onClick={() => gotoPage(Page.Graph)}
-                    active={page === Page.Graph}
-                    disabled={ctx.station != null}>
+                    active={page === Page.Graph}>
                     Graph
                 </NavDropdown.Item>
                 <NavDropdown.Item
+                    className={stationSelected ? '' : 'disabled'}
                     onClick={() => gotoPage(Page.Map)}
-                    active={page === Page.Map}
-                    disabled={ctx.station != null}>
+                    active={page === Page.Map}>
                     Map
                 </NavDropdown.Item>
-                <NavDropdown.Item
-                    onClick={() => gotoPage(Page.About)}
-                    active={page === Page.About}
-                    disabled={ctx.station != null}>
+                <NavDropdown.Item onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
