@@ -342,9 +342,6 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
 
     hilomap = {}  # {dt: HighLowEvent}
 
-    if len(obs_dict) == 0:
-        return hilomap  # nothing to do
-
     past_padded_timeline = timeline.get_all_past()
 
     # Use the sparse predicted highs/lows to drive the logic. Since actual highs/lows will occur fairly close
@@ -354,7 +351,7 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
     # TODO: Handle edge case where observed high or low is missing and we falsely report a nearby value instead.
     for dt, pred in astro_pred_dict.items():
         logger.debug(f"Considering predicted {pred} at {dt}")
-        if dt > past_padded_timeline[-1]:
+        if len(past_padded_timeline) == 0 or dt > past_padded_timeline[-1]:
             hilomap[dt] = pred
             continue
         # Find the time with the highest or lowest observed value within 1 hour of the predicted time.
