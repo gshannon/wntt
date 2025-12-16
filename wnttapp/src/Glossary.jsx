@@ -1,9 +1,7 @@
 import { Col, Row, Stack } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 import { Link } from './Links'
-import { AppContext } from './AppContext'
-import { useContext } from 'react'
-import { getStormSurgeUrl, TidesAndCurrentsUrl } from './utils'
+import { SurgeUrl, TidesCurrentsUrl, TidesCurrentsDatumsUrl } from './utils'
 
 const Entry = (props) => {
     return (
@@ -17,7 +15,6 @@ const Entry = (props) => {
 }
 
 export default function Glossary() {
-    const ctx = useContext(AppContext)
     return (
         <Container>
             <Row className='justify-content-center fs-4 fw-bold'>Glossary</Row>
@@ -62,12 +59,8 @@ export default function Glossary() {
                     , which is the tidal{' '}
                     <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />{' '}
                     (point of reference) used by this application for all land and sea elevations.
-                    See{' '}
-                    <Link
-                        href={`https://tidesandcurrents.noaa.gov/datums.html?id=${ctx.station.noaaStationId}`}
-                        text='here'
-                    />{' '}
-                    for more information about datums.
+                    See <Link href={TidesCurrentsDatumsUrl} text='here' /> for more information
+                    about datums.
                 </Entry>
                 <Entry title='Custom Elevation'>
                     The elevation relative to MLLW of your selected location on the Map page. This
@@ -103,8 +96,8 @@ export default function Glossary() {
                 <Entry title='Predicted Tide'>
                     The predicted astronomical tide level relative to MLLW based on the gravity of
                     the Moon and the relative motion of the Earth, Sun and Moon, as published by{' '}
-                    <Link href={`${TidesAndCurrentsUrl}${ctx.station.noaaStationId}`} text='NOAA' />
-                    . Such predictions do not consider any atmospheric or meteorological events.
+                    <Link href={TidesCurrentsUrl} text='NOAA' />. Such predictions do not consider
+                    any atmospheric or meteorological events.
                 </Entry>
                 <Entry title='Recorded Storm Surge'>
                     The difference between the Observed Tide and the Predicted Tide. This generally
@@ -116,11 +109,7 @@ export default function Glossary() {
                 <Entry title='Projected Storm Surge'>
                     A computer model-generated estimate of adjustments to Predicted Tide levels in
                     the near future (about 4 days), based on NOAA&apos;s{' '}
-                    <Link
-                        href={getStormSurgeUrl(ctx.station.noaaStationId)}
-                        text='Probabilistic Extra-Tropical Storm Surge'
-                    />{' '}
-                    data.{' '}
+                    <Link href={SurgeUrl} text='Probabilistic Extra-Tropical Storm Surge' /> data.{' '}
                     <b>This is an EXPERIMENTAL project and is not to be considered a forecast</b>.
                     The data is refreshed four times a day. Please read NOAA&apos;s disclaimer{' '}
                     <Link href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php' text='here' />

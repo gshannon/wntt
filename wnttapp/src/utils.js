@@ -1,8 +1,12 @@
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
-export const TidesAndCurrentsUrl = 'https://tidesandcurrents.noaa.gov/stationhome.html?id='
-export const getStormSurgeUrl = (noaaStationId) => {
+export const TidesCurrentsUrl = 'https://tidesandcurrents.noaa.gov/tide_predictions.html'
+export const TidesCurrentsStationUrl = 'https://tidesandcurrents.noaa.gov/stationhome.html?id='
+export const TidesCurrentsDatumsUrl = 'https://tidesandcurrents.noaa.gov/datum_options.html'
+export const SurgeUrl =
+    'https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo'
+export const getSurgeStationUrl = (noaaStationId) => {
     return `https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=${noaaStationId}&datum=MLLW&show=0-0-1-1-0`
 }
 

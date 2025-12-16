@@ -4,7 +4,7 @@ import Accordion from 'react-bootstrap/Accordion'
 import { SimpleLink, Link } from './Links'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
-import { getStormSurgeUrl, TidesAndCurrentsUrl } from './utils'
+import { getSurgeStationUrl, SurgeUrl, TidesCurrentsUrl, TidesCurrentsStationUrl } from './utils'
 
 export default function About() {
     const ctx = useContext(AppContext)
@@ -139,7 +139,7 @@ export default function About() {
                                     <div>
                                         Tide predictions come from the{' '}
                                         <Link
-                                            href='https://tidesandcurrents.noaa.gov/tide_predictions.html'
+                                            href={TidesCurrentsUrl}
                                             text={`National Oceanic and Atmospheric Administration (NOAA)`}
                                         />
                                         .
@@ -150,7 +150,7 @@ export default function About() {
                                                 <li>
                                                     Station page for{' '}
                                                     <Link
-                                                        href={`${TidesAndCurrentsUrl}${ctx.station.noaaStationId}`}
+                                                        href={`${TidesCurrentsStationUrl}${ctx.station.noaaStationId}`}
                                                         text={ctx.station.noaaStationName}
                                                     />
                                                 </li>
@@ -169,7 +169,7 @@ export default function About() {
                                     <div>
                                         Storm surge projections come from{' '}
                                         <Link
-                                            href='https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo'
+                                            href={SurgeUrl}
                                             text={`Probabilistic Extra-Tropical Storm Surge (NOAA)`}
                                         />
                                     </div>
@@ -178,7 +178,7 @@ export default function About() {
                                             <li>
                                                 Station page for{' '}
                                                 <Link
-                                                    href={getStormSurgeUrl(
+                                                    href={getSurgeStationUrl(
                                                         ctx.station.noaaStationId
                                                     )}
                                                     text={ctx.station.noaaStationName}
