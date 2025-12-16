@@ -390,9 +390,8 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
 
 
 def clean_water_data(in_dict, station: Station) -> dict:
-    """Strip out one kind of known data error from CDMO. Sometimes we see a period of no data, immediately followed
-    by 1 or 2 zero values, which are bogus. Here we identify those 0 NAVD88 values and strip them out.
-    We require a minimum of 1 hour of missing data, but that should be adjusted up or down as necessary.
+    """Strip out one kind of known data error from CDMO. Sometimes we see a series of multiple zeros.
+    We will reject any zero value that is not preceded by a non-zero value between -1 and +1 ft navd88.
     TODO: Remove this when this issue is addressed.
 
     Args:
@@ -402,24 +401,46 @@ def clean_water_data(in_dict, station: Station) -> dict:
     Returns:
         dict: Same as passed in dict, with bad data removed.
     """
-    last_dt = None
+    first_bad_dt = None
+    last_nonzero_dt = None
+    last_nonzero_navd_val = None
+    reject_cnt = 0
 
-    def check_one(dt, val):
-        nonlocal last_dt
-        if (
-            val
-            == station.mllw_conversion  # values are already converted to mllw, so convert back to navd88
-            and last_dt is not None
-            and dt - last_dt > timedelta(hours=1)
-        ):
-            logger.warning(
-                f"Rejecting {dt} with value {val} (navd88 0) with most recent data at {last_dt}"
-            )
-            return False
-        last_dt = dt
+    def check_one(dt, navd_val):
+        nonlocal first_bad_dt
+        nonlocal last_nonzero_dt
+        nonlocal last_nonzero_navd_val
+        nonlocal reject_cnt
+
+        if navd_val == 0:
+            if (
+                last_nonzero_dt is None
+                or dt - last_nonzero_dt > timedelta(minutes=15)
+                or abs(navd_val - last_nonzero_navd_val) > 1
+            ):
+                reject_cnt += 1
+                if first_bad_dt is None:
+                    first_bad_dt = dt
+                logger.debug(
+                    f"Rejecting {dt} with value 0 with prior value {last_nonzero_navd_val} at {last_nonzero_dt}"
+                )
+                return False
+
+        if navd_val != 0:
+            last_nonzero_dt = dt
+            last_nonzero_navd_val = navd_val
         return True
 
-    return {dt: val for dt, val in in_dict.items() if check_one(dt, val)}
+    cleaned = {
+        dt: val
+        for dt, val in in_dict.items()
+        if check_one(dt, val - station.mllw_conversion)
+    }
+    if reject_cnt > 0:
+        logger.warning(
+            f"Rejected {reject_cnt} out of {len(in_dict)} with value navd88 0, first={first_bad_dt}"
+        )
+    return cleaned
 
 
 def handle_float(data_str: str, local_dt: datetime):

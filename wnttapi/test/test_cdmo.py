@@ -29,26 +29,27 @@ class TestCdmo(TestCase):
 
     def test_xml_parse_with_bad_zero_problem(self):
         # Strip out bogus zero level data from cdmo.
+        # We make a 3-hour timeline, all in the past.
         timeline = Timeline(
-            datetime(2025, 12, 8, 0, tzinfo=self.tzone),
-            datetime(2025, 12, 8, 3, tzinfo=self.tzone),
-            datetime(2025, 12, 9, 0, tzinfo=self.tzone),
+            datetime(2025, 7, 8, 0, tzinfo=self.tzone),
+            datetime(2025, 7, 8, 3, tzinfo=self.tzone),
+            datetime(2025, 12, 1, 0, tzinfo=self.tzone),
         )
-        # Create test dict for timeline, setting all values to any non-zero value.
-        full_dict = dict.fromkeys(timeline.get_all_past(), 2.7)
+        # Create test dict for timeline, setting all values to a near-zero value.
+        full_dict = dict.fromkeys(timeline.get_all_past(), 5.28)
         # Remove all 1 o'clock data and set 2:00, 2:15 and 2:45 to 0
         test_dict = {k: v for k, v in full_dict.items() if k.hour != 1}
-        bad_date1 = datetime(2025, 12, 8, 2, 0, tzinfo=self.tzone)
-        bad_date2 = datetime(2025, 12, 8, 2, 15, tzinfo=self.tzone)
-        ok_zero_date = datetime(2025, 12, 8, 2, 45, tzinfo=self.tzone)
-        test_dict[bad_date1] = test_dict[bad_date2] = test_dict[ok_zero_date] = (
+        zero_date1 = datetime(2025, 7, 8, 2, 0, tzinfo=self.tzone)
+        zero_date2 = datetime(2025, 7, 8, 2, 15, tzinfo=self.tzone)
+        ok_zero_date = datetime(2025, 7, 8, 2, 45, tzinfo=self.tzone)
+        test_dict[zero_date1] = test_dict[zero_date2] = test_dict[ok_zero_date] = (
             station.mllw_conversion
         )
         # clean it. It should remove only the 2 zero elements following the data gap.
         cleaned = cdmo.clean_water_data(test_dict, station)
         self.assertEqual(len(cleaned), len(test_dict) - 2)
-        self.assertNotIn(bad_date1, cleaned)
-        self.assertNotIn(bad_date2, cleaned)
+        self.assertNotIn(zero_date1, cleaned)
+        self.assertNotIn(zero_date2, cleaned)
 
     def test_hilos_with_missing_data(self):
         # With seven hours of missing observed data, make sure all highs and lows are still found.
