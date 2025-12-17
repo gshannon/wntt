@@ -48,12 +48,12 @@ class Station:
     def mllw_feet_to_navd88_feet(self, in_value: float) -> float:
         return round(in_value - self.mllw_conversion, 2)
 
-    def navd88_meters_to_mllw_feet(self, in_value: float) -> float:
-        feet = round(in_value * 3.28084, 2)
+    def navd88_meters_to_mllw_feet(self, meters: float) -> float:
+        feet = round(meters * 3.28084, 2)
         return round(self.navd88_feet_to_mllw_feet(feet), 2)
 
-    def mllw_feet_to_navd88_meters(self, in_value: float) -> float:
-        feet = self.mllw_feet_to_navd88_feet(in_value)
+    def mllw_feet_to_navd88_meters(self, feet: float) -> float:
+        feet = self.mllw_feet_to_navd88_feet(feet)
         return round(feet / 3.28084, 2)
 
 
