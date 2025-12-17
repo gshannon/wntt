@@ -2,6 +2,7 @@ import logging
 import os
 import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
+from enum import Enum
 
 from app import tzutil as tz
 from app import util
@@ -31,6 +32,13 @@ max_wind_speed = 120  # any wind speed reading higher than this is considered ba
 # every request is causing the user/password to be rejected by CDMO. This should be
 # cleaned up once that issue is resolved.
 _client = None
+
+
+class CleanStatus(Enum):
+    ACCEPT = 1
+    REJECT = 2
+    UNKNOWN = 3
+    ZERO = 4
 
 
 def get_soap_client():
@@ -387,8 +395,10 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
 
 
 def clean_water_data(in_dict, station: Station) -> dict:
-    """Strip out one kind of known data error from CDMO. Sometimes we see a series of multiple zeros.
-    We will reject any zero value that is not preceded by a non-zero value between -1 and +1 ft navd88.
+    """Strip out one kind of known data error from CDMO. Sometimes we get a lot of invalid zero values.
+    Since values are sent in NAVD88, and by now all values are converted to MLLW, we have to convert back
+    to test for zeroes. Here we will reject any zero value that is not immediately preceeded or followed
+    by a value between -1 and +1 ft, with the assumption that tide will never move that much in 15 minutes.
     TODO: Remove this when this issue is addressed.
 
     Args:
@@ -398,41 +408,60 @@ def clean_water_data(in_dict, station: Station) -> dict:
     Returns:
         dict: Same as passed in dict, with bad data removed.
     """
+    keys = list(in_dict.keys())
     first_bad_dt = None
-    last_nonzero_dt = None
-    last_nonzero_navd_val = None
     reject_cnt = 0
 
-    def check_one(dt, navd_val):
+    # Examine the data prior to this index, if any.
+    def look_back(idx, dt, navd_feet) -> CleanStatus:
+        if idx == 0:
+            return CleanStatus.UNKNOWN
+        prev_dt = keys[idx - 1]
+        if dt - prev_dt > timedelta(minutes=15):
+            return CleanStatus.UNKNOWN
+        prev_navd_feet = in_dict[prev_dt] - station.mllw_conversion
+        if prev_navd_feet == 0:
+            return CleanStatus.ZERO
+        return CleanStatus.ACCEPT if -1 <= prev_navd_feet <= 1 else CleanStatus.REJECT
+
+    # Examine the data after this index, if any.
+    def look_ahead(idx, dt, navd_feet) -> bool:
+        if idx >= len(keys) - 1:
+            return False
+        next_dt = keys[idx + 1]
+        if next_dt - dt > timedelta(minutes=15):
+            return False
+        next_navd_feet = in_dict[next_dt] - station.mllw_conversion
+        if next_navd_feet == 0:
+            return False
+        return -1 <= next_navd_feet <= 1
+
+    def check_one(idx, dt):
+        nonlocal keys
         nonlocal first_bad_dt
-        nonlocal last_nonzero_dt
-        nonlocal last_nonzero_navd_val
         nonlocal reject_cnt
 
-        if navd_val == 0:
-            if (
-                last_nonzero_dt is None
-                or dt - last_nonzero_dt > timedelta(minutes=15)
-                or abs(navd_val - last_nonzero_navd_val) > 1
-            ):
-                reject_cnt += 1
-                if first_bad_dt is None:
-                    first_bad_dt = dt
-                logger.debug(
-                    f"Rejecting {dt} with value 0 with prior value {last_nonzero_navd_val} at {last_nonzero_dt}"
-                )
-                return False
+        navd_feet = in_dict[dt] - station.mllw_conversion
 
-        if navd_val != 0:
-            last_nonzero_dt = dt
-            last_nonzero_navd_val = navd_val
+        if navd_feet == 0:
+            match look_back(idx, dt, navd_feet):
+                case CleanStatus.ACCEPT:
+                    return True
+                case CleanStatus.UNKNOWN | CleanStatus.ZERO:
+                    if look_ahead(idx, dt, navd_feet):
+                        return True
+                case CleanStatus.REJECT:
+                    pass
+
+            reject_cnt += 1
+            if first_bad_dt is None:
+                first_bad_dt = dt
+            logger.debug(f"Rejecting value 0 navd88 at {dt}")
+            return False
+
         return True
 
-    cleaned = {
-        dt: val
-        for dt, val in in_dict.items()
-        if check_one(dt, val - station.mllw_conversion)
-    }
+    cleaned = {dt: in_dict[dt] for idx, dt in enumerate(keys) if check_one(idx, dt)}
     if reject_cnt > 0:
         logger.warning(
             f"Rejected {reject_cnt} out of {len(in_dict)} with value navd88 0, first={first_bad_dt}"

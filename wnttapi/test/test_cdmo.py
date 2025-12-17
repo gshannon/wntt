@@ -17,7 +17,7 @@ setup()
 
 csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
 test_data_path = os.path.dirname(os.path.abspath(__file__))
-station = stn.get_station("welinwq", csv_location)
+wells = stn.get_station("welinwq", csv_location)
 
 
 dst_start_date = date(2024, 3, 10)
@@ -27,29 +27,59 @@ dst_end_date = date(2024, 11, 3)
 class TestCdmo(TestCase):
     tzone = tz.eastern  # Do not change, tests use hard-coded times
 
+    def make_sample_dict(self, values) -> dict:
+        # We make a 2-hour timeline and fill it with sample valid readings
+        timeline = Timeline(
+            datetime(2025, 7, 4, 0, tzinfo=self.tzone),
+            datetime(2025, 7, 4, 2, tzinfo=self.tzone),
+        )
+        self.assertEqual(len(values), timeline.length_requested())
+        full = {k: v for (k, v) in zip(timeline.get_requested(), values)}
+        return {k: v for (k, v) in full.items() if v is not None}
+
     def test_xml_parse_with_bad_zero_problem(self):
         # Strip out bogus zero level data from cdmo.
-        # We make a 3-hour timeline, all in the past.
-        timeline = Timeline(
-            datetime(2025, 7, 8, 0, tzinfo=self.tzone),
-            datetime(2025, 7, 8, 3, tzinfo=self.tzone),
-            datetime(2025, 12, 1, 0, tzinfo=self.tzone),
-        )
-        # Create test dict for timeline, setting all values to a near-zero value.
-        full_dict = dict.fromkeys(timeline.get_all_past(), 5.28)
-        # Remove all 1 o'clock data and set 2:00, 2:15 and 2:45 to 0
-        test_dict = {k: v for k, v in full_dict.items() if k.hour != 1}
-        zero_date1 = datetime(2025, 7, 8, 2, 0, tzinfo=self.tzone)
-        zero_date2 = datetime(2025, 7, 8, 2, 15, tzinfo=self.tzone)
-        ok_zero_date = datetime(2025, 7, 8, 2, 45, tzinfo=self.tzone)
-        test_dict[zero_date1] = test_dict[zero_date2] = test_dict[ok_zero_date] = (
-            station.mllw_conversion
-        )
-        # clean it. It should remove only the 2 zero elements following the data gap.
-        cleaned = cdmo.clean_water_data(test_dict, station)
-        self.assertEqual(len(cleaned), len(test_dict) - 2)
-        self.assertNotIn(zero_date1, cleaned)
-        self.assertNotIn(zero_date2, cleaned)
+        # Values are in NAVD88, so 5.14 = 0 MLLW for Wells station.
+
+        # 1. with no missing data, make sure we don't remove legal zeros.
+        values = [8.14, 7.14, 6.14, 5.14, 4.14, 5.14, 6.14, 7.14, 8.14]
+        test_dict = self.make_sample_dict(values)
+        cleaned = cdmo.clean_water_data(test_dict, wells)
+        self.assertEqual(cleaned, test_dict)
+
+        # 2. zero following out of range data is always removed
+        values = [7.1, 6.6, 6.1, 6.5, 6.3, 5.14, 6.1, 5.5, 4.9]
+        test_dict = self.make_sample_dict(values)
+        cleaned = cdmo.clean_water_data(test_dict, wells)
+        # 6.3 - 5.14 > 1.0
+        expected = {k: v for (k, v) in test_dict.items() if v != 5.14}
+        self.assertEqual(cleaned, expected)
+
+        # 3. zero following missing data is ok if followed by data in range
+        values = [7.1, 6.6, 6.1, 5.5, None, 5.14, 6.1, 6.6, 7.1]
+        test_dict = self.make_sample_dict(values)
+        cleaned = cdmo.clean_water_data(test_dict, wells)
+        # abs(5.14 - 6.1) <= 1.0
+        self.assertEqual(cleaned, test_dict)
+
+        # 4. zero at beginning of data is ok if followed by data in range
+        values = [5.14, 6.1, 5.5, 5.2, 5.0, 4.1, 3.6, 2.1, 2.4]
+        test_dict = self.make_sample_dict(values)
+        cleaned = cdmo.clean_water_data(test_dict, wells)
+        # abs(5.14 - 6.1) <= 1.0
+        self.assertEqual(cleaned, test_dict)
+
+        # 5. Combo with 3  zeros in a row
+        # 1st 0 is rejected because of gap from previous value
+        # 2nd 0 is rejected because 0s on either side
+        # 3rd 0 is accepted because good gap on right side
+        values = [9.14, 8.14, 7.14, 5.14, 5.14, 5.14, 6.14, 7.14, 8.14]
+        test_dict = self.make_sample_dict(values)
+        cleaned = cdmo.clean_water_data(test_dict, wells)
+        to_remove = [3, 4]  # These 2 should be rejected
+        keys = list(test_dict.keys())
+        expected = {k: test_dict[k] for i, k in enumerate(keys) if i not in to_remove}
+        self.assertEqual(cleaned, expected)
 
     def test_hilos_with_missing_data(self):
         # With seven hours of missing observed data, make sure all highs and lows are still found.
@@ -58,12 +88,12 @@ class TestCdmo(TestCase):
         # Get astro predictions for the timeline
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-120405.json")
         contents = astro.extract_json(raw)
-        preds_dict = astro.hilo_json_to_dict(station, contents, timeline)
+        preds_dict = astro.hilo_json_to_dict(wells, contents, timeline)
 
         # Get observed tides from CDMO for the timeline
         with open(f"{test_data_path}/data/cdmo-120405.xml", "r") as file:
             xml = file.read()
-        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
+        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
         obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
 
         # Find the hilos in the observed data.
@@ -89,22 +119,22 @@ class TestCdmo(TestCase):
             cdmo.parse_cdmo_xml(timeline, xml, "anyparam", None)
 
     def test_handle_navd88(self):
-        converter = cdmo.make_navd88_level_converter(station.navd88_meters_to_mllw_feet)
+        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
         self.assertTrue(converter(None, None) is None)
         self.assertTrue(cdmo.handle_windspeed("nONE", None) is None)
         self.assertTrue(converter("", None) is None)
         self.assertTrue(converter("13s", None) is None)
         self.assertTrue(converter("\n\t", None) is None)
 
-        max_meters = station.mllw_feet_to_navd88_meters(cdmo.max_tide)
-        min_meters = station.mllw_feet_to_navd88_meters(cdmo.min_tide)
+        max_meters = wells.mllw_feet_to_navd88_meters(cdmo.max_tide)
+        min_meters = wells.mllw_feet_to_navd88_meters(cdmo.min_tide)
         self.assertTrue(converter(f"{max_meters + 1.0}", None) is None)
         self.assertTrue(converter(f"{max_meters - 1.0}", None) is not None)
         self.assertTrue(converter(f"{min_meters - 1.0}", None) is None)
         self.assertTrue(converter(f"{min_meters + 1.0}", None) is not None)
         self.assertEqual(
             converter("1.5", None),
-            station.navd88_meters_to_mllw_feet(1.5),
+            wells.navd88_meters_to_mllw_feet(1.5),
         )
 
     def test_handle_windspeed(self):

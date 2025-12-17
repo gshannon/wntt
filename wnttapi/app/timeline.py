@@ -64,6 +64,9 @@ class Timeline:
         """Returns whether the given datetime is within the boundries of the requested timeline."""
         return dt and self.start_dt <= dt <= self.end_dt
 
+    def get_requested(self) -> list:
+        return self._requested_times
+
     def get_all_past(self) -> list:
         """Return all datetimes in the initial timeline that are before now."""
         return list(filter(lambda dt: dt < self.now, self._requested_times))
