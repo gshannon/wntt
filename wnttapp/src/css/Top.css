@@ -18,6 +18,7 @@
 
 .current-station {
     font-size: 0.9rem;
+    height: 20px; /* needed in case there's no reserve selected */
     color: var(--federal-blue);
     color: white;
     background-color: var(--dusk-blue);
@@ -67,6 +68,21 @@
     opacity: 0.2;
 }
 
+#reserve-dropdown button {
+    color: white;
+    background: var(--deep-blue);
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin: 1px 0px;
+    font-size: 0.9rem;
+    line-height: 1rem;
+}
+
+#reserve-dropdown button:hover {
+    color: white;
+    background: var(--med-blue);
+}
+
 /* Activate for very narrow, subset of xs */
 @media (max-width: 400px) {
     .conditions-img {
@@ -84,14 +100,14 @@
 }
 
 /* Activate when small or smaller */
-@media (max-width: 767px) {
+@media (max-width: 991px) {
     .app-box-top .hamburger-menu {
         flex-grow: 3;
     }
 }
 
 /* Activate when medium or larger */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
     .app-box-top .expanded-menu {
         flex-grow: 5;
     }

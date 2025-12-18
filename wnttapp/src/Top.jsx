@@ -6,12 +6,13 @@ import NavbarBrand from 'react-bootstrap/NavbarBrand'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
-import { MediumBase, Page } from './utils'
+import { LargeBase, Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
 import ConditionsPopup from './ConditionsPopup'
 import Overlay from './Overlay'
+import ReserveSelect from './ReserveSelect'
 import { AppContext } from './AppContext'
 
 export default function Top({ page, gotoPage }) {
@@ -95,11 +96,21 @@ export default function Top({ page, gotoPage }) {
                             <div className='tide-tracker'>Tide Tracker</div>
                         </NavbarBrand>
                     </Col>
-                    <Activity mode={window.innerWidth >= MediumBase ? 'visible' : 'hidden'}>
+                    <Activity mode={window.innerWidth >= LargeBase ? 'visible' : 'hidden'}>
                         {expandedMenu}
                     </Activity>
-                    <Activity mode={window.innerWidth < MediumBase ? 'visible' : 'hidden'}>
+                    <Activity mode={window.innerWidth < LargeBase ? 'visible' : 'hidden'}>
                         {pulldownMenu}
+                    </Activity>
+                    <Activity mode={ctx.special ? 'visible' : 'hidden'}>
+                        <Col className='px-1'>
+                            <Overlay
+                                id='#select-'
+                                text='Select a Reserve to work with'
+                                placement='left'
+                                contents={<ReserveSelect />}
+                            />
+                        </Col>
                     </Activity>
                     <Col className='px-1'>
                         <Overlay
@@ -141,9 +152,11 @@ export default function Top({ page, gotoPage }) {
                     </Col>
                 </Row>
             </Container>
-            {ctx.special && ctx.station ? (
+            {ctx.special ? (
                 <Row className='current-station justify-content-center py-1 my-0 mx-0'>
-                    Station: {ctx.station.reserveName}, {ctx.station.waterStationName}
+                    {ctx.station
+                        ? `Station: ${ctx.station.reserveName}, ${ctx.station.waterStationName}`
+                        : ' '}
                 </Row>
             ) : null}
             {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
