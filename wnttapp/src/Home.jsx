@@ -1,45 +1,15 @@
 import './css/Home.css'
-import { useState } from 'react'
 import { Row, Col } from 'react-bootstrap'
 import Button from 'react-bootstrap/Button'
-import Dropdown from 'react-bootstrap/Dropdown'
-import { Activity, useContext } from 'react'
+import { useContext } from 'react'
 import { AppContext } from './AppContext'
 import { Link } from './Links'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
-import useStationSelection from './useStationSelection'
-import { apiErrorResponse, Page } from './utils'
-
-const StationSelection = (props) => {
-    return props.error ? (
-        <div className='text-warning bg-dark'>{apiErrorResponse(props.error)}</div>
-    ) : (
-        <>{props.children}</>
-    )
-}
+import { Page } from './utils'
 
 export default function Home() {
     const ctx = useContext(AppContext)
-    const [stationSelectionData, setStationSelectionData] = useState(null)
-    const { data, error } = useStationSelection(stationSelectionData == null)
-
-    if (data != null && stationSelectionData == null) {
-        setStationSelectionData(data)
-    }
-
-    const stationItems = stationSelectionData
-        ? stationSelectionData.map((stn) => (
-              <Dropdown.Item
-                  key={stn.id} // Anything unique
-                  disabled={stn.id === ctx.station?.id}
-                  onClick={() => {
-                      ctx.setStationId(stn.id)
-                  }}>
-                  {stn.reserveName}, {stn.waterStationName}
-              </Dropdown.Item>
-          ))
-        : ''
 
     const text1 = () => {
         if (ctx.special) {
@@ -76,7 +46,12 @@ export default function Home() {
             if (ctx.station) {
                 return <>You can change the reserve you are interested in at any time.</>
             } else {
-                return <>Choose a reserve to get started.</>
+                return (
+                    <>
+                        First, use the Choose Reserve button above to select a reserve. You can
+                        change it at any time.
+                    </>
+                )
             }
         }
     }
@@ -97,20 +72,6 @@ export default function Home() {
                 </p>
             </div>
             <Row>
-                <Activity mode={ctx.special ? 'visible' : 'hidden'}>
-                    <Col className='align-content-center'>
-                        <StationSelection error={error}>
-                            <Dropdown>
-                                <Dropdown.Toggle
-                                    variant='custom-primary'
-                                    className='home-screen-btn'>
-                                    Choose Reserve
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>{stationItems}</Dropdown.Menu>
-                            </Dropdown>
-                        </StationSelection>
-                    </Col>
-                </Activity>
                 {ctx.station != null && (
                     <Col>
                         <Button

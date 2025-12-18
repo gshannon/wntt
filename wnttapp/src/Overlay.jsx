@@ -19,7 +19,7 @@ export default function Overlay(props) {
     } else {
         return (
             <OverlayTrigger placement={placement} overlay={<Tooltip>{text}</Tooltip>}>
-                {contents}
+                <span>{contents}</span>
             </OverlayTrigger>
         )
     }
