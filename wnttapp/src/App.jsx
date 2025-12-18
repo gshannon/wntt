@@ -69,7 +69,7 @@ export default function App() {
                     station_id: stationId,
                 })
                 .then((res) => {
-                    setStation(Station.fromJson(res.data))
+                    setStation(Station.fromJson(stationId, res.data))
                     setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
                 })
             storage.setGlobalPermanentStorage({

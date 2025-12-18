@@ -19,9 +19,9 @@ backend processing are included here.
 class Station:
     # Builder method
     @staticmethod
-    def from_dict(data: dict) -> "Station":
+    def from_dict(station_id: str, data: dict) -> "Station":
         return Station(
-            id=data["id"],
+            id=station_id,
             weather_station_id=data["weatherStationId"],
             noaa_station_id=data["noaaStationId"],
             navd88_to_mllw=data["navd88ToMllwConversion"],
@@ -65,10 +65,10 @@ def get_station_selection_data(data_dir=_default_file_dir) -> list:
     """
     data = get_or_load_stations(data_dir)
     selection_data = []
-    for station in data.values():
+    for station_id, station in data.items():
         selection_data.append(
             {
-                "id": station["id"],
+                "id": station_id,
                 "reserveName": station["reserveName"],
                 "waterStationName": station["waterStationName"],
             }
@@ -89,7 +89,7 @@ def get_supported_years() -> list:
 # such as 'welinwq' for Wells.
 def get_station(station_id: str, data_dir=_default_file_dir) -> Station:
     obj = get_station_data(station_id, data_dir=data_dir)
-    return Station.from_dict(obj)
+    return Station.from_dict(station_id, obj)
 
 
 def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:
