@@ -19,10 +19,10 @@ The main technical features are:
 
 ## Runtime Data
 
-On the hosting server there is a directory that is mounted by the API Docker image which contains configuration and astronomical data files required by the application. See the _volumes_ section in docker-compose.yml for the definition. These files can be edited on the server and then put into immediate use by by restarting the API.
+On the hosting server there is a directory that is mounted by the API Docker container which contains configuration and astronomical data files required by the application. See the _volumes_ section in docker-compose.yml for the definition. These files can be edited on the server and then put into immediate use by by restarting the API.
 
 -   stations/
-    -   stations.json - configuration details of all supported SWMP stations
+    -   stations.json - configuration details of all supported SWMP stations. See below for details.
     -   annual_highs_navd88.json - predicted highs of all supported years for all referenced NOAA stations. Use the astro-highs.py program in local/tools to get the data.
 -   surge/data/
     -   1 csv file for each referenced NOAA station. The files are downloaded with cron job
@@ -60,7 +60,7 @@ Its contents are passed to both docker builds using --build-arg. wnttapp then pa
 
 ### local/.env, remote/config/.env
 
-Contains secret values used by wnttapi. The .env file should be placed in the same directory as the Docker compose file, and compose will read these and add them to the Django runtime environment. Format is KEY=VALUE with no quotes. This approach keeps these values securely out of the image.
+Contains secret values used by wnttapi. The .env file should be placed in the same directory as the Docker compose file, and Docker will read these and add them to the Django runtime environment. Format is KEY=VALUE with no quotes. This approach keeps these values securely out of the image.
 
 -   DJANGO_KEY : A unique key used by Django
 -   CDMO_USER : Username for CDMO API access
@@ -111,3 +111,43 @@ docker build --platform=linux/amd64 \
     --build-arg VERSION=$version --build-arg NGINXCFG=nginx-default.conf \
     -t <DOCKERHUB>/wnttapp:amd -f wnttapp/Dockerfile wntt/wnttapp
 ```
+
+---
+
+---
+
+## stations.json format
+
+    {
+        "welinwq": {
+            "timeZone": "US/Eastern",
+            "reserveName": "Wells",
+            "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
+            "waterStationName": "Inlet",
+            "weatherStationId": "wellfmet",
+            "weatherStationName": "Laudholm Farm",
+            "noaaStationId": "8419317",
+            "noaaStationName": "Wells, ME",
+            "noaaStationLocation": {
+                "lat": 43.32,
+                "lng": -70.563333
+            },
+            "navd88ToMllwConversion": 5.14,
+            "meanHighWaterMllw": 9.13,
+            "mapBounds": [
+                [44.01, -70.73],
+                [43.01, -69.8]
+            ],
+            "swmpLocation": {
+                "lat": 43.320089,
+                "lng": -70.563442
+            },
+            "weatherLocation": {
+                "lat": 43.33738,
+                "lng": -70.54944
+            },
+            "recordTideNavd88": 8.13,
+            "recordTideDate": "2024-1-13",
+        }
+        [, ... ]
+    }

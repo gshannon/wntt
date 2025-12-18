@@ -2,9 +2,9 @@ import { defaultMinGraphDate, roundTo } from './utils'
 import { DefaultMapZoom } from './mapUtils'
 
 export default class Station {
-    static fromJson = (json) => {
+    static fromJson = (stationId, json) => {
         return new Station({
-            id: json.id,
+            id: stationId,
             reserveName: json.reserveName,
             timeZone: json.timeZone,
             reserveUrl: json.reserveUrl,
