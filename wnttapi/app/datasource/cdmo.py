@@ -412,8 +412,8 @@ def clean_water_data(in_dict, station: Station) -> dict:
     first_bad_dt = None
     reject_cnt = 0
 
-    # Examine the data prior to this index, if any.
-    def look_back(idx, dt, navd_feet) -> CleanStatus:
+    # Examine the data prior to the zero found at this index, if any.
+    def look_back(idx, dt) -> CleanStatus:
         if idx == 0:
             return CleanStatus.UNKNOWN
         prev_dt = keys[idx - 1]
@@ -424,8 +424,8 @@ def clean_water_data(in_dict, station: Station) -> dict:
             return CleanStatus.ZERO
         return CleanStatus.ACCEPT if -1 <= prev_navd_feet <= 1 else CleanStatus.REJECT
 
-    # Examine the data after this index, if any.
-    def look_ahead(idx, dt, navd_feet) -> bool:
+    # Examine the data after the zero found at this index, if any.
+    def look_ahead(idx, dt) -> bool:
         if idx >= len(keys) - 1:
             return False
         next_dt = keys[idx + 1]
@@ -444,11 +444,11 @@ def clean_water_data(in_dict, station: Station) -> dict:
         navd_feet = in_dict[dt] - station.mllw_conversion
 
         if navd_feet == 0:
-            match look_back(idx, dt, navd_feet):
+            match look_back(idx, dt):
                 case CleanStatus.ACCEPT:
                     return True
                 case CleanStatus.UNKNOWN | CleanStatus.ZERO:
-                    if look_ahead(idx, dt, navd_feet):
+                    if look_ahead(idx, dt):
                         return True
                 case CleanStatus.REJECT:
                     pass

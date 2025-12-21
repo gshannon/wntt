@@ -1,6 +1,7 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 from app import util
@@ -40,8 +41,10 @@ def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
 
 def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, dict]:
     """
-    Fetch high/low astronomical tide predictions for the timeline.
-
+    Fetch high/low astronomical tide predictions for the timeline. We must pull in data for the day
+    before the timeline start since these predictions are used as a guideline for determining annotation of
+    observed highs and lows. If an observed high/low occurs at or just after midnight and the corresponding
+    predicted high/low is before midnight, we would miss the annotation without having the previous day.
     Args:
         station (Station): the SWMP station
         timeline (Timeline): the timeline
@@ -52,11 +55,15 @@ def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, di
     """
 
     preds_hilo_dict = {}
-    start_date = timeline.start_dt.strftime("%Y%m%d")
-    end_date = timeline.end_dt.strftime("%Y%m%d")
 
-    future_preds_json = pull_data(station.noaa_station_id, "hilo", start_date, end_date)
-    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, timeline)
+    request_start_dt = timeline.start_dt - timedelta(days=1)
+    start_date_str = request_start_dt.strftime("%Y%m%d")
+    end_date_str = timeline.end_dt.strftime("%Y%m%d")
+
+    future_preds_json = pull_data(
+        station.noaa_station_id, "hilo", start_date_str, end_date_str
+    )
+    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, timeline.time_zone)
 
     return preds_hilo_dict
 
@@ -79,13 +86,13 @@ def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -
     return reg_preds_dict
 
 
-def hilo_json_to_dict(station: Station, hilo_json: list, timeline: Timeline) -> dict:
+def hilo_json_to_dict(station: Station, hilo_json: list, tzone: ZoneInfo) -> dict:
     """
     Convert json returned from the api call into a dict of high or low data values.
     Args:
         hilo_json (string): json content: list of high/low predictions like
             {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}
-        timeline (Timeline): the requested timeline.
+        tzone: timezone of the station
 
     Returns:
         A sparse dict of {timeline_dt: PredictedHighOrLow} for all values that
@@ -95,22 +102,23 @@ def hilo_json_to_dict(station: Station, hilo_json: list, timeline: Timeline) -> 
         APIException: Invalid data from API
     """
     future_hilo_dict = {}
+    if len(hilo_json) == 0:
+        return future_hilo_dict
     for pred in hilo_json:
         dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=tzone)
         # If we know the time of the last observation, use that as the cutoff instead of current time, since
         # there's a ~1 hour latency for observed data, and it's better to show the most accurate predictions
         # when we can. Remember hi/lo prediction dates are exact minutes, not aligned with 15-min intervals.
-        if timeline.contains(dt):
-            val = pred["v"]
-            if pred["type"] not in ["H", "L"]:
-                logger.error(f"Unknown type {pred['type']} for date {dts}")
-                raise APIException()
-            hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
-            # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
-            future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
-                station.navd88_feet_to_mllw_feet(float(val)), hilo, dt
-            )
+        val = pred["v"]
+        if pred["type"] not in ["H", "L"]:
+            logger.error(f"Unknown type {pred['type']} for date {dts}")
+            raise APIException()
+        hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
+        # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
+        future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
+            station.navd88_feet_to_mllw_feet(float(val)), hilo, dt
+        )
 
     return future_hilo_dict
 

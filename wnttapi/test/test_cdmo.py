@@ -81,6 +81,39 @@ class TestCdmo(TestCase):
         expected = {k: test_dict[k] for i, k in enumerate(keys) if i not in to_remove}
         self.assertEqual(cleaned, expected)
 
+    def test_hilos_with_predicted_high_on_previous_day(self):
+        # Edge case: The last high tide on day 12/20 was at 23:48. Using that as guidance, the max nearby
+        # observed tide was on 12/21 at 00:00. That correctly gets marked as high for timeline of
+        # that starts on or before the 20th. But when the timeline starts on the 21st, the predicted tides
+        # from the 21st do not include the 23:48 high tide from the 20th, and without that the observed high
+        # tide at 00:00 would not be annotated. Therefore, we need to always include the day preceding the
+        # timeline start when pulling predicted high/lows.
+
+        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
+
+        # A single-day timeline for the 21st. Remember we pull in extra padding for cdmo tide data.
+        timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
+        with open(f"{test_data_path}/data/cdmo-20251221.xml", "r") as file:
+            xml = file.read()
+        obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
+
+        # First, see what happens when we just pull the 21st high/low predictions.
+        raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251221.json")
+        contents = astro.extract_json(raw)
+        pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
+        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
+        # The predicted high tide from the 20th is not included in the 21st predictions.
+        self.assertNotIn(midnight_high, hilos)
+
+        # But if we include the 20th, we should get the predicted high tide from the 20th.
+        raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251220-21.json")
+        contents = astro.extract_json(raw)
+        pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
+        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
+        self.assertIn(midnight_high, hilos)
+
     def test_hilos_with_missing_data(self):
         # With seven hours of missing observed data, make sure all highs and lows are still found.
         timeline = GraphTimeline(date(2025, 12, 4), date(2025, 12, 5), self.tzone)
@@ -88,7 +121,7 @@ class TestCdmo(TestCase):
         # Get astro predictions for the timeline
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-120405.json")
         contents = astro.extract_json(raw)
-        preds_dict = astro.hilo_json_to_dict(wells, contents, timeline)
+        pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
 
         # Get observed tides from CDMO for the timeline
         with open(f"{test_data_path}/data/cdmo-120405.xml", "r") as file:
@@ -97,8 +130,8 @@ class TestCdmo(TestCase):
         obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
 
         # Find the hilos in the observed data.
-        hilos = cdmo.find_all_hilos(timeline, obs_dict, preds_dict)
-        self.assertEqual(len(hilos), len(preds_dict))
+        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        self.assertEqual(len(hilos), len(pred_hilo_dict))
         missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.tzone)
         self.assertNotIn(missing_obs, obs_dict)
         self.assertIsInstance(hilos[missing_obs], PredictedHighOrLow)
@@ -110,7 +143,7 @@ class TestCdmo(TestCase):
             if isinstance(val, ObservedHighOrLow):
                 self.assertIn(dt, obs_dict)
             else:
-                self.assertEqual(val.value, preds_dict[dt].value)
+                self.assertEqual(val.value, pred_hilo_dict[dt].value)
 
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")
