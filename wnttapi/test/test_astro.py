@@ -1,12 +1,13 @@
 import os.path
-from datetime import datetime
+from datetime import date, datetime
 from unittest import TestCase
+from unittest.mock import patch
 
 import app.datasource.astrotide as astro
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
-from app.timeline import Timeline
+from app.timeline import GraphTimeline, Timeline
 from django import setup
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
@@ -18,6 +19,22 @@ station = stn.get_station("welinwq", csv_location)
 
 
 class TestAstro(TestCase):
+    def test_date_range(self):
+        """Pulls correct date range for high/low predictions."""
+
+        # mock astrotide.pull_data to validate parameters
+        def mocked_data_pull(*args):
+            # even though we asked for 2025-12-21 only, the API must pull the day before also
+            self.assertEqual(args[2], "20251220")
+            self.assertEqual(args[3], "20251222")
+            return {}
+
+        with patch("app.datasource.astrotide.pull_data", side_effect=mocked_data_pull):
+            timeline = GraphTimeline(
+                date(2025, 12, 21), date(2025, 12, 21), station.time_zone
+            )
+            astro.get_hilo_astro_tides(station, timeline)
+
     def test_parse_15m_predictions(self):
         """Able to parse 15m predictions from a json list of predictions from API call."""
         zone = tz.eastern
