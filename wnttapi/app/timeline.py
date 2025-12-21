@@ -137,11 +137,10 @@ class GraphTimeline(Timeline):
 
     def get_all_past(self) -> list:
         # Return all requested times, plus any padding, that are in the past.
-        return (
-            self._start_padding
-            + list(filter(lambda dt: dt < self.now, self._requested_times))
-            + self._end_padding
-        )
+        if len(self._start_padding) == 0:
+            return []
+        all = self._start_padding + self._requested_times + self._end_padding
+        return list(filter(lambda dt: dt < self.now, all))
 
     def get_min_with_padding(self) -> datetime:
         # Return the earliest time, including padding.

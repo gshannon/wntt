@@ -248,6 +248,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
         # Now convert to requested tzone, so DST is handled properly
         dt_in_local = in_utc.astimezone(timeline.time_zone)
         # Since we query more data than we need, only save the data that is in the requested timeline.
+        # For GraphTimeline's, this includes any padded times for hi/lo functionality.
         if dt_in_local not in past_timeline:
             logger.debug(f"Skipping {param} for {dt_in_local}, not in timeline")
             ignored += 1
@@ -260,15 +261,15 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
             else:
                 datadict[dt_in_local] = value
         except (TypeError, ValueError):
+            none_or_bad += 1
             logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
 
     timeline_len = len(past_timeline)
-    missing = timeline_len - len(datadict)
-    failure_rate = int(round((missing + none_or_bad) / len(past_timeline), 2) * 100)
+    failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
     message = (
-        f"For {param}, got {len(datadict)} values, failrate={failure_rate}% "
-        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] (len={timeline_len}) "
-        + f"read={records} ignored={ignored} none+bad={none_or_bad} missing={missing}"
+        f"For {param}, got {len(datadict)} out of {timeline_len}, failrate={failure_rate}% "
+        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] "
+        + f"records={records} out-of-range={ignored} none+bad={none_or_bad}"
     )
 
     if (timeline_len >= 96 and failure_rate > 20) or (
