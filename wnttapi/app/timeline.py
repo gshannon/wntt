@@ -52,6 +52,9 @@ class Timeline:
     def is_future(self, dt):
         return dt > self.now
 
+    def is_past(self, dt):
+        return dt < self.now
+
     def is_all_future(self):
         """Returns whether the start time is in the future."""
         return self.start_dt > self.now

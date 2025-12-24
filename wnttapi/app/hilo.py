@@ -5,6 +5,13 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+"""
+A utility class for representing High and Low Tide events.
+
+Raises:
+    ValueError: _description_
+"""
+
 
 class Hilo(Enum):
     LOW = 1
@@ -12,6 +19,8 @@ class Hilo(Enum):
 
 
 class HighOrLow(ABC):
+    """Abstract base class"""
+
     def __init__(self, value: float, hilo: Hilo):
         self.value = value
         if not isinstance(hilo, Hilo):
@@ -20,17 +29,15 @@ class HighOrLow(ABC):
 
 
 class ObservedHighOrLow(HighOrLow):
-    """Represents an observed High or Low Tide value
-
-    Args:
-        HighLowEvent (_type_): _description_
-    """
+    """Represents an observed High or Low Tide value -- data we got from CDMO."""
 
     def __init__(self, value: float, hilo: Hilo):
         super().__init__(value, hilo)
 
 
 class PredictedHighOrLow(HighOrLow):
+    """Represents a predicted High or Low Tide value -- data we got from NOAA."""
+
     def __init__(self, value: float, hilo: Hilo, real_dt: datetime):
         super().__init__(value, hilo)
         self.real_dt = real_dt  # The actual time of the predicted event
