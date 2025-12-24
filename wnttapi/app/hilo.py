@@ -34,6 +34,9 @@ class ObservedHighOrLow(HighOrLow):
     def __init__(self, value: float, hilo: Hilo):
         super().__init__(value, hilo)
 
+    def __str__(self):
+        return f"{self.value} {self.hilo.name}"
+
 
 class PredictedHighOrLow(HighOrLow):
     """Represents a predicted High or Low Tide value -- data we got from NOAA."""
@@ -41,3 +44,6 @@ class PredictedHighOrLow(HighOrLow):
     def __init__(self, value: float, hilo: Hilo, real_dt: datetime):
         super().__init__(value, hilo)
         self.real_dt = real_dt  # The actual time of the predicted event
+
+    def __str__(self):
+        return f"{self.value} {self.hilo.name} {self.real_dt.strftime('%Y-%m-%d %H:%M:%S')}"
