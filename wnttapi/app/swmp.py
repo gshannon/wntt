@@ -1,12 +1,13 @@
 import logging
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
 from app import util
 from app.datasource import astrotide, cdmo, moon
 from app.datasource.apiutil import APICall, run_parallel
+from app.hilo import Hilo
 from app.station import Station
 from app.timeline import Timeline
-from app.hilo import Hilo
 
 from . import tzutil as tz
 
@@ -48,10 +49,13 @@ def get_latest_conditions(station: Station) -> dict:
         cdmo_calls[2].data,
         cdmo_calls[3].data,
         moon_dict,
+        station.time_zone,
     )
 
 
-def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict:
+def extract_data(
+    wind_dict, tide_dict, temp_dict, astro_dict, moon_dict, tzone: ZoneInfo = None
+) -> dict:
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
     # we don't have to worry about missing data.  All dict keys are in chronological order.
     if len(tide_dict) > 0:
@@ -81,13 +85,12 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict
     else:
         latest_temp_dt = temp_str = None
 
-    # Get the time and type of the next high or low tide prediction
-    vals = list(astro_dict.values())
-    vals.sort(key=lambda d: d.real_dt)
-
-    next_tide_dt = vals[0].real_dt
+    # Get the time and type of the next high or low tide prediction.
+    # dict is already sorted by datetime, so we just need to get the first real_dt that's in the future.
+    futures = [v for v in astro_dict.values() if v.real_dt > tz.now(tzone)]
+    next_tide_dt = futures[0].real_dt if len(futures) > 0 else None
     next_tide_type = (
-        ("H" if vals[0].hilo == Hilo.HIGH else "L") if len(vals) > 0 else None
+        ("H" if futures[0].hilo == Hilo.HIGH else "L") if len(futures) > 0 else None
     )
 
     return {
@@ -107,7 +110,3 @@ def extract_data(wind_dict, tide_dict, temp_dict, astro_dict, moon_dict) -> dict
         "next_tide_dt": next_tide_dt,
         "next_tide_type": next_tide_type,
     }
-
-
-# def ftime(dt):
-#     return dt.strftime("%b %d %Y %I:%M %p")
