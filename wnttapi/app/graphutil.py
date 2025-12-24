@@ -226,9 +226,9 @@ def build_future_surge_plots(
 
     Args:
         timeline: list of datetimes
-        future_surge_dict: {dt: surge_value}
-        reg_preds_dict: {dt: value}
-        future_hilo_dict: {timeline_dt: HighLowEvent}
+        future_surge_dict: what we read from the surge API {dt: surge_value}
+        reg_preds_dict: regular tide & currents tide predictions for the timeline {dt: value}
+        future_hilo_dict: predicted highs and lows {timeline_dt: HighLowEvent}
     """
     if len(future_surge_dict) == 0:
         # No future surge data, so return None for both plots.

@@ -44,13 +44,13 @@ class TestCdmo(TestCase):
         # 1. with no missing data, make sure we don't remove legal zeros.
         values = [8.14, 7.14, 6.14, 5.14, 4.14, 5.14, 6.14, 7.14, 8.14]
         test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_water_data(test_dict, wells)
+        cleaned = cdmo.clean_tide_data(test_dict, wells)
         self.assertEqual(cleaned, test_dict)
 
         # 2. zero following out of range data is always removed
         values = [7.1, 6.6, 6.1, 6.5, 6.3, 5.14, 6.1, 5.5, 4.9]
         test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_water_data(test_dict, wells)
+        cleaned = cdmo.clean_tide_data(test_dict, wells)
         # 6.3 - 5.14 > 1.0
         expected = {k: v for (k, v) in test_dict.items() if v != 5.14}
         self.assertEqual(cleaned, expected)
@@ -58,14 +58,14 @@ class TestCdmo(TestCase):
         # 3. zero following missing data is ok if followed by data in range
         values = [7.1, 6.6, 6.1, 5.5, None, 5.14, 6.1, 6.6, 7.1]
         test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_water_data(test_dict, wells)
+        cleaned = cdmo.clean_tide_data(test_dict, wells)
         # abs(5.14 - 6.1) <= 1.0
         self.assertEqual(cleaned, test_dict)
 
         # 4. zero at beginning of data is ok if followed by data in range
         values = [5.14, 6.1, 5.5, 5.2, 5.0, 4.1, 3.6, 2.1, 2.4]
         test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_water_data(test_dict, wells)
+        cleaned = cdmo.clean_tide_data(test_dict, wells)
         # abs(5.14 - 6.1) <= 1.0
         self.assertEqual(cleaned, test_dict)
 
@@ -75,7 +75,7 @@ class TestCdmo(TestCase):
         # 3rd 0 is accepted because good gap on right side
         values = [9.14, 8.14, 7.14, 5.14, 5.14, 5.14, 6.14, 7.14, 8.14]
         test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_water_data(test_dict, wells)
+        cleaned = cdmo.clean_tide_data(test_dict, wells)
         to_remove = [3, 4]  # These 2 should be rejected
         keys = list(test_dict.keys())
         expected = {k: test_dict[k] for i, k in enumerate(keys) if i not in to_remove}

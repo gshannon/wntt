@@ -7,7 +7,7 @@ from app.timeline import GraphTimeline
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
-_default_file_dir = "/data/syzygy"
+_default_file_dir = "/data/syzygy"  # default location of data files
 utc = ZoneInfo("UTC")
 
 NEW_MOON = "NM"
@@ -21,7 +21,7 @@ APHELION = "AH"
 
 
 def get_current_moon_phases(
-    tzone, asof: datetime = None, data_dir: str = _default_file_dir
+    tzone: ZoneInfo, asof: datetime = None, data_dir: str = _default_file_dir
 ) -> dict:
     """Get the current moon phase and the next moon phase.
 

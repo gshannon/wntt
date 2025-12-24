@@ -13,8 +13,11 @@ from rest_framework.exceptions import APIException
 logger = logging.getLogger(__name__)
 
 """
-    API interface for astronomical tide predictions in MLLW as provided by NWS. For Wells, see
+    Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
         https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
+    For values, we request data in NAVD88 feet, and convert to MLLW feet using station configuration.
+    For timezones, we request LST_LDT, or local standard time / local daylight time. This means the data
+    comes the the correct local time, accounting for DST as appropriate.
 """
 base_url = (
     "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL"
@@ -41,10 +44,10 @@ def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
 
 def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, dict]:
     """
-    Fetch high/low astronomical tide predictions for the timeline. We must pull in data for the day
-    before the timeline start since these predictions are used as a guideline for determining annotation of
-    observed highs and lows. If an observed high/low occurs at or just after midnight and the corresponding
-    predicted high/low is before midnight, we would miss the annotation without having the previous day.
+    Fetch high/low astronomical tide predictions for the timeline. If the timeline starts in the past, it may
+    include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
+    need to pull in data for the day before the timeline to handle certain edge cases where a high or low
+    occurs just before the start of the timeline.
     Args:
         station (Station): the SWMP station
         timeline (Timeline): the timeline
@@ -56,7 +59,11 @@ def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, di
 
     preds_hilo_dict = {}
 
-    request_start_dt = timeline.start_dt - timedelta(days=1)
+    request_start_dt = (
+        timeline.start_dt - timedelta(days=1)
+        if timeline.is_past(timeline.start_dt)
+        else timeline.start_dt
+    )
     start_date_str = request_start_dt.strftime("%Y%m%d")
     end_date_str = timeline.end_dt.strftime("%Y%m%d")
 

@@ -14,7 +14,7 @@ from rest_framework.exceptions import APIException
 from suds.client import Client
 
 """
-Utility data and functions for graph building. 
+Access CDMO web services to retrieve observed tide, wind, and temperature data. 
 """
 
 logger = logging.getLogger(__name__)
@@ -24,21 +24,14 @@ windgust_param = "MaxWspd"
 winddir_param = "Wdir"
 tide_param = "Level"
 temp_param = "Temp"
-min_tide = -5.0  # any mllw/feet tide reading lower than this is considered bad data
-max_tide = 20.0  # any mllw/feet tide reading higher than this is considered bad data
-max_wind_speed = 120  # any wind speed reading higher than this is considered bad data
+# Min and max sane tide feet mllw/feet
+(min_tide, max_tide) = (-5.0, 20.0)
+max_wind_speed = 120  # max sane wind speed in mph
 
-# this is a temp workaround to an issue where recreating the suds client on
-# every request is causing the user/password to be rejected by CDMO. This should be
+# This is a workaround to an issue where recreating the suds client on
+# every request is causing the user/password to be rejected by CDMO. This could be
 # cleaned up once that issue is resolved.
-_client = None
-
-
-class CleanStatus(Enum):
-    ACCEPT = 1
-    REJECT = 2
-    UNKNOWN = 3
-    ZERO = 4
+_client: Client = None
 
 
 def get_soap_client():
@@ -78,7 +71,7 @@ def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
         converter=make_navd88_level_converter(station.navd88_meters_to_mllw_feet),
     )
     # Clean the data of bogus zeros, i.e. any 0 that is more than 1 hour after the previous data.
-    return clean_water_data(tide_dict, station)
+    return clean_tide_data(tide_dict, station)
 
 
 def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
@@ -395,12 +388,14 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
     return hilomap
 
 
-def clean_water_data(in_dict, station: Station) -> dict:
-    """Strip out one kind of known data error from CDMO. Sometimes we get a lot of invalid zero values.
-    Since values are sent in NAVD88, and by now all values are converted to MLLW, we have to convert back
-    to test for zeroes. Here we will reject any zero value that is not immediately preceeded or followed
-    by a value between -1 and +1 ft, with the assumption that tide will never move that much in 15 minutes.
-    TODO: Remove this when this issue is addressed.
+def clean_tide_data(in_dict: dict, station: Station) -> dict:
+    """Strip out one kind of known data error from CDMO. Sometimes when CDMO doesn't have a good value for
+    a data point it sends a 0 value (navd88).  While zero tide is a possible real value, if there are multiple
+    zeros in a row, or a zero that constitutes a large, unreasonable jump from the previous value, then we
+    just reject those values as bad data. Since values are sent in NAVD88, and at this point, all values are converted to MLLW, we have to convert back
+    to navd88 feet to do this analysis. We will reject any zero value that is not immediately preceeded or followed
+    by a non-zero value between -1 and +1 ft.
+    TODO: Remove this if this issue is addressed.
 
     Args:
         in_dict: the dt:val dict in chronological order
@@ -409,6 +404,13 @@ def clean_water_data(in_dict, station: Station) -> dict:
     Returns:
         dict: Same as passed in dict, with bad data removed.
     """
+
+    class CleanStatus(Enum):
+        ACCEPT = 1
+        REJECT = 2
+        UNKNOWN = 3
+        ZERO = 4
+
     keys = list(in_dict.keys())
     first_bad_dt = None
     reject_cnt = 0
@@ -437,7 +439,7 @@ def clean_water_data(in_dict, station: Station) -> dict:
             return False
         return -1 <= next_navd_feet <= 1
 
-    def check_one(idx, dt):
+    def is_valid(idx, dt):
         nonlocal keys
         nonlocal first_bad_dt
         nonlocal reject_cnt
@@ -445,24 +447,26 @@ def clean_water_data(in_dict, station: Station) -> dict:
         navd_feet = in_dict[dt] - station.mllw_conversion
 
         if navd_feet == 0:
+            accept = False
             match look_back(idx, dt):
                 case CleanStatus.ACCEPT:
-                    return True
+                    accept = True  # No need to check ahead also
                 case CleanStatus.UNKNOWN | CleanStatus.ZERO:
                     if look_ahead(idx, dt):
-                        return True
+                        accept = True  # Passed the ahead check, so OK
                 case CleanStatus.REJECT:
                     pass
 
-            reject_cnt += 1
-            if first_bad_dt is None:
-                first_bad_dt = dt
-            logger.debug(f"Rejecting value 0 navd88 at {dt}")
-            return False
+            if not accept:
+                reject_cnt += 1
+                if first_bad_dt is None:
+                    first_bad_dt = dt
+                logger.debug(f"Rejecting value 0 navd88 at {dt}")
+            return accept
 
         return True
 
-    cleaned = {dt: in_dict[dt] for idx, dt in enumerate(keys) if check_one(idx, dt)}
+    cleaned = {dt: in_dict[dt] for idx, dt in enumerate(keys) if is_valid(idx, dt)}
     if reject_cnt > 0:
         logger.warning(
             f"Rejected {reject_cnt} out of {len(in_dict)} with value navd88 0, first={first_bad_dt}"

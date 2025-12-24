@@ -7,6 +7,8 @@ from rest_framework.exceptions import APIException
 
 logger = logging.getLogger(__name__)
 
+"""Support for running multiple API calls in parallel."""
+
 
 class APICall:
     def __init__(self, name: str, func: callable, station: Station, timeline: Timeline):
@@ -21,7 +23,7 @@ class APICall:
 
 
 def run_parallel(calls: list):
-    # Call a list of APIs in parallel
+    # Call a list of APICall objects in parallel
     with ThreadPoolExecutor(max_workers=3) as executor:
         # Use a dict comprehension to map active futures to calls
         future_to_call = {

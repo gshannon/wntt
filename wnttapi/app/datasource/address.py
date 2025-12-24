@@ -8,12 +8,12 @@ from rest_framework.exceptions import APIException
 logger = logging.getLogger(__name__)
 
 """
-    API interface for retrieving the lat/lon of an url-encoded address.
+    API interface for retrieving the lat/lon of an url-encoded physical address in the reserve area.
 """
 base_url = f"https://geocode.maps.co/search?api_key={os.environ.get('GEOCODE_KEY')}"
 
 
-def get_location(search) -> dict:
+def get_location(search: str) -> dict:
     """
     Call the geocode service with an address to look up, and get the lat/lon of that address, or error.
     All addresses are assumed to be in U.S.  They should include state.
