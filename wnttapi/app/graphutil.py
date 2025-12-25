@@ -119,8 +119,13 @@ def get_graph_data(
     else:
         final_timeline = timeline.get_final_times({})
     past_tl_index, future_tl_index = util.get_timeline_boundaries(final_timeline)
-    start_date_str = timeline.start_date.strftime("%m/%d/%Y")
-    end_date_str = timeline.end_date.strftime("%m/%d/%Y")
+    start_date_str = timeline.start_date.strftime("%b %-d, %Y")
+    end_date_str = timeline.end_date.strftime("%b %-d, %Y")
+    subtitle = (
+        start_date_str
+        if start_date == end_date
+        else f"{start_date_str} - {end_date_str}"
+    )
     return {
         "timeline": final_timeline,
         "syzygy": syzygy_data,
@@ -138,8 +143,7 @@ def get_graph_data(
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
             station, start_date.year
         ),
-        "start_date": start_date_str,
-        "end_date": end_date_str,
+        "subtitle": subtitle,
         "num_days": (end_date - start_date).days + 1,
         "past_tl_index": past_tl_index,
         "future_tl_index": future_tl_index,
@@ -347,9 +351,9 @@ def build_wind_plots(
     minutes = [0, 15, 30, 45]  # show all
     if not isinstance(timeline, HiloTimeline):
         days = (timeline.end_dt.date() - timeline.start_dt.date()).days
-        if days > 5:
+        if days > 4:
             minutes = [0]  # only show 1 point per hour
-        elif days > 2:
+        elif days > 1:
             minutes = [0, 30]  # show 2 per hour
 
     def check_item(dt, key):

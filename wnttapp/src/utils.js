@@ -10,10 +10,6 @@ export const getSurgeStationUrl = (noaaStationId) => {
     return `https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=${noaaStationId}&datum=MLLW&show=0-0-1-1-0`
 }
 
-// Are we on a touch screen?
-export const isTouchScreen =
-    'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
-
 export const Months = [
     'Jan',
     'Feb',
@@ -83,6 +79,10 @@ export const XXLBase = 1400
 
 // This will allow handling of smart phones or other narrow screen devices.
 export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase - 1}px)`).matches
+
+// Are we on a touch screen?
+export const isTouchScreen =
+    'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
 
 // Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would
