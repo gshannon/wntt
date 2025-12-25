@@ -63,9 +63,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
     }
 
     const graph1_max = 1
-    const graph1_min = data.wind_speeds !== null ? 0.52 : 0.1
-    const graph2_max = 0.48
-    const graph2_min = 0
+    const graph1_min = data.wind_speeds !== null ? 0.48 : 0.1
+    const graph2_max = 0.44
+    const graph2_min = 0.1
 
     const layout = {
         showlegend: !isNarrow,
@@ -75,7 +75,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         title: {
             text: `${ctx.station.reserveName}: ${ctx.station.waterStationName} Tides`,
             subtitle: {
-                text: data.start_date + ' - ' + data.end_date,
+                text: data.subtitle,
             },
         },
         hovermode: 'x unified',
@@ -108,7 +108,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         margin: { t: 70, b: 50, l: 65 }, // overriding defaults t: 100, b/l/r: 80
         // Override default date format to more readable, with 12-hour clock.
         // See https://github.com/d3/d3-time-format/tree/v2.2.3#locale_format
-        xaxis: { gridcolor: 'black', hoverformat: '%a, %b %-e, %Y %-I:%M %p' },
+        xaxis: {
+            gridcolor: 'black',
+            hoverformat: '%a, %b %-e, %Y %-I:%M %p',
+            tickformat: '%H:%M %b %-e',
+        },
         xaxis2: { gridcolor: 'black' },
         yaxis: {
             title: {
@@ -152,6 +156,13 @@ export default function Chart({ error, loading, hiloMode, data }) {
     layout.annotations = annotations
 
     const expandConstant = (value) => {
+        // It's not clear why, but on some phones, we get hover text on the boundary midnight times
+        // even when there's no high or low tide there. This doesn't seem to happen on desktop browsers.
+        // To compensate, we don't include constant values for those times either. This means the
+        // constant lines won't extend the full width of the graph, but that's a lesser evil.
+        if (hiloMode && isNarrow) {
+            return Array.from(data.astro_tides, (x) => (x ? value : null))
+        }
         return Array(data.timeline.length).fill(value)
     }
 
@@ -160,15 +171,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
     // should be the highest 2 values. If there's a custom elevation, that will be inserted in the proper place
     // so the 1st 3 are in descending order. After that, the precise order could vary by time, so we just make our
     // best guess here.
-
-    // Hack: Plotly uses the 1st element of wind_dir array to control the direction of the marker in the legend.
-    // Unfortunately it doesn't use the first non-null value.  So if the 1st element is null, as is normally the
-    // case in hilo mode, it will show wind speed & wind gust in the legend with NO MARKER.. So we cheat a little.
-    // This does not cause the false value to appear in the graph, since the speed & gust values are null.
-    const my_wind_dir =
-        data.wind_dir !== null && data.wind_dir.length > 0 && data.wind_dir[0] === null
-            ? [0].concat(data.wind_dir.slice(1))
-            : data.wind_dir
 
     const plotData = [
         buildPlot({
@@ -279,7 +281,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       y: data.wind_gusts,
                       markerSize: windMarkerSize,
                       markerSymbol: 'arrow',
-                      markerAngle: my_wind_dir,
+                      markerAngle: data.wind_dir,
                       color: WindGustColor,
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',
@@ -292,7 +294,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                       y: data.wind_speeds,
                       markerSize: windMarkerSize,
                       markerSymbol: 'arrow',
-                      markerAngle: my_wind_dir,
+                      markerAngle: data.wind_dir,
                       color: WindSpeedColor,
                       yaxis: 'y2',
                       hovertemplate: '%{y:.1f} mph from %{hovertext}',
