@@ -38,12 +38,11 @@ def main():
     parser.add_argument(
         "-s", "--station", default=Wells, help=f"station code (default {Wells})"
     )
-    # these are positional:
-    parser.add_argument("start_date", help="start date YYYY/mm/dd")
-    parser.add_argument("end_date", help="end date YYYY/mm/dd")
+    parser.add_argument("start_date", help="start date YYYY-mm-dd")
+    parser.add_argument("end_date", help="end date YYYY-mm-dd")
     args = parser.parse_args()
-    start = datetime.strptime(args.start_date, "%Y/%m/%d")
-    end = datetime.strptime(args.end_date, "%Y/%m/%d")
+    start = datetime.strptime(args.start_date, "%Y-%m-%d")
+    end = datetime.strptime(args.end_date, "%Y-%m-%d")
     timeline = GraphTimeline(start, end, tz.eastern)
     req_start_date, req_end_date = cdmo.compute_cdmo_request_dates(
         timeline.get_min_with_padding(), timeline.get_max_with_padding()

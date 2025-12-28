@@ -1,5 +1,11 @@
 import { AppContext } from './AppContext'
-import { formatDate, isTouchScreen, isSmallScreen, apiErrorResponse } from './utils'
+import {
+    calcWindspeedTickInterval,
+    formatDate,
+    isTouchScreen,
+    isSmallScreen,
+    apiErrorResponse,
+} from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import { buildSyzygyAnnotations, buildPlot } from './ChartBuilder'
@@ -133,13 +139,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             title: { text: 'Wind MPH', font: { size: 15 } },
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
-            // For wind, we prefer a tick interval of 2, for greater precision, but if the range
-            // is too high, it gets very cluttered, so we bump it to 5.
-            dtick:
-                data.wind_speeds !== null &&
-                Math.max(...data.wind_gusts) - Math.min(...data.wind_speeds) < 18
-                    ? 2
-                    : 5,
+            rangemode: 'tozero',
+            dtick: calcWindspeedTickInterval(data.wind_gusts),
         },
         grid: {
             rows: 2,

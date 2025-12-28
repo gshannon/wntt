@@ -27,6 +27,8 @@ class Timeline:
 
     """
 
+    _padding_points = 8  # How many 15-min intervals to go beyond the start/end times.
+
     # The "now" param is for testing only!
     def __init__(self, start_dt: datetime, end_dt: datetime, now: datetime = None):
         self._requested_times = []
@@ -49,6 +51,28 @@ class Timeline:
             self._requested_times.append(utc_cur.astimezone(self.time_zone))
             utc_cur += timedelta(minutes=15)
 
+        # For determining highs and lows for CDMO Level data, which is by definition only in the
+        # past (before "self.now"), we need to look a bit beyond the requested timeline in case
+        # there is a high or low near or on the first or last displayed time. Here we define
+        # the timeline extensions used for that purpose.
+        self._start_padding = []
+        self._end_padding = []
+        # Pad the start if any part of the timeline is in the past.
+        if self.start_dt < self.now:
+            utc_cur = self.start_dt.astimezone(tz.utc)
+            for _ in range(self._padding_points):
+                utc_cur -= timedelta(minutes=15)
+                self._start_padding.insert(0, utc_cur.astimezone(self.time_zone))
+
+        # Pad the end, limiting to the past.
+        if self.end_dt < self.now:
+            utc_cur = self.end_dt.astimezone(tz.utc)
+            for _ in range(self._padding_points):
+                utc_cur += timedelta(minutes=15)
+                dt = utc_cur.astimezone(self.time_zone)
+                if dt <= self.now:
+                    self._end_padding.append(dt)
+
     def is_future(self, dt):
         return dt > self.now
 
@@ -70,25 +94,39 @@ class Timeline:
     def get_requested(self) -> list:
         return self._requested_times
 
-    def get_all_past(self) -> list:
-        """Return all datetimes in the initial timeline that are before now."""
+    def get_all_past(self, padded: bool) -> list:
+        # Return all requested times, plus any padding if requested, that are in the past.
+        # Padding is only used for water level in GraphTimeline and its subclasses.
+        if self.start_dt >= self.now:
+            return []
+        if padded:
+            all = self._start_padding + self._requested_times + self._end_padding
+            return list(filter(lambda dt: dt < self.now, all))
         return list(filter(lambda dt: dt < self.now, self._requested_times))
 
-    def get_min_with_padding(self) -> datetime:
-        """Return the minimum datetime requested, including padding (none for this class)"""
-        return self._requested_times[0]
+    def get_min(self, padded: bool) -> datetime:
+        # Return the earliest time, maybe including padding.
+        # Padding is only used for water level in GraphTimeline and its subclasses.
+        return (
+            min(self._start_padding + self._requested_times)
+            if padded
+            else min(self._requested_times)
+        )
 
-    def get_max_with_padding(self) -> datetime:
-        """Return the maximum datetime requested, including padding (none for this class)"""
-        return self._requested_times[-1]
+    def get_max(self, padded: bool) -> datetime:
+        # Return the latest time, maybe including padding.
+        # Padding is only used for water level in GraphTimeline and its subclasses.
+        return (
+            max(self._requested_times + self._end_padding)
+            if padded
+            else max(self._requested_times)
+        )
 
 
 class GraphTimeline(Timeline):
     """A subclass of Timeline suitable for building Plotly scatter plots with full days shown.
     This timeline will always include an extra element for 00:00 on the day following the end_date.
     """
-
-    _padding_points = 8  # How many 15-min intervals to go beyond the start/end times.
 
     def __init__(
         self,
@@ -115,43 +153,6 @@ class GraphTimeline(Timeline):
             ),
             now,
         )
-
-        # For determining highs and lows for CDMO data, which is by definition only in the
-        # past (before "self.now"), we need to look a bit beyond the requested timeline in case
-        # there is a high or low near or on the first or last displayed time. Here we define
-        # the timeline extensions used for that purpose.
-        self._start_padding = []
-        self._end_padding = []
-        # Pad the start if any part of the timeline is in the past.
-        if self.start_dt < self.now:
-            utc_cur = self.start_dt.astimezone(tz.utc)
-            for _ in range(self._padding_points):
-                utc_cur -= timedelta(minutes=15)
-                self._start_padding.insert(0, utc_cur.astimezone(self.time_zone))
-
-        # Pad the end, limiting to the past.
-        if self.end_dt < self.now:
-            utc_cur = self.end_dt.astimezone(tz.utc)
-            for _ in range(self._padding_points):
-                utc_cur += timedelta(minutes=15)
-                dt = utc_cur.astimezone(self.time_zone)
-                if dt <= self.now:
-                    self._end_padding.append(dt)
-
-    def get_all_past(self) -> list:
-        # Return all requested times, plus any padding, that are in the past.
-        if len(self._start_padding) == 0:
-            return []
-        all = self._start_padding + self._requested_times + self._end_padding
-        return list(filter(lambda dt: dt < self.now, all))
-
-    def get_min_with_padding(self) -> datetime:
-        # Return the earliest time, including padding.
-        return min(self._start_padding + self._requested_times)
-
-    def get_max_with_padding(self) -> datetime:
-        # Return the latest time, including padding.
-        return max(self._end_padding + self._requested_times)
 
     def add_time(self, dt: datetime):
         """Add a datetime to the timeline, if its in bounds, and sort the times so it's still in order.
