@@ -358,7 +358,9 @@ def build_wind_plots(
 
     def check_item(dt, key):
         if dt.minute in minutes and dt in wind_dict:
-            return wind_dict[dt].get(key, None)
+            if key not in wind_dict[dt]:
+                raise ValueError(f"Missing {key} in wind data for {dt}")
+            return wind_dict[dt].get(key)
         else:
             return None
 

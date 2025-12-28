@@ -73,7 +73,7 @@ class TestGraphTimeline(TestCase):
         timeline = GraphTimeline(
             start_date, end_date, zone, datetime(2025, 7, 16, 1, 7, tzinfo=zone)
         )
-        past = timeline.get_all_past()
+        past = timeline.get_all_past(padded=True)
         self.assertEqual(
             len(past), 96 + 5 + timeline._padding_points
         )  # full day (96) + 1 hour (4) + 01:00 (1) + pre-timeline padding
@@ -82,14 +82,14 @@ class TestGraphTimeline(TestCase):
         timeline = GraphTimeline(
             start_date, end_date, zone, datetime(2025, 7, 14, tzinfo=zone)
         )
-        past = timeline.get_all_past()
+        past = timeline.get_all_past(padded=True)
         self.assertEqual(len(past), 0)
 
         # all in the past
         timeline = GraphTimeline(
             start_date, end_date, zone, datetime(2025, 7, 17, 4, 23, tzinfo=zone)
         )
-        past = timeline.get_all_past()
+        past = timeline.get_all_past(padded=True)
         self.assertEqual(
             len(past), timeline.length_requested() + (timeline._padding_points * 2)
         )

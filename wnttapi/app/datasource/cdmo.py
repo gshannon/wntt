@@ -9,7 +9,7 @@ from app import util
 from app.datasource.custom_transport import CustomTransport
 from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
-from app.timeline import Timeline
+from app.timeline import GraphTimeline, Timeline
 from rest_framework.exceptions import APIException
 from suds.client import Client
 
@@ -48,9 +48,8 @@ def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
     """Retrieve tide water levels from CDMO relative to MLLW feet.
 
     Args:
+        station (Station): the station object
         timeline (Timeline): the timeline of datetimes to fetch data for
-        **kwargs: Should contain water_station & noaa_station_id. Needs to be kwargs
-          so this method can be called in parallel.
 
     Returns:
         dict: dense dict, {dt: level} where dt is a datetime in the timeline and level is the
@@ -79,8 +78,8 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
     Args:
+        station (Station): the station object
         timeline (Timeline): the timeline of datetimes to fetch data for
-        **kwargs: Should contain weather_station. Needs to be kwargs so this method can be called in parallel.
 
     Returns:
         dense dict of {dt: {speed, gust, dir, dir_str}}
@@ -111,7 +110,6 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
     logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
     # Assemble all the data.
-    # The graph will display compass point names, so translate the direction into strings for dir_str.
     for dt, speed in speed_dict.items():
         # Make sure we have all values, or none.
         if dt not in gust_dict or dt not in dir_dict:
@@ -121,9 +119,8 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
             "speed": speed,
             "gust": gust_dict[dt],
             "dir": dir_dict[dt],
-            "dir_str": (
-                util.degrees_to_dir(dir_dict[dt]) if dir_dict[dt] is not None else None
-            ),
+            # The graph will display compass point names, so translate the direction into strings for dir_str.
+            "dir_str": util.degrees_to_dir(dir_dict[dt]),
         }
 
     return wind_dict
@@ -132,12 +129,20 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
 def get_recorded_temps(station: Station, timeline: Timeline) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of water temp readings from CDMO.
+
+    Args:
+        station (Station): the station object
+        timeline (Timeline): the timeline of datetimes to fetch data for
+
+    Returns:
+        dict: dense dict, {dt: temp centigrade} where dt is a datetime in the timeline and level is the
+        tide level in MLLW feet.
+
     """
     if timeline.is_all_future():
         # Nothing to fetch, it's all in the future
         return None
 
-    # Use a converter to convert from string to formatted number.
     return get_cdmo(timeline, station.id, temp_param, converter=handle_float)
 
 
@@ -156,9 +161,12 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
     converter : a function to convert a data point into the desired type, e.g. float or int, or unit conversion
 
     Returns:
-        dense dict of tide levels, {datetime: level}
+        dense dict of values, {datetime: value}
 
     """
+    if len(station_id or "") == 0:
+        raise ValueError("station_id is required")
+
     # validate that timeline datetimes are on 15-minute intervals and seconds=0
     if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
         # CDMO data is always on 15-minute intervals.
@@ -178,9 +186,11 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
     - param: the CDMO param code
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
-    # Note we add padding before and after to help determine highs/lows when they are near the boundaries.
+    # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
+    use_padding = param == tide_param and isinstance(timeline, GraphTimeline)
+
     req_start_date, req_end_date = compute_cdmo_request_dates(
-        timeline.get_min_with_padding(), timeline.get_max_with_padding()
+        timeline.get_min(use_padding), timeline.get_max(use_padding)
     )
 
     # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=get_transport())
@@ -221,7 +231,9 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
 
     # We need to pull data for the padded timeline, for hi/lo functionality, not just
     # display times. No sense looking for future, these are observations.
-    past_timeline = timeline.get_all_past()
+    past_timeline = timeline.get_all_past(
+        padded=isinstance(timeline, GraphTimeline) and param == tide_param
+    )
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
     text_error_check(root.find(".//data"))
@@ -327,7 +339,9 @@ def compute_cdmo_request_dates(
     return requested_start_date, requested_end_date
 
 
-def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) -> dict:
+def find_all_hilos(
+    timeline: GraphTimeline, obs_dict: dict, astro_pred_dict: dict
+) -> dict:
     """Build a dense dict of high and low tides times from observed and predicted tide data. If there is missing
     observed data that makes it impossible to determine a high or low observed tide, we'll substitute the
     predicted value, so it can be labelled on the graph, and still appear in HiLo mode.
@@ -344,7 +358,7 @@ def find_all_hilos(timeline: Timeline, obs_dict: dict, astro_pred_dict: dict) ->
 
     hilomap = {}  # {dt: HighLowEvent}
 
-    past_padded_timeline = timeline.get_all_past()
+    past_padded_timeline = timeline.get_all_past(padded=True)
 
     # Use the sparse predicted highs/lows to drive the logic. Since actual highs/lows will occur fairly close
     # to the predicted, this way we can simplify the identification of observed highs and lows, which may contain

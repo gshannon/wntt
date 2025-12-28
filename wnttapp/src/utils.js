@@ -196,6 +196,21 @@ export const getDefaultDateStrings = () => {
     }
 }
 
+// Calculate a reasonable tick interval for wind graphs so it's
+// just the right amount of clutter.
+export const calcWindspeedTickInterval = (gusts) => {
+    let interval = 10
+    if (gusts !== null) {
+        const range = Math.max(...gusts)
+        if (range < 20) {
+            interval = 3
+        } else if (range < 30) {
+            interval = 5
+        }
+    }
+    return interval
+}
+
 const NotAcceptable = 406 // version out of date
 
 // Use when a call to the API fails. Provides a standard message, and handles the
