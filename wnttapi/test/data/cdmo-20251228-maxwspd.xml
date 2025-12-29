@@ -1,0 +1,1656 @@
+<?xml version="1.0" encoding="utf-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <soapenv:Body>
+  <ns1:exportAllParamsDateRangeXMLNewResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://webservices2">
+   <exportAllParamsDateRangeXMLNewReturn xsi:type="ns2:Document" xmlns:ns2="http://xml.apache.org/xml-soap">
+    <returnData>
+      	
+        
+          <data count="1">
+          <DateTimeStamp>12/29/2025 11:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.0</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 16:00</utcStamp>
+
+      </data>
+
+      
+          <data count="2">
+          <DateTimeStamp>12/29/2025 10:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 15:45</utcStamp>
+
+      </data>
+
+      
+          <data count="3">
+          <DateTimeStamp>12/29/2025 10:30</DateTimeStamp>
+
+      
+          <MaxWspd>3.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 15:30</utcStamp>
+
+      </data>
+
+      
+          <data count="4">
+          <DateTimeStamp>12/29/2025 10:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 15:15</utcStamp>
+
+      </data>
+
+      
+          <data count="5">
+          <DateTimeStamp>12/29/2025 10:00</DateTimeStamp>
+
+      
+          <MaxWspd>4.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 15:00</utcStamp>
+
+      </data>
+
+      
+          <data count="6">
+          <DateTimeStamp>12/29/2025 09:45</DateTimeStamp>
+
+      
+          <MaxWspd>5.0</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 14:45</utcStamp>
+
+      </data>
+
+      
+          <data count="7">
+          <DateTimeStamp>12/29/2025 09:30</DateTimeStamp>
+
+      
+          <MaxWspd>5.7</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 14:30</utcStamp>
+
+      </data>
+
+      
+          <data count="8">
+          <DateTimeStamp>12/29/2025 09:15</DateTimeStamp>
+
+      
+          <MaxWspd>5.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 14:15</utcStamp>
+
+      </data>
+
+      
+          <data count="9">
+          <DateTimeStamp>12/29/2025 09:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 14:00</utcStamp>
+
+      </data>
+
+      
+          <data count="10">
+          <DateTimeStamp>12/29/2025 08:45</DateTimeStamp>
+
+      
+          <MaxWspd>4.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 13:45</utcStamp>
+
+      </data>
+
+      
+          <data count="11">
+          <DateTimeStamp>12/29/2025 08:30</DateTimeStamp>
+
+      
+          <MaxWspd>5.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 13:30</utcStamp>
+
+      </data>
+
+      
+          <data count="12">
+          <DateTimeStamp>12/29/2025 08:15</DateTimeStamp>
+
+      
+          <MaxWspd>5.1</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 13:15</utcStamp>
+
+      </data>
+
+      
+          <data count="13">
+          <DateTimeStamp>12/29/2025 08:00</DateTimeStamp>
+
+      
+          <MaxWspd>5.1</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 13:00</utcStamp>
+
+      </data>
+
+      
+          <data count="14">
+          <DateTimeStamp>12/29/2025 07:45</DateTimeStamp>
+
+      
+          <MaxWspd>4.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 12:45</utcStamp>
+
+      </data>
+
+      
+          <data count="15">
+          <DateTimeStamp>12/29/2025 07:30</DateTimeStamp>
+
+      
+          <MaxWspd>5.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 12:30</utcStamp>
+
+      </data>
+
+      
+          <data count="16">
+          <DateTimeStamp>12/29/2025 07:15</DateTimeStamp>
+
+      
+          <MaxWspd>5.2</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 12:15</utcStamp>
+
+      </data>
+
+      
+          <data count="17">
+          <DateTimeStamp>12/29/2025 07:00</DateTimeStamp>
+
+      
+          <MaxWspd>4.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 12:00</utcStamp>
+
+      </data>
+
+      
+          <data count="18">
+          <DateTimeStamp>12/29/2025 06:45</DateTimeStamp>
+
+      
+          <MaxWspd>6.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 11:45</utcStamp>
+
+      </data>
+
+      
+          <data count="19">
+          <DateTimeStamp>12/29/2025 06:30</DateTimeStamp>
+
+      
+          <MaxWspd>6.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 11:30</utcStamp>
+
+      </data>
+
+      
+          <data count="20">
+          <DateTimeStamp>12/29/2025 06:15</DateTimeStamp>
+
+      
+          <MaxWspd>5.7</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 11:15</utcStamp>
+
+      </data>
+
+      
+          <data count="21">
+          <DateTimeStamp>12/29/2025 06:00</DateTimeStamp>
+
+      
+          <MaxWspd>4.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 11:00</utcStamp>
+
+      </data>
+
+      
+          <data count="22">
+          <DateTimeStamp>12/29/2025 05:45</DateTimeStamp>
+
+      
+          <MaxWspd>4.7</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 10:45</utcStamp>
+
+      </data>
+
+      
+          <data count="23">
+          <DateTimeStamp>12/29/2025 05:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 10:30</utcStamp>
+
+      </data>
+
+      
+          <data count="24">
+          <DateTimeStamp>12/29/2025 05:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.5</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 10:15</utcStamp>
+
+      </data>
+
+      
+          <data count="25">
+          <DateTimeStamp>12/29/2025 05:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 10:00</utcStamp>
+
+      </data>
+
+      
+          <data count="26">
+          <DateTimeStamp>12/29/2025 04:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 09:45</utcStamp>
+
+      </data>
+
+      
+          <data count="27">
+          <DateTimeStamp>12/29/2025 04:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 09:30</utcStamp>
+
+      </data>
+
+      
+          <data count="28">
+          <DateTimeStamp>12/29/2025 04:15</DateTimeStamp>
+
+      
+          <MaxWspd>0.7</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 09:15</utcStamp>
+
+      </data>
+
+      
+          <data count="29">
+          <DateTimeStamp>12/29/2025 03:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 08:00</utcStamp>
+
+      </data>
+
+      
+          <data count="30">
+          <DateTimeStamp>12/29/2025 02:45</DateTimeStamp>
+
+      
+          <MaxWspd>3.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 07:45</utcStamp>
+
+      </data>
+
+      
+          <data count="31">
+          <DateTimeStamp>12/29/2025 02:30</DateTimeStamp>
+
+      
+          <MaxWspd>4.7</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 07:30</utcStamp>
+
+      </data>
+
+      
+          <data count="32">
+          <DateTimeStamp>12/29/2025 02:15</DateTimeStamp>
+
+      
+          <MaxWspd>4.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 07:15</utcStamp>
+
+      </data>
+
+      
+          <data count="33">
+          <DateTimeStamp>12/29/2025 02:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.5</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 07:00</utcStamp>
+
+      </data>
+
+      
+          <data count="34">
+          <DateTimeStamp>12/29/2025 01:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 06:45</utcStamp>
+
+      </data>
+
+      
+          <data count="35">
+          <DateTimeStamp>12/29/2025 01:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.1</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 06:30</utcStamp>
+
+      </data>
+
+      
+          <data count="36">
+          <DateTimeStamp>12/29/2025 01:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 06:15</utcStamp>
+
+      </data>
+
+      
+          <data count="37">
+          <DateTimeStamp>12/29/2025 01:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 06:00</utcStamp>
+
+      </data>
+
+      
+          <data count="38">
+          <DateTimeStamp>12/29/2025 00:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.1</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 05:45</utcStamp>
+
+      </data>
+
+      
+          <data count="39">
+          <DateTimeStamp>12/29/2025 00:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 05:30</utcStamp>
+
+      </data>
+
+      
+          <data count="40">
+          <DateTimeStamp>12/29/2025 00:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 05:15</utcStamp>
+
+      </data>
+
+      
+          <data count="41">
+          <DateTimeStamp>12/29/2025 00:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 05:00</utcStamp>
+
+      </data>
+
+      
+          <data count="42">
+          <DateTimeStamp>12/28/2025 23:45</DateTimeStamp>
+
+      
+          <MaxWspd>0.5</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 04:45</utcStamp>
+
+      </data>
+
+      
+          <data count="43">
+          <DateTimeStamp>12/28/2025 23:30</DateTimeStamp>
+
+      
+          <MaxWspd>0.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 04:30</utcStamp>
+
+      </data>
+
+      
+          <data count="44">
+          <DateTimeStamp>12/28/2025 23:15</DateTimeStamp>
+
+      
+          <MaxWspd>0.6</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 04:15</utcStamp>
+
+      </data>
+
+      
+          <data count="45">
+          <DateTimeStamp>12/28/2025 23:00</DateTimeStamp>
+
+      
+          <MaxWspd>0.5</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 04:00</utcStamp>
+
+      </data>
+
+      
+          <data count="46">
+          <DateTimeStamp>12/28/2025 22:45</DateTimeStamp>
+
+      
+          <MaxWspd>0.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 03:45</utcStamp>
+
+      </data>
+
+      
+          <data count="47">
+          <DateTimeStamp>12/28/2025 22:30</DateTimeStamp>
+
+      
+          <MaxWspd>0.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 03:30</utcStamp>
+
+      </data>
+
+      
+          <data count="48">
+          <DateTimeStamp>12/28/2025 22:15</DateTimeStamp>
+
+      
+          <MaxWspd>0.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 03:15</utcStamp>
+
+      </data>
+
+      
+          <data count="49">
+          <DateTimeStamp>12/28/2025 22:00</DateTimeStamp>
+
+      
+          <MaxWspd>0.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 03:00</utcStamp>
+
+      </data>
+
+      
+          <data count="50">
+          <DateTimeStamp>12/28/2025 21:45</DateTimeStamp>
+
+      
+          <MaxWspd>0.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 02:45</utcStamp>
+
+      </data>
+
+      
+          <data count="51">
+          <DateTimeStamp>12/28/2025 21:30</DateTimeStamp>
+
+      
+          <MaxWspd>0.4</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 02:30</utcStamp>
+
+      </data>
+
+      
+          <data count="52">
+          <DateTimeStamp>12/28/2025 21:15</DateTimeStamp>
+
+      
+          <MaxWspd>0.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 02:15</utcStamp>
+
+      </data>
+
+      
+          <data count="53">
+          <DateTimeStamp>12/28/2025 21:00</DateTimeStamp>
+
+      
+          <MaxWspd>0.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 02:00</utcStamp>
+
+      </data>
+
+      
+          <data count="54">
+          <DateTimeStamp>12/28/2025 20:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.0</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 01:45</utcStamp>
+
+      </data>
+
+      
+          <data count="55">
+          <DateTimeStamp>12/28/2025 20:30</DateTimeStamp>
+
+      
+          <MaxWspd>0.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 01:30</utcStamp>
+
+      </data>
+
+      
+          <data count="56">
+          <DateTimeStamp>12/28/2025 20:15</DateTimeStamp>
+
+      
+          <MaxWspd>0.5</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 01:15</utcStamp>
+
+      </data>
+
+      
+          <data count="57">
+          <DateTimeStamp>12/28/2025 20:00</DateTimeStamp>
+
+      
+          <MaxWspd>0.8</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 01:00</utcStamp>
+
+      </data>
+
+      
+          <data count="58">
+          <DateTimeStamp>12/28/2025 19:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.3</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 00:45</utcStamp>
+
+      </data>
+
+      
+          <data count="59">
+          <DateTimeStamp>12/28/2025 19:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.0</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 00:30</utcStamp>
+
+      </data>
+
+      
+          <data count="60">
+          <DateTimeStamp>12/28/2025 19:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.0</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 00:15</utcStamp>
+
+      </data>
+
+      
+          <data count="61">
+          <DateTimeStamp>12/28/2025 19:00</DateTimeStamp>
+
+      
+          <MaxWspd>0.9</MaxWspd>
+
+      
+          <utcStamp>12/29/2025 00:00</utcStamp>
+
+      </data>
+
+      
+          <data count="62">
+          <DateTimeStamp>12/28/2025 18:45</DateTimeStamp>
+
+      
+          <MaxWspd>0.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 23:45</utcStamp>
+
+      </data>
+
+      
+          <data count="63">
+          <DateTimeStamp>12/28/2025 18:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 23:30</utcStamp>
+
+      </data>
+
+      
+          <data count="64">
+          <DateTimeStamp>12/28/2025 18:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 23:15</utcStamp>
+
+      </data>
+
+      
+          <data count="65">
+          <DateTimeStamp>12/28/2025 18:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 23:00</utcStamp>
+
+      </data>
+
+      
+          <data count="66">
+          <DateTimeStamp>12/28/2025 17:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 22:45</utcStamp>
+
+      </data>
+
+      
+          <data count="67">
+          <DateTimeStamp>12/28/2025 17:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 22:30</utcStamp>
+
+      </data>
+
+      
+          <data count="68">
+          <DateTimeStamp>12/28/2025 17:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 22:15</utcStamp>
+
+      </data>
+
+      
+          <data count="69">
+          <DateTimeStamp>12/28/2025 17:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 22:00</utcStamp>
+
+      </data>
+
+      
+          <data count="70">
+          <DateTimeStamp>12/28/2025 16:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 21:45</utcStamp>
+
+      </data>
+
+      
+          <data count="71">
+          <DateTimeStamp>12/28/2025 16:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 21:30</utcStamp>
+
+      </data>
+
+      
+          <data count="72">
+          <DateTimeStamp>12/28/2025 16:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 21:15</utcStamp>
+
+      </data>
+
+      
+          <data count="73">
+          <DateTimeStamp>12/28/2025 16:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 21:00</utcStamp>
+
+      </data>
+
+      
+          <data count="74">
+          <DateTimeStamp>12/28/2025 15:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 20:45</utcStamp>
+
+      </data>
+
+      
+          <data count="75">
+          <DateTimeStamp>12/28/2025 15:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 20:30</utcStamp>
+
+      </data>
+
+      
+          <data count="76">
+          <DateTimeStamp>12/28/2025 15:15</DateTimeStamp>
+
+      
+          <MaxWspd>2.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 20:15</utcStamp>
+
+      </data>
+
+      
+          <data count="77">
+          <DateTimeStamp>12/28/2025 15:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 20:00</utcStamp>
+
+      </data>
+
+      
+          <data count="78">
+          <DateTimeStamp>12/28/2025 14:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 19:45</utcStamp>
+
+      </data>
+
+      
+          <data count="79">
+          <DateTimeStamp>12/28/2025 14:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 19:30</utcStamp>
+
+      </data>
+
+      
+          <data count="80">
+          <DateTimeStamp>12/28/2025 14:15</DateTimeStamp>
+
+      
+          <MaxWspd>2.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 19:15</utcStamp>
+
+      </data>
+
+      
+          <data count="81">
+          <DateTimeStamp>12/28/2025 14:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 19:00</utcStamp>
+
+      </data>
+
+      
+          <data count="82">
+          <DateTimeStamp>12/28/2025 13:45</DateTimeStamp>
+
+      
+          <MaxWspd>3.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 18:45</utcStamp>
+
+      </data>
+
+      
+          <data count="83">
+          <DateTimeStamp>12/28/2025 13:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 18:30</utcStamp>
+
+      </data>
+
+      
+          <data count="84">
+          <DateTimeStamp>12/28/2025 13:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 18:15</utcStamp>
+
+      </data>
+
+      
+          <data count="85">
+          <DateTimeStamp>12/28/2025 13:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 18:00</utcStamp>
+
+      </data>
+
+      
+          <data count="86">
+          <DateTimeStamp>12/28/2025 12:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 17:45</utcStamp>
+
+      </data>
+
+      
+          <data count="87">
+          <DateTimeStamp>12/28/2025 12:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 17:30</utcStamp>
+
+      </data>
+
+      
+          <data count="88">
+          <DateTimeStamp>12/28/2025 12:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 17:15</utcStamp>
+
+      </data>
+
+      
+          <data count="89">
+          <DateTimeStamp>12/28/2025 12:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 17:00</utcStamp>
+
+      </data>
+
+      
+          <data count="90">
+          <DateTimeStamp>12/28/2025 11:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 16:45</utcStamp>
+
+      </data>
+
+      
+          <data count="91">
+          <DateTimeStamp>12/28/2025 11:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 16:30</utcStamp>
+
+      </data>
+
+      
+          <data count="92">
+          <DateTimeStamp>12/28/2025 11:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 16:15</utcStamp>
+
+      </data>
+
+      
+          <data count="93">
+          <DateTimeStamp>12/28/2025 11:00</DateTimeStamp>
+
+      
+          <MaxWspd>1.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 16:00</utcStamp>
+
+      </data>
+
+      
+          <data count="94">
+          <DateTimeStamp>12/28/2025 10:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 15:45</utcStamp>
+
+      </data>
+
+      
+          <data count="95">
+          <DateTimeStamp>12/28/2025 10:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 15:30</utcStamp>
+
+      </data>
+
+      
+          <data count="96">
+          <DateTimeStamp>12/28/2025 10:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 15:15</utcStamp>
+
+      </data>
+
+      
+          <data count="97">
+          <DateTimeStamp>12/28/2025 10:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 15:00</utcStamp>
+
+      </data>
+
+      
+          <data count="98">
+          <DateTimeStamp>12/28/2025 09:45</DateTimeStamp>
+
+      
+          <MaxWspd>1.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 14:45</utcStamp>
+
+      </data>
+
+      
+          <data count="99">
+          <DateTimeStamp>12/28/2025 09:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 14:30</utcStamp>
+
+      </data>
+
+      
+          <data count="100">
+          <DateTimeStamp>12/28/2025 09:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 14:15</utcStamp>
+
+      </data>
+
+      
+          <data count="101">
+          <DateTimeStamp>12/28/2025 09:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 14:00</utcStamp>
+
+      </data>
+
+      
+          <data count="102">
+          <DateTimeStamp>12/28/2025 08:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 13:45</utcStamp>
+
+      </data>
+
+      
+          <data count="103">
+          <DateTimeStamp>12/28/2025 08:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 13:30</utcStamp>
+
+      </data>
+
+      
+          <data count="104">
+          <DateTimeStamp>12/28/2025 08:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 13:15</utcStamp>
+
+      </data>
+
+      
+          <data count="105">
+          <DateTimeStamp>12/28/2025 08:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 13:00</utcStamp>
+
+      </data>
+
+      
+          <data count="106">
+          <DateTimeStamp>12/28/2025 07:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 12:45</utcStamp>
+
+      </data>
+
+      
+          <data count="107">
+          <DateTimeStamp>12/28/2025 07:30</DateTimeStamp>
+
+      
+          <MaxWspd>3.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 12:30</utcStamp>
+
+      </data>
+
+      
+          <data count="108">
+          <DateTimeStamp>12/28/2025 07:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 12:15</utcStamp>
+
+      </data>
+
+      
+          <data count="109">
+          <DateTimeStamp>12/28/2025 07:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 12:00</utcStamp>
+
+      </data>
+
+      
+          <data count="110">
+          <DateTimeStamp>12/28/2025 06:45</DateTimeStamp>
+
+      
+          <MaxWspd>4.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 11:45</utcStamp>
+
+      </data>
+
+      
+          <data count="111">
+          <DateTimeStamp>12/28/2025 06:30</DateTimeStamp>
+
+      
+          <MaxWspd>3.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 11:30</utcStamp>
+
+      </data>
+
+      
+          <data count="112">
+          <DateTimeStamp>12/28/2025 06:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 11:15</utcStamp>
+
+      </data>
+
+      
+          <data count="113">
+          <DateTimeStamp>12/28/2025 06:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 11:00</utcStamp>
+
+      </data>
+
+      
+          <data count="114">
+          <DateTimeStamp>12/28/2025 05:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 10:45</utcStamp>
+
+      </data>
+
+      
+          <data count="115">
+          <DateTimeStamp>12/28/2025 05:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.8</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 10:30</utcStamp>
+
+      </data>
+
+      
+          <data count="116">
+          <DateTimeStamp>12/28/2025 05:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.1</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 10:15</utcStamp>
+
+      </data>
+
+      
+          <data count="117">
+          <DateTimeStamp>12/28/2025 05:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 10:00</utcStamp>
+
+      </data>
+
+      
+          <data count="118">
+          <DateTimeStamp>12/28/2025 04:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.4</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 09:45</utcStamp>
+
+      </data>
+
+      
+          <data count="119">
+          <DateTimeStamp>12/28/2025 04:30</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 09:30</utcStamp>
+
+      </data>
+
+      
+          <data count="120">
+          <DateTimeStamp>12/28/2025 04:15</DateTimeStamp>
+
+      
+          <MaxWspd>3.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 09:15</utcStamp>
+
+      </data>
+
+      
+          <data count="121">
+          <DateTimeStamp>12/28/2025 04:00</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 09:00</utcStamp>
+
+      </data>
+
+      
+          <data count="122">
+          <DateTimeStamp>12/28/2025 03:45</DateTimeStamp>
+
+      
+          <MaxWspd>3.3</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 08:45</utcStamp>
+
+      </data>
+
+      
+          <data count="123">
+          <DateTimeStamp>12/28/2025 03:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 08:30</utcStamp>
+
+      </data>
+
+      
+          <data count="124">
+          <DateTimeStamp>12/28/2025 03:15</DateTimeStamp>
+
+      
+          <MaxWspd>2.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 08:15</utcStamp>
+
+      </data>
+
+      
+          <data count="125">
+          <DateTimeStamp>12/28/2025 03:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 08:00</utcStamp>
+
+      </data>
+
+      
+          <data count="126">
+          <DateTimeStamp>12/28/2025 02:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 07:45</utcStamp>
+
+      </data>
+
+      
+          <data count="127">
+          <DateTimeStamp>12/28/2025 02:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.0</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 07:30</utcStamp>
+
+      </data>
+
+      
+          <data count="128">
+          <DateTimeStamp>12/28/2025 02:15</DateTimeStamp>
+
+      
+          <MaxWspd>1.8</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 07:15</utcStamp>
+
+      </data>
+
+      
+          <data count="129">
+          <DateTimeStamp>12/28/2025 02:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.2</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 07:00</utcStamp>
+
+      </data>
+
+      
+          <data count="130">
+          <DateTimeStamp>12/28/2025 01:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 06:45</utcStamp>
+
+      </data>
+
+      
+          <data count="131">
+          <DateTimeStamp>12/28/2025 01:30</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 06:30</utcStamp>
+
+      </data>
+
+      
+          <data count="132">
+          <DateTimeStamp>12/28/2025 01:15</DateTimeStamp>
+
+      
+          <MaxWspd>2.6</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 06:15</utcStamp>
+
+      </data>
+
+      
+          <data count="133">
+          <DateTimeStamp>12/28/2025 01:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.7</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 06:00</utcStamp>
+
+      </data>
+
+      
+          <data count="134">
+          <DateTimeStamp>12/28/2025 00:45</DateTimeStamp>
+
+      
+          <MaxWspd>2.8</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 05:45</utcStamp>
+
+      </data>
+
+      
+          <data count="135">
+          <DateTimeStamp>12/28/2025 00:30</DateTimeStamp>
+
+      
+          <MaxWspd>1.9</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 05:30</utcStamp>
+
+      </data>
+
+      
+          <data count="136">
+          <DateTimeStamp>12/28/2025 00:15</DateTimeStamp>
+
+      
+          <MaxWspd></MaxWspd>
+
+      
+          <utcStamp>12/28/2025 05:15</utcStamp>
+
+      </data>
+
+      
+          <data count="137">
+          <DateTimeStamp>12/28/2025 00:00</DateTimeStamp>
+
+      
+          <MaxWspd>2.5</MaxWspd>
+
+      
+          <utcStamp>12/28/2025 05:00</utcStamp>
+
+      </data>
+
+      
+      </returnData>
+   </exportAllParamsDateRangeXMLNewReturn>
+  </ns1:exportAllParamsDateRangeXMLNewResponse>
+ </soapenv:Body>
+</soapenv:Envelope>
