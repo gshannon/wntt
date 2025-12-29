@@ -109,6 +109,20 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
     )
     logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
+    return assemble_wind_data(speed_dict, gust_dict, dir_dict)
+
+
+def assemble_wind_data(speed_dict: dict, gust_dict: dict, dir_dict: dict) -> dict:
+    """Assemble wind data from the 3 component dicts into a single dict.
+
+    Args:
+        speed_dict (dict): dense dict of {dt: speed}
+        gust_dict (dict): dense dict of {dt: gust}
+        dir_dict (dict): dense dict of {dt: direction}
+    Returns:
+        dict: dense dict of {dt: {speed, gust, dir, dir_str}}
+    """
+    wind_dict = {}
     # Assemble all the data.
     for dt, speed in speed_dict.items():
         # Make sure we have all values, or none.
@@ -151,7 +165,7 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
     that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
-    data points starting from the MOST RECENT data, not the latest.  So care should be taken not to ask for too much,
+    data points starting from the oldest data, not the latest.  So care should be taken not to ask for too much,
     else data at the beginning of the graph will be missing.
 
     Parameters:

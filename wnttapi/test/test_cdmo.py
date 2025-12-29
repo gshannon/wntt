@@ -15,11 +15,10 @@ from rest_framework.exceptions import APIException
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
 
-csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
+wells = stn.get_station(
+    "welinwq", "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
+)
 test_data_path = os.path.dirname(os.path.abspath(__file__))
-wells = stn.get_station("welinwq", csv_location)
-
-
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
 
@@ -37,7 +36,7 @@ class TestCdmo(TestCase):
         full = {k: v for (k, v) in zip(timeline.get_requested(), values)}
         return {k: v for (k, v) in full.items() if v is not None}
 
-    def test_xml_parse_with_bad_zero_problem(self):
+    def test_xml_parse_level_with_bad_zeros(self):
         # Strip out bogus zero level data from cdmo.
         # Values are in NAVD88, so 5.14 = 0 MLLW for Wells station.
 
@@ -69,7 +68,7 @@ class TestCdmo(TestCase):
         # abs(5.14 - 6.1) <= 1.0
         self.assertEqual(cleaned, test_dict)
 
-        # 5. Combo with 3  zeros in a row
+        # 5. Combo with 3 zeros in a row
         # 1st 0 is rejected because of gap from previous value
         # 2nd 0 is rejected because 0s on either side
         # 3rd 0 is accepted because good gap on right side
@@ -93,7 +92,7 @@ class TestCdmo(TestCase):
 
         # A single-day timeline for the 21st. Remember we pull in extra padding for cdmo tide data.
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
-        with open(f"{test_data_path}/data/cdmo-20251221.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "r") as file:
             xml = file.read()
         obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
 
@@ -124,7 +123,7 @@ class TestCdmo(TestCase):
         pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
 
         # Get observed tides from CDMO for the timeline
-        with open(f"{test_data_path}/data/cdmo-120405.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-level-20251204-05.xml", "r") as file:
             xml = file.read()
         converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
         obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)

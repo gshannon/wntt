@@ -96,7 +96,7 @@ class Timeline:
 
     def get_all_past(self, padded: bool) -> list:
         # Return all requested times, plus any padding if requested, that are in the past.
-        # Padding is only used for water level in GraphTimeline and its subclasses.
+        # Padding is only needed for water level in GraphTimeline and its subclasses.
         if self.start_dt >= self.now:
             return []
         if padded:
@@ -106,7 +106,7 @@ class Timeline:
 
     def get_min(self, padded: bool) -> datetime:
         # Return the earliest time, maybe including padding.
-        # Padding is only used for water level in GraphTimeline and its subclasses.
+        # Padding is only needed for water level in GraphTimeline and its subclasses.
         return (
             min(self._start_padding + self._requested_times)
             if padded
@@ -115,7 +115,7 @@ class Timeline:
 
     def get_max(self, padded: bool) -> datetime:
         # Return the latest time, maybe including padding.
-        # Padding is only used for water level in GraphTimeline and its subclasses.
+        # Padding is only needed for water level in GraphTimeline and its subclasses.
         return (
             max(self._requested_times + self._end_padding)
             if padded

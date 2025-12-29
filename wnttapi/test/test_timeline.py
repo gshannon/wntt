@@ -71,7 +71,7 @@ class TestGraphTimeline(TestCase):
 
         # some in past, some in future
         timeline = GraphTimeline(
-            start_date, end_date, zone, datetime(2025, 7, 16, 1, 7, tzinfo=zone)
+            start_date, end_date, zone, now=datetime(2025, 7, 16, 1, 7, tzinfo=zone)
         )
         past = timeline.get_all_past(padded=True)
         self.assertEqual(
