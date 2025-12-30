@@ -18,15 +18,16 @@ Access CDMO web services to retrieve observed tide, wind, and temperature data.
 """
 
 logger = logging.getLogger(__name__)
-cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
-windspeed_param = "Wspd"
-windgust_param = "MaxWspd"
-winddir_param = "Wdir"
-tide_param = "Level"
-temp_param = "Temp"
+_cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
+_windspeed_param = "Wspd"
+_windgust_param = "MaxWspd"
+_winddir_param = "Wdir"
+_tide_param = "Level"
+_temp_param = "Temp"
 # Min and max sane tide feet mllw/feet
-(min_tide, max_tide) = (-5.0, 20.0)
-max_wind_speed = 120  # max sane wind speed in mph
+(_min_tide, _max_tide) = (-5.0, 20.0)
+_max_wind_speed = 120  # max sane wind speed in mph
+_missing_data_value = -99.99
 
 # This is a workaround to an issue where recreating the suds client on
 # every request is causing the user/password to be rejected by CDMO. This could be
@@ -40,7 +41,7 @@ def get_soap_client():
         user_name = os.environ.get("CDMO_USER")
         password = os.environ.get("CDMO_PASSWORD")
         transport = CustomTransport(user_name, password)
-        _client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=transport)
+        _client = Client(_cdmo_wsdl, timeout=90, retxml=True, transport=transport)
     return _client
 
 
@@ -66,7 +67,7 @@ def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
     tide_dict = get_cdmo(
         timeline,
         station.id,
-        tide_param,
+        _tide_param,
         converter=make_navd88_level_converter(station.navd88_meters_to_mllw_feet),
     )
     # Clean the data of bogus zeros, i.e. any 0 that is more than 1 hour after the previous data.
@@ -92,7 +93,7 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
         return wind_dict
 
     speed_dict = get_cdmo(
-        timeline, station.weather_station_id, windspeed_param, handle_windspeed
+        timeline, station.weather_station_id, _windspeed_param, handle_windspeed
     )
     logger.debug(f"Wind speed data points retrieved: {len(speed_dict)}")
 
@@ -101,11 +102,11 @@ def get_recorded_wind_data(station: Station, timeline: Timeline) -> dict:
 
     # CDMO returns wind speed in meters per second, so convert to mph.
     gust_dict = get_cdmo(
-        timeline, station.weather_station_id, windgust_param, handle_windspeed
+        timeline, station.weather_station_id, _windgust_param, handle_windspeed
     )
     logger.debug(f"Wind gust data points retrieved: {len(gust_dict)}")
     dir_dict = get_cdmo(
-        timeline, station.weather_station_id, winddir_param, lambda d, dt: int(d)
+        timeline, station.weather_station_id, _winddir_param, lambda d, dt: int(d)
     )
     logger.debug(f"Wind direction data points retrieved: {len(dir_dict)}")
 
@@ -157,7 +158,7 @@ def get_recorded_temps(station: Station, timeline: Timeline) -> dict:
         # Nothing to fetch, it's all in the future
         return None
 
-    return get_cdmo(timeline, station.id, temp_param, converter=handle_float)
+    return get_cdmo(timeline, station.id, _temp_param, converter=handle_float)
 
 
 def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict:
@@ -201,7 +202,7 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
-    use_padding = param == tide_param and isinstance(timeline, GraphTimeline)
+    use_padding = param == _tide_param and isinstance(timeline, GraphTimeline)
 
     req_start_date, req_end_date = compute_cdmo_request_dates(
         timeline.get_min(use_padding), timeline.get_max(use_padding)
@@ -246,7 +247,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
     # We need to pull data for the padded timeline, for hi/lo functionality, not just
     # display times. No sense looking for future, these are observations.
     past_timeline = timeline.get_all_past(
-        padded=isinstance(timeline, GraphTimeline) and param == tide_param
+        padded=isinstance(timeline, GraphTimeline) and param == _tide_param
     )
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
@@ -531,10 +532,11 @@ def handle_navd88_level(
     try:
         read_level = float(level_str)
         level = converter(read_level)
-        if level < min_tide or level > max_tide:
-            logger.error(
-                f"level out of range for {local_dt}: {level} (raw: {read_level})"
-            )
+        if level < _min_tide or level > _max_tide:
+            if read_level != _missing_data_value:  # CDMO missing data code
+                logger.error(
+                    f"level out of range for {local_dt}: {level} (raw: {read_level})"
+                )
             level = None
     except ValueError:
         logger.error(f"invalid level: [{level_str}]")
@@ -549,7 +551,7 @@ def handle_windspeed(wspd_str: str, local_dt: datetime):
     try:
         read_wspd = float(wspd_str)
         mph = util.meters_per_second_to_mph(read_wspd)
-        if mph < 0 or mph > max_wind_speed:
+        if mph < 0 or mph > _max_wind_speed:
             logger.error(
                 f"wind speed out of range for {local_dt}: {read_wspd} mps converted to {mph} mph"
             )
@@ -562,7 +564,7 @@ def handle_windspeed(wspd_str: str, local_dt: datetime):
 
 def dump_all_codes():
     """Utility function to dump all NERRS metadata to a file."""
-    soap_client = Client(cdmo_wsdl, timeout=90, retxml=True)
+    soap_client = Client(_cdmo_wsdl, timeout=90, retxml=True)
     try:
         xml = soap_client.service.exportStationCodesXMLNew()
         util.dump_xml(xml, "/surgedata/StationCodes.xml")

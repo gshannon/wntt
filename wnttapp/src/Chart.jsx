@@ -69,9 +69,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
     }
 
     const graph1_max = 1
-    const graph1_min = data.wind_speeds !== null ? 0.48 : 0.1
-    const graph2_max = 0.44
-    const graph2_min = 0.1
+    const graph1_min = data.wind_speeds !== null ? 0.44 : 0
+    const graph2_max = 0.4
+    const graph2_min = 0
 
     const layout = {
         showlegend: !isNarrow,
@@ -117,7 +117,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         xaxis: {
             gridcolor: 'black',
             hoverformat: '%a, %b %-e, %Y %-I:%M %p',
-            tickformat: '%H:%M %b %-e',
+            tickformat: '%I:%M %p<br>%b %-e',
         },
         xaxis2: { gridcolor: 'black' },
         yaxis: {

@@ -63,8 +63,18 @@ def get_graph_data(
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
 
-    # Pull all predicted high & low tides for the timeline.
-    astro_all_hilo_dict = astro.get_hilo_astro_tides(station, timeline)
+    # Pull all predicted high & low tides for the timeline. If the timeline starts in the past, it may
+    # include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
+    # need to pull in data for the day before the timeline to handle certain edge cases where a high or low
+    # occurs just before the start of the timeline.
+    hilo_start_date = (
+        timeline.start_dt.date() - timedelta(days=1)
+        if timeline.is_past(timeline.start_dt)
+        else timeline.start_dt.date()
+    )
+    astro_all_hilo_dict = astro.get_hilo_astro_tides(
+        station, hilo_start_date, timeline.end_dt.date()
+    )
 
     # Determine all highs and lows, whether observed or predicted.
     hilo_event_dict = cdmo.find_all_hilos(timeline, obs_dict, astro_all_hilo_dict)
@@ -117,7 +127,7 @@ def get_graph_data(
             }
         )
     else:
-        final_timeline = timeline.get_final_times({})
+        final_timeline = timeline.requested_times
     past_tl_index, future_tl_index = util.get_timeline_boundaries(final_timeline)
     start_date_str = timeline.start_date.strftime("%b %-d, %Y")
     end_date_str = timeline.end_date.strftime("%b %-d, %Y")

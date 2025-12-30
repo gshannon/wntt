@@ -20,21 +20,21 @@ class TestCdmo(TestCase):
             xml = file.read()
 
         wspd_dict = cdmo.parse_cdmo_xml(
-            timeline, xml, cdmo.windspeed_param, cdmo.handle_windspeed
+            timeline, xml, cdmo._windspeed_param, cdmo.handle_windspeed
         )
 
         with open(f"{test_data_path}/data/cdmo-20251228-maxwspd.xml", "r") as file:
             xml = file.read()
 
         maxwspd_dict = cdmo.parse_cdmo_xml(
-            timeline, xml, cdmo.windgust_param, cdmo.handle_windspeed
+            timeline, xml, cdmo._windgust_param, cdmo.handle_windspeed
         )
 
         with open(f"{test_data_path}/data/cdmo-20251228-wdir.xml", "r") as file:
             xml = file.read()
 
         wdir_dict = cdmo.parse_cdmo_xml(
-            timeline, xml, cdmo.winddir_param, lambda d, dt: int(d)
+            timeline, xml, cdmo._winddir_param, lambda d, dt: int(d)
         )
 
         # Every data point should be present except for the missing gust at 00:15 on 12/28.

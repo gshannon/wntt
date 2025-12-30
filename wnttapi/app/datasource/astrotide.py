@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import requests
@@ -42,15 +42,15 @@ def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
     return pred15_json_to_dict(pred_json, timeline, station)
 
 
-def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, dict]:
+def get_hilo_astro_tides(
+    station: Station, start_date: date, end_date: date
+) -> tuple[dict, dict]:
     """
-    Fetch high/low astronomical tide predictions for the timeline. If the timeline starts in the past, it may
-    include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
-    need to pull in data for the day before the timeline to handle certain edge cases where a high or low
-    occurs just before the start of the timeline.
+    Fetch high/low astronomical tide predictions for the date range.
     Args:
         station (Station): the SWMP station
-        timeline (Timeline): the timeline
+        start_date (date): starting date, should be in same timezone as station
+        end_date (date): ending date, should be in same timezone as station
 
     Returns:
         dict of 15-min interval predictions for highs and lows only.
@@ -59,18 +59,13 @@ def get_hilo_astro_tides(station: Station, timeline: Timeline) -> tuple[dict, di
 
     preds_hilo_dict = {}
 
-    request_start_dt = (
-        timeline.start_dt - timedelta(days=1)
-        if timeline.is_past(timeline.start_dt)
-        else timeline.start_dt
-    )
-    start_date_str = request_start_dt.strftime("%Y%m%d")
-    end_date_str = timeline.end_dt.strftime("%Y%m%d")
+    start_date_str = start_date.strftime("%Y%m%d")
+    end_date_str = end_date.strftime("%Y%m%d")
 
     future_preds_json = pull_data(
         station.noaa_station_id, "hilo", start_date_str, end_date_str
     )
-    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, timeline.time_zone)
+    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, station.time_zone)
 
     return preds_hilo_dict
 

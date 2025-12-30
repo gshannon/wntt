@@ -38,7 +38,7 @@ class TestGraphTimeline(TestCase):
         start_date = end_date = date(2024, 3, 1)
 
         timeline = GraphTimeline(start_date, end_date, zone)
-        self.assertEqual(len(timeline._requested_times), normal_count)
+        self.assertEqual(len(timeline.requested_times), normal_count)
         self.assertEqual(timeline.start_dt, datetime(2024, 3, 1, 0, tzinfo=zone))
         self.assertEqual(timeline.end_dt, datetime(2024, 3, 2, 0, tzinfo=zone))
 
@@ -52,14 +52,14 @@ class TestGraphTimeline(TestCase):
         timeline = GraphTimeline(start_date, end_date, zone)
         self.assertEqual(timeline.length_requested(), normal_count + 4)
         self.assertEqual(
-            timeline._requested_times[0].day, timeline._requested_times[-2].day
+            timeline.requested_times[0].day, timeline.requested_times[-2].day
         )
         self.assertNotEqual(
-            timeline._requested_times[0].day, timeline._requested_times[-1].day
+            timeline.requested_times[0].day, timeline.requested_times[-1].day
         )
 
         bad_time_count = 0
-        for dt in timeline._requested_times:
+        for dt in timeline.requested_times:
             if dt.minute not in (0, 15, 30, 45):
                 bad_time_count += 1
         self.assertEqual(bad_time_count, 0)
@@ -104,10 +104,10 @@ class TestGraphTimeline(TestCase):
         real_time_1 = datetime(2025, 8, 5, 7, 51, tzinfo=zone)
         original_time_2 = datetime(2025, 8, 5, 15, 30, tzinfo=zone)
         real_time_2 = datetime(2025, 8, 5, 15, 26, tzinfo=zone)
-        self.assertTrue(original_time_1 in timeline._requested_times)
-        self.assertTrue(real_time_1 not in timeline._requested_times)
-        self.assertTrue(original_time_2 in timeline._requested_times)
-        self.assertTrue(real_time_2 not in timeline._requested_times)
+        self.assertTrue(original_time_1 in timeline.requested_times)
+        self.assertTrue(real_time_1 not in timeline.requested_times)
+        self.assertTrue(original_time_2 in timeline.requested_times)
+        self.assertTrue(real_time_2 not in timeline.requested_times)
 
         corrections = {
             original_time_1: real_time_1,
@@ -115,7 +115,7 @@ class TestGraphTimeline(TestCase):
         }
         final = timeline.get_final_times(corrections)
         self.assertEqual(timeline.length_requested(), len(final))
-        self.assertNotEqual(final, timeline._requested_times)
+        self.assertNotEqual(final, timeline.requested_times)
         self.assertTrue(original_time_1 not in final)
         self.assertTrue(real_time_1 in final)
         self.assertTrue(original_time_2 not in final)
