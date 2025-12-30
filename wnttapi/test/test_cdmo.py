@@ -158,8 +158,8 @@ class TestCdmo(TestCase):
         self.assertTrue(converter("13s", None) is None)
         self.assertTrue(converter("\n\t", None) is None)
 
-        max_meters = wells.mllw_feet_to_navd88_meters(cdmo.max_tide)
-        min_meters = wells.mllw_feet_to_navd88_meters(cdmo.min_tide)
+        max_meters = wells.mllw_feet_to_navd88_meters(cdmo._max_tide)
+        min_meters = wells.mllw_feet_to_navd88_meters(cdmo._min_tide)
         self.assertTrue(converter(f"{max_meters + 1.0}", None) is None)
         self.assertTrue(converter(f"{max_meters - 1.0}", None) is not None)
         self.assertTrue(converter(f"{min_meters - 1.0}", None) is None)

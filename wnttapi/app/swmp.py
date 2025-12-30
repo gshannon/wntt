@@ -29,14 +29,20 @@ def get_latest_conditions(station: Station) -> dict:
     cdmo_timeline = Timeline(cdmo_end_dt - timedelta(hours=4), cdmo_end_dt)
 
     # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
-    future_start_dt = tz.now(station.time_zone) + timedelta(minutes=1)
-    future_timeline = Timeline(future_start_dt, future_start_dt + timedelta(hours=15))
+    future_start_date = tz.now(station.time_zone).date()
+    future_end_date = future_start_date + timedelta(days=1)
 
     cdmo_calls = [
         APICall("wind", cdmo.get_recorded_wind_data, station, cdmo_timeline),
         APICall("tide", cdmo.get_recorded_tides, station, cdmo_timeline),
         APICall("temp", cdmo.get_recorded_temps, station, cdmo_timeline),
-        APICall("nexttide", astrotide.get_hilo_astro_tides, station, future_timeline),
+        APICall(
+            "nexttide",
+            astrotide.get_hilo_astro_tides,
+            station,
+            future_start_date,
+            future_end_date,
+        ),
     ]
 
     run_parallel(cdmo_calls)

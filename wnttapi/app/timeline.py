@@ -31,7 +31,7 @@ class Timeline:
 
     # The "now" param is for testing only!
     def __init__(self, start_dt: datetime, end_dt: datetime, now: datetime = None):
-        self._requested_times = []
+        self.requested_times = []
         self.start_dt = start_dt
         self.end_dt = end_dt
         self.time_zone = start_dt.tzinfo
@@ -48,7 +48,7 @@ class Timeline:
         utc_end = self.end_dt.astimezone(tz.utc)
         utc_cur = self.start_dt.astimezone(tz.utc)
         while utc_cur <= utc_end:
-            self._requested_times.append(utc_cur.astimezone(self.time_zone))
+            self.requested_times.append(utc_cur.astimezone(self.time_zone))
             utc_cur += timedelta(minutes=15)
 
         # For determining highs and lows for CDMO Level data, which is by definition only in the
@@ -85,14 +85,14 @@ class Timeline:
 
     def length_requested(self):
         """Return the number of times in the requested timeline."""
-        return len(self._requested_times)
+        return len(self.requested_times)
 
     def contains(self, dt: datetime) -> bool:
         """Returns whether the given datetime is within the boundries of the requested timeline."""
         return dt and self.start_dt <= dt <= self.end_dt
 
     def get_requested(self) -> list:
-        return self._requested_times
+        return self.requested_times
 
     def get_all_past(self, padded: bool) -> list:
         # Return all requested times, plus any padding if requested, that are in the past.
@@ -100,26 +100,26 @@ class Timeline:
         if self.start_dt >= self.now:
             return []
         if padded:
-            all = self._start_padding + self._requested_times + self._end_padding
+            all = self._start_padding + self.requested_times + self._end_padding
             return list(filter(lambda dt: dt < self.now, all))
-        return list(filter(lambda dt: dt < self.now, self._requested_times))
+        return list(filter(lambda dt: dt < self.now, self.requested_times))
 
     def get_min(self, padded: bool) -> datetime:
         # Return the earliest time, maybe including padding.
         # Padding is only needed for water level in GraphTimeline and its subclasses.
         return (
-            min(self._start_padding + self._requested_times)
+            min(self._start_padding + self.requested_times)
             if padded
-            else min(self._requested_times)
+            else min(self.requested_times)
         )
 
     def get_max(self, padded: bool) -> datetime:
         # Return the latest time, maybe including padding.
         # Padding is only needed for water level in GraphTimeline and its subclasses.
         return (
-            max(self._requested_times + self._end_padding)
+            max(self.requested_times + self._end_padding)
             if padded
-            else max(self._requested_times)
+            else max(self.requested_times)
         )
 
 
@@ -167,9 +167,9 @@ class GraphTimeline(Timeline):
         """
         if not self.contains(dt):
             raise ValueError(f"{dt} is outside of timeline boundaries")
-        if dt not in self._requested_times:
-            self._requested_times.append(dt)
-            self._requested_times.sort()
+        if dt not in self.requested_times:
+            self.requested_times.append(dt)
+            self.requested_times.sort()
 
     def build_plot(self, callback):
         """Build a list containing a combination of data values and None's, which correspond to
@@ -182,7 +182,7 @@ class GraphTimeline(Timeline):
         Returns:
             list: The resulting list of data values or None
         """
-        return list(map(callback, self._requested_times))
+        return list(map(callback, self.requested_times))
 
     def get_final_times(self, corrections: dict):
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
@@ -196,7 +196,7 @@ class GraphTimeline(Timeline):
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
         return [
-            corrections[dt] if dt in corrections else dt for dt in self._requested_times
+            corrections[dt] if dt in corrections else dt for dt in self.requested_times
         ]
 
 
