@@ -1,4 +1,5 @@
-import { daysBetween, formatDatetime, SyzygyInfo, Perihelion } from './utils'
+import { daysBetween, formatDatetime } from './utils'
+import { getSyzygyEvent } from './Syzygy'
 
 export const Overlap_pixel_shift = 15
 export const Overlap_x_millis = 1000 * 60 * 15 // 15 minutes
@@ -65,21 +66,21 @@ export const calculate_overlap_minutes = (timeline, screen_width) => {
 }
 
 // syzygy is an Array of objects with 2 fields. "dt": datetime string & "code" of event, like NM, FQ, etc.
-export const buildSyzygyAnnotations = (syzygy, timeline) => {
+export const buildSyzygyAnnotations = (apiData, timeline) => {
     const annotations = []
     const annotationInfo = [] // This will parallel the layout annotations, so we can popup help on each.
 
-    for (const item of syzygy) {
-        const info = SyzygyInfo[item.code]
+    for (const item of apiData) {
+        const event = getSyzygyEvent(item)
         const annotation = {
-            text: info.display,
-            font: { size: item.code == Perihelion ? 30 : 24 },
-            x: item.dt,
+            text: event.config.display,
+            font: { size: event.config.fontSize },
+            x: event.dt,
             yref: 'paper', // We'll put this at the top of the graph, sticking out a bit
             y: 1.05,
             showarrow: false,
             hoverlabel: { bgcolor: 'black', font: { color: 'white' } },
-            hovertext: `${info.name}: ${formatDatetime(
+            hovertext: `${event.config.name}: ${formatDatetime(
                 new Date(item.dt)
             )}<br>Click symbol for more.`,
         }

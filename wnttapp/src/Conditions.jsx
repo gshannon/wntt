@@ -1,7 +1,8 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
 import { Link } from './Links'
-import { apiErrorResponse, Months, SyzygyInfo } from './utils'
+import { apiErrorResponse, Months } from './utils'
+import { SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
 
@@ -77,13 +78,13 @@ export default function Conditions({ data, error }) {
 
             <div className='cond-label'>Moon Phase</div>
             <div className='cond-data'>
-                {data.phase ? `${SyzygyInfo[data.phase].name}` : noData}
+                {data.phase ? `${SyzygyConfig[data.phase].name}` : noData}
             </div>
             <div className='cond-time'>{data.phase_dt ? format_dt(data.phase_dt) : noData}</div>
 
             <div className='cond-label'>Next Phase</div>
             <div className='cond-data'>
-                {data.next_phase ? `${SyzygyInfo[data.next_phase].name}` : noData}
+                {data.next_phase ? `${SyzygyConfig[data.next_phase].name}` : noData}
             </div>
             <div className='cond-time'>
                 {data.next_phase_dt ? format_dt(data.next_phase_dt) : noData}

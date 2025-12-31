@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 
 from app import util
 from app.datasource import astrotide as astro
-from app.datasource import cdmo, moon
+from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
@@ -53,7 +53,7 @@ def get_graph_data(
         timeline = GraphTimeline(start_date, end_date, station.time_zone)
 
     # Get moon/sun tide data
-    syzygy_data = moon.get_syzygy_data(timeline)
+    syzygy_data = syzygy.get_syzygy_data(timeline)
     # Phase 1: Retrieve all data from external sources. All these dicts are dense -- they
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 

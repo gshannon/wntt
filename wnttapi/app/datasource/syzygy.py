@@ -65,24 +65,24 @@ def get_current_moon_phases(
     }
 
 
-def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> dict:
+def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> list:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
     sorted by datetime.
 
     Args:
-        timeline
+        timeline: we are looking for syzygy events within this timeline
 
     Returns:
-        [ { <datetime>: <code> }, ... ]  sorted by datetime
+        [ { code: <code>, dt: <datetime> }, ... ]  sorted by datetime
     """
     data = []
     phase_code, phase_dt = get_moon_phase(timeline, data_dir)
     if phase_dt:
         data.append({"code": phase_code, "dt": phase_dt})
-    perigee_dt = get_perigee(timeline)
+    perigee_dt = get_perigee(timeline, data_dir)
     if perigee_dt:
         data.append({"code": PERIGEE, "dt": perigee_dt})
-    perihelion_dt = get_perihelion(timeline)
+    perihelion_dt = get_perihelion(timeline, data_dir)
     if perihelion_dt:
         data.append({"code": PERIHELION, "dt": perihelion_dt})
 

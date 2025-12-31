@@ -3,7 +3,16 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import Modal from 'react-bootstrap/Modal'
 import { useContext } from 'react'
-import { Page, SyzygyInfo } from './utils'
+import { Page } from './utils'
+import {
+    FirstQuarter,
+    LastQuarter,
+    NewMoon,
+    FullMoon,
+    Perigee,
+    Perihelion,
+    SyzygyConfig,
+} from './Syzygy'
 import { AppContext } from './AppContext'
 
 export default function SyzygyPopup({ code, onClose }) {
@@ -14,7 +23,7 @@ export default function SyzygyPopup({ code, onClose }) {
                 className='py-2 syzygy-header text-white'
                 closeButton
                 closeVariant='white'>
-                {SyzygyInfo[code].name}
+                {SyzygyConfig[code].name}
             </Modal.Header>
             <Modal.Body className='px-4 py-4'>
                 <Container>
@@ -38,7 +47,7 @@ const Help = ({ gotoPage }) => {
 }
 
 const Content = ({ code, gotoPage }) => {
-    if (code === 'NM' || code === 'FM') {
+    if ([NewMoon, FullMoon].includes(code)) {
         return (
             <>
                 <p>
@@ -51,7 +60,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === 'FQ' || code === 'LQ') {
+    } else if ([FirstQuarter, LastQuarter].includes(code)) {
         return (
             <>
                 <p>
@@ -63,7 +72,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === 'PG') {
+    } else if (code === Perigee) {
         return (
             <>
                 <p>
@@ -76,7 +85,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === 'PH') {
+    } else if (code === Perihelion) {
         return (
             <>
                 <p>
