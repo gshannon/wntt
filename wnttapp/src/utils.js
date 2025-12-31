@@ -10,40 +10,8 @@ export const getSurgeStationUrl = (noaaStationId) => {
     return `https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=${noaaStationId}&datum=MLLW&show=0-0-1-1-0`
 }
 
-export const Months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-]
-
-// These must be kept in sync with the API
-export const NewMoon = 'NM'
-export const FirstQuarter = 'FQ'
-export const FullMoon = 'FM'
-export const LastQuarter = 'LQ'
-export const Perigee = 'PG'
-// export const Apogee = 'AG'
-export const Perihelion = 'PH'
-// export const Aphelion = 'AH'
-
-export const SyzygyInfo = {}
-SyzygyInfo[NewMoon] = { name: 'New Moon', display: '\u{1F31A}' } // 🌚
-SyzygyInfo[FirstQuarter] = { name: 'First Quarter', display: '\u{1F313}' } // 🌓
-SyzygyInfo[FullMoon] = { name: 'Full Moon', display: '\u{1F31D}' } // 🌝
-SyzygyInfo[LastQuarter] = { name: 'Last Quarter', display: '\u{1F317}' } // 🌗
-SyzygyInfo[Perigee] = { name: 'Perigee', display: '\u{1F535}' } //  🔵 \u{1F53B} 🔻 \u{1F53A} 🔺
-// SyzygyInfo[Apogee] = { name: 'Apogee', display: '?' }
-SyzygyInfo[Perihelion] = { name: 'Perihelion', display: '\u{2600}\u{fe0f}' } // ☀️
-// SyzygyInfo[Aphelion] = { name: 'Aphelion', display: '?' }
+// prettier-ignore
+export const Months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',  'Dec']
 
 // Format a Date object for display. Output: "Jan 3, 2026 04:08 PM"
 export const formatDatetime = (dt) => {

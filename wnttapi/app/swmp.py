@@ -3,7 +3,7 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from app import util
-from app.datasource import astrotide, cdmo, moon
+from app.datasource import astrotide, cdmo, syzygy
 from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo
 from app.station import Station
@@ -47,7 +47,7 @@ def get_latest_conditions(station: Station) -> dict:
 
     run_parallel(cdmo_calls)
 
-    moon_dict = moon.get_current_moon_phases(station.time_zone)
+    moon_dict = syzygy.get_current_moon_phases(station.time_zone)
 
     return extract_data(
         cdmo_calls[0].data,

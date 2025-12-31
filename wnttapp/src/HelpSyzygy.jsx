@@ -1,7 +1,7 @@
 import { ListGroup, Row } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 import { SimpleLink, Link } from './Links'
-import { SyzygyInfo } from './utils'
+import { SyzygyConfig } from './Syzygy'
 
 const GoBack = ({ gotoPage, returnPage }) => {
     return returnPage ? (
@@ -30,12 +30,13 @@ export default function HelpSyzygy({ gotoPage, returnPage }) {
                 <p>
                     Tides are caused by the gravitational forces produced by the relative positions
                     of the Sun, Moon and Earth, and the rotation of the Earth. Symbols representing
-                    key positions of the Sun ({SyzygyInfo.PH.display}) and Moon (
-                    {SyzygyInfo.NM.display} {SyzygyInfo.FQ.display} {SyzygyInfo.FM.display}
-                    {SyzygyInfo.LQ.display} {SyzygyInfo.PG.display}) are presented on the tide graph
-                    as a way to better understand the tide patterns. While there are other drivers
-                    of coastal flooding such as weather, local topography and sea level rise, in the
-                    lunar month, the highest tides usually occur around New Moon and Full Moon.
+                    key positions of the Sun ({SyzygyConfig.PH.display}) and Moon (
+                    {SyzygyConfig.NM.display} {SyzygyConfig.FQ.display} {SyzygyConfig.FM.display}
+                    {SyzygyConfig.LQ.display} {SyzygyConfig.PG.display}) are presented on the tide
+                    graph as a way to better understand the tide patterns. While there are other
+                    drivers of coastal flooding such as weather, local topography and sea level
+                    rise, in the lunar month, the highest tides usually occur around New Moon and
+                    Full Moon.
                 </p>
                 <p>
                     The gravitational pull of the Moon is the primary force, and as it moves along
