@@ -15,9 +15,9 @@ from rest_framework.exceptions import APIException
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
 
-wells = stn.get_station(
-    "welinwq", "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
-)
+cur_path = os.path.dirname(os.path.abspath(__file__))
+
+wells = stn.get_station("welinwq", f"{cur_path}/../../datamount/stations")
 test_data_path = os.path.dirname(os.path.abspath(__file__))
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)

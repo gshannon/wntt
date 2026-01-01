@@ -7,7 +7,8 @@ import app.tzutil as tz
 from app.timeline import GraphTimeline
 from django import setup
 
-csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/syzygy"
+cur_path = os.path.dirname(os.path.abspath(__file__))
+csv_location = f"{cur_path}/../../datamount/syzygy"
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()

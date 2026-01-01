@@ -10,7 +10,8 @@ services:
         restart: unless-stopped
         volumes:
             # For Hot Module Replacement (hmr), mount the src code.
-            - /Users/gshannon/dev/work/docker/wntt/wnttapp/src:/app/src
+            # Path is relative to the location of this yml file
+            - ../wnttapp/src:/app/src
 
     api:
         container_name: api-c
@@ -25,4 +26,5 @@ services:
             - 8000:8001
         restart: unless-stopped
         volumes:
-            - /Users/gshannon/dev/work/docker/wntt/datamount:/data
+            # Path is relative to the location of this yml file
+            - ../datamount:/data
