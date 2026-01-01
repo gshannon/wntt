@@ -12,8 +12,8 @@ from django import setup
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
 
-csv_location = "/Users/gshannon/dev/work/docker/wntt/datamount/stations"
-test_data_path = os.path.dirname(os.path.abspath(__file__))
+cur_path = os.path.dirname(os.path.abspath(__file__))
+csv_location = f"{cur_path}/../../datamount/stations"
 station = stn.get_station("welinwq", csv_location)
 
 
@@ -21,7 +21,7 @@ class TestAstro(TestCase):
     def test_parse_15m_predictions(self):
         """Able to parse 15m predictions from a json list of predictions from API call."""
         zone = tz.eastern
-        raw = util.read_file(f"{test_data_path}/data/astro-15m.json")
+        raw = util.read_file(f"{cur_path}/data/astro-15m.json")
         contents = astro.extract_json(raw)
         # file has entire day of data, but we'll extract just 1 hour
         start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
@@ -48,7 +48,7 @@ class TestAstro(TestCase):
 
     def test_api_error(self):
         """Able to handle API error."""
-        raw = util.read_file(f"{test_data_path}/data/astro-error.json")
+        raw = util.read_file(f"{cur_path}/data/astro-error.json")
         self.assertRaisesRegex(
             ValueError,
             "No Predictions data was found. Please make sure the Datum input is valid",
