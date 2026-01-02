@@ -6,7 +6,7 @@ import NavbarBrand from 'react-bootstrap/NavbarBrand'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 import Nav from 'react-bootstrap/Nav'
 import NavLink from 'react-bootstrap/NavLink'
-import { LargeBase, Page } from './utils'
+import { Page } from './utils'
 import Logo from './images/wr-logo.png'
 import Wave from './images/util/wave.png'
 import Hamburger from './images/util/hamburger.png'
@@ -96,12 +96,8 @@ export default function Top({ page, gotoPage }) {
                             <div className='tide-tracker'>Tide Tracker</div>
                         </NavbarBrand>
                     </Col>
-                    <Activity mode={window.innerWidth >= LargeBase ? 'visible' : 'hidden'}>
-                        {expandedMenu}
-                    </Activity>
-                    <Activity mode={window.innerWidth < LargeBase ? 'visible' : 'hidden'}>
-                        {pulldownMenu}
-                    </Activity>
+                    {expandedMenu}
+                    {pulldownMenu}
                     <Activity mode={ctx.special ? 'visible' : 'hidden'}>
                         <Col className='px-1'>
                             <Overlay
