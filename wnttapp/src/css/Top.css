@@ -83,6 +83,26 @@
     background: var(--med-blue);
 }
 
+/* Activate when less than large */
+@media (max-width: 991px) {
+    .hamburger-menu {
+        display: block;
+    }
+    .expanded-menu {
+        display: none;
+    }
+}
+
+/* Activate when large */
+@media (min-width: 992px) {
+    .hamburger-menu {
+        display: none;
+    }
+    .expanded-menu {
+        display: block;
+    }
+}
+
 /* Activate for very narrow, subset of xs */
 @media (max-width: 400px) {
     .conditions-img {
