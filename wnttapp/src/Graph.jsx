@@ -38,7 +38,7 @@ export default function Graph() {
 
     /////////////////
     // start date, end date, hilo mode, screen size
-    const stationDaily = storage.getStationDailyStorage(ctx.station?.id || null)
+    const stationDaily = storage.getDailyStorage(ctx.station?.id || null)
 
     // these strings drive what's in the screen start/end date text box controls.
     const [startDateStr, setStartDateStr] = useState(stationDaily.start ?? defaultStartStr)
@@ -61,7 +61,7 @@ export default function Graph() {
     })
 
     const onDateChange = useEffectEvent((start, end, hiloMode) => {
-        storage.setStationDailyStorage(ctx.station.id, {
+        storage.setDailyStorage(ctx.station.id, {
             start: start,
             end: end,
             hiloMode: hiloMode,
@@ -166,7 +166,7 @@ export default function Graph() {
             setEndDateStr(stringify(newEnd))
         }
         // This avoids an endless loop on rerender.
-        storage.setStationDailyStorage(ctx.station.id, {
+        storage.setDailyStorage(ctx.station.id, {
             ...stationDaily,
             screenBase: getScreenBase(),
         })
