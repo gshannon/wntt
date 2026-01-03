@@ -34,7 +34,7 @@ export default function App() {
     const [returnPage, setReturnPage] = useState(null)
 
     // Initial station will be the one stored, or null by default.
-    const main = storage.getGlobalPermanentStorage()
+    const main = storage.getMainStorage()
     // In multi-reserve mode, there is no default station.
     const [stationId, setStationId] = useState(
         main.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
@@ -59,6 +59,7 @@ export default function App() {
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
+        storage.convertOldStorage()
     }, [])
 
     useEffect(() => {
@@ -72,7 +73,7 @@ export default function App() {
                     setStation(Station.fromJson(stationId, res.data))
                     setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
                 })
-            storage.setGlobalPermanentStorage({
+            storage.setMainStorage({
                 stationId: stationId,
             })
         }
@@ -80,9 +81,9 @@ export default function App() {
 
     const onCustomChange = useEffectEvent((newElevation) => {
         if (newElevation !== undefined && station != null) {
-            const storedOptions = storage.getStationPermanentStorage(station.id)
+            const storedOptions = storage.getPermanentStorage(station.id)
             const options = station.stationOptionsWithDefaults(storedOptions)
-            storage.setStationPermanentStorage(station.id, {
+            storage.setPermanentStorage(station.id, {
                 ...options,
                 customElevationNav: newElevation,
             })

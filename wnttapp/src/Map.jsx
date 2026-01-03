@@ -26,7 +26,7 @@ const NoaaStationEmoji = '\u{1F53B}'
 export default function Map() {
     const ctx = useContext(AppContext)
 
-    const storedOptions = storage.getStationPermanentStorage(ctx.station.id)
+    const storedOptions = storage.getPermanentStorage(ctx.station.id)
     const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
 
     // This is used when user clicks on the map or finds by address, while we look up the elevation.
@@ -120,9 +120,9 @@ export default function Map() {
     // Keep the local storage of permanent station options in sync.
     // We own all the values except customElevationNav, so we leave that alone.
     const onValueChange = useEffectEvent(() => {
-        const storedOptions = storage.getStationPermanentStorage(ctx.station.id)
+        const storedOptions = storage.getPermanentStorage(ctx.station.id)
         const curOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
-        storage.setStationPermanentStorage(ctx.station.id, {
+        storage.setPermanentStorage(ctx.station.id, {
             ...curOptions,
             markerLocation,
             markerElevationNav,
