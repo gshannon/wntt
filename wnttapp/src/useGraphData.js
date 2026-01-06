@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import useClientIp from './useClientIp'
-import { buildCacheKey } from './utils'
+import * as Sentry from '@sentry/react'
 import axios from 'axios'
+import { buildCacheKey, NotAcceptable } from './utils'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
     const { data: clientIp } = useClientIp()
@@ -23,8 +24,9 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                 })
                 .then((res) => res.data)
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
-                        console.log(error)
+                    if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
+                        console.log(error.message)
+                        Sentry.captureException(error.message)
                     }
                     throw error
                 })

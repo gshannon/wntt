@@ -4,6 +4,8 @@ import './css/App.css'
 //import './bs-breakpoint.css'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import axios from 'axios'
+import * as Sentry from '@sentry/react'
 import Top from './Top'
 import Control from './Control'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -11,7 +13,7 @@ import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page } from './utils'
 import Station from './Station'
-import axios from 'axios'
+import { NotAcceptable } from './utils'
 
 const WELLS_STATION_ID = 'welinwq'
 const WELLS_BG_CLASS = 'wells-bg'
@@ -30,6 +32,7 @@ export default function App() {
     // Set up state.
     const isSpecial = import.meta.env.VITE_SPECIAL ?? '0' === '1'
     const [special, setSpecial] = useState(isSpecial) // temporary dev hack
+    const [fatalError, setFatalError] = useState(null)
     const [curPage, setCurPage] = useState(Page.Home)
     const [returnPage, setReturnPage] = useState(null)
 
@@ -72,12 +75,20 @@ export default function App() {
                 .then((res) => {
                     setStation(Station.fromJson(stationId, res.data))
                     setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
+                    storage.setMainStorage({
+                        stationId: stationId,
+                    })
                 })
-            storage.setMainStorage({
-                stationId: stationId,
-            })
+                .catch((error) => {
+                    if (error.status === NotAcceptable) {
+                        setFatalError(error)
+                    } else if (error.name !== 'CanceledError') {
+                        console.error(error.message)
+                        Sentry.captureException(error.message)
+                    }
+                })
         }
-    }, [stationId, bgClass])
+    }, [stationId])
 
     const onCustomChange = useEffectEvent((newElevation) => {
         if (newElevation !== undefined && station != null) {
@@ -104,6 +115,8 @@ export default function App() {
                     gotoPage: gotoPage,
                     customElevationNav: customElevationNav,
                     setCustomElevationNav: setCustomElevationNav,
+                    fatalError: fatalError,
+                    setFatalError: setFatalError,
                     special: special,
                     toggleSpecial: toggleSpecial,
                 }}>

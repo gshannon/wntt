@@ -5,6 +5,7 @@ import Map from './Map'
 import About from './About'
 import Help from './Help'
 import HelpSyzygy from './HelpSyzygy'
+import ErrorPage from './ErrorPage'
 import { Page } from './utils'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
@@ -12,13 +13,21 @@ import { AppContext } from './AppContext'
 export default function Control({ page, returnPage, gotoPage }) {
     const ctx = useContext(AppContext)
 
-    // Changing the "key" prop forces unmount/mount in cases where the station is changed
-    // while on that page.
+    if (ctx.fatalError) {
+        return (
+            <div className='app-box-bottom'>
+                <ErrorPage error={ctx.fatalError} />
+            </div>
+        )
+    }
+
+    // Changing the "key" prop forces remount in cases where the station is changed
+    // while on that page. Note that to get to Graph or Map, a station must be set in the context.
     return (
         <div className='app-box-bottom'>
             {page === Page.Home && <Home />}
-            {page === Page.Graph && <Graph key={ctx.station.id} />}
-            {page === Page.Map && <Map key={ctx.station.id} />}
+            {page === Page.Graph && <Graph key={ctx.station?.id} />}
+            {page === Page.Map && <Map key={ctx.station?.id} />}
             {page === Page.About && <About />}
             {page === Page.Glossary && <Glossary />}
             {page === Page.Tutorials && <Help />}

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { EpqsUrl, roundTo } from './utils'
+import * as Sentry from '@sentry/react'
 import axios from 'axios'
 
 export default function useElevationData(pendingMarkerLocation) {
@@ -25,7 +26,8 @@ export default function useElevationData(pendingMarkerLocation) {
                 })
                 .catch((error) => {
                     if (error.name !== 'CanceledError') {
-                        console.log(error)
+                        console.log(error.message)
+                        Sentry.captureException(error.message)
                     }
                     throw error
                 })

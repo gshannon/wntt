@@ -179,7 +179,7 @@ export const calcWindspeedTickInterval = (gusts) => {
     return interval
 }
 
-const NotAcceptable = 406 // version out of date
+export const NotAcceptable = 406 // version out of date
 
 // Use when a call to the API fails. Provides a standard message, and handles the
 // NotAcceptable code we're using when a call to the backend sees we need to update.
