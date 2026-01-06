@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import * as Sentry from '@sentry/react'
 import axios from 'axios'
+import { NotAcceptable } from './utils'
 
 export default function useAddressLookup(search) {
     const address = search + ' USA'
@@ -21,8 +23,9 @@ export default function useAddressLookup(search) {
                     return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }
                 })
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
-                        console.log(error)
+                    if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
+                        console.log(error.message)
+                        Sentry.captureException(error.message)
                     }
                     throw error
                 })

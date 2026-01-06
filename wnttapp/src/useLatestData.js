@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
 import useClientIp from './useClientIp'
+import axios from 'axios'
+import * as Sentry from '@sentry/react'
+import { NotAcceptable } from './utils'
 
 export default function useLatestData(station) {
     // We'll try to get the client IP address for logging, but it's not critical.
@@ -19,8 +21,9 @@ export default function useLatestData(station) {
                 })
                 .then((res) => res.data)
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
-                        console.log(error)
+                    if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
+                        console.log(error.message)
+                        Sentry.captureException(error.message)
                     }
                     throw error
                 })
