@@ -9,6 +9,7 @@ gunicorn==23.0.0
 idna==3.11
 packaging==25.0
 requests==2.32.5
+sentry-sdk==2.48.0
 sqlparse==0.5.3
 suds==1.2.0
 tzdata==2025.2

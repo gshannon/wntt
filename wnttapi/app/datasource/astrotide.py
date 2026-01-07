@@ -114,8 +114,8 @@ def hilo_json_to_dict(station: Station, hilo_json: list, tzone: ZoneInfo) -> dic
         # when we can. Remember hi/lo prediction dates are exact minutes, not aligned with 15-min intervals.
         val = pred["v"]
         if pred["type"] not in ["H", "L"]:
-            logger.error(f"Unknown type {pred['type']} for date {dts}")
-            raise APIException()
+            logger.error("Unknown type %s for date %s", pred["type"], dts)
+            continue
         hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
         # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
         future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
@@ -158,7 +158,7 @@ def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
     try:
         return extract_json(response.text)
     except ValueError as e:
-        logger.error(f"Error calling {url}: {e}")
+        logger.error("Url: %s %s", url, str(e))
         raise APIException(e)
 
 

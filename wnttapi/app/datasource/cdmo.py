@@ -125,10 +125,11 @@ def assemble_wind_data(speed_dict: dict, gust_dict: dict, dir_dict: dict) -> dic
     """
     wind_dict = {}
     # Assemble all the data.
+
     for dt, speed in speed_dict.items():
         # Make sure we have all values, or none.
         if dt not in gust_dict or dt not in dir_dict:
-            logger.error(f"Missing gust and/or direction wind data for {dt}")
+            logger.error("Missing gust and/or direction wind data for %s", dt)
             continue
         wind_dict[dt] = {
             "speed": speed,
@@ -218,13 +219,20 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
         # util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
     except Exception as e:
         logger.error(
-            f"Error getting {param} data {req_start_date} to {req_end_date} from CDMO",
-            exc_info=e,
+            "Error getting %s data %s to %s from CDMO: %s",
+            param,
+            req_start_date,
+            req_end_date,
+            str(e),
         )
         raise APIException()
 
     logger.debug(
-        f"CDMO {param} data retrieved for {station_id} for {req_start_date} to {req_end_date}"
+        "CDMO %s data retrieved for %s for %s to %s",
+        param,
+        station_id,
+        req_start_date,
+        req_end_date,
     )
     return xml
 
@@ -260,7 +268,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
         try:
             naive_utc = datetime.strptime(date_str, "%m/%d/%Y %H:%M")
         except ValueError:
-            logger.error(f"Skipping bad datetime '{date_str}'")
+            logger.error("Skipping bad datetime '%s'", date_str)
             continue
 
         # We need this local time. First promote to UTC.
@@ -282,7 +290,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
                 datadict[dt_in_local] = value
         except (TypeError, ValueError):
             none_or_bad += 1
-            logger.error(f"Invalid {param} for {naive_utc}: '{data_str}'")
+            logger.error("Invalid %s for %s: '%s'", param, naive_utc, data_str)
 
     timeline_len = len(past_timeline)
     failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
@@ -310,7 +318,7 @@ def text_error_check(non_text_node):
     try:
         message = non_text_node.text.strip()
         if len(message) > 0:
-            logger.error(f"Received unexpected message from CDMO: {message}")
+            logger.error("Received unexpected message from CDMO: %s", message)
             raise APIException(message)
     except AttributeError:
         pass
@@ -498,7 +506,11 @@ def clean_tide_data(in_dict: dict, station: Station) -> dict:
     cleaned = {dt: in_dict[dt] for idx, dt in enumerate(keys) if is_valid(idx, dt)}
     if reject_cnt > 0:
         logger.warning(
-            f"Rejected {reject_cnt} out of {len(in_dict)} with value navd88 0, first={first_bad_dt}"
+            "for %s, rejected %d out of %d with value nav 0, first=%s",
+            station.id,
+            reject_cnt,
+            len(in_dict),
+            first_bad_dt,
         )
     return cleaned
 
@@ -510,7 +522,7 @@ def handle_float(data_str: str, local_dt: datetime):
     try:
         value = float(data_str)
     except ValueError:
-        logger.error(f"Invalid float for {local_dt}: '{data_str}'")
+        logger.error("Invalid float for %s: '%s'", local_dt, data_str)
         value = None
     return value
 
@@ -535,11 +547,14 @@ def handle_navd88_level(
         if level < _min_tide or level > _max_tide:
             if read_level != _missing_data_value:  # CDMO missing data code
                 logger.error(
-                    f"level out of range for {local_dt}: {level} (raw: {read_level})"
+                    "level out of range for %s: %s (raw: %s)",
+                    local_dt,
+                    level,
+                    read_level,
                 )
             level = None
     except ValueError:
-        logger.error(f"invalid level: [{level_str}]")
+        logger.error("invalid level: [%s]", level_str)
         level = None
     return level
 
@@ -553,11 +568,14 @@ def handle_windspeed(wspd_str: str, local_dt: datetime):
         mph = util.meters_per_second_to_mph(read_wspd)
         if mph < 0 or mph > _max_wind_speed:
             logger.error(
-                f"wind speed out of range for {local_dt}: {read_wspd} mps converted to {mph} mph"
+                "wind speed out of range for %s: %s mps converted to %s mph",
+                local_dt,
+                read_wspd,
+                mph,
             )
             mph = None
     except ValueError:
-        logger.error(f"invalid windspeed: [{wspd_str}]")
+        logger.error("invalid windspeed: [%s]", wspd_str)
         mph = None
     return mph
 
@@ -569,7 +587,7 @@ def dump_all_codes():
         xml = soap_client.service.exportStationCodesXMLNew()
         util.dump_xml(xml, "/surgedata/StationCodes.xml")
     except Exception as e:
-        logger.error("Error getting all codes from CDMO", exc_info=e)
+        logger.error("Error getting all codes from CDMO: %s", str(e))
         raise APIException()
     root = ElTree.fromstring(xml)  # ElementTree.Element
     return root

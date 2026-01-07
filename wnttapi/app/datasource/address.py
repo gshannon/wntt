@@ -30,11 +30,11 @@ def get_location(search: str) -> dict:
     try:
         response = requests.get(url)
     except Exception as e:
-        logger.error(f"Url: {url} Response: {response}", exc_info=e)
-        raise APIException()
+        logger.error("Url: %s %s", url, str(e))
+        raise APIException(e)
 
     if response.status_code != 200:
-        logger.error(f"status {response.status_code} calling {url}")
+        logger.error("Url: %s Code: %d", url, response.status_code)
         raise APIException()
 
     try:
@@ -43,7 +43,6 @@ def get_location(search: str) -> dict:
         return (
             {"lat": jtext[0]["lat"], "lng": jtext[0]["lon"]} if len(jtext) > 0 else {}
         )
-
     except ValueError as e:
-        logger.error(f"Error calling {url}: {e}")
+        logger.error("json.loads error on response from %s %s", url, str(e))
         raise APIException(e)
