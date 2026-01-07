@@ -73,7 +73,7 @@ class AddressView(APIView):
 
 def log_request(name, data):
     cleaned = {k: v for k, v in data.items() if k != "signal"}
-    logger.info(f"{name}: {cleaned}")
+    logger.info("name=%s %s", name, cleaned)
 
 
 # Try to get a param from the request. If not there, raise
@@ -82,7 +82,7 @@ def log_request(name, data):
 def get_param(data, param):
     if param in data:
         return data[param]
-    logger.warning(f"Missing request parameter: {param}")
+    logger.warning("Missing request parameter %s", param)
     raise NotAcceptable()
 
 
@@ -93,6 +93,6 @@ def verify_version(data):
     ip = data.get("ip", "unknown")
     if caller_version != version:
         logger.warning(
-            f"Caller {ip}: version {caller_version} does not match {version}"
+            "Caller %s version %s does not match %s", ip, caller_version, version
         )
         raise NotAcceptable()

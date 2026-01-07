@@ -3,12 +3,11 @@ import logging
 import os
 import os.path
 from datetime import datetime, timedelta
-
 from zoneinfo import ZoneInfo
-from django.core.cache import cache
 
 from app import tzutil as tz
 from app.timeline import Timeline
+from django.core.cache import cache
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -108,7 +107,9 @@ def get_or_load_projected_surge_file(
     if file_mtime is None:
         if data is None:
             logger.error(
-                f"{filepath} is not found, and there is no cached surge data for {noaa_station_id}"
+                "%s is not found, and there is no cached surge data for %s",
+                filepath,
+                noaa_station_id,
             )
             return {}
         logger.error(f"Can't read {filepath} file, forced to use cache")
@@ -156,9 +157,9 @@ def get_or_load_projected_surge_file(
                             f"Found unexpected surge value [{surge}] for target {in_utc}"
                         )
                 except ValueError:
-                    logger.error(f"Invalid surge value: '{row[3]}'")
+                    logger.error("Invalid surge value: '%s'", row[3])
     except FileNotFoundError:
-        logger.error(f"Prediction file not found: {surge_file}")
+        logger.error("Prediction file not found: %s", surge_file)
         return {}
 
     # Cache the data. We'll use a TTL of 24 hours to handle cases where download fails a few times.

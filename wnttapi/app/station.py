@@ -117,12 +117,12 @@ def get_astro_high_tide_mllw(
     year_str = str(year)
 
     if station.noaa_station_id not in data:
-        logger.error(f"No annual highs found for station {station.noaa_station_id}")
+        logger.error("No annual highs found for station %s", station.noaa_station_id)
         return None
 
     if year_str not in data[station.noaa_station_id]:
         logger.error(
-            f"No annual high found for station {station.noaa_station_id} year {year}"
+            "No annual high found for station %s for %d", station.noaa_station_id, year
         )
         return None
 
@@ -169,5 +169,5 @@ def get_or_load_annual_highs(
         )
         return data
     except Exception as e:
-        logger.error(f"Error loading annual highs from {filepath}", exc_info=e)
+        logger.error("Error loading annual highs from %s: %s", filepath, str(e))
         return {}

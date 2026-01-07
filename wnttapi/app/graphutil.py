@@ -272,7 +272,7 @@ def build_future_surge_plots(
             else reg_preds_dict.get(dt, None)
         )
         if surge_val is not None and hilo_pred is None:
-            logger.error(f"Missing future prediction for {dt}")
+            logger.error("Missing future prediction for %s", dt)
             return None, None
         return surge_val, hilo_pred
 
@@ -413,12 +413,14 @@ def validate_dates(start: date, end: date):
         or end < earliest_date
     ):
         logger.error(
-            f"Invalid range: {start} - {end} is not between {earliest_date} - {latest_date}"
+            "Invalid range: %s - %s is not between %s - %s",
+            start,
+            end,
+            earliest_date,
+            latest_date,
         )
         # This will return a code 400
-        raise ValidationError(
-            detail="Invalid date range"
-        )  # Override the default 'Invalid input'
+        raise ValidationError(detail="Invalid date range")
     if end < start:
-        logger.error(f"end_date {end} cannot be earlier than start_date {start}")
+        logger.error("end_date %s cannot be earlier than start_date %s", end, start)
         raise ValidationError(detail="end date less than start date")

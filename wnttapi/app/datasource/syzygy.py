@@ -55,7 +55,7 @@ def get_current_moon_phases(
             break
 
     if current_phase_code is None or next_phase_code is None:
-        logger.error(f"Could not find current or next phase asof={asof}")
+        logger.error("Could not find current or next phase asof=%s", asof)
 
     return {
         "current": current_phase_code,
@@ -155,7 +155,7 @@ def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> l
                 dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
                 data.append(dt_utc)
             except Exception as e:
-                logger.error(f"Bad datetime in {filepath}: {row[0]}", exc_info=e)
+                logger.error("Bad datetime in %s, %s %s", filepath, row[0], str(e))
 
     logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
     cache.set(cache_key, data, timeout=None)  # unlimited timeout
@@ -180,11 +180,11 @@ def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
                 dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
                 type = row[1]
                 if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
-                    logger.error(f"Bad type in {filepath} for {dt_utc}: {type}")
-                    raise ValueError(f"Bad type: {type}")
+                    logger.error("Bad type in %s for %s: %s", filepath, dt_utc, type)
+                    raise ValueError("Bad type")
                 data[dt_utc] = type
             except Exception as e:
-                logger.error(f"Bad datetime in {filepath}: {row[0]}", exc_info=e)
+                logger.error("Bad datetime in %s: %s %s", filepath, row[0], str(e))
 
     logger.debug(f"Loaded {len(data)} moon phases from {filepath}")
     cache.set(cache_key, data, timeout=None)  # unlimited timeout
