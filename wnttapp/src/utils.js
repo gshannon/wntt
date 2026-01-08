@@ -1,5 +1,4 @@
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
-export const ClientIpUrl = 'https://api.ipify.org/?format=json'
 export const GeocodeUrl = 'https://geocode.maps.co'
 export const TidesCurrentsUrl = 'https://tidesandcurrents.noaa.gov/tide_predictions.html'
 export const TidesCurrentsStationUrl = 'https://tidesandcurrents.noaa.gov/stationhome.html?id='

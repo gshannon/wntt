@@ -2,8 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import * as Sentry from '@sentry/react'
 import axios from 'axios'
 import { NotAcceptable } from './utils'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 export default function useAddressLookup(search) {
+    const ctx = useContext(AppContext)
     const address = search + ' USA'
     const encoded = address.replace(/\s+/gi, '+')
     const subKey = search ?? 'X'
@@ -16,8 +19,9 @@ export default function useAddressLookup(search) {
             return await axios
                 .post(import.meta.env.VITE_API_ADDRESS_URL, {
                     signal,
+                    bid: ctx.browserId,
+                    version: import.meta.env.VITE_APP_VERSION,
                     search: encoded,
-                    app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {
                     return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }
