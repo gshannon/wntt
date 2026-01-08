@@ -46,6 +46,9 @@ export default function App() {
     const [bgClass, setBgClass] = useState(OTHER_BG_CLASS)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
 
+    const browserId = main.bid ?? crypto.randomUUID().substring(0, 13)
+    storage.setMainStorage({ ...main, bid: browserId })
+
     // temporary dev hack
     const toggleSpecial = () => {
         setSpecial(!special)
@@ -69,13 +72,16 @@ export default function App() {
         if (stationId) {
             axios
                 .post(import.meta.env.VITE_API_STATION_DATA_URL, {
-                    app_version: import.meta.env.VITE_APP_VERSION,
+                    bid: browserId,
+                    version: import.meta.env.VITE_APP_VERSION,
                     station_id: stationId,
                 })
                 .then((res) => {
                     setStation(Station.fromJson(stationId, res.data))
                     setBgClass(stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
+                    const main = storage.getMainStorage()
                     storage.setMainStorage({
+                        ...main,
                         stationId: stationId,
                     })
                 })
@@ -88,7 +94,7 @@ export default function App() {
                     }
                 })
         }
-    }, [stationId])
+    }, [stationId, browserId])
 
     const onCustomChange = useEffectEvent((newElevation) => {
         if (newElevation !== undefined && station != null) {
@@ -109,6 +115,7 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
             <AppContext.Provider
                 value={{
+                    browserId: browserId,
                     station: station,
                     setStationId: setStationId,
                     bgClass: bgClass,

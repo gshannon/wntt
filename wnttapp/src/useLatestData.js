@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import useClientIp from './useClientIp'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import { NotAcceptable } from './utils'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 export default function useLatestData(station) {
-    // We'll try to get the client IP address for logging, but it's not critical.
-    const { data: clientIp, error: ipError } = useClientIp()
+    const ctx = useContext(AppContext)
 
     const { isLoading, data, error } = useQuery({
         retry: false,
@@ -15,9 +15,9 @@ export default function useLatestData(station) {
             return await axios
                 .post(import.meta.env.VITE_API_LATEST_URL, {
                     signal,
-                    ip: clientIp ?? 'unknown',
+                    bid: ctx.browserId,
+                    version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
-                    app_version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => res.data)
                 .catch((error) => {
@@ -28,10 +28,6 @@ export default function useLatestData(station) {
                     throw error
                 })
         },
-        // This query will be run on the Home page, so we'd like to have the client ip for logging.
-        // Client query is fast but will generally not finish before this query is run, so we wait
-        // for it. However, an error getting the ip should not stop the app.
-        enabled: !!clientIp || !!ipError,
         staleTime: 30_000, // 30 seconds. Allows for frequent checks without hammering the server.
         gcTime: 30_000, // gcTime should be >= staleTime in case they move off the page and return
     })

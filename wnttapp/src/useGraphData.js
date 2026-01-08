@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import useClientIp from './useClientIp'
 import * as Sentry from '@sentry/react'
 import axios from 'axios'
 import { buildCacheKey, NotAcceptable } from './utils'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
-    const { data: clientIp } = useClientIp()
+    const ctx = useContext(AppContext)
 
     // The main graph data api call.
     return useQuery({
@@ -15,12 +16,12 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
             return await axios
                 .post(import.meta.env.VITE_API_GRAPH_URL, {
                     signal,
-                    start_date: startDate,
-                    end_date: endDate,
-                    hilo_mode: hiloMode,
+                    bid: ctx.browserId,
+                    version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
-                    ip: clientIp ?? 'unknown',
-                    app_version: import.meta.env.VITE_APP_VERSION,
+                    start: startDate,
+                    end: endDate,
+                    hilo: hiloMode,
                 })
                 .then((res) => res.data)
                 .catch((error) => {

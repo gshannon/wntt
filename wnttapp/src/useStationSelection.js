@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
-import useClientIp from './useClientIp'
 import { NotAcceptable } from './utils'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 
 // Fetch station selection data from the server, and keep it cached for the app lifetime.
 export default function useStationSelection(enabled) {
-    const { data: clientIp } = useClientIp()
+    const ctx = useContext(AppContext)
     return useQuery({
         enabled: enabled,
         queryKey: ['station-selection'],
@@ -17,8 +18,8 @@ export default function useStationSelection(enabled) {
             return await axios
                 .post(import.meta.env.VITE_API_STATION_SELECTION_URL, {
                     signal,
-                    ip: clientIp ?? 'unknown',
-                    app_version: import.meta.env.VITE_APP_VERSION,
+                    bid: ctx.browserId,
+                    version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {
                     return res.data
