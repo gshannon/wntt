@@ -12,10 +12,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+# release/build version
 ARG VERSION=?
 ENV APP_VERSION=$VERSION
+# development, staging or production
 ARG ENVIRONMENT=?
 ENV ENVIRONMENT=$ENVIRONMENT
+# enable Sentry
+ENV ENABLE_SENTRY=1
 
 WORKDIR /wnttapi
 

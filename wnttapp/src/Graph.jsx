@@ -46,7 +46,7 @@ export default function Graph() {
     const [isHiloMode, setIsHiloMode] = useState(stationDaily.hiloMode ?? isSmallScreen())
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
-    const [, forceUpdate] = useReducer((x) => x + 1, 0)
+    const [, forceRerender] = useReducer((x) => x + 1, 0)
 
     const [startCtl, setStartCtl] = useState({
         min: ctx.station.minGraphDate(),
@@ -76,14 +76,16 @@ export default function Graph() {
     const queryClient = useQueryClient()
     const daysShown = daysBetween(startDateStr, endDateStr) + 1
 
-    const setDateRangeStrings = (newStartDateStr, newEndDateStr) => {
+    const setDateRangeStrings = (newStartDateStr, newEndDateStr, forceRefresh) => {
         setStartDateStr(newStartDateStr)
 
         setEndDateStr(newEndDateStr)
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
-        const key = buildCacheKey(ctx.station.id, newStartDateStr, newEndDateStr, isHiloMode)
-        queryClient.removeQueries({ queryKey: key, exact: true })
-        forceUpdate() // If the dates have changed, this isn't necessary, but it's harmless.
+        if (forceRefresh) {
+            const key = buildCacheKey(ctx.station.id, newStartDateStr, newEndDateStr, isHiloMode)
+            queryClient.removeQueries({ queryKey: key, exact: true })
+        }
+        forceRerender() // If the dates have changed, this isn't necessary, but it's harmless.
     }
 
     const toggleHiloMode = () => {
@@ -103,7 +105,7 @@ export default function Graph() {
             end: newEnd,
             max: limitDate(addDays(newStart, getMaxNumDays() - 1), ctx.station),
         })
-        setDateRangeStrings(stringify(newStart), stringify(newEnd))
+        setDateRangeStrings(stringify(newStart), stringify(newEnd), false)
     }
 
     // Reset the date controls to use the default range, as if entering app for the first time with no storage values.
@@ -119,7 +121,7 @@ export default function Graph() {
             end: new Date(defaultEndStr),
             max: addDays(new Date(defaultStartStr), getMaxNumDays() - 1),
         })
-        setDateRangeStrings(defaultStartStr, defaultEndStr)
+        setDateRangeStrings(defaultStartStr, defaultEndStr, false)
     }
 
     const handlePreviousClick = (e) => {
