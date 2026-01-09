@@ -47,6 +47,7 @@ export default function Map() {
         setMarkerLocation(pendingMarkerLocation)
         setPendingMarkerLocation(null)
         setMarkerElevationNav(data)
+        setMapCenter(pendingMarkerLocation) // recenter on looked up location
     }
 
     const addtoGraph = () => {
