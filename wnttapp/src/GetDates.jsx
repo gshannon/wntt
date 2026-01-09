@@ -50,7 +50,7 @@ export default function GetDates({
 
         if (clickedButton.name === 'refresh') {
             // This will force a re-render even if the dates are the same as before
-            setDateRangeStrings(stringify(startCtl.start), stringify(endCtl.end))
+            setDateRangeStrings(stringify(startCtl.start), stringify(endCtl.end), true)
         } else if (clickedButton.name === 'reset') {
             resetDateControls() // Let parent reset the date controls, and the appContext.
         }

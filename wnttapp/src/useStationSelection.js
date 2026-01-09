@@ -32,6 +32,7 @@ export default function useStationSelection(enabled) {
                     throw error
                 })
         },
-        staleTime: 'static',
+        staleTime: Infinity,
+        gcTime: Infinity,
     })
 }

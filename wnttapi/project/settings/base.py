@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 
 import logging
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -117,18 +115,22 @@ CACHES = {
     }
 }
 
-sentry_sdk.init(
-    dsn="https://326ad2d24211542ad336ef9266be0038@o4510657968734208.ingest.us.sentry.io/4510669339951104",
-    # Add data like request headers and IP for users,
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    environment=os.getenv("ENVIRONMENT"),
-    release=os.getenv("APP_VERSION"),
-    send_default_pii=True,
-    # traces_sample_rate=0.1,
-    enable_logs=True,
-    integrations=[
-        # Only send WARNING (and higher) logs to Sentry logs,
-        # even if the logger is set to a lower level.
-        LoggingIntegration(sentry_logs_level=logging.WARNING),
-    ],
-)
+# This lets us turn off Sentry for unit tests
+if os.environ.get("ENABLE_SENTRY", "0") == "1":
+    import sentry_sdk
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    sentry_sdk.init(
+        dsn="https://326ad2d24211542ad336ef9266be0038@o4510657968734208.ingest.us.sentry.io/4510669339951104",
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        environment=os.getenv("ENVIRONMENT"),
+        release=os.getenv("APP_VERSION"),
+        # traces_sample_rate=0.1,
+        enable_logs=True,
+        integrations=[
+            # Only send WARNING (and higher) logs to Sentry logs,
+            # even if the logger is set to a lower level.
+            LoggingIntegration(sentry_logs_level=logging.WARNING),
+        ],
+    )
