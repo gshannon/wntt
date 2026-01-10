@@ -6,7 +6,13 @@ from datetime import datetime, timedelta
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
-pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
+
+
+# This custom exception indicates a programming error.
+class InternalError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 
 def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:
@@ -109,6 +115,7 @@ def dump_xml(xml, filename=None):
 
 
 def pply(fig, data=False):
+    pp = pprint.PrettyPrinter(indent=2)  # initialises a pretty printer
     if not data:
         # use copy to make sure we don't break the original figure dictionary
         po = copy.deepcopy(fig)

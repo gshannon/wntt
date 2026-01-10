@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from app import util
 from django.core.cache import cache
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/stations"
@@ -99,14 +100,14 @@ def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:
         station_id (str): station id, e.g. 'welinwq'
 
     Raises:
-        RuntimeError: if station id not found
+        InternalError: if station id not found
 
     Returns:
         dict: station data object
     """
     data = get_or_load_stations(data_dir)
     if station_id not in data:
-        raise RuntimeError(f"Station ID {station_id} not found")
+        raise util.InternalError(f"Station ID {station_id} not found")
     return data[station_id]
 
 
@@ -169,5 +170,6 @@ def get_or_load_annual_highs(
         )
         return data
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         logger.error("Error loading annual highs from %s: %s", filepath, str(e))
         return {}

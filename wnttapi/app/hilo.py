@@ -2,14 +2,12 @@ import logging
 from abc import ABC
 from datetime import datetime
 from enum import Enum
+from app import util
 
 logger = logging.getLogger(__name__)
 
 """
 A utility class for representing High and Low Tide events.
-
-Raises:
-    ValueError: _description_
 """
 
 
@@ -24,7 +22,7 @@ class HighOrLow(ABC):
     def __init__(self, value: float, hilo: Hilo):
         self.value = value
         if not isinstance(hilo, Hilo):
-            raise ValueError("invalid hilo")
+            raise util.InternalError(f"invalid hilo type: {type(hilo)}")
         self.hilo = hilo
 
 

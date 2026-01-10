@@ -50,7 +50,7 @@ class TestAstro(TestCase):
         """Able to handle API error."""
         raw = util.read_file(f"{cur_path}/data/astro-error.json")
         self.assertRaisesRegex(
-            ValueError,
+            Exception,
             "No Predictions data was found. Please make sure the Datum input is valid",
             astro.extract_json,
             raw,

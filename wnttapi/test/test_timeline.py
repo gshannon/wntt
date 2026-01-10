@@ -3,6 +3,7 @@ from unittest import TestCase
 
 import app.graphutil as gu
 import app.tzutil as tz
+import app.util as util
 from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
 spring_date = date(2024, 3, 10)
@@ -15,17 +16,17 @@ class TestGraphTimeline(TestCase):
 
         start_dt = datetime(2025, 5, 2, 8, 0, 0, tzinfo=tz.central)
         end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.central)
-        with self.assertRaisesRegex(ValueError, "greater than start"):
+        with self.assertRaisesRegex(util.InternalError, "greater than start"):
             Timeline(start_dt, end_dt)
 
         start_dt = datetime(2025, 5, 1, 8, 0, 0, tzinfo=tz.eastern)
         end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.pacific)
-        with self.assertRaisesRegex(ValueError, "zone mismatch"):
+        with self.assertRaisesRegex(util.InternalError, "zone mismatch"):
             Timeline(start_dt, end_dt)
 
         start_dt = datetime(2025, 5, 1, 8, 0, 0)
         end_dt = datetime(2025, 5, 1, 11, 0, 0, tzinfo=tz.pacific)
-        with self.assertRaisesRegex(ValueError, "cannot be naive"):
+        with self.assertRaisesRegex(util.InternalError, "cannot be naive"):
             Timeline(start_dt, end_dt)
 
     def test_handles_dst(self):
@@ -157,9 +158,9 @@ class TestHiloTimeline(TestCase):
         end_date = date(2025, 9, 1)
         timeline = HiloTimeline(start_date, end_date, tz.central)
 
-        with self.assertRaisesRegex(ValueError, "must be called first"):
+        with self.assertRaisesRegex(util.InternalError, "must be called first"):
             timeline.build_plot(lambda _: None)
-        with self.assertRaisesRegex(ValueError, "must be called first"):
+        with self.assertRaisesRegex(util.InternalError, "must be called first"):
             timeline.get_final_times({})
 
     def test_build_wind_plots_hilo(self):

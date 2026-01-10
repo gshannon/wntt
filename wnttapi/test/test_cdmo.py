@@ -10,7 +10,6 @@ import app.util as util
 from app.hilo import ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, Timeline
 from django import setup
-from rest_framework.exceptions import APIException
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
@@ -147,7 +146,7 @@ class TestCdmo(TestCase):
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
-        with self.assertRaisesRegex(APIException, "^Invalid ip"):
+        with self.assertRaisesRegex(Exception, "Invalid ip"):
             cdmo.parse_cdmo_xml(timeline, xml, "anyparam", None)
 
     def test_handle_navd88(self):

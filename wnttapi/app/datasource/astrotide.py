@@ -8,7 +8,6 @@ from app import util
 from app.hilo import Hilo, PredictedHighOrLow
 from app.station import Station
 from app.timeline import Timeline
-from rest_framework.exceptions import APIException
 
 logger = logging.getLogger(__name__)
 
@@ -150,16 +149,17 @@ def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
     try:
         response = requests.get(url)
     except Exception as e:
-        raise APIException(f"Url: {url}", e)
+        e.add_note(f"Url: {url}")
+        raise e
 
     if response.status_code != 200:
-        raise APIException(f"status {response.status_code} calling {url}")
+        raise Exception(f"status {response.status_code} calling {url}")
 
     try:
         return extract_json(response.text)
     except ValueError as e:
-        logger.error("Url: %s %s", url, str(e))
-        raise APIException(e)
+        e.add_note("Url: %s", url)
+        raise e
 
 
 def extract_json(raw) -> list:
@@ -169,6 +169,6 @@ def extract_json(raw) -> list:
     # This is what content may look like if it's an invalid request.
     #  {"error": {"message":"No Predictions data was found. Please make sure the Datum input is valid."}}
     if "error" in json_dict:
-        raise ValueError(json_dict)
+        raise Exception(f"found in returned json: {json_dict['error']}")
 
     return json_dict["predictions"]

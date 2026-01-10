@@ -181,12 +181,12 @@ def get_cdmo(timeline: Timeline, station_id: str, param: str, converter) -> dict
 
     """
     if len(station_id or "") == 0:
-        raise ValueError("station_id is required")
+        raise util.InternalError("station_id is required")
 
     # validate that timeline datetimes are on 15-minute intervals and seconds=0
     if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
         # CDMO data is always on 15-minute intervals.
-        raise ValueError("datetimes must be on 15-minute intervals")
+        raise util.InternalError("datetimes must be on 15-minute intervals")
 
     xml = get_cdmo_xml(timeline, station_id, param)
     data = parse_cdmo_xml(timeline, xml, param, converter)
@@ -217,15 +217,16 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
             station_id, req_start_date, req_end_date, param
         )
         # util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
-    except Exception as e:
+    except Exception as exc:
         logger.error(
             "Error getting %s data %s to %s from CDMO: %s",
             param,
             req_start_date,
             req_end_date,
-            str(e),
+            str(exc),
         )
-        raise APIException()
+        exc.add_note("param: %s %s to %s" % (param, req_start_date, req_end_date))
+        raise exc
 
     logger.debug(
         "CDMO %s data retrieved for %s for %s to %s",
@@ -259,7 +260,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
     )
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
-    text_error_check(root.find(".//data"))
+    text_error_check(root)
     records = ignored = none_or_bad = 0
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
@@ -311,17 +312,18 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
     return dict(reversed(list(datadict.items())))
 
 
-def text_error_check(non_text_node):
+def text_error_check(rootElement):
     """If a node is not supposed to have text, return that text, else None
     This is how CDMO returns an error e.g. Invalid IP address.
     """
+    data_node = rootElement.find(".//data")
     try:
-        message = non_text_node.text.strip()
+        message = data_node.text.strip()
         if len(message) > 0:
             logger.error("Received unexpected message from CDMO: %s", message)
-            raise APIException(message)
+            raise Exception(f"CDMO returned: {message}")
     except AttributeError:
-        pass
+        pass  # Not every payload has text in their data node
 
 
 def compute_cdmo_request_dates(
@@ -578,16 +580,3 @@ def handle_windspeed(wspd_str: str, local_dt: datetime):
         logger.error("invalid windspeed: [%s]", wspd_str)
         mph = None
     return mph
-
-
-def dump_all_codes():
-    """Utility function to dump all NERRS metadata to a file."""
-    soap_client = Client(_cdmo_wsdl, timeout=90, retxml=True)
-    try:
-        xml = soap_client.service.exportStationCodesXMLNew()
-        util.dump_xml(xml, "/surgedata/StationCodes.xml")
-    except Exception as e:
-        logger.error("Error getting all codes from CDMO: %s", str(e))
-        raise APIException()
-    root = ElTree.fromstring(xml)  # ElementTree.Element
-    return root

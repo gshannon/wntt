@@ -26,7 +26,7 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                 .then((res) => res.data)
                 .catch((error) => {
                     if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
-                        console.log(error.message)
+                        console.log(error.message, error.response?.data?.detail)
                         Sentry.captureException(error.message)
                     }
                     throw error
