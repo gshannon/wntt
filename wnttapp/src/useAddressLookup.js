@@ -28,7 +28,7 @@ export default function useAddressLookup(search) {
                 })
                 .catch((error) => {
                     if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
-                        console.log(error.message)
+                        console.log(error.message, error.response?.data?.detail)
                         Sentry.captureException(error.message)
                     }
                     throw error

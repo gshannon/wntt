@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
+from app import util
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
@@ -37,11 +38,13 @@ class Timeline:
         self.time_zone = start_dt.tzinfo
         self.now = tz.now(self.time_zone) if now is None else now
         if self.start_dt.tzinfo is None or self.end_dt.tzinfo is None:
-            raise ValueError("datetimes cannot be naive")
+            raise util.InternalError("datetimes cannot be naive")
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
-            raise ValueError(f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}")
+            raise util.InternalError(
+                f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}"
+            )
         if self.end_dt <= self.start_dt:
-            raise ValueError("end must be greater than start")
+            raise util.InternalError("end must be greater than start")
 
         # timedelta is broken when crossing DST boundaries in tz's which honor DST, so
         # we'll do all datetime arithmetic in UTC in modern Python.
@@ -163,10 +166,10 @@ class GraphTimeline(Timeline):
             dt (datetime): time to add
 
         Raises:
-            ValueError: if the time is out of bounds.
+            InternalError: if the time is out of bounds.
         """
         if not self.contains(dt):
-            raise ValueError(f"{dt} is outside of timeline boundaries")
+            raise util.InternalError(f"{dt} is outside of timeline boundaries")
         if dt not in self.requested_times:
             self.requested_times.append(dt)
             self.requested_times.sort()
@@ -237,13 +240,13 @@ class HiloTimeline(GraphTimeline):
               observed or predicted.
 
         Raises:
-            ValueError: if any times are outside the timeline start/end times.
+            util.InternalError: if any times are outside the timeline start/end times.
         """
         # We'll need to know if the start and end times have data, to determine whether we include them
         # in the final plot.
 
         if hilo_dts is None:
-            raise ValueError("hilo_dts cannot be null")
+            raise util.InternalError("hilo_dts cannot be None")
 
         self._start_has_data = self.start_dt in hilo_dts
         self._end_has_data = self.end_dt in hilo_dts
@@ -267,13 +270,13 @@ class HiloTimeline(GraphTimeline):
               the matching data, or None as appropriate.
 
         Raises:
-            ValueError: If register_hilo_times has not been called.
+            InternalError: If register_hilo_times has not been called.
 
         Returns:
             list: The resulting list of data values or None
         """
         if self._hilo_timeline is None:
-            raise ValueError("register_hilo_times must be called first")
+            raise util.InternalError("register_hilo_times must be called first")
 
         # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
         # Note we only callback for the start and end times if they have data.
@@ -292,13 +295,13 @@ class HiloTimeline(GraphTimeline):
             the value is the correct datetime. It may be empty.
 
         Raises:
-            ValueError: If register_hilo_times has not been called.
+            InternalError: If register_hilo_times has not been called.
 
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
         if self._hilo_timeline is None:
-            raise ValueError("register_hilo_times must be called first")
+            raise util.InternalError("register_hilo_times must be called first")
 
         return [
             corrections[dt] if dt in corrections else dt for dt in self._hilo_timeline

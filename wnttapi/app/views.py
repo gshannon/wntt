@@ -1,9 +1,10 @@
 import logging
 import os
 from datetime import datetime
+import sentry_sdk
 
 from app.datasource import address
-from rest_framework.exceptions import NotAcceptable
+from rest_framework.exceptions import NotAcceptable, APIException
 from rest_framework.views import APIView, Response
 
 from . import graphutil as gr
@@ -22,9 +23,14 @@ class StationSelectionView(APIView):
         try:
             stations = stn.get_station_selection_data()
             return Response(data=stations)
-        except Exception as e:
-            log_exception(self.__class__.__name__, type(e).__name__, str(e), params)
-            raise e
+        except NotAcceptable as exc:
+            logger.warning(f"NotAcceptable {params}")
+            raise exc
+        except Exception as exc:
+            exc.add_note(str(params))
+            logger.exception(str(exc))
+            sentry_sdk.capture_exception(exc)
+            raise APIException(str(exc))
 
 
 class StationDataView(APIView):
@@ -36,9 +42,14 @@ class StationDataView(APIView):
         try:
             station_data = stn.get_station_data(station_id)
             return Response(data=station_data)
-        except Exception as e:
-            log_exception(self.__class__.__name__, type(e).__name__, str(e), params)
-            raise e
+        except NotAcceptable as exc:
+            logger.warning(f"NotAcceptable {params}")
+            raise exc
+        except Exception as exc:
+            exc.add_note(str(params))
+            logger.exception(str(exc))
+            sentry_sdk.capture_exception(exc)
+            raise APIException(str(exc))
 
 
 class LatestInfoView(APIView):
@@ -52,9 +63,14 @@ class LatestInfoView(APIView):
         try:
             info = swmp.get_latest_conditions(station)
             return Response(data=info)
-        except Exception as e:
-            log_exception(self.__class__.__name__, type(e).__name__, str(e), params)
-            raise e
+        except NotAcceptable as exc:
+            logger.warning(f"NotAcceptable {params}")
+            raise exc
+        except Exception as exc:
+            exc.add_note(str(params))
+            logger.exception(str(exc))
+            sentry_sdk.capture_exception(exc)
+            raise APIException(str(exc))
 
 
 class CreateGraphView(APIView):
@@ -74,9 +90,14 @@ class CreateGraphView(APIView):
             # Gather all data needed for the graph and pass it back here
             graph_data = gr.get_graph_data(start_date, end_date, hilo_mode, station)
             return Response(data=graph_data)
-        except Exception as e:
-            log_exception(self.__class__.__name__, type(e).__name__, str(e), params)
-            raise e
+        except NotAcceptable as exc:
+            logger.warning(f"NotAcceptable {params}")
+            raise exc
+        except Exception as exc:
+            exc.add_note(str(params))
+            logger.exception(str(exc))
+            sentry_sdk.capture_exception(exc)
+            raise APIException(str(exc))
 
 
 class AddressView(APIView):
@@ -88,13 +109,14 @@ class AddressView(APIView):
         try:
             latlng = address.get_location(search)
             return Response(data=latlng)
-        except Exception as e:
-            log_exception(self.__class__.__name__, type(e).__name__, str(e), params)
-            raise e
-
-
-def log_exception(method, ename, message, params):
-    logger.error("in %s, %s (%s) %s", method, ename, message, params)
+        except NotAcceptable as exc:
+            logger.warning(f"NotAcceptable {params}")
+            raise exc
+        except Exception as exc:
+            exc.add_note(str(params))
+            logger.exception(str(exc))
+            sentry_sdk.capture_exception(exc)
+            raise APIException(str(exc))
 
 
 def clean_params(data):

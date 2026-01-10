@@ -8,7 +8,6 @@ from app.datasource import surge as sg
 from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
-from rest_framework.exceptions import ValidationError
 
 from . import station as stn
 
@@ -167,9 +166,6 @@ def get_cdmo_data(timeline: GraphTimeline, station: stn.Station) -> tuple[dict, 
         timeline (GraphTimeline)
         station (Station)
 
-    Raises:
-        APIException: if a call fails
-
     Returns:
         tuple[dict, dict]: tide_dict, wind_dict.  Both will be empty if timeline is all in future.
     """
@@ -292,8 +288,9 @@ def build_future_surge_plots(
     future_storm_tide_plot = timeline.build_plot(handle_storm_surge)
 
     if len(future_surge_plot) != len(future_storm_tide_plot):
-        logger.error(f"{len(future_surge_plot)} != {len(future_storm_tide_plot)}")
-        raise ValidationError()
+        msg = f"{len(future_surge_plot)} != {len(future_storm_tide_plot)}"
+        logger.error(msg)
+        raise util.InternalError(msg)
 
     return future_surge_plot, future_storm_tide_plot
 
@@ -369,7 +366,7 @@ def build_wind_plots(
     def check_item(dt, key):
         if dt.minute in minutes and dt in wind_dict:
             if key not in wind_dict[dt]:
-                raise ValueError(f"Missing {key} in wind data for {dt}")
+                raise util.InternalError(f"Missing {key} in wind data for {dt}")
             return wind_dict[dt].get(key)
         else:
             return None
@@ -412,15 +409,10 @@ def validate_dates(start: date, end: date):
         or end > latest_date
         or end < earliest_date
     ):
-        logger.error(
-            "Invalid range: %s - %s is not between %s - %s",
-            start,
-            end,
-            earliest_date,
-            latest_date,
+        raise util.InternalError(
+            "%s - %s is not between %s - %s" % (start, end, earliest_date, latest_date)
         )
-        # This will return a code 400
-        raise ValidationError(detail="Invalid date range")
     if end < start:
-        logger.error("end_date %s cannot be earlier than start_date %s", end, start)
-        raise ValidationError(detail="end date less than start date")
+        raise util.InternalError(
+            "end_date %s cannot be earlier than start_date %s" % (end, start)
+        )

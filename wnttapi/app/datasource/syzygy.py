@@ -4,6 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.timeline import GraphTimeline
+from app import util
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
@@ -181,7 +182,7 @@ def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
                 type = row[1]
                 if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
                     logger.error("Bad type in %s for %s: %s", filepath, dt_utc, type)
-                    raise ValueError("Bad type")
+                    raise util.InternalError(f"Bad type: {type}")
                 data[dt_utc] = type
             except Exception as e:
                 logger.error("Bad datetime in %s: %s %s", filepath, row[0], str(e))

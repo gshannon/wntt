@@ -26,7 +26,7 @@ export default function useElevationData(pendingMarkerLocation) {
                 })
                 .catch((error) => {
                     if (error.name !== 'CanceledError') {
-                        console.log(error.message)
+                        console.log(error.message, error.response?.data?.detail)
                         Sentry.captureException(error.message)
                     }
                     throw error

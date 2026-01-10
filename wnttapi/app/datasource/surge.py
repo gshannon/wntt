@@ -86,9 +86,6 @@ def get_or_load_projected_surge_file(
         timezone (ZoneInfo): Timezone to convert to.
         surge_file_dir (str, optional): for testing, use to override standard surge file location.
 
-    Raises:
-        APIException: if file cannot be opened
-
     Returns:
         dict: key = datetime, value = surge value in MLLW feet
     """
