@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from app.timeline import GraphTimeline
 from app import util
 from django.core.cache import cache
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/syzygy"  # default location of data files
@@ -56,7 +57,9 @@ def get_current_moon_phases(
             break
 
     if current_phase_code is None or next_phase_code is None:
-        logger.error("Could not find current or next phase asof=%s", asof)
+        msg = f"Could not find current or next phase asof={asof}"
+        logger.error(msg)
+        sentry_sdk.capture_message(msg)
 
     return {
         "current": current_phase_code,
@@ -149,18 +152,27 @@ def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> l
     data = []
     filepath = f"{data_dir}/{type}.csv"
 
-    with open(filepath, newline="") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            try:
-                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
-                data.append(dt_utc)
-            except Exception as e:
-                logger.error("Bad datetime in %s, %s %s", filepath, row[0], str(e))
+    try:
+        with open(filepath, newline="") as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                try:
+                    dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(
+                        tzinfo=utc
+                    )
+                    data.append(dt_utc)
+                except Exception as exc:
+                    exc.add_note("Bad datetime in %s, [%s]" % (filepath, row[0]))
+                    raise exc
 
-    logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
-    cache.set(cache_key, data, timeout=None)  # unlimited timeout
-    return data
+        logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
+        cache.set(cache_key, data, timeout=None)  # unlimited timeout
+        return data
+
+    except Exception as exc:
+        msg = f"Processing {filepath}"
+        exc.add_note(msg)
+        raise exc
 
 
 def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
@@ -174,19 +186,30 @@ def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
     data = {}
     filepath = f"{data_dir}/phases.csv"
 
-    with open(filepath, newline="") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            try:
-                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
-                type = row[1]
-                if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
-                    logger.error("Bad type in %s for %s: %s", filepath, dt_utc, type)
-                    raise util.InternalError(f"Bad type: {type}")
-                data[dt_utc] = type
-            except Exception as e:
-                logger.error("Bad datetime in %s: %s %s", filepath, row[0], str(e))
+    try:
+        with open(filepath, newline="") as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                try:
+                    dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(
+                        tzinfo=utc
+                    )
+                    type = row[1]
+                    if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
+                        raise Exception(
+                            "Bad type in %s for %s: %s" % (filepath, dt_utc, type)
+                        )
+                    data[dt_utc] = type
+                except Exception as exc:
+                    exc.add_note("Bad datetime in %s: [%s]" % (filepath, row[0]))
+                    raise exc
 
-    logger.debug(f"Loaded {len(data)} moon phases from {filepath}")
-    cache.set(cache_key, data, timeout=None)  # unlimited timeout
-    return data
+        logger.debug(f"Loaded {len(data)} moon phases from {filepath}")
+        cache.set(cache_key, data, timeout=None)  # unlimited timeout
+        return data
+
+    except Exception as exc:
+        msg = f"Processing {filepath}"
+        exc.add_note(msg)
+        logger.error(msg)
+        raise exc

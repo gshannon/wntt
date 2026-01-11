@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from app import tzutil as tz
 from app.timeline import Timeline
 from django.core.cache import cache
+import sentry_sdk
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -102,6 +103,7 @@ def get_or_load_projected_surge_file(
 
     # First handle the case of a missing file.
     if file_mtime is None:
+        sentry_sdk.capture_message(f"missing surge file {filepath}")
         if data is None:
             logger.error(
                 "%s is not found, and there is no cached surge data for %s",
@@ -136,6 +138,7 @@ def get_or_load_projected_surge_file(
         ...
         """
         with open(filepath) as surge_file:
+            error_cnt = 0
             reader = csv.reader(surge_file, skipinitialspace=True)
             next(reader)  # skip header row
             for row in reader:
@@ -150,13 +153,21 @@ def get_or_load_projected_surge_file(
                     if _min_surge <= surge <= _max_surge:
                         data[local_dt] = round(surge, 2)
                     else:
+                        error_cnt += 1
                         logger.error(
                             f"Found unexpected surge value [{surge}] for target {in_utc}"
                         )
                 except ValueError:
+                    error_cnt += 1
                     logger.error("Invalid surge value: '%s'", row[3])
+            if error_cnt > 0:
+                sentry_sdk.capture_message(
+                    f"Found {error_cnt} data errors in surge file!"
+                )
     except FileNotFoundError:
-        logger.error("Prediction file not found: %s", surge_file)
+        msg = f"Prediction file could not be opened: {surge_file}"
+        logger.error(msg)
+        sentry_sdk.capture_message(msg)
         return {}
 
     # Cache the data. We'll use a TTL of 24 hours to handle cases where download fails a few times.

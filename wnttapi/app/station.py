@@ -118,13 +118,18 @@ def get_astro_high_tide_mllw(
     year_str = str(year)
 
     if station.noaa_station_id not in data:
-        logger.error("No annual highs found for station %s", station.noaa_station_id)
+        msg = "No annual highs found for station %s!" % (station.noaa_station_id)
+        logger.error(msg)
+        sentry_sdk.capture_message(msg)
         return None
 
     if year_str not in data[station.noaa_station_id]:
-        logger.error(
-            "No annual high found for station %s for %d", station.noaa_station_id, year
+        msg = "No annual high found for station %s for %d" % (
+            station.noaa_station_id,
+            year,
         )
+        logger.error(msg)
+        sentry_sdk.capture_message(msg)
         return None
 
     navd88_high = data[station.noaa_station_id][year_str]
