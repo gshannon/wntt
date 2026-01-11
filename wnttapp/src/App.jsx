@@ -13,7 +13,7 @@ import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page } from './utils'
 import Station from './Station'
-import { NotAcceptable } from './utils'
+import { NotAcceptable, stringify } from './utils'
 
 const WELLS_STATION_ID = 'welinwq'
 const WELLS_BG_CLASS = 'wells-bg'
@@ -45,9 +45,12 @@ export default function App() {
     const [station, setStation] = useState(null)
     const [bgClass, setBgClass] = useState(OTHER_BG_CLASS)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
-
     const browserId = main.bid ?? crypto.randomUUID().substring(0, 13)
-    storage.setMainStorage({ ...main, bid: browserId })
+    if (!main.bid) {
+        storage.setMainStorage({ ...main, bid: browserId, since: stringify(new Date()) })
+    } else if (!main.since) {
+        storage.setMainStorage({ ...main, since: stringify(new Date()) })
+    }
 
     // temporary dev hack
     const toggleSpecial = () => {
