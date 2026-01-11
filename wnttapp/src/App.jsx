@@ -42,7 +42,10 @@ export default function App() {
         main.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
     )
     const [station, setStation] = useState(null)
-    const [bgClass, setBgClass] = useState(OTHER_BG_CLASS)
+    // For now we have 1 background for Wells, and 1 for all others.
+    const [bgClass, setBgClass] = useState(
+        stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS
+    )
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
     const browserId = main.bid ?? crypto.randomUUID().substring(0, 13)
     if (!main.bid) {
@@ -67,7 +70,6 @@ export default function App() {
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
-        storage.convertOldStorage()
     }, [])
 
     useEffect(() => {

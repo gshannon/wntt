@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import * as Sentry from '@sentry/react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import * as storage from './storage'
 
 Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -10,6 +11,8 @@ Sentry.init({
     enableLogs: true,
     debug: false,
 })
+
+storage.convertOldStorage()
 
 const container = document.getElementById('root')
 const root = createRoot(container, {

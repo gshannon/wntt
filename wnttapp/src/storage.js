@@ -19,32 +19,40 @@ export const convertOldStorage = () => {
     // If 002 storage exists, convert it to 003.
     const numKeys = Object.keys(localStorage).length
     let numConverted = 0
+    const oldStorage = []
+    const newStorage = []
     for (let i = 0; i < numKeys; i++) {
         const key = localStorage.key(i)
+        oldStorage.push({ [key]: JSON.parse(localStorage.getItem(key)) })
         if (key.endsWith('main-002')) {
             console.log('Converting main-002')
             const v2 = JSON.parse(localStorage.getItem(key))
+            newStorage.push(v2)
             setMainStorage(v2)
             numConverted += 1
         } else if (key.endsWith('welinwq-002')) {
             console.log('Converting welinwq-002')
             const v2 = JSON.parse(localStorage.getItem(key))
             setPermanentStorage('welinwq', v2)
+            newStorage.push(getPermanentStorage('welinwq'))
             numConverted += 1
         } else if (key.endsWith('welinwq-daily-002')) {
             console.log('Converting welinwq-daily-002')
             const v2 = JSON.parse(localStorage.getItem(key))
             setDailyStorage('welinwq', v2.value, new Date(v2.day))
+            newStorage.push(getDailyStorage('welinwq'))
             numConverted += 1
         } else if (key.endsWith('nocrcwq-002')) {
             console.log('Converting nocrcwq-002')
             const v2 = JSON.parse(localStorage.getItem(key))
             setPermanentStorage('nocrcwq', v2)
+            newStorage.push(getPermanentStorage('nocrcwq'))
             numConverted += 1
         } else if (key.endsWith('nocrcwq-daily-002')) {
             console.log('Converting nocrcwq-daily-002')
             const v2 = JSON.parse(localStorage.getItem(key))
             setDailyStorage('nocrcwq', v2.value, new Date(v2.day))
+            newStorage.push(getDailyStorage('nocrcwq'))
             numConverted += 1
         }
     }
@@ -57,9 +65,11 @@ export const convertOldStorage = () => {
         }
     }
     Sentry.logger.info('Converted old storage', {
-        numKeys: numKeys,
-        numConverted: numConverted,
-        numRemoved: numRemoved,
+        numKeys,
+        numConverted,
+        numRemoved,
+        newStorage,
+        oldStorage,
     })
 }
 

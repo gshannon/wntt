@@ -88,8 +88,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-# We do not need this because we do all date/time logic based on the time zone of the swmp station.
-# TIME_ZONE = "US/Eastern"
+# This controls the timezone of the "asctime" field in the logs.
+TIME_ZONE = "UTC"
 
 # This is not useful with the way we handle datetimes, so we don't use it.
 # USE_TZ = True
