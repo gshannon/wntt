@@ -5,9 +5,6 @@ import useLatestData from './useLatestData'
 
 export default function ConditionsPopup({ station, onClose }) {
     const { data, error } = useLatestData(station)
-    if (error) {
-        console.error(error)
-    }
 
     return (
         <Modal id='conditions-modal' show={true} size='md' onHide={onClose}>

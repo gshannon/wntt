@@ -127,7 +127,7 @@ if os.environ.get("ENABLE_SENTRY", "0") == "1":
         environment=os.getenv("ENVIRONMENT"),
         release=os.getenv("APP_VERSION"),
         # traces_sample_rate=0.1,
-        enable_logs=True,
+        enable_logs=False,
         integrations=[
             # Only send WARNING (and higher) logs to Sentry logs,
             # even if the logger is set to a lower level.

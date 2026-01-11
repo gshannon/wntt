@@ -5,7 +5,6 @@ import './css/App.css'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
 import Top from './Top'
 import Control from './Control'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -92,8 +91,7 @@ export default function App() {
                     if (error.status === NotAcceptable) {
                         setFatalError(error)
                     } else if (error.name !== 'CanceledError') {
-                        console.error(error.message)
-                        Sentry.captureException(error.message)
+                        console.log(error.message, error.response?.data?.detail)
                     }
                 })
         }

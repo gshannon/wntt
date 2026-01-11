@@ -268,8 +268,9 @@ def build_future_surge_plots(
             else reg_preds_dict.get(dt, None)
         )
         if surge_val is not None and hilo_pred is None:
-            logger.error("Missing future prediction for %s", dt)
-            return None, None
+            msg = f"Missing future prediction for {dt}"
+            logger.error(msg)
+            raise util.InternalError(msg)
         return surge_val, hilo_pred
 
     def handle_surge_pred(dt):

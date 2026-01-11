@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
 import { NotAcceptable } from './utils'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
@@ -23,7 +22,6 @@ export default function useLatestData(station) {
                 .catch((error) => {
                     if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
                         console.log(error.message, error.response?.data?.detail)
-                        Sentry.captureException(error)
                     }
                     throw error
                 })

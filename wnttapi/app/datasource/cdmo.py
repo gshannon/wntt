@@ -4,13 +4,13 @@ import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 from enum import Enum
 
+import sentry_sdk
 from app import tzutil as tz
 from app import util
 from app.datasource.custom_transport import CustomTransport
 from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
-from rest_framework.exceptions import APIException
 from suds.client import Client
 
 """
@@ -126,10 +126,22 @@ def assemble_wind_data(speed_dict: dict, gust_dict: dict, dir_dict: dict) -> dic
     wind_dict = {}
     # Assemble all the data.
 
+    len_speed = len(speed_dict)
+    len_gust = len(gust_dict)
+    len_dir = len(dir_dict)
+
+    if len_speed != len_gust or len_gust != len_dir:
+        msg = f"wind data mismatch, speeds={len_speed} gusts={len_gust}, dirs={len_dir}"
+        logger.error(msg)
+        sentry_sdk.capture_message(msg)
+
+    error_found = False
     for dt, speed in speed_dict.items():
         # Make sure we have all values, or none.
         if dt not in gust_dict or dt not in dir_dict:
-            logger.error("Missing gust and/or direction wind data for %s", dt)
+            if not error_found:
+                logger.error("Missing gust and/or direction wind data for %s", dt)
+            error_found = True
             continue
         wind_dict[dt] = {
             "speed": speed,
@@ -269,6 +281,7 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
         try:
             naive_utc = datetime.strptime(date_str, "%m/%d/%Y %H:%M")
         except ValueError:
+            none_or_bad += 1
             logger.error("Skipping bad datetime '%s'", date_str)
             continue
 

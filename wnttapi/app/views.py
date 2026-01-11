@@ -27,7 +27,6 @@ class StationSelectionView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            exc.add_note(str(params))
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
@@ -46,7 +45,6 @@ class StationDataView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            exc.add_note(str(params))
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
@@ -67,7 +65,6 @@ class LatestInfoView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            exc.add_note(str(params))
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
@@ -94,7 +91,6 @@ class CreateGraphView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            exc.add_note(str(params))
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
@@ -113,7 +109,6 @@ class AddressView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            exc.add_note(str(params))
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
