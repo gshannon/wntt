@@ -15,7 +15,7 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
             return await axios
                 .post(import.meta.env.VITE_API_GRAPH_URL, {
                     signal,
-                    bid: ctx.browserId,
+                    uid: ctx.userId,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                     start: startDate,

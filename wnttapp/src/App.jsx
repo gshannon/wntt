@@ -2,6 +2,7 @@
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
+import * as Sentry from '@sentry/react'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
@@ -47,9 +48,9 @@ export default function App() {
         stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS
     )
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
-    const browserId = main.bid ?? crypto.randomUUID().substring(0, 13)
-    if (!main.bid) {
-        storage.setMainStorage({ ...main, bid: browserId, since: stringify(new Date()) })
+    const userId = main.uid ?? crypto.randomUUID().substring(0, 13)
+    if (!main.uid) {
+        storage.setMainStorage({ ...main, uid: userId, since: stringify(new Date()) })
     } else if (!main.since) {
         storage.setMainStorage({ ...main, since: stringify(new Date()) })
     }
@@ -70,13 +71,16 @@ export default function App() {
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
+        Sentry.logger.info('Startup', {
+            main: storage.getMainStorage(),
+        })
     }, [])
 
     useEffect(() => {
         if (stationId) {
             axios
                 .post(import.meta.env.VITE_API_STATION_DATA_URL, {
-                    bid: browserId,
+                    uid: userId,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: stationId,
                 })
@@ -97,7 +101,7 @@ export default function App() {
                     }
                 })
         }
-    }, [stationId, browserId])
+    }, [stationId, userId])
 
     const onCustomChange = useEffectEvent((newElevation) => {
         if (newElevation !== undefined && station != null) {
@@ -118,7 +122,7 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
             <AppContext.Provider
                 value={{
-                    browserId: browserId,
+                    userId: userId,
                     station: station,
                     setStationId: setStationId,
                     bgClass: bgClass,

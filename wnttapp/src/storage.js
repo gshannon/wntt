@@ -20,39 +20,48 @@ export const convertOldStorage = () => {
     const numKeys = Object.keys(localStorage).length
     let numConverted = 0
     const oldStorage = []
-    const newStorage = []
     for (let i = 0; i < numKeys; i++) {
         const key = localStorage.key(i)
-        oldStorage.push({ [key]: JSON.parse(localStorage.getItem(key)) })
+        if (key === '003.main') {
+            // Renaming "bid" to "uid"
+            const v3 = JSON.parse(localStorage.getItem(key))
+            if ('bid' in v3) {
+                oldStorage.push({ [key]: { ...v3 } })
+                v3.uid = v3.bid
+                delete v3.bid
+                setMainStorage(v3)
+                numConverted += 1
+            }
+        }
         if (key.endsWith('main-002')) {
             console.log('Converting main-002')
             const v2 = JSON.parse(localStorage.getItem(key))
-            newStorage.push(v2)
+            oldStorage.push({ [key]: v2 })
             setMainStorage(v2)
             numConverted += 1
         } else if (key.endsWith('welinwq-002')) {
             console.log('Converting welinwq-002')
             const v2 = JSON.parse(localStorage.getItem(key))
+            oldStorage.push({ [key]: v2 })
             setPermanentStorage('welinwq', v2)
-            newStorage.push(getPermanentStorage('welinwq'))
             numConverted += 1
         } else if (key.endsWith('welinwq-daily-002')) {
             console.log('Converting welinwq-daily-002')
             const v2 = JSON.parse(localStorage.getItem(key))
+            oldStorage.push({ [key]: v2 })
             setDailyStorage('welinwq', v2.value, new Date(v2.day))
-            newStorage.push(getDailyStorage('welinwq'))
             numConverted += 1
         } else if (key.endsWith('nocrcwq-002')) {
             console.log('Converting nocrcwq-002')
             const v2 = JSON.parse(localStorage.getItem(key))
+            oldStorage.push({ [key]: v2 })
             setPermanentStorage('nocrcwq', v2)
-            newStorage.push(getPermanentStorage('nocrcwq'))
             numConverted += 1
         } else if (key.endsWith('nocrcwq-daily-002')) {
             console.log('Converting nocrcwq-daily-002')
             const v2 = JSON.parse(localStorage.getItem(key))
+            oldStorage.push({ [key]: v2 })
             setDailyStorage('nocrcwq', v2.value, new Date(v2.day))
-            newStorage.push(getDailyStorage('nocrcwq'))
             numConverted += 1
         }
     }
@@ -64,13 +73,24 @@ export const convertOldStorage = () => {
             numRemoved += 1
         }
     }
-    Sentry.logger.info('Converted old storage', {
-        numKeys,
-        numConverted,
-        numRemoved,
-        newStorage,
-        oldStorage,
-    })
+    const newStorage = []
+    if (numConverted > 0) {
+        const numKeys = Object.keys(localStorage).length
+        for (let i = 0; i < numKeys; i++) {
+            const key = localStorage.key(i)
+            newStorage.push({ [key]: JSON.parse(localStorage.getItem(key)) })
+        }
+    }
+
+    if (numConverted + numRemoved > 0) {
+        Sentry.logger.info('Converted storage', {
+            numKeys,
+            numConverted,
+            numRemoved,
+            oldStorage,
+            newStorage,
+        })
+    }
 }
 
 // Store a non-station-specific object in local storage.

@@ -17,7 +17,7 @@ export default function useStationSelection(enabled) {
             return await axios
                 .post(import.meta.env.VITE_API_STATION_SELECTION_URL, {
                     signal,
-                    bid: ctx.browserId,
+                    uid: ctx.userId,
                     version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {

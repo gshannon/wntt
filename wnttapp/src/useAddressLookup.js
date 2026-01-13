@@ -18,7 +18,7 @@ export default function useAddressLookup(search) {
             return await axios
                 .post(import.meta.env.VITE_API_ADDRESS_URL, {
                     signal,
-                    bid: ctx.browserId,
+                    uid: ctx.userId,
                     version: import.meta.env.VITE_APP_VERSION,
                     search: encoded,
                 })

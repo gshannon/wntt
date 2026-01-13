@@ -14,7 +14,7 @@ export default function useLatestData(station) {
             return await axios
                 .post(import.meta.env.VITE_API_LATEST_URL, {
                     signal,
-                    bid: ctx.browserId,
+                    uid: ctx.userId,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                 })
