@@ -15,84 +15,6 @@ const storageKey = (key) => {
     return `${StorageVersion}.${key}`
 }
 
-export const convertOldStorage = () => {
-    // If 002 storage exists, convert it to 003.
-    const numKeys = Object.keys(localStorage).length
-    let numConverted = 0
-    const oldStorage = []
-    for (let i = 0; i < numKeys; i++) {
-        const key = localStorage.key(i)
-        if (key === '003.main') {
-            // Renaming "bid" to "uid"
-            const v3 = JSON.parse(localStorage.getItem(key))
-            if ('bid' in v3) {
-                oldStorage.push({ [key]: { ...v3 } })
-                v3.uid = v3.bid
-                delete v3.bid
-                setMainStorage(v3)
-                numConverted += 1
-            }
-        }
-        if (key.endsWith('main-002')) {
-            console.log('Converting main-002')
-            const v2 = JSON.parse(localStorage.getItem(key))
-            oldStorage.push({ [key]: v2 })
-            setMainStorage(v2)
-            numConverted += 1
-        } else if (key.endsWith('welinwq-002')) {
-            console.log('Converting welinwq-002')
-            const v2 = JSON.parse(localStorage.getItem(key))
-            oldStorage.push({ [key]: v2 })
-            setPermanentStorage('welinwq', v2)
-            numConverted += 1
-        } else if (key.endsWith('welinwq-daily-002')) {
-            console.log('Converting welinwq-daily-002')
-            const v2 = JSON.parse(localStorage.getItem(key))
-            oldStorage.push({ [key]: v2 })
-            setDailyStorage('welinwq', v2.value, new Date(v2.day))
-            numConverted += 1
-        } else if (key.endsWith('nocrcwq-002')) {
-            console.log('Converting nocrcwq-002')
-            const v2 = JSON.parse(localStorage.getItem(key))
-            oldStorage.push({ [key]: v2 })
-            setPermanentStorage('nocrcwq', v2)
-            numConverted += 1
-        } else if (key.endsWith('nocrcwq-daily-002')) {
-            console.log('Converting nocrcwq-daily-002')
-            const v2 = JSON.parse(localStorage.getItem(key))
-            oldStorage.push({ [key]: v2 })
-            setDailyStorage('nocrcwq', v2.value, new Date(v2.day))
-            numConverted += 1
-        }
-    }
-    let numRemoved = 0
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key.endsWith('001') || key.endsWith('002')) {
-            localStorage.removeItem(key)
-            numRemoved += 1
-        }
-    }
-    const newStorage = []
-    if (numConverted > 0) {
-        const numKeys = Object.keys(localStorage).length
-        for (let i = 0; i < numKeys; i++) {
-            const key = localStorage.key(i)
-            newStorage.push({ [key]: JSON.parse(localStorage.getItem(key)) })
-        }
-    }
-
-    if (numConverted + numRemoved > 0) {
-        Sentry.logger.info('Converted storage', {
-            numKeys,
-            numConverted,
-            numRemoved,
-            oldStorage,
-            newStorage,
-        })
-    }
-}
-
 // Store a non-station-specific object in local storage.
 export const setMainStorage = (value) => {
     try {
@@ -186,4 +108,76 @@ export const getDailyStorage = (stationId) => {
         Sentry.captureException(error.message)
         return {}
     }
+}
+
+// To be called during app startup. TODO: remove this by Spring 2026.
+export const manageStorage = () => {
+    // If 002 storage exists, convert it to 003.
+    const preKeyCount = Object.keys(localStorage).length
+    let numConverted = 0
+    const converted = []
+    for (let i = 0; i < preKeyCount; i++) {
+        const key = localStorage.key(i)
+        if (key === '003.main') {
+            const v3 = JSON.parse(localStorage.getItem(key))
+            if ('bid' in v3) {
+                // Rename "bid" to "uid"
+                converted.push({ [key]: { ...v3 } }) // makes a copy for logging
+                v3.uid = v3.bid
+                delete v3.bid
+                setMainStorage(v3)
+                numConverted += 1
+            }
+        }
+        if (key.endsWith('main-002')) {
+            console.log('Converting main-002')
+            const v2 = JSON.parse(localStorage.getItem(key))
+            converted.push({ [key]: v2 })
+            setMainStorage(v2)
+            numConverted += 1
+        } else if (key.endsWith('welinwq-002')) {
+            console.log('Converting welinwq-002')
+            const v2 = JSON.parse(localStorage.getItem(key))
+            converted.push({ [key]: v2 })
+            setPermanentStorage('welinwq', v2)
+            numConverted += 1
+        } else if (key.endsWith('welinwq-daily-002')) {
+            console.log('Converting welinwq-daily-002')
+            const v2 = JSON.parse(localStorage.getItem(key))
+            converted.push({ [key]: v2 })
+            setDailyStorage('welinwq', v2.value, new Date(v2.day))
+            numConverted += 1
+        }
+    }
+    const removedKeys = []
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key.endsWith('001') || key.endsWith('002')) {
+            removedKeys.push(key)
+            localStorage.removeItem(key)
+        }
+    }
+
+    // Lastly, add some info for this app instance.
+    const main = getMainStorage()
+    setMainStorage({ ...main, session: crypto.randomUUID().substring(0, 6), started: new Date() })
+
+    const finalStorage = []
+    const postKeyCount = Object.keys(localStorage).length
+    for (let i = 0; i < postKeyCount; i++) {
+        const key = localStorage.key(i)
+        finalStorage.push({ [key]: JSON.parse(localStorage.getItem(key)) })
+    }
+
+    const info = {
+        preKeyCount,
+        postKeyCount,
+        numConverted,
+        converted,
+        finalStorage,
+        removedKeys,
+    }
+
+    console.log(info)
+    Sentry.logger.info('Local storage', info)
 }

@@ -72,9 +72,7 @@ export default function App() {
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
-        Sentry.logger.info('Startup', {
-            main: storage.getMainStorage(),
-        })
+        Sentry.logger.info('Startup', storage.getMainStorage())
     }, [])
 
     // Set the station if we have the id and have loaded the station configs.  Should only happen
@@ -87,6 +85,7 @@ export default function App() {
         <AppContext.Provider
             value={{
                 userId,
+                sessionId: mainStore.session ?? '?',
                 stationsData,
                 station,
                 onStationSelected,

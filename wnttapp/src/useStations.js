@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { NotAcceptable } from './utils'
-import { AppContext } from './AppContext'
-import { useContext } from 'react'
 import Station from './Station'
+import * as storage from './storage'
 
 // Fetch station selection data from the server, and keep it cached for the app lifetime.
 export default function useStations() {
-    const ctx = useContext(AppContext)
+    const mainStore = storage.getMainStorage()
+
     return useQuery({
         queryKey: ['station-all'],
         retry: false,
@@ -17,7 +17,8 @@ export default function useStations() {
             return await axios
                 .post(import.meta.env.VITE_API_STATIONS_URL, {
                     signal,
-                    uid: ctx.userId,
+                    uid: mainStore.uid,
+                    session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
                 })
                 .then((res) => {
