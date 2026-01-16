@@ -111,6 +111,18 @@ def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:
     return data[station_id]
 
 
+def get_all_stations(data_dir=_default_file_dir) -> dict:
+    """Get a list of Station objects
+
+    Args:
+        data_dir: override for testing
+
+    Returns:
+        list of station data objects
+    """
+    return get_or_load_stations(data_dir)
+
+
 def get_astro_high_tide_mllw(
     station: Station, year: int, data_dir=_default_file_dir
 ) -> float:

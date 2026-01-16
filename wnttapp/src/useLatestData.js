@@ -7,7 +7,7 @@ import { useContext } from 'react'
 export default function useLatestData(station) {
     const ctx = useContext(AppContext)
 
-    const { isLoading, data, error } = useQuery({
+    return useQuery({
         retry: false,
         queryKey: [station.id, 'latest'],
         queryFn: async ({ signal }) => {
@@ -29,6 +29,4 @@ export default function useLatestData(station) {
         staleTime: 30_000, // 30 seconds. Allows for frequent checks without hammering the server.
         gcTime: 30_000, // gcTime should be >= staleTime in case they move off the page and return
     })
-
-    return { isLoading, data, error }
 }

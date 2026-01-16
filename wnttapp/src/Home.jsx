@@ -6,7 +6,10 @@ import { AppContext } from './AppContext'
 import { Link } from './Links'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
-import { Page } from './utils'
+import { Page, WELLS_STATION_ID } from './utils'
+
+const WELLS_BG_CLASS = 'wells-bg'
+const OTHER_BG_CLASS = 'other-bg'
 
 export default function Home() {
     const ctx = useContext(AppContext)
@@ -57,7 +60,11 @@ export default function Home() {
     }
 
     return (
-        <div id='home' className={'home ' + ctx.bgClass}>
+        <div
+            id='home'
+            className={
+                'home ' + (ctx.stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
+            }>
             <div className='welcome p-2 my-3'>
                 <p>
                     Welcome to the {ctx.special ? '' : 'Wells'} National Estuarine Research Reserve

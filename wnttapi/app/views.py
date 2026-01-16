@@ -15,32 +15,14 @@ logger = logging.getLogger(__name__)
 version = os.getenv("APP_VERSION", "set-me")
 
 
-class StationSelectionView(APIView):
+class StationsView(APIView):
     def post(self, request, format=None):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
         try:
-            stations = stn.get_station_selection_data()
+            stations = stn.get_all_stations()
             return Response(data=stations)
-        except NotAcceptable as exc:
-            logger.warning(f"NotAcceptable {params}")
-            raise exc
-        except Exception as exc:
-            logger.exception(str(exc))
-            sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc))
-
-
-class StationDataView(APIView):
-    def post(self, request, format=None):
-        params = clean_params(request.data)
-        logger.info("%s: %s", self.__class__.__name__, params)
-        verify_version(request.data)
-        station_id = get_param(request.data, "station_id")
-        try:
-            station_data = stn.get_station_data(station_id)
-            return Response(data=station_data)
         except NotAcceptable as exc:
             logger.warning(f"NotAcceptable {params}")
             raise exc

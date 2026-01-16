@@ -1,30 +1,6 @@
-import { useState } from 'react'
-import { useContext } from 'react'
 import Dropdown from 'react-bootstrap/Dropdown'
-import { useEffect, useEffectEvent } from 'react'
-import { AppContext } from './AppContext'
-import useStationSelection from './useStationSelection'
-import { NotAcceptable } from './utils'
 
-export default function ReserveSelect() {
-    const ctx = useContext(AppContext)
-    const [stationSelectionData, setStationSelectionData] = useState([])
-    const { data, error } = useStationSelection(stationSelectionData.length == 0)
-
-    if (data && stationSelectionData.length == 0) {
-        setStationSelectionData(data)
-    }
-
-    const errorCheck = useEffectEvent(() => {
-        if (error && error.status == NotAcceptable) {
-            ctx.setFatalError(error)
-        }
-    })
-
-    useEffect(() => {
-        errorCheck()
-    }, [])
-
+export default function ReserveSelect({ ctx }) {
     return (
         <Dropdown id='reserve-dropdown'>
             <Dropdown.Toggle>
@@ -33,17 +9,30 @@ export default function ReserveSelect() {
                 Reserve
             </Dropdown.Toggle>
             <Dropdown.Menu>
-                {stationSelectionData.map((stn) => (
+                <Content ctx={ctx} />
+            </Dropdown.Menu>
+        </Dropdown>
+    )
+}
+
+// In case we don't have station data loaded yet, just display an empty select list.
+const Content = ({ ctx }) => {
+    if (!ctx.stationsData) {
+        return <></>
+    } else {
+        return (
+            <>
+                {Object.entries(ctx.stationsData).map(([id, stn]) => (
                     <Dropdown.Item
-                        key={stn.id} // Anything unique
-                        disabled={stn.id === ctx.station?.id}
+                        key={id} // Anything unique
+                        disabled={id === ctx.station?.id}
                         onClick={() => {
-                            ctx.setStationId(stn.id)
+                            ctx.onStationSelected(stn.id)
                         }}>
                         {stn.reserveName}, {stn.waterStationName}
                     </Dropdown.Item>
                 ))}
-            </Dropdown.Menu>
-        </Dropdown>
-    )
+            </>
+        )
+    }
 }

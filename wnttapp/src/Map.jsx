@@ -51,14 +51,14 @@ export default function Map() {
     }
 
     const addtoGraph = () => {
-        ctx.setCustomElevationNav(markerElevationNav)
+        ctx.onCustomElevationSet(markerElevationNav)
         ctx.gotoPage(Page.Graph) // start tracking elevation, goto graph
     }
 
     const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
 
     const removeMarker = () => {
-        ctx.setCustomElevationNav(null)
+        ctx.onCustomElevationSet(null)
         setMarkerLocation(null)
         setMarkerElevationNav(null)
         setPendingMarkerLocation(null)

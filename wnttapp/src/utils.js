@@ -1,3 +1,4 @@
+export const WELLS_STATION_ID = 'welinwq'
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const GeocodeUrl = 'https://geocode.maps.co'
 export const TidesCurrentsUrl = 'https://tidesandcurrents.noaa.gov/tide_predictions.html'
