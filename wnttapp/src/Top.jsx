@@ -104,7 +104,7 @@ export default function Top({ page, gotoPage }) {
                                 id='#select-'
                                 text='Select a Reserve to work with'
                                 placement='left'
-                                contents={<ReserveSelect />}
+                                contents={<ReserveSelect ctx={ctx} />}
                             />
                         </Col>
                     </Activity>

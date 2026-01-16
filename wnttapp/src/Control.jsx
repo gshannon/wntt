@@ -5,10 +5,10 @@ import Map from './Map'
 import About from './About'
 import Help from './Help'
 import HelpSyzygy from './HelpSyzygy'
-import ErrorPage from './ErrorPage'
 import { Page } from './utils'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
+import { apiErrorResponse } from './utils'
 
 export default function Control({ page, returnPage, gotoPage }) {
     const ctx = useContext(AppContext)
@@ -16,7 +16,9 @@ export default function Control({ page, returnPage, gotoPage }) {
     if (ctx.fatalError) {
         return (
             <div className='app-box-bottom'>
-                <ErrorPage error={ctx.fatalError} />
+                <br />
+                <br />
+                <div className='text-center fs-5'>{apiErrorResponse(ctx.fatalError)}</div>
             </div>
         )
     }

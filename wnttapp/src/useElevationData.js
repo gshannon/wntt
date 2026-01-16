@@ -7,7 +7,7 @@ export default function useElevationData(pendingMarkerLocation) {
     const subKey = pendingMarkerLocation
         ? `${pendingMarkerLocation.lat},${pendingMarkerLocation.lng}`
         : 'x'
-    const { data, error, isLoading } = useQuery({
+    return useQuery({
         retry: false,
         enabled: !!pendingMarkerLocation,
         queryKey: ['marker', subKey],
@@ -34,6 +34,4 @@ export default function useElevationData(pendingMarkerLocation) {
         cacheTime: 0,
         gcTime: 0,
     })
-
-    return { data, error, isLoading }
 }

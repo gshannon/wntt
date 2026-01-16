@@ -10,7 +10,7 @@ export default function useAddressLookup(search) {
     const encoded = address.replace(/\s+/gi, '+')
     const subKey = search ?? 'X'
 
-    const { isLoading, data, error } = useQuery({
+    return useQuery({
         retry: false,
         enabled: !!search,
         queryKey: ['geocode', subKey],
@@ -36,5 +36,4 @@ export default function useAddressLookup(search) {
         cacheTime: 0,
         gcTime: 0,
     })
-    return { isLoading, data, error }
 }
