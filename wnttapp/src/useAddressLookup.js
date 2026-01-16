@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { NotAcceptable } from './utils'
-import { AppContext } from './AppContext'
-import { useContext } from 'react'
+import * as storage from './storage'
 
 export default function useAddressLookup(search) {
-    const ctx = useContext(AppContext)
+    const mainStore = storage.getMainStorage()
     const address = search + ' USA'
     const encoded = address.replace(/\s+/gi, '+')
     const subKey = search ?? 'X'
@@ -18,7 +17,8 @@ export default function useAddressLookup(search) {
             return await axios
                 .post(import.meta.env.VITE_API_ADDRESS_URL, {
                     signal,
-                    uid: ctx.userId,
+                    uid: mainStore.uid,
+                    session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
                     search: encoded,
                 })

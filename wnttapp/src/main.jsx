@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
     },
 })
 
-storage.convertOldStorage()
+storage.manageStorage()
 
 const container = document.getElementById('root')
 const root = createRoot(container, {

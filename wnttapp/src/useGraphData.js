@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { buildCacheKey, NotAcceptable } from './utils'
-import { AppContext } from './AppContext'
-import { useContext } from 'react'
+import * as storage from './storage'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
-    const ctx = useContext(AppContext)
-
+    const mainStore = storage.getMainStorage()
     // The main graph data api call.
     return useQuery({
         retry: false,
@@ -15,7 +13,8 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
             return await axios
                 .post(import.meta.env.VITE_API_GRAPH_URL, {
                     signal,
-                    uid: ctx.userId,
+                    uid: mainStore.uid,
+                    session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                     start: startDate,
