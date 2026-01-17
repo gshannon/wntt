@@ -63,7 +63,10 @@ export default function Home() {
         <div
             id='home'
             className={
-                'home ' + (ctx.stationId === WELLS_STATION_ID ? WELLS_BG_CLASS : OTHER_BG_CLASS)
+                'home ' +
+                (ctx.station && ctx.station.id === WELLS_STATION_ID
+                    ? WELLS_BG_CLASS
+                    : OTHER_BG_CLASS)
             }>
             <div className='welcome p-2 my-3'>
                 <p>

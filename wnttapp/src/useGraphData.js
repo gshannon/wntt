@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { buildCacheKey, NotAcceptable } from './utils'
+import { buildCacheKey } from './utils'
 import * as storage from './storage'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
@@ -23,8 +23,12 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                 })
                 .then((res) => res.data)
                 .catch((error) => {
-                    if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
-                        console.log(error.message, error.response?.data?.detail)
+                    if (error.name !== 'CanceledError') {
+                        console.error(
+                            error.message,
+                            error.response?.status,
+                            error.response?.data?.detail
+                        )
                     }
                     throw error
                 })

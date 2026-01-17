@@ -25,7 +25,11 @@ export default function useElevationData(pendingMarkerLocation) {
                 })
                 .catch((error) => {
                     if (error.name !== 'CanceledError') {
-                        console.log(error.message, error.response?.data?.detail)
+                        console.error(
+                            error.message,
+                            error.response?.status,
+                            error.response?.data?.detail
+                        )
                     }
                     throw error
                 })

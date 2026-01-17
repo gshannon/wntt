@@ -1,16 +1,11 @@
 import { AppContext } from './AppContext'
-import {
-    calcWindspeedTickInterval,
-    formatDate,
-    isTouchScreen,
-    isSmallScreen,
-    apiErrorResponse,
-} from './utils'
+import { calcWindspeedTickInterval, formatDate, isTouchScreen, isSmallScreen } from './utils'
 import Plot from 'react-plotly.js'
 import Spinner from 'react-bootstrap/Spinner'
 import { buildSyzygyAnnotations, buildPlot } from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
 import { useContext, useState } from 'react'
+import ErrorBlock from './ErrorBlock'
 
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
@@ -43,16 +38,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
     if (error) {
         return (
-            <div>
-                <br />
-                <br />
-                <br />
-                <br /> {apiErrorResponse(error)}
-                <br />
-                <br />
-                <br />
-                <br />
-            </div>
+            <>
+                <ErrorBlock error={error} />
+            </>
         )
     } else if (loading) {
         return (
