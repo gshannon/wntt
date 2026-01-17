@@ -8,7 +8,7 @@ import HelpSyzygy from './HelpSyzygy'
 import { Page } from './utils'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
-import { apiErrorResponse } from './utils'
+import ErrorBlock from './ErrorBlock'
 
 export default function Control({ page, returnPage, gotoPage }) {
     const ctx = useContext(AppContext)
@@ -16,9 +16,7 @@ export default function Control({ page, returnPage, gotoPage }) {
     if (ctx.fatalError) {
         return (
             <div className='app-box-bottom'>
-                <br />
-                <br />
-                <div className='text-center fs-5'>{apiErrorResponse(ctx.fatalError)}</div>
+                <ErrorBlock error={ctx.fatalError} />
             </div>
         )
     }

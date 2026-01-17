@@ -33,8 +33,8 @@ export default function App() {
 
     const [station, setStation] = useState(null)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
-    const userId = mainStore.uid ?? crypto.randomUUID().substring(0, 13) // unique enough for our purpose
     if (!mainStore.uid) {
+        const userId = mainStore.uid ?? crypto.randomUUID().substring(0, 13) // unique enough for our purpose
         storage.setMainStorage({ ...mainStore, uid: userId, since: stringify(new Date()) })
     } else if (!mainStore.since) {
         storage.setMainStorage({ ...mainStore, since: stringify(new Date()) })
@@ -84,7 +84,6 @@ export default function App() {
     return (
         <AppContext.Provider
             value={{
-                userId,
                 sessionId: mainStore.session ?? '?',
                 stationsData,
                 station,

@@ -1,10 +1,11 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
 import { Link } from './Links'
-import { apiErrorResponse, Months } from './utils'
+import { Months } from './utils'
 import { SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
+import ErrorBlock from './ErrorBlock'
 
 export default function Conditions({ data, error }) {
     const ctx = useContext(AppContext)
@@ -27,7 +28,11 @@ export default function Conditions({ data, error }) {
     }
 
     if (error) {
-        return <div className='text-center text-white'>{apiErrorResponse(error)}</div>
+        return (
+            <>
+                <ErrorBlock error={error} />
+            </>
+        )
     }
 
     if (!data) {

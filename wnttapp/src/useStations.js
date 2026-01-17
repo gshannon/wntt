@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { NotAcceptable } from './utils'
 import Station from './Station'
 import * as storage from './storage'
 
@@ -29,8 +28,12 @@ export default function useStations() {
                     return Object.fromEntries(asArray)
                 })
                 .catch((error) => {
-                    if (error.name !== 'CanceledError' && error.status != NotAcceptable) {
-                        console.log(error.message, error.response?.data?.detail)
+                    if (error.name !== 'CanceledError') {
+                        console.error(
+                            error.message,
+                            error.response?.status,
+                            error.response?.data?.detail
+                        )
                     }
                     throw error
                 })

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { NotAcceptable } from './utils'
 import * as storage from './storage'
 
 export default function useLatestData(station) {
@@ -20,8 +19,12 @@ export default function useLatestData(station) {
                 })
                 .then((res) => res.data)
                 .catch((error) => {
-                    if (error.name !== 'CanceledError' && error.status !== NotAcceptable) {
-                        console.log(error.message, error.response?.data?.detail)
+                    if (error.name !== 'CanceledError') {
+                        console.error(
+                            error.message,
+                            error.response?.status,
+                            error.response?.data?.detail
+                        )
                     }
                     throw error
                 })

@@ -10,7 +10,7 @@ import { Col, Row } from 'react-bootstrap'
 import { RedPinIcon } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
 import AddressPopup from './AddressPopup'
-import { Page, apiErrorResponse } from './utils'
+import { Page } from './utils'
 import { AppContext } from './AppContext'
 import Tutorial from './Tutorial'
 import Overlay from './Overlay'
@@ -18,6 +18,7 @@ import { getData } from './tutorials/map'
 import * as mu from './mapUtils'
 import * as storage from './storage'
 import useElevationData from './useElevationData'
+import ErrorBlock from './ErrorBlock'
 
 const WaterStationEmoji = '\u{1F537}'
 const WeatherStationEmoji = '\u{1F536}'
@@ -166,7 +167,7 @@ export default function Map() {
             return (
                 <Row>
                     <Col className='d-flex justify-content-center text-warning bg-dark'>
-                        {apiErrorResponse(queryError)}
+                        <ErrorBlock error={queryError} />
                     </Col>
                 </Row>
             )
