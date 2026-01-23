@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { EpqsUrl, roundTo } from './utils'
 import axios from 'axios'
+import * as Sentry from '@sentry/react'
+import { EpqsUrl, roundTo } from './utils'
 
 export default function useElevationData(pendingMarkerLocation) {
     // We want the key to be different so it doesn't use cached data from previous query.
@@ -30,6 +31,8 @@ export default function useElevationData(pendingMarkerLocation) {
                             error.response?.status,
                             error.response?.data?.detail
                         )
+                        // This endpoint is not part of our backend, so we'll log exceptions here.
+                        Sentry.captureException(error)
                     }
                     throw error
                 })
