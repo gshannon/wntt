@@ -21,7 +21,7 @@ export const setMainStorage = (value) => {
         localStorage.setItem(storageKey('main'), JSON.stringify(value))
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
     }
 }
 
@@ -33,7 +33,7 @@ export const getMainStorage = () => {
         return data ? JSON.parse(data) : {}
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
         return {}
     }
 }
@@ -47,7 +47,7 @@ export const setPermanentStorage = (stationId, value) => {
         localStorage.setItem(storageKey(stationId), JSON.stringify({ ...data, perm: value }))
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
     }
 }
 
@@ -64,7 +64,7 @@ export const getPermanentStorage = (stationId) => {
         return data.perm ?? {}
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
         return {}
     }
 }
@@ -79,7 +79,7 @@ export const setDailyStorage = (stationId, value, date = new Date()) => {
         localStorage.setItem(storageKey(stationId), JSON.stringify({ ...data, daily: newDaily }))
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
     }
 }
 
@@ -105,7 +105,7 @@ export const getDailyStorage = (stationId) => {
         return {}
     } catch (error) {
         console.error(error.message)
-        Sentry.captureException(error.message)
+        Sentry.captureException(error)
         return {}
     }
 }

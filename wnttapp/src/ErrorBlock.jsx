@@ -35,7 +35,7 @@ export default function ErrorBlock({ error }) {
     }, [isUpgrade])
 
     if (error == null) {
-        Sentry.logger.info('Error is NULL!')
+        Sentry.logger.error('Error is NULL!')
         return ''
     }
     if (isUpgrade) {

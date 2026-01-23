@@ -58,11 +58,8 @@ export default function AddressPopup({ setPendingMarkerLocation, onClose, statio
                 <Modal.Title className='address-body'>Address Lookup</Modal.Title>
             </Modal.Header>
             <Modal.Body className='address-body'>
-                {isLoading ? (
-                    <Spinner animation='border' variant='secondary' />
-                ) : (
-                    <ErrorBlock error={errorParam} />
-                )}
+                {isLoading && <Spinner animation='border' variant='secondary' />}
+                {errorParam && <ErrorBlock error={errorParam} />}
                 <Form onSubmit={(e) => handleSubmit(e)}>
                     <Form.Group className='mb-3' controlId='addressLookup'>
                         <Form.Control
