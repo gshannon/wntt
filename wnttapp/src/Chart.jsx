@@ -19,6 +19,7 @@ const ProjectedStormSurgeColor = '#9467bd'
 const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
+const ForecastWindSpeedColor = '#8D89A6'
 
 export default function Chart({ error, loading, hiloMode, data }) {
     const ctx = useContext(AppContext)
@@ -56,8 +57,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         )
     }
 
+    // Enable this just for special mode for now.
+    const forecast_wind_speeds = ctx.special ? data.forecast_wind_speeds : null
+
     const graph1_max = 1
-    const graph1_min = data.wind_speeds !== null ? 0.44 : 0
+    const graph1_min = data.wind_speeds !== null || forecast_wind_speeds !== null ? 0.44 : 0
     const graph2_max = 0.4
     const graph2_min = 0
 
@@ -118,17 +122,20 @@ export default function Chart({ error, loading, hiloMode, data }) {
             // For tide, we will use 1-ft intervals for tick marks if not showing wind and
             // total range is low enough to avoid being too cluttered.
             dtick:
-                data.wind_speeds === null &&
-                Math.max(ctx.station.recordTideMllw(), customElevationMllw ?? 0) < 16
-                    ? 1
-                    : 2,
+                (
+                    data.wind_speeds === null &&
+                    forecast_wind_speeds === null &&
+                    Math.max(ctx.station.recordTideMllw(), customElevationMllw ?? 0) < 16
+                ) ?
+                    1
+                :   2,
         },
         yaxis2: {
             title: { text: 'Wind MPH', font: { size: 15 } },
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
             rangemode: 'tozero',
-            dtick: calcWindspeedTickInterval(data.wind_gusts),
+            dtick: calcWindspeedTickInterval(data.wind_gusts, forecast_wind_speeds),
         },
         grid: {
             rows: 2,
@@ -164,7 +171,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const plotData = [
         buildPlot({
             name: `Record Tide ${formatDate(
-                new Date(ctx.station.recordTideDate)
+                new Date(ctx.station.recordTideDate),
             )} (${ctx.station.recordTideMllw()})`,
             x: data.timeline,
             // We need this one filled across cuz it may appear on the hover text.
@@ -175,9 +182,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             hoverinfo: isNarrow ? 'all' : 'skip',
             // hovertemplate overrides hoverinfo, so must set to empty if we want no hover text.
             // Otherwise must override default template of "{name} : %{y}".
-            hovertemplate: isNarrow
-                ? `Record (${ctx.station.recordTideDate}) : %{y}<extra></extra>`
-                : null,
+            hovertemplate:
+                isNarrow ? `Record (${ctx.station.recordTideDate}) : %{y}<extra></extra>` : null,
         }),
         buildPlot({
             name: 'Highest Annual Predicted (' + data.highest_annual_prediction + ')',
@@ -197,22 +203,22 @@ export default function Chart({ error, loading, hiloMode, data }) {
             color: MeanHighWaterColor,
             hoverinfo: 'skip',
         }),
-        ...(data.hist_tides !== null
-            ? [
-                  buildPlot({
-                      name: 'Observed Tide',
-                      x: data.timeline,
-                      y: data.hist_tides,
-                      lineType: 'solid',
-                      markerSize: hiloMode ? tideMarkerSize : 0,
-                      color: ObservedTideColor,
-                      hovertext: data.hist_hilo_labels,
-                      hovertemplate: '%{y} %{hovertext}',
-                      disableToggle: true,
-                      connectgaps: false,
-                  }),
-              ]
-            : []),
+        ...(data.hist_tides !== null ?
+            [
+                buildPlot({
+                    name: 'Observed Tide',
+                    x: data.timeline,
+                    y: data.hist_tides,
+                    lineType: 'solid',
+                    markerSize: hiloMode ? tideMarkerSize : 0,
+                    color: ObservedTideColor,
+                    hovertext: data.hist_hilo_labels,
+                    hovertemplate: '%{y} %{hovertext}',
+                    disableToggle: true,
+                    connectgaps: false,
+                }),
+            ]
+        :   []),
         buildPlot({
             name: 'Predicted Tide',
             x: data.timeline,
@@ -225,84 +231,99 @@ export default function Chart({ error, loading, hiloMode, data }) {
             disableToggle: false,
             connectgaps: false,
         }),
-        ...(data.past_surge !== null
-            ? [
-                  buildPlot({
-                      name: 'Recorded Storm Surge',
-                      x: data.timeline,
-                      y: data.past_surge,
-                      lineType: 'solid',
-                      markerSize: hiloMode ? tideMarkerSize : 0,
-                      color: RecordedStormSurgeColor,
-                      connectgaps: false,
-                  }),
-              ]
-            : []),
-        ...(data.future_tide !== null
-            ? [
-                  buildPlot({
-                      name: 'Projected Storm Tide',
-                      x: data.timeline,
-                      y: data.future_tide,
-                      lineType: 'dash',
-                      markerSize: hiloMode ? tideMarkerSize : 0,
-                      color: ProjectedStormTideColor,
-                  }),
-              ]
-            : []),
-        ...(data.future_surge !== null
-            ? [
-                  buildPlot({
-                      name: 'Projected Storm Surge',
-                      x: data.timeline,
-                      y: data.future_surge,
-                      lineType: 'dash',
-                      markerSize: hiloMode ? tideMarkerSize : 0,
-                      color: ProjectedStormSurgeColor,
-                  }),
-              ]
-            : []),
-        ...(data.wind_speeds !== null
-            ? [
-                  buildPlot({
-                      name: 'Wind Gusts',
-                      x: data.timeline,
-                      y: data.wind_gusts,
-                      markerSize: windMarkerSize,
-                      markerSymbol: 'arrow',
-                      markerAngle: data.wind_dir,
-                      color: WindGustColor,
-                      yaxis: 'y2',
-                      hovertemplate: '%{y:.1f} mph from %{hovertext}',
-                      hovertext: data.wind_dir_hover,
-                      disableToggle: true,
-                  }),
-                  buildPlot({
-                      name: 'Wind Speed',
-                      x: data.timeline,
-                      y: data.wind_speeds,
-                      markerSize: windMarkerSize,
-                      markerSymbol: 'arrow',
-                      markerAngle: data.wind_dir,
-                      color: WindSpeedColor,
-                      yaxis: 'y2',
-                      hovertemplate: '%{y:.1f} mph from %{hovertext}',
-                      hovertext: data.wind_dir_hover,
-                      disableToggle: true,
-                  }),
-              ]
-            : []),
+        ...(data.past_surge !== null ?
+            [
+                buildPlot({
+                    name: 'Recorded Storm Surge',
+                    x: data.timeline,
+                    y: data.past_surge,
+                    lineType: 'solid',
+                    markerSize: hiloMode ? tideMarkerSize : 0,
+                    color: RecordedStormSurgeColor,
+                    connectgaps: false,
+                }),
+            ]
+        :   []),
+        ...(data.future_tide !== null ?
+            [
+                buildPlot({
+                    name: 'Projected Storm Tide',
+                    x: data.timeline,
+                    y: data.future_tide,
+                    lineType: 'dash',
+                    markerSize: hiloMode ? tideMarkerSize : 0,
+                    color: ProjectedStormTideColor,
+                }),
+            ]
+        :   []),
+        ...(data.future_surge !== null ?
+            [
+                buildPlot({
+                    name: 'Projected Storm Surge',
+                    x: data.timeline,
+                    y: data.future_surge,
+                    lineType: 'dash',
+                    markerSize: hiloMode ? tideMarkerSize : 0,
+                    color: ProjectedStormSurgeColor,
+                }),
+            ]
+        :   []),
+        ...(data.wind_speeds !== null ?
+            [
+                buildPlot({
+                    name: 'Wind Gust',
+                    x: data.timeline,
+                    y: data.wind_gusts,
+                    markerSize: windMarkerSize,
+                    markerSymbol: 'arrow',
+                    markerAngle: data.wind_dir,
+                    color: WindGustColor,
+                    yaxis: 'y2',
+                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertext: data.wind_dir_hover,
+                    disableToggle: true,
+                }),
+                buildPlot({
+                    name: 'Wind Speed',
+                    x: data.timeline,
+                    y: data.wind_speeds,
+                    markerSize: windMarkerSize,
+                    markerSymbol: 'arrow',
+                    markerAngle: data.wind_dir,
+                    color: WindSpeedColor,
+                    yaxis: 'y2',
+                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertext: data.wind_dir_hover,
+                    disableToggle: true,
+                }),
+            ]
+        :   []),
+        ...(forecast_wind_speeds !== null ?
+            [
+                buildPlot({
+                    name: 'Wind Forecast',
+                    x: data.timeline,
+                    y: forecast_wind_speeds,
+                    markerSize: windMarkerSize,
+                    markerSymbol: 'arrow',
+                    markerAngle: data.forecast_wind_dir,
+                    color: ForecastWindSpeedColor,
+                    yaxis: 'y2',
+                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertext: data.forecast_wind_dir_hover,
+                    disableToggle: true,
+                }),
+            ]
+        :   []),
     ]
 
     if (customElevationMllw != null) {
         // If they are showing a custom elevation, insert it into the plot data, so that the
         // 1st 3 items are in descending order.
         const index =
-            customElevationMllw >= ctx.station.recordTideMllw()
-                ? 0
-                : customElevationMllw >= data.highest_annual_prediction
-                ? 1
-                : 2
+            customElevationMllw >= ctx.station.recordTideMllw() ? 0
+            : customElevationMllw >= data.highest_annual_prediction ? 1
+            : 2
         plotData.splice(
             index,
             0,
@@ -314,7 +335,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 lineType: 'solid',
                 color: CustomElevationColor,
                 hovertemplate: 'Custom Elevation: %{y}<extra></extra>',
-            })
+            }),
         )
     }
 

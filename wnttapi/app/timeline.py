@@ -158,7 +158,7 @@ class GraphTimeline(Timeline):
         )
 
     def add_time(self, dt: datetime):
-        """Add a datetime to the timeline, if its in bounds, and sort the times so it's still in order.
+        """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
         This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
         in the timeline.
 

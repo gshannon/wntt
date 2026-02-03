@@ -4,7 +4,13 @@ import Accordion from 'react-bootstrap/Accordion'
 import { SimpleLink, Link } from './Links'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
-import { getSurgeStationUrl, SurgeUrl, TidesCurrentsUrl, TidesCurrentsStationUrl } from './utils'
+import {
+    getSurgeStationUrl,
+    SurgeUrl,
+    TidesCurrentsUrl,
+    OpenMateoUrl,
+    TidesCurrentsStationUrl,
+} from './utils'
 
 export default function About() {
     const ctx = useContext(AppContext)
@@ -165,6 +171,15 @@ export default function About() {
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
                                 <div className='ms-2 me-auto'>
+                                    <div className='fw-bold'>Wind Forecasts</div>
+                                    <div>
+                                        Wind forecasts come from{' '}
+                                        <Link href={OpenMateoUrl} text={`Open-Mateo`} />.
+                                    </div>
+                                </div>
+                            </li>
+                            <li className='list-group-item d-flex justify-content-between align-items-start'>
+                                <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Future Storm Surge Projections</div>
                                     <div>
                                         Storm surge projections come from{' '}
@@ -179,7 +194,7 @@ export default function About() {
                                                 Station page for{' '}
                                                 <Link
                                                     href={getSurgeStationUrl(
-                                                        ctx.station.noaaStationId
+                                                        ctx.station.noaaStationId,
                                                     )}
                                                     text={ctx.station.noaaStationName}
                                                 />

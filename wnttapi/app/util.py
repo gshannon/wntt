@@ -50,6 +50,10 @@ def round_up_to_quarter(dt: datetime) -> datetime:
     return dt + timedelta(minutes=new_minute - dt.minute)
 
 
+def kilometers_to_miles(k: float) -> float:
+    return round(k * 0.6213712, 1)
+
+
 def meters_per_second_to_mph(in_value: float) -> float:
     """Convert meters/sec to miles/hour"""
     miles_per_sec = in_value * 0.000621371

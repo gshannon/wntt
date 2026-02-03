@@ -1,6 +1,7 @@
 export const WELLS_STATION_ID = 'welinwq'
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const GeocodeUrl = 'https://geocode.maps.co'
+export const OpenMateoUrl = 'https://open-meteo.com'
 export const TidesCurrentsUrl = 'https://tidesandcurrents.noaa.gov/tide_predictions.html'
 export const TidesCurrentsStationUrl = 'https://tidesandcurrents.noaa.gov/stationhome.html?id='
 export const TidesCurrentsDatumsUrl = 'https://tidesandcurrents.noaa.gov/datum_options.html'
@@ -166,10 +167,10 @@ export const getDefaultDateStrings = () => {
 
 // Calculate a reasonable tick interval for wind graphs so it's
 // just the right amount of clutter.
-export const calcWindspeedTickInterval = (gusts) => {
+export const calcWindspeedTickInterval = (gusts, forecasts) => {
     let interval = 10
-    if (gusts !== null) {
-        const range = Math.max(...gusts)
+    if (gusts !== null || forecasts !== null) {
+        const range = gusts ? Math.max(...gusts) : Math.max(...forecasts)
         if (range < 20) {
             interval = 3
         } else if (range < 30) {

@@ -1,6 +1,6 @@
 import { Col, Row, Stack } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
-import { Link } from './Links'
+import { Link, SimpleLink } from './Links'
 import { SurgeUrl, TidesCurrentsUrl, TidesCurrentsDatumsUrl } from './utils'
 
 const Entry = (props) => {
@@ -127,6 +127,10 @@ export default function Glossary() {
                     The average wind speed detected during the 15-minute sample period at the
                     reserve&apos;s meteorological station. Samples are taken every five seconds.
                     Source: <b>SWMP</b>
+                </Entry>
+                <Entry title='Wind Forecast'>
+                    Wind speed and direction forecast data at the reserve&apos;s meteorological
+                    station, provided by <SimpleLink href='https://open-meteo.com' />.
                 </Entry>
                 <Entry title='National Tidal Datum Epoch'>
                     The specific{' '}
