@@ -4,9 +4,9 @@ import os
 from datetime import date
 from zoneinfo import ZoneInfo
 
+import sentry_sdk
 from app import util
 from django.core.cache import cache
-import sentry_sdk
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/stations"
@@ -27,6 +27,8 @@ class Station:
             noaa_station_id=data["noaaStationId"],
             navd88_to_mllw=data["navd88ToMllwConversion"],
             time_zone=ZoneInfo(data["timeZone"]),
+            weather_location_latitude=data["weatherLocation"]["lat"],
+            weather_location_longitude=data["weatherLocation"]["lng"],
         )
 
     def __init__(
@@ -36,12 +38,16 @@ class Station:
         noaa_station_id: str,
         navd88_to_mllw: float,
         time_zone: ZoneInfo,
+        weather_location_latitude: float,
+        weather_location_longitude: float,
     ):
         self.id = id
         self.weather_station_id = weather_station_id
         self.noaa_station_id = noaa_station_id
         self.mllw_conversion = navd88_to_mllw
         self.time_zone = time_zone
+        self.weather_station_latitude = weather_location_latitude
+        self.weather_station_longitude = weather_location_longitude
 
     def navd88_feet_to_mllw_feet(self, in_value: float) -> float:
         return round(in_value + self.mllw_conversion, 2)

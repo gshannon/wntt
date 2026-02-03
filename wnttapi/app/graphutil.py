@@ -5,6 +5,7 @@ from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
+from app.datasource import windforecast as wind
 from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
@@ -62,6 +63,9 @@ def get_graph_data(
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
 
+    # Get hourly wind forecasts.
+    forecast_wind_dict = wind.get_wind_forecast(station, timeline)
+
     # Pull all predicted high & low tides for the timeline. If the timeline starts in the past, it may
     # include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
     # need to pull in data for the day before the timeline to handle certain edge cases where a high or low
@@ -96,6 +100,10 @@ def get_graph_data(
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
         timeline, wind_dict
+    )
+
+    forecast_wind_speed_plot, forecast_wind_dir_plot, forecast_wind_dir_hover = (
+        build_wind_forecast_plots(timeline, forecast_wind_dict)
     )
 
     astro_tides_plot, astro_hilo_labels = build_astro_plot(
@@ -146,6 +154,9 @@ def get_graph_data(
         "wind_gusts": wind_gust_plot,
         "wind_dir": wind_dir_plot,
         "wind_dir_hover": wind_dir_hover,
+        "forecast_wind_speeds": forecast_wind_speed_plot,
+        "forecast_wind_dir": forecast_wind_dir_plot,
+        "forecast_wind_dir_hover": forecast_wind_dir_hover,
         "past_surge": past_surge_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
@@ -294,6 +305,52 @@ def build_future_surge_plots(
         raise util.InternalError(msg)
 
     return future_surge_plot, future_storm_tide_plot
+
+
+def build_wind_forecast_plots(
+    timeline: GraphTimeline, forecast_dict: dict
+) -> tuple[list, list, list]:
+    """
+    Build data for 3 graph plots for wind forecast -- speed, direction (degrees), and direction label (e.g. NNE).
+
+    Args:
+        timeline (GraphTimeline): the timeline
+        forecast_dict (dict): forecast data.
+
+    Returns:
+        tuple[list, list, list]: _description_
+    """
+    found = False
+
+    def get_value(dt):
+        nonlocal found
+        if dt in forecast_dict:
+            found = True
+            return forecast_dict[dt].get("mph")
+        return None
+
+    def get_dir_degrees(dt):
+        if dt in forecast_dict:
+            return forecast_dict[dt].get("dir")
+        return None
+
+    def get_dir_label(dt):
+        if dt in forecast_dict:
+            return forecast_dict[dt].get("dir_str")
+        return None
+
+    forecast_speed_plot = timeline.build_plot(get_value)
+    forecast_dir_plot = timeline.build_plot(get_dir_degrees)
+    forecast_dir_str_plot = timeline.build_plot(get_dir_label)
+
+    if found:
+        # This is a hack for a plotly bug. It needs a direction to draw the marker angle in the legend, and
+        # it uses the very first element in the plot. If that's a None, it doesn't draw the marker in the legend.
+        if forecast_dir_plot[0] is None:
+            forecast_dir_plot[0] = 0
+        return forecast_speed_plot, forecast_dir_plot, forecast_dir_str_plot
+    else:
+        return None, None, None
 
 
 def build_astro_plot(
