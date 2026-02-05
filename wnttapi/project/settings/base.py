@@ -1,10 +1,6 @@
 import os
-from pathlib import Path
 
 import logging
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -58,12 +54,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "project.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -91,8 +81,9 @@ LANGUAGE_CODE = "en-us"
 # This controls the timezone of the "asctime" field in the logs.
 TIME_ZONE = "UTC"
 
-# This is not useful with the way we handle datetimes, so we don't use it.
-# USE_TZ = True
+# This seems to be useful only for storing timezone aware datetimes in sqlite. If set, it
+# converts to UTC on storage.
+USE_TZ = True
 
 USE_I18N = True
 
