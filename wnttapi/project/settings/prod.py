@@ -17,6 +17,17 @@ ALLOWED_HOSTS = [
     os.environ.get("API_ALLOWED_HOST"),
 ]
 
+# Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "/data/db/wntt.sqlite3",
+    }
+}
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

@@ -1,15 +1,17 @@
 import logging
 import os
 from datetime import datetime
-import sentry_sdk
 
+import sentry_sdk
 from app.datasource import address
-from rest_framework.exceptions import NotAcceptable, APIException
+from rest_framework.exceptions import APIException, NotAcceptable
 from rest_framework.views import APIView, Response
 
 from . import graphutil as gr
-from . import swmp
 from . import station as stn
+from . import swmp
+from . import tzutil as tz
+from .models import Request, User
 
 logger = logging.getLogger(__name__)
 version = os.getenv("APP_VERSION", "set-me")
@@ -20,6 +22,10 @@ class StationsView(APIView):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
+
+        user_id = log_user(request.data)
+        log_request(request.data, user_id, Request.Type.STATION, None, None, None)
+
         try:
             stations = stn.get_all_stations()
             return Response(data=stations)
@@ -64,6 +70,13 @@ class CreateGraphView(APIView):
         hilo_mode = get_param(request.data, "hilo")
         station_id = get_param(request.data, "station_id")
         station = stn.get_station(station_id)
+        days = (end_date - start_date).days + 1
+        db_station = Request.get_station(station_id)
+
+        user_id = log_user(request.data)
+        log_request(
+            request.data, user_id, Request.Type.GRAPH, db_station, hilo_mode, days
+        )
 
         try:
             # Gather all data needed for the graph and pass it back here
@@ -94,6 +107,51 @@ class AddressView(APIView):
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc))
+
+
+def log_user(data) -> int:
+    if "uid" not in data:
+        logger.debug("No uid in parameters")
+        return None
+    try:
+        id, created = User.objects.get_or_create(
+            uuid=data["uid"],  # Lookup criteria (must be unique)
+            defaults={"uuid": data["uid"], "created_at": tz.now(tz.eastern)},
+        )
+        logger.debug(f"user created? {created} id: {id}")
+        return id
+    except Exception as exc:
+        logger.exception(str(exc))
+        sentry_sdk.capture_exception(exc)
+        return None
+
+
+def log_request(
+    data: dict,
+    user_id: int,
+    request_type: Request.Type,
+    station: Request.Station,
+    hilo_mode: bool,
+    days: int,
+):
+    if user_id is None:
+        return None
+    try:
+        obj = Request.objects.create(
+            user=user_id,
+            when=tz.now(tz.eastern),
+            station=station,
+            type=request_type,
+            version=get_param(data, "version"),
+            hilo=hilo_mode,
+            days=days,
+        )
+        logger.debug("request created")
+        logger.debug(obj)
+
+    except Exception as exc:
+        logger.exception(str(exc))
+        sentry_sdk.capture_exception(exc)
 
 
 def clean_params(data):
