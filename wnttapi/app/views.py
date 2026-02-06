@@ -135,7 +135,7 @@ def log_request(
     days: int,
 ):
     if user_id is None:
-        return None
+        return
     try:
         obj = Request.objects.create(
             user=user_id,
