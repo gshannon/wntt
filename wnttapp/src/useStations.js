@@ -32,7 +32,7 @@ export default function useStations() {
                         console.error(
                             error.message,
                             error.response?.status,
-                            error.response?.data?.detail
+                            error.response?.data?.detail,
                         )
                     }
                     throw error

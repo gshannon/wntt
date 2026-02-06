@@ -27,10 +27,6 @@ export default function App() {
     // In multi-reserve mode, there is no default station.
     const stationId = mainStore.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
 
-    // Note this will usually be loading and return null data on the very 1st pass.
-    // When fetch is done, it will trigger rerender on this component, and we'll get it that time.
-    const { data: stationsData, error: fatalError } = useStations()
-
     const [station, setStation] = useState(null)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
     if (!mainStore.uid) {
@@ -39,6 +35,10 @@ export default function App() {
     } else if (!mainStore.since) {
         storage.setMainStorage({ ...mainStore, since: stringify(new Date()) })
     }
+
+    // Note this will usually be loading and return null data on the very 1st pass.
+    // When fetch is done, it will trigger rerender on this component, and we'll get it that time.
+    const { data: stationsData, error: fatalError } = useStations()
 
     // temporary dev hack
     const toggleSpecial = () => {
