@@ -2,7 +2,6 @@
 import './css/App.css'
 // uncomment to show bootstrap debug
 //import './bs-breakpoint.css'
-import * as Sentry from '@sentry/react'
 import { useEffect, useState } from 'react'
 import Top from './Top'
 import Control from './Control'
@@ -72,7 +71,6 @@ export default function App() {
 
     useEffect(() => {
         console.log(`WNTT Startup, build ${import.meta.env.VITE_APP_VERSION}`)
-        Sentry.logger.info('Startup', storage.getMainStorage())
     }, [])
 
     // Set the station if we have the id and have loaded the station configs.  Should only happen

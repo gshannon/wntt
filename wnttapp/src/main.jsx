@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './App'
-import * as storage from './storage'
 
 import.meta.env.VITE_SENTRY_ENABLE === '1' &&
     Sentry.init({
@@ -22,8 +21,6 @@ const queryClient = new QueryClient({
         },
     },
 })
-
-storage.manageStorage()
 
 const container = document.getElementById('root')
 const root = createRoot(container, {
@@ -47,5 +44,5 @@ root.render(
                 position='bottom'
             /> */}
         </QueryClientProvider>
-    </>
+    </>,
 )
