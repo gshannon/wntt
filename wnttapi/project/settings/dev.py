@@ -18,10 +18,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        # This is the only version that works for dealing with migrations from command line, not using a docker container.
-        # Do not check it in, as it will break the app in docker.
+        # Temporarily use this NAME for "makemigrations" since that must be done directly on the
+        # file system, not docker container, so the created migration file persists.
         # "NAME": str(BASE_DIR / "datamount" / "db" / "wntt.sqlite3"),
-        # This version must be used by the app.
+        # Otherwise, use this NAME, which uses a docker mount for running the container.
         "NAME": "/data/db/wntt.sqlite3",
     }
 }

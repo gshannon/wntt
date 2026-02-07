@@ -26,6 +26,8 @@ class Request(models.Model):
     start = models.DateField(null=True)
     days = models.SmallIntegerField(null=True)
     hilo = models.BooleanField(default=False, null=True)
+    customNav = models.FloatField(null=True)
+    screenWidth = models.SmallIntegerField(null=True)
 
     @staticmethod
     def get_station(station_id: str) -> Station:
