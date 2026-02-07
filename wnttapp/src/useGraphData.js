@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import * as Sentry from '@sentry/react'
 import { buildCacheKey } from './utils'
 import * as storage from './storage'
 
 export default function useGraphData(station, startDate, endDate, hiloMode) {
     const mainStore = storage.getMainStorage()
+    const permStore = storage.getPermanentStorage(station.id)
     // The main graph data api call.
     return useQuery({
         retry: false,
@@ -13,13 +15,16 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
             return await axios
                 .post(import.meta.env.VITE_API_GRAPH_URL, {
                     signal,
-                    uid: mainStore.uid,
-                    session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                     start: startDate,
                     end: endDate,
                     hilo: hiloMode,
+                    // These fields are for logging
+                    uid: mainStore.uid ?? 'NONE',
+                    session: mainStore.session ?? null,
+                    screenWidth: window.innerWidth,
+                    customNav: permStore.customElevationNav ?? null,
                 })
                 .then((res) => res.data)
                 .catch((error) => {
@@ -27,8 +32,9 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                         console.error(
                             error.message,
                             error.response?.status,
-                            error.response?.data?.detail
+                            error.response?.data?.detail,
                         )
+                        Sentry.captureException(error)
                     }
                     throw error
                 })

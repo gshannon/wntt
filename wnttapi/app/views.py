@@ -23,8 +23,13 @@ class StationsView(APIView):
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
 
-        user_id = log_user(request.data)
-        log_request(request.data, user_id, Request.Type.STATION, None, None, None)
+        user_id = log_user(request.data.get("uid"))
+        log_request(
+            Request.Type.STATION,
+            user_id,
+            request.data.get("version"),
+            request.data.get("screenWidth"),
+        )
 
         try:
             stations = stn.get_all_stations()
@@ -43,7 +48,7 @@ class LatestInfoView(APIView):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
-        swmp_station_id = get_param(request.data, "station_id")
+        swmp_station_id = get_required(request.data, "station_id")
         station = stn.get_station(swmp_station_id)
 
         try:
@@ -64,18 +69,26 @@ class CreateGraphView(APIView):
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
         start_date = datetime.strptime(
-            get_param(request.data, "start"), "%m/%d/%Y"
+            get_required(request.data, "start"), "%m/%d/%Y"
         ).date()
-        end_date = datetime.strptime(get_param(request.data, "end"), "%m/%d/%Y").date()
-        hilo_mode = get_param(request.data, "hilo")
-        station_id = get_param(request.data, "station_id")
+        end_date = datetime.strptime(
+            get_required(request.data, "end"), "%m/%d/%Y"
+        ).date()
+        hilo_mode = get_required(request.data, "hilo")
+        station_id = get_required(request.data, "station_id")
         station = stn.get_station(station_id)
-        days = (end_date - start_date).days + 1
-        db_station = Request.get_station(station_id)
 
-        user_id = log_user(request.data)
+        user_id = log_user(request.data.get("uid"))
         log_request(
-            request.data, user_id, Request.Type.GRAPH, db_station, hilo_mode, days
+            Request.Type.GRAPH,
+            user_id,
+            request.data.get("version"),
+            request.data.get("screenWidth"),
+            station_id=station_id,
+            start_date=start_date,
+            end_date=end_date,
+            hilo_mode=hilo_mode,
+            customNav=request.data.get("customNav"),
         )
 
         try:
@@ -96,7 +109,7 @@ class AddressView(APIView):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
-        search = get_param(request.data, "search")
+        search = get_required(request.data, "search")
         try:
             latlng = address.get_location(search)
             return Response(data=latlng)
@@ -109,47 +122,63 @@ class AddressView(APIView):
             raise APIException(str(exc))
 
 
-def log_user(data) -> int:
-    if "uid" not in data:
-        logger.debug("No uid in parameters")
+def log_user(uid: str) -> int:
+    if uid is None:
+        logger.error("No uid in parameters!")
         return None
     try:
         id, created = User.objects.get_or_create(
-            uuid=data["uid"],  # Lookup criteria (must be unique)
-            defaults={"uuid": data["uid"], "created_at": tz.now(tz.eastern)},
+            uuid=uid,
+            defaults={"uuid": uid, "created_at": tz.now(tz.eastern)},
         )
         logger.debug(f"user created? {created} id: {id}")
         return id
     except Exception as exc:
+        # Log but do not raise
         logger.exception(str(exc))
         sentry_sdk.capture_exception(exc)
         return None
 
 
 def log_request(
-    data: dict,
-    user_id: int,
     request_type: Request.Type,
-    station: Request.Station,
-    hilo_mode: bool,
-    days: int,
+    user_id: int,
+    version: str,
+    screenWidth: int,
+    **kwargs,
 ):
     if user_id is None:
         return
     try:
-        obj = Request.objects.create(
-            user=user_id,
-            when=tz.now(tz.eastern),
-            station=station,
-            type=request_type,
-            version=get_param(data, "version"),
-            hilo=hilo_mode,
-            days=days,
-        )
-        logger.debug("request created")
-        logger.debug(obj)
+        if request_type == Request.Type.STATION:
+            Request.objects.create(
+                user=user_id,
+                when=tz.now(tz.eastern),
+                type=request_type,
+                version=version,
+                screenWidth=screenWidth,
+            )
+        else:
+            start_date = kwargs["start_date"]
+            end_date = kwargs["end_date"]
+            days = (end_date - start_date).days + 1
+            db_station = Request.get_station(kwargs["station_id"])
+
+            Request.objects.create(
+                user=user_id,
+                when=tz.now(tz.eastern),
+                type=request_type,
+                station=db_station,
+                version=version,
+                start=start_date,
+                days=days,
+                hilo=kwargs["hilo_mode"],
+                customNav=kwargs["customNav"],
+                screenWidth=screenWidth,
+            )
 
     except Exception as exc:
+        # Log but do not raise
         logger.exception(str(exc))
         sentry_sdk.capture_exception(exc)
 
@@ -161,7 +190,7 @@ def clean_params(data):
 # Try to get a param from the request. If not there, raise
 # NotAcceptable (406), which in this context probably means
 # the app is out of date and needs refreshed.
-def get_param(data, param):
+def get_required(data, param):
     if param in data:
         return data[param]
     logger.warning("Missing request parameter %s", param)
@@ -171,7 +200,7 @@ def get_param(data, param):
 # Verify that caller's release version matches ours.  If not, raise NotAcceptable
 # which app should interpret as version out of date.
 def verify_version(data):
-    caller_version = get_param(data, "version")
+    caller_version = get_required(data, "version")
     browser_id = data.get("bid", "unknown")
     if caller_version != version:
         msg = "Caller %s version %s does not match %s" % (

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import * as Sentry from '@sentry/react'
 import Station from './Station'
 import * as storage from './storage'
 
@@ -16,9 +17,11 @@ export default function useStations() {
             return await axios
                 .post(import.meta.env.VITE_API_STATIONS_URL, {
                     signal,
-                    uid: mainStore.uid,
-                    session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
+                    // For logging...
+                    uid: mainStore.uid ?? 'NONE',
+                    session: mainStore.session ?? null,
+                    screenWidth: window.innerWidth,
                 })
                 .then((res) => {
                     const asArray = Object.entries(res.data).map(([id, stn]) => [
@@ -34,6 +37,7 @@ export default function useStations() {
                             error.response?.status,
                             error.response?.data?.detail,
                         )
+                        Sentry.captureException(error)
                     }
                     throw error
                 })

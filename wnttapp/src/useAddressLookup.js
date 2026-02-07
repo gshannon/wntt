@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import * as Sentry from '@sentry/react'
 import * as storage from './storage'
 
 export default function useAddressLookup(search) {
@@ -29,8 +30,9 @@ export default function useAddressLookup(search) {
                         console.error(
                             error.message,
                             error.response?.status,
-                            error.response?.data?.detail
+                            error.response?.data?.detail,
                         )
+                        Sentry.captureException(error)
                     }
                     throw error
                 })
