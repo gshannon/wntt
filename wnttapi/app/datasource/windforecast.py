@@ -18,11 +18,13 @@ max_forecast_days = 14
 """
 base_url = (
     "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&timezone={}"
-    "&hourly=wind_speed_10m,wind_direction_10m&forecast_days={}"
+    "&{}=wind_speed_10m,wind_direction_10m&forecast_days={}"
 )
 
 
-def get_wind_forecast(station: Station, timeline: GraphTimeline) -> dict:
+def get_wind_forecast(
+    station: Station, timeline: GraphTimeline, hilo_mode: bool
+) -> dict:
     """
     Fetch wind speed and direction forecast for the desired timeline. We only support forecasts for a period of 7
     days starting with the current date, so if timeline does not overlap with that time window, no data is retrieved.
@@ -30,10 +32,10 @@ def get_wind_forecast(station: Station, timeline: GraphTimeline) -> dict:
     Args:
         station (Station): the SWMP station
         timeline (Timeline): the timeline
-        asof: as of this datetime, for testing only
+        hilo_mode: if true, pull 15-min data instead of hourly, so graph will have something to display for every high or low.
 
     Returns:
-        - dict of hourly forecasts for the relevant portion of the timeline. {datetime: {"mph": float, "dir": str}}.
+        - dict of hourly or 15-min forecasts for the relevant portion of the timeline. {datetime: {"mph": float, "dir": str}}.
     """
 
     # If the forecast window does not overlap the timeline, do nothing.
@@ -45,7 +47,7 @@ def get_wind_forecast(station: Station, timeline: GraphTimeline) -> dict:
         return {}
 
     days = (overlap[-1].date() - now.date()).days + 1
-    forecast_json = pull_data(station, days)
+    forecast_json = pull_data(station, days, hilo_mode)
 
     if len(forecast_json) > 0:
         return pred_json_to_dict(forecast_json, timeline, overlap, now)
@@ -55,8 +57,7 @@ def get_wind_forecast(station: Station, timeline: GraphTimeline) -> dict:
 def get_forecast_window(timeline: GraphTimeline, now: datetime) -> list:
     """
     Build a list of datetimes which are a subset of the timeline for which we would like
-    to get wind speed and direction forecasts. We are limiting it to several days in the future, and only
-    hourly times, although the API supports 15-min and up to 16 days.
+    to get wind speed and direction forecasts.
     """
     if now.tzinfo != timeline.time_zone:
         raise util.InternalError
@@ -75,11 +76,13 @@ def get_forecast_window(timeline: GraphTimeline, now: datetime) -> list:
     return overlap
 
 
-def pull_data(station: Station, forecast_days: int) -> dict:
+def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
+    granularity = "hourly" if not hilo_mode else "minutely_15"
     url = base_url.format(
         station.weather_station_latitude,
         station.weather_station_longitude,
         station.time_zone.key,
+        granularity,
         forecast_days,
     )
     reason = None
@@ -95,7 +98,9 @@ def pull_data(station: Station, forecast_days: int) -> dict:
             else:
                 reason = "code {response.status_code}"
             raise Exception
-        return json_dict["hourly"]
+        keys = list(json_dict.keys())
+        logger.info(keys)
+        return json_dict[granularity]
 
     except Exception as e:
         e.add_note(f"Url: {url}")
