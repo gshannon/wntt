@@ -19,13 +19,13 @@ class TestWindForecast(TestCase):
 
         start = date(2026, 2, 2)
         end = date(2026, 2, 2)
-        tline = GraphTimeline(start, end, zone)
-        forecast_window = wind.get_forecast_window(tline, now)
+        tline = GraphTimeline(start, end, zone, now)
+        forecast_window = wind.get_forecast_window(tline)
 
         raw = util.read_file(f"{cur_path}/data/wind-20260202-03.json")
         contents = json.loads(raw)["hourly"]
 
-        result = wind.pred_json_to_dict(contents, tline, forecast_window, now)
+        result = wind.pred_json_to_dict(contents, tline, forecast_window)
         self.assertEqual(len(result), 13)
         self.assertEqual(len(result), len(forecast_window))
         self.assertEqual(

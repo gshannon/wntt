@@ -320,6 +320,9 @@ def build_wind_forecast_plots(
     Returns:
         tuple[list, list, list]: _description_
     """
+    if len(forecast_dict) == 0:
+        return None, None, None
+
     found = False
 
     def get_value(dt):
@@ -343,14 +346,14 @@ def build_wind_forecast_plots(
     forecast_dir_plot = timeline.build_plot(get_dir_degrees)
     forecast_dir_str_plot = timeline.build_plot(get_dir_label)
 
-    if found:
-        # This is a hack for a plotly bug. It needs a direction to draw the marker angle in the legend, and
-        # it uses the very first element in the plot. If that's a None, it doesn't draw the marker in the legend.
-        if forecast_dir_plot[0] is None:
-            forecast_dir_plot[0] = 0
-        return forecast_speed_plot, forecast_dir_plot, forecast_dir_str_plot
-    else:
+    if not found:
         return None, None, None
+
+    # This is a hack for a plotly bug. It needs a direction to draw the marker angle in the legend, and
+    # it uses the very first element in the plot. If that's a None, it doesn't draw the marker in the legend.
+    if forecast_dir_plot[0] is None:
+        forecast_dir_plot[0] = 0
+    return forecast_speed_plot, forecast_dir_plot, forecast_dir_str_plot
 
 
 def build_astro_plot(
@@ -408,9 +411,12 @@ def build_wind_plots(
         3. Wind direction (0-360, to drive marker angle)
         4. Wind direction string (for hover text display)
     """
+
     if len(wind_dict) == 0:
         # There are no wind predictions, return None for all lists.
         return None, None, None, None
+
+    found = False
 
     # If not in hilo mode, for readability, thin out the data points, as it gets pretty dense and hard to read.
     minutes = [0, 15, 30, 45]  # show all
@@ -422,9 +428,11 @@ def build_wind_plots(
             minutes = [0, 30]  # show 2 per hour
 
     def check_item(dt, key):
+        nonlocal found
         if dt.minute in minutes and dt in wind_dict:
             if key not in wind_dict[dt]:
                 raise util.InternalError(f"Missing {key} in wind data for {dt}")
+            found = True
             return wind_dict[dt].get(key)
         else:
             return None
@@ -446,6 +454,13 @@ def build_wind_plots(
     wind_dir_plot = timeline.build_plot(check_dir)
     wind_dir_hover = timeline.build_plot(check_dir_str)
 
+    if not found:
+        return None, None, None, None
+
+    # This is a hack for a plotly bug. It needs a direction to draw the marker angle in the legend, and
+    # it uses the very first element in the plot. If that's a None, it doesn't draw the marker in the legend.
+    if wind_dir_plot[0] is None:
+        wind_dir_plot[0] = 0
     return wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover
 
 

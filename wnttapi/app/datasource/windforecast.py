@@ -38,38 +38,36 @@ def get_wind_forecast(
         - dict of hourly or 15-min forecasts for the relevant portion of the timeline. {datetime: {"mph": float, "dir": str}}.
     """
 
-    # If the forecast window does not overlap the timeline, do nothing.
-    # max(timeline) must be > min(window) AND max(window) must be > min(timeline)
-    now = tz.now(station.time_zone)
+    # If timeline is in past, or the forecast window does not overlap the timeline, do nothing.
+    if timeline.is_all_past():
+        return {}
 
-    overlap = get_forecast_window(timeline, now)
+    overlap = get_forecast_window(timeline)
     if len(overlap) == 0:
         return {}
 
-    days = (overlap[-1].date() - now.date()).days + 1
+    days = (overlap[-1].date() - timeline.now.date()).days + 1
     forecast_json = pull_data(station, days, hilo_mode)
 
     if len(forecast_json) > 0:
-        return pred_json_to_dict(forecast_json, timeline, overlap, now)
+        return pred_json_to_dict(forecast_json, timeline, overlap)
     return {}
 
 
-def get_forecast_window(timeline: GraphTimeline, now: datetime) -> list:
+def get_forecast_window(timeline: GraphTimeline) -> list:
     """
     Build a list of datetimes which are a subset of the timeline for which we would like
     to get wind speed and direction forecasts.
     """
-    if now.tzinfo != timeline.time_zone:
-        raise util.InternalError
-    max_window_date = now.date() + timedelta(days=max_forecast_days - 1)
+    max_window_date = timeline.now.date() + timedelta(days=max_forecast_days - 1)
     max_window_dt = datetime.combine(max_window_date, time(23, 0)).replace(
-        tzinfo=now.tzinfo
+        tzinfo=timeline.time_zone
     )
 
     # Determine the part of the forecast window that overlaps the timeline.
     overlap = list(
         filter(
-            lambda dt: dt.minute == 0 and now <= dt <= max_window_dt,
+            lambda dt: dt.minute == 0 and timeline.now <= dt <= max_window_dt,
             timeline.get_requested(),
         )
     )
@@ -111,9 +109,7 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         return {}
 
 
-def pred_json_to_dict(
-    pred_json: dict, timeline: GraphTimeline, overlap: list, asof: datetime
-):
+def pred_json_to_dict(pred_json: dict, timeline: GraphTimeline, overlap: list):
     if overlap[0].tzinfo != timeline.time_zone:
         raise util.InternalError
     result = {}
@@ -127,7 +123,7 @@ def pred_json_to_dict(
                 tzinfo=timeline.time_zone
             )  # '2026-01-13T17:30'
 
-            if dt >= asof:
+            if dt >= timeline.now:
                 if dt > overlap[-1]:
                     break  # we're past the range of interest
                 if timeline.contains(dt):
