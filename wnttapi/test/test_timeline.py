@@ -190,7 +190,8 @@ class TestHiloTimeline(TestCase):
         )
         self.assertEqual(wind_speed_plot, [None, 12, None, None, None, None])
         self.assertEqual(wind_gust_plot, [None, 15.5, None, None, None, None])
-        self.assertEqual(wind_dir_plot, [None, 325, None, None, None, None])
+        # Note the 0 at index 0. Hack for plotly bug.
+        self.assertEqual(wind_dir_plot, [0, 325, None, None, None, None])
         self.assertEqual(wind_dir_hover, [None, "NW", None, None, None, None])
 
     def test_hilo_plot_with_boundary_data(self):
