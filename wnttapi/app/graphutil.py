@@ -63,8 +63,8 @@ def get_graph_data(
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
 
-    # Get hourly wind forecasts.
-    forecast_wind_dict = wind.get_wind_forecast(station, timeline)
+    # Get wind forecasts.
+    forecast_wind_dict = wind.get_wind_forecast(station, timeline, hilo_mode)
 
     # Pull all predicted high & low tides for the timeline. If the timeline starts in the past, it may
     # include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
