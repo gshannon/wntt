@@ -57,11 +57,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
         )
     }
 
-    // Enable this just for special mode for now.
-    const forecast_wind_speeds = ctx.special ? data.forecast_wind_speeds : null
-
     const graph1_max = 1
-    const graph1_min = data.wind_speeds !== null || forecast_wind_speeds !== null ? 0.44 : 0
+    const graph1_min = data.wind_speeds !== null || data.forecast_wind_speeds !== null ? 0.44 : 0
     const graph2_max = 0.4
     const graph2_min = 0
 
@@ -124,7 +121,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             dtick:
                 (
                     data.wind_speeds === null &&
-                    forecast_wind_speeds === null &&
+                    data.forecast_wind_speeds === null &&
                     Math.max(ctx.station.recordTideMllw(), customElevationMllw ?? 0) < 16
                 ) ?
                     1
@@ -135,7 +132,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             domain: [graph2_min, graph2_max],
             gridcolor: 'black',
             rangemode: 'tozero',
-            dtick: calcWindspeedTickInterval(data.wind_gusts, forecast_wind_speeds),
+            dtick: calcWindspeedTickInterval(data.wind_gusts, data.forecast_wind_speeds),
         },
         grid: {
             rows: 2,
@@ -271,45 +268,46 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.wind_speeds !== null ?
             [
                 buildPlot({
-                    name: 'Wind Gust',
+                    name: 'Wind Gust (points to source)',
                     x: data.timeline,
                     y: data.wind_gusts,
                     markerSize: windMarkerSize,
-                    markerSymbol: 'arrow',
+                    markerSymbol: 'arrow-wide-open',
                     markerAngle: data.wind_dir,
                     color: WindGustColor,
                     yaxis: 'y2',
-                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertemplate: 'Wind Gust: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.wind_dir_hover,
                     disableToggle: true,
                 }),
                 buildPlot({
-                    name: 'Wind Speed',
+                    // fig.update_traces(hovertemplate='X: %{x}<br>Y: %{y}<br>Angle: %{marker.angle}')
+                    name: 'Wind Speed (points to source)',
                     x: data.timeline,
                     y: data.wind_speeds,
                     markerSize: windMarkerSize,
-                    markerSymbol: 'arrow',
+                    markerSymbol: 'arrow-wide-open',
                     markerAngle: data.wind_dir,
                     color: WindSpeedColor,
                     yaxis: 'y2',
-                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertemplate: 'Wind Speed: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.wind_dir_hover,
                     disableToggle: true,
                 }),
             ]
         :   []),
-        ...(forecast_wind_speeds !== null ?
+        ...(data.forecast_wind_speeds !== null ?
             [
                 buildPlot({
-                    name: 'Wind Forecast',
+                    name: 'Wind Forecast (points to source)',
                     x: data.timeline,
-                    y: forecast_wind_speeds,
+                    y: data.forecast_wind_speeds,
                     markerSize: windMarkerSize,
-                    markerSymbol: 'arrow',
+                    markerSymbol: 'arrow-wide-open',
                     markerAngle: data.forecast_wind_dir,
                     color: ForecastWindSpeedColor,
                     yaxis: 'y2',
-                    hovertemplate: '%{y:.1f} mph from %{hovertext}',
+                    hovertemplate: 'Wind Forecast: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.forecast_wind_dir_hover,
                     disableToggle: true,
                 }),
