@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+info() {
+  echo "$(date) $@"
+}
+
 cwd=$(pwd)
 rootdir=$HOME/datamount/surge
 workdir=$rootdir/tmp
@@ -12,38 +16,46 @@ mkdir -p $workdir $archive $datadir
 # Edit this whenever a reserve is added/subtracted.
 stations=("8419317" "8658163")
 
-# Top level directories are named "etss.<date>", e.t. etss.20251029, and the most recent 4
-# are kept. Each contains several varieties of tar files, with the time "cycle" (0, 6, 12 or 18) 
-# embedded in the name. The one we want is etss.t${cycle}z.csv.tar.gz.  Calculate that file 
-# name based on the current date/time.
-filedate=$(date +%Y%m%d)
-hour=$(date +%H)
-if [ $hour -ge 23 ]; then
-    cycle='18'
-elif [ $hour -ge 17 ]; then
-    cycle='12'
-elif [ $hour -ge 11 ]; then
-    cycle='06'
-elif [ $hour -ge 5 ]; then
+# Top level directories are named "etss.<date>", e.g. etss.20251029, and the most recent few days' files
+# are kept on the host. Each contains several varieties of tar files, with the time "cycle" (0, 6, 12 or 18) 
+# embedded in the name. The one we want is etss.t${cycle}z.csv.tar.gz.  NOAA publishes the files on this
+# schedule:
+# cycle 00 : ~06:15
+# cycle 06 : ~12:15
+# cycle 12 : ~18:15
+# cycle 18 : ~00:15 following day
+#
+# Calculate the most recent cycle available to download. All datetimes are UTC.
+filedate=$(date -u +%Y%m%d)
+curtime=$(date -u +%H%M)
+if [[ $curtime > "0629" ]] && [[ $curtime < "1230" ]]; then
     cycle='00'
+elif [[ $curtime > "1229" ]] && [[ $curtime < "1830" ]]; then
+    cycle='06'
+elif [[ $curtime > "1829" ]]; then
+    cycle='12'
+elif [[ $curtime < "0030" ]]; then
+    cycle='12'
+    filedate=$(date -u -d '-1 day' +%Y%m%d)
 else
-    # Use yesterday's last cycle
-    filedate=$(date -d '-1 day' +%Y%m%d)
     cycle='18'
+    filedate=$(date -u -d '-1 day' +%Y%m%d)
 fi
 
+info "Pulling cycle $cycle for filedate $filedate"
+
 # This is the expected most recent tar file.
-rawfile=etss.t${cycle}z.csv.tar.gz
+target=etss.t${cycle}z.csv.tar.gz
 
 cd $workdir
 rm -rf *  # clean up files from previous run 
-url="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${filedate}/${rawfile}"
-curl --no-progress-meter --fail-with-body -o $rawfile $url || {
-  echo "Failed to download $url"
+url="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${filedate}/${target}"
+curl --no-progress-meter --fail-with-body -o $target $url || {
+  info "Failed to download $url"
   exit 1
 }
-tar zxf $rawfile || {
-  echo "Failed to extract $rawfile"
+tar zxf $target || {
+  info "Failed to extract $target"
   exit 1
 }
 
@@ -55,16 +67,20 @@ tar zxf $rawfile || {
 for ((i=0; i<${#stations[@]}; i++)); do
   datafile=etss.$filedate/t${cycle}z.csv/${stations[$i]}.csv
   if [ ! -f $datafile ]; then
-    echo "Expected file $datafile not found after extraction."
+    info "Expected file $datafile not found after extraction."
   else
     cp $datafile $datadir
-    echo "extracted ${stations[$i]}.csv..."
+    cp $datafile $archive/${stations[$i]}-${filedate}-${cycle}.csv
+    info "extracted ${stations[$i]}.csv"
+    # Run the surge_logger util in the api container
+    DJANGO_SETTINGS_MODULE=project.settings.prod docker compose -f $HOME/docker-compose.yml run --rm \
+      api app/surge_logger.py \
+      -d $filedate -c $cycle -s ${stations[$i]} && info "logged ${stations[$i]}.csv"
   fi
 done
 
 # We'll leave the tmp dir contents around for debugging.
 # rm -rf $workdir/*
-
-echo "$(date): $filedate $cycle" >> $rootdir/log
+echo "$filedate $cycle" >> $rootdir/log
 
 exit 0

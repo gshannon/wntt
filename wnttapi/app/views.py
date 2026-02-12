@@ -11,7 +11,7 @@ from . import graphutil as gr
 from . import station as stn
 from . import swmp
 from . import tzutil as tz
-from .models import Request, User
+from .models import Request, User, get_station
 
 logger = logging.getLogger(__name__)
 version = os.getenv("APP_VERSION", "set-me")
@@ -162,7 +162,7 @@ def log_request(
             start_date = kwargs["start_date"]
             end_date = kwargs["end_date"]
             days = (end_date - start_date).days + 1
-            db_station = Request.get_station(kwargs["station_id"])
+            db_station = get_station(kwargs["station_id"])
 
             Request.objects.create(
                 user=user_id,

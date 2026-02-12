@@ -96,8 +96,6 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
             else:
                 reason = "code {response.status_code}"
             raise Exception
-        keys = list(json_dict.keys())
-        logger.info(keys)
         return json_dict[granularity]
 
     except Exception as e:

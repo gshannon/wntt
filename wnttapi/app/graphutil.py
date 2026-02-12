@@ -87,6 +87,9 @@ def get_graph_data(
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
+
+    past_surge_check_dict = sg.get_historic_surge(timeline, station.noaa_station_id)
+
     future_surge_dict = sg.get_future_surge_data(
         timeline, station.noaa_station_id, max(obs_dict) if len(obs_dict) > 0 else None
     )
@@ -110,11 +113,16 @@ def get_graph_data(
         timeline, astro_preds15_dict, hilo_event_dict
     )
 
+    past_surge_check_plot, past_surge_check_total_plot = build_past_surge_check_plots(
+        timeline, past_surge_check_dict, astro_preds15_dict
+    )
+
     past_surge_plot = (
         timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
         if not timeline.is_all_future()
         else None
     )
+
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
         timeline, future_surge_dict, astro_preds15_dict, astro_all_hilo_dict
     )
@@ -158,6 +166,8 @@ def get_graph_data(
         "forecast_wind_dir": forecast_wind_dir_plot,
         "forecast_wind_dir_hover": forecast_wind_dir_hover,
         "past_surge": past_surge_plot,
+        "past_surge_check": past_surge_check_plot,
+        "past_surge_total_check": past_surge_check_total_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
@@ -305,6 +315,35 @@ def build_future_surge_plots(
         raise util.InternalError(msg)
 
     return future_surge_plot, future_storm_tide_plot
+
+
+def build_past_surge_check_plots(
+    timeline: GraphTimeline, pred_dict, astro_preds15_dict
+) -> tuple[list, list]:
+    if len(pred_dict) == 0:
+        return None
+
+    found = False
+
+    def get_pred(dt: datetime):
+        nonlocal found
+        found = found or dt in pred_dict
+        return pred_dict.get(dt, None)
+
+    def get_total_pred(dt: datetime):
+        nonlocal found
+        # lookup_dt = dt if dt.minute == 0 else dt.replace(minute=0)
+        if dt in pred_dict and dt in astro_preds15_dict:
+            found = True
+            return pred_dict[dt] + astro_preds15_dict[dt]
+        return None
+
+    surge_plot = timeline.build_plot(lambda dt: get_pred(dt))
+    if found:
+        total_plot = timeline.build_plot(lambda dt: get_total_pred(dt))
+        return surge_plot, total_plot
+    else:
+        return None, None
 
 
 def build_wind_forecast_plots(

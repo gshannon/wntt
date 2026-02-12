@@ -216,6 +216,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }),
             ]
         :   []),
+        ...(ctx.special && !hiloMode && data.past_surge_total_check !== null ?
+            [
+                buildPlot({
+                    name: 'CHECK Pred Storm Tide',
+                    x: data.timeline,
+                    y: data.past_surge_total_check,
+                    lineType: 'dash',
+                    markerSize: 0,
+                    color: RecordTideColor,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
         buildPlot({
             name: 'Predicted Tide',
             x: data.timeline,
@@ -228,6 +241,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
             disableToggle: false,
             connectgaps: false,
         }),
+        ...(ctx.special && !hiloMode && data.past_surge_check !== null ?
+            [
+                buildPlot({
+                    name: 'CHECK Pred Storm Surge',
+                    x: data.timeline,
+                    y: data.past_surge_check,
+                    lineType: 'dot',
+                    markerSize: 0,
+                    color: RecordTideColor,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
         ...(data.past_surge !== null ?
             [
                 buildPlot({
