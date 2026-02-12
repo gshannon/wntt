@@ -5,10 +5,12 @@ import os.path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app import tzutil as tz
-from app.timeline import Timeline
-from django.core.cache import cache
 import sentry_sdk
+from app import tzutil as tz
+from app.timeline import GraphTimeline
+from django.core.cache import cache
+
+from ..models import Surge
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -19,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_future_surge_data(
-    timeline: Timeline, noaa_station_id: str, last_recorded_dt: datetime
+    timeline: GraphTimeline, noaa_station_id: str, last_recorded_dt: datetime
 ) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes which are past the
     last_recorded_dt param, if given, else the current system time. These are extracted from a csv file
@@ -32,7 +34,8 @@ def get_future_surge_data(
         last_recorded_dt (datetime): time of latest recorded tide, or None
 
     Returns:
-        dict: {dt: height MLLW feet} latest predicted surge value for each time in timeline
+        dict: {dt: tide in mllw feet} latest predicted surge value for each time in timeline
+
     """
     future_surge_dict = {}  # {dt: surge_value}
 
@@ -52,6 +55,23 @@ def get_future_surge_data(
             }
 
     return future_surge_dict
+
+
+def get_historic_surge(timeline: GraphTimeline, noaa_station_id: str) -> dict:
+    """Get the last known surge predictions for the past times in the timeline."""
+    data = {}
+    if timeline.is_all_future():
+        return data
+
+    qs = Surge.objects.filter(
+        noaa_id=noaa_station_id, tide_time__range=(timeline.start_dt, timeline.now)
+    ).order_by("tide_time")
+
+    for rec in qs:
+        in_tz = rec.tide_time.astimezone(timeline.time_zone)
+        data[in_tz] = rec.surge
+
+    return data
 
 
 def calculate_past_storm_surge(astro_dict: dict, obs_dict: dict) -> dict:
