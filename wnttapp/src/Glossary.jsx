@@ -49,18 +49,14 @@ export default function Glossary() {
                     .
                 </Entry>
                 <Entry title='MLLW (Mean Lower Low Water)'>
-                    MLLW is the average of all lowest daily tides observed over the{' '}
-                    <b>National Tidal Datum Epoch</b>. When we say a tide is <i>9.5 feet MLLW</i>,
-                    we mean its height is 9.5 feet higher than{' '}
-                    <Link
-                        href='https://tidesandcurrents.noaa.gov/datum_options.html#MLLW'
-                        text='Mean Lower Low Water'
-                    />
-                    , which is the tidal{' '}
-                    <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />{' '}
-                    (point of reference) used by this application for all land and sea elevations.
-                    See <Link href={TidesCurrentsDatumsUrl} text='here' /> for more information
-                    about datums.
+                    <Link href={TidesCurrentsDatumsUrl} text='Mean Lower Low Water' /> is a fixed
+                    point of reference (
+                    <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />)
+                    representing the average of all lowest daily tides observed over the{' '}
+                    <b>National Tidal Datum Epoch</b> for a particular tide station. When we say a
+                    tide is <i>9 feet MLLW</i>, we mean its height is 9 feet higher than than this{' '}
+                    point of reference. MLLW is the datum used by this application for all land and
+                    sea elevations.
                 </Entry>
                 <Entry title='Custom Elevation'>
                     The elevation relative to MLLW of your selected location on the Map page. This

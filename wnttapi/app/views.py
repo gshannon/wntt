@@ -129,7 +129,8 @@ def log_user(uid: str) -> int:
     try:
         id, created = User.objects.get_or_create(
             uuid=uid,
-            defaults={"uuid": uid, "created_at": tz.now(tz.eastern)},
+            # Use UTC since sqlite converts all times to UTC anyway.
+            defaults={"uuid": uid, "created_at": tz.now(tz.utc)},
         )
         logger.debug(f"user created? {created} id: {id}")
         return id
@@ -150,10 +151,12 @@ def log_request(
     if user_id is None:
         return
     try:
+        # Use UTC since sqlite converts all times to UTC anyway.
+        now = tz.now(tz.utc)
         if request_type == Request.Type.STATION:
             Request.objects.create(
                 user=user_id,
-                when=tz.now(tz.eastern),
+                when=now,
                 type=request_type,
                 version=version,
                 screenWidth=screenWidth,
@@ -166,7 +169,7 @@ def log_request(
 
             Request.objects.create(
                 user=user_id,
-                when=tz.now(tz.eastern),
+                when=now,
                 type=request_type,
                 station=db_station,
                 version=version,
