@@ -321,7 +321,7 @@ def build_past_surge_check_plots(
     timeline: GraphTimeline, pred_dict, astro_preds15_dict
 ) -> tuple[list, list]:
     if len(pred_dict) == 0:
-        return None
+        return None, None
 
     found = False
 
