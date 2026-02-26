@@ -15,7 +15,7 @@ import { stringify } from './utils'
 export default function App() {
     /////////////////////////////////////////////
     // Set up state.
-    const isSpecial = import.meta.env.VITE_SPECIAL ?? '0' === '1'
+    const isSpecial = (import.meta.env.VITE_SPECIAL ?? '0') === '1'
     const [special, setSpecial] = useState(isSpecial) // temporary dev hack
     const [curPage, setCurPage] = useState(Page.Home)
     const [returnPage, setReturnPage] = useState(null)

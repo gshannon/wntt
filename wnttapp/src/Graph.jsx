@@ -95,9 +95,9 @@ export default function Graph() {
     const setJumpDates = (directionFactor) => {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
-            directionFactor > 0
-                ? limitDate(addDays(endDateStr, 1), ctx.station)
-                : limitDate(addDays(startDateStr, daysToShow * directionFactor), ctx.station)
+            directionFactor > 0 ?
+                limitDate(addDays(endDateStr, 1), ctx.station)
+            :   limitDate(addDays(startDateStr, daysToShow * directionFactor), ctx.station)
         const newEnd = limitDate(addDays(newStart, daysToShow - 1), ctx.station)
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
@@ -178,7 +178,7 @@ export default function Graph() {
         isPending: loading,
         data,
         error,
-    } = useGraphData(ctx.station, startDateStr, endDateStr, isHiloMode)
+    } = useGraphData(ctx.station, startDateStr, endDateStr, isHiloMode, ctx.special)
 
     const numDaysText = daysShown > 1 ? `${daysShown} days` : 'day'
 
@@ -234,10 +234,12 @@ const JumpDates = (props) => {
     }
     // Disable these if out of range
     const anchorClass =
-        (props.dir === 'back' && props.start <= props.station.minGraphDate()) ||
-        (props.dir === 'forward' && props.end >= maxGraphDate())
-            ? 'disable-pointer'
-            : 'pointer'
+        (
+            (props.dir === 'back' && props.start <= props.station.minGraphDate()) ||
+            (props.dir === 'forward' && props.end >= maxGraphDate())
+        ) ?
+            'disable-pointer'
+        :   'pointer'
     return (
         <Col className='col-1 px-0 jumpdate'>
             <Overlay

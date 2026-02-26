@@ -77,6 +77,7 @@ class CreateGraphView(APIView):
         hilo_mode = get_required(request.data, "hilo")
         station_id = get_required(request.data, "station_id")
         station = stn.get_station(station_id)
+        is_special = request.data.get("special", False)
 
         user_id = log_user(request.data.get("uid"))
         log_request(
@@ -93,7 +94,9 @@ class CreateGraphView(APIView):
 
         try:
             # Gather all data needed for the graph and pass it back here
-            graph_data = gr.get_graph_data(start_date, end_date, hilo_mode, station)
+            graph_data = gr.get_graph_data(
+                start_date, end_date, hilo_mode, station, is_special
+            )
             return Response(data=graph_data)
         except NotAcceptable as exc:
             logger.warning(f"NotAcceptable {params}")

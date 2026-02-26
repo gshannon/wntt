@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/react'
 import { buildCacheKey } from './utils'
 import * as storage from './storage'
 
-export default function useGraphData(station, startDate, endDate, hiloMode) {
+export default function useGraphData(station, startDate, endDate, hiloMode, special) {
     const mainStore = storage.getMainStorage()
     const permStore = storage.getPermanentStorage(station.id)
     // The main graph data api call.
@@ -25,6 +25,7 @@ export default function useGraphData(station, startDate, endDate, hiloMode) {
                     session: mainStore.session ?? null,
                     screenWidth: window.innerWidth,
                     customNav: permStore.customElevationNav ?? null,
+                    special: special,
                 })
                 .then((res) => res.data)
                 .catch((error) => {
