@@ -31,7 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 def get_graph_data(
-    start_date: date, end_date: date, hilo_mode: bool, station: stn.Station
+    start_date: date,
+    end_date: date,
+    hilo_mode: bool,
+    station: stn.Station,
+    special: bool,
 ):
     """Generate plot data.
 
@@ -88,7 +92,9 @@ def get_graph_data(
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
 
-    past_surge_check_dict = sg.get_historic_surge(timeline, station.noaa_station_id)
+    past_surge_check_dict = (
+        sg.get_historic_surge(timeline, station.noaa_station_id) if special else {}
+    )
 
     future_surge_dict = sg.get_future_surge_data(
         timeline, station.noaa_station_id, max(obs_dict) if len(obs_dict) > 0 else None
