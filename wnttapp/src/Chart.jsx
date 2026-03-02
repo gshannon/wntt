@@ -68,7 +68,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         template: 'plotly',
         plot_bgcolor: PlotBgColor,
         title: {
-            text: `${ctx.station.reserveName}: ${ctx.station.waterStationName} Tides`,
+            text: `Tides at ${ctx.station.waterStationName}`,
             subtitle: {
                 text: data.subtitle,
             },

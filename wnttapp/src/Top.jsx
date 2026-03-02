@@ -148,13 +148,13 @@ export default function Top({ page, gotoPage }) {
                     </Col>
                 </Row>
             </Container>
-            {ctx.special ? (
+            {ctx.special ?
                 <Row className='current-station justify-content-center py-1 my-0 mx-0'>
-                    {ctx.station
-                        ? `Station: ${ctx.station.reserveName}, ${ctx.station.waterStationName}`
-                        : ' '}
+                    {ctx.station ?
+                        `${ctx.station.reserveName}, ${ctx.station.waterStationName}`
+                    :   ' '}
                 </Row>
-            ) : null}
+            :   null}
             {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
         </div>
     )
