@@ -16,15 +16,23 @@ mkdir -p $workdir $archive $datadir
 # Edit this whenever a reserve is added/subtracted.
 stations=("8419317" "8658163")
 
-# Top level directories are named "etss.<date>", e.g. etss.20251029, and the most recent few days' files
-# are kept on the host. Each contains several varieties of tar files, with the time "cycle" (0, 6, 12 or 18) 
-# embedded in the name. The one we want is etss.t${cycle}z.csv.tar.gz.  NOAA publishes the files on this
-# schedule:
-# cycle 00 : ~06:15
-# cycle 06 : ~12:15
-# cycle 12 : ~18:15
-# cycle 18 : ~00:15 following day
-#
+: '
+Top level directories are named etss.<date>, e.g. etss.20251029, and the most recent few days files
+are kept on the host. Each contains several varieties of tar files, with the time "cycle" (0, 6, 12 or 18) 
+embedded in the name. The one we want is etss.t${cycle}z.csv.tar.gz.  NOAA publishes the files on this
+schedule, in a 24-hour cycle, with all datetimes in UTC:
+- ~00:15 UTC: cycle 18 of prior day. Use predictions for 01:00, 02:00, 03:00, 04:00, 05:00, 06:00
+- ~06:15 UTC: cycle 00. Use predictions for 07:00, 08:00, 09:00, 10:00, 11:00, 12:00
+- ~12:15 UTC: cycle 06. Use predictions for 13:00, 14:00, 15:00, 16:00, 17:00, 18:00
+- ~18:15 UTC: cycle 12. Use predictions for 19:00, 20:00, 21:00, 22:00, 23:00, 00:00
+
+Translating to Eastern Standard Time:
+- ~01:15 EST: cycle 00. Use predictions for 02:00, 03:00, 04:00, 05:00, 06:00, 07:00
+- ~07:15 EST: cycle 06. Use predictions for 08:00, 09:00, 10:00, 11:00, 12:00, 13:00
+- ~13:15 EST: cycle 12. Use predictions for 14:00, 15:00, 16:00, 17:00, 18:00, 19:00
+- ~19:15 EST: cycle 18. Use predictions for 20:00, 21:00, 22:00, 23:00, 00:00, 01:00
+'
+
 # Calculate the most recent cycle available to download. All datetimes are UTC.
 filedate=$(date -u +%Y%m%d)
 curtime=$(date -u +%H%M)

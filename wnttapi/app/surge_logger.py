@@ -25,6 +25,12 @@ Files are released daily as follows, in a 24-hour cycle which does not coincide 
 - ~12:15 UTC: cycle 06. Use predictions for 13:00, 14:00, 15:00, 16:00, 17:00, 18:00
 - ~18:15 UTC: cycle 12. Use predictions for 19:00, 20:00, 21:00, 22:00, 23:00, 00:00
 
+Translating to Eastern Standard Time:
+- ~01:15 EST: cycle 00. Use predictions for 02:00, 03:00, 04:00, 05:00, 06:00, 07:00
+- ~07:15 EST: cycle 06. Use predictions for 08:00, 09:00, 10:00, 11:00, 12:00, 13:00
+- ~13:15 EST: cycle 12. Use predictions for 14:00, 15:00, 16:00, 17:00, 18:00, 19:00
+- ~19:15 EST: cycle 18. Use predictions for 20:00, 21:00, 22:00, 23:00, 00:00, 01:00
+
 Inputs:
 --station_id <station_id> : e.g. "welinwq" for wells
 --date <date> : date of file publication, YYYYmmdd
