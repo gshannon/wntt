@@ -62,6 +62,7 @@ export default function Graph() {
 
     const onDateChange = useEffectEvent((start, end, hiloMode) => {
         storage.setDailyStorage(ctx.station.id, {
+            ...stationDaily,
             start: start,
             end: end,
             hiloMode: hiloMode,
@@ -122,6 +123,10 @@ export default function Graph() {
             max: addDays(new Date(defaultStartStr), getMaxNumDays() - 1),
         })
         setDateRangeStrings(defaultStartStr, defaultEndStr, false)
+        // Also reset the plot visibility states. Remove the legendOnly object, force a re-init.
+        const daily = storage.getDailyStorage(ctx.station.id)
+        delete daily.legendOnly
+        storage.setDailyStorage(ctx.station.id, daily)
     }
 
     const handlePreviousClick = (e) => {
