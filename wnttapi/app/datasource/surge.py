@@ -94,7 +94,6 @@ def get_best_historic_surge(
             surge += rec.bias or 0
         data[in_tz] = surge
 
-    logger.debug(data)
     return data
 
 
@@ -147,7 +146,7 @@ def get_or_load_projected_surge_file(
     entry = cache.get(noaa_station_id)
     if entry is not None:
         logger.debug(
-            f"cache exists for {noaa_station_id} filedate {entry.get('filedate', None)}, cycle {entry.get('cycle', None)}, data from {min(entry['data']) if entry['data'] else 'N/A'} to {max(entry['data']) if entry['data'] else 'N/A'}"
+            f"cache exists for {noaa_station_id} filedate {entry.get('filedate', None)}, cycle {entry.get('cycle', None)}"
         )
     else:
         logger.debug("nothing in cache")

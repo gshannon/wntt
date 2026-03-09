@@ -6,6 +6,7 @@ import { buildSyzygyAnnotations, buildPlot } from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
 import { useContext, useState } from 'react'
 import ErrorBlock from './ErrorBlock'
+import * as storage from './storage'
 
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
@@ -21,6 +22,25 @@ const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 const ForecastWindSpeedColor = '#8D89A6'
 
+// For uniquely identifying traces in event handling. Order doesn't matter, so long as they are unique.
+const TraceId = Object.freeze({
+    RecordTide: 1,
+    HighestAnnualPredicted: 2,
+    MeanHighWater: 3,
+    ObservedTide: 4,
+    PredictedTide: 5,
+    RecordedStormSurge: 6,
+    ProjectedStormTide: 7,
+    ProjectedStormSurge: 8,
+    WindGust: 9,
+    WindSpeed: 10,
+    WindForecast: 11,
+    XPredictedStormTide: 12,
+    XPredictedStormSurge: 13,
+    BPredictedStormTide: 14,
+    BPredictedStormSurge: 15,
+})
+
 export default function Chart({ error, loading, hiloMode, data }) {
     const ctx = useContext(AppContext)
     const customElevationNav = ctx.customElevationNav
@@ -35,6 +55,31 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
     const onModalClose = () => {
         setHelpIndex(-1)
+    }
+
+    // Recall or initialize the set of traces that should not be visible in the graph.
+    const getOrInitializeDaily = () => {
+        const daily = storage.getDailyStorage(ctx.station.id)
+        if (daily.legendOnly) {
+            return daily
+        }
+        // Not there yet, so initialize it.
+        storage.setDailyStorage(ctx.station.id, {
+            ...daily,
+            legendOnly: [TraceId.MeanHighWater], // Mean High Water is usually not relevant, so start with it hidden.
+        })
+        return storage.getDailyStorage(ctx.station.id)
+    }
+
+    const stationDaily = getOrInitializeDaily()
+
+    // Callback for when user toggles a trace on or off. We update daily local storage, so it will
+    // persist for the day. This does not trigger a re-render.
+    const saveToggleState = (id, visible) => {
+        const stationDaily = getOrInitializeDaily()
+        if (visible) stationDaily.legendOnly = stationDaily.legendOnly.filter((v) => v !== id)
+        else stationDaily.legendOnly.push(id)
+        storage.setDailyStorage(ctx.station.id, stationDaily)
     }
 
     if (error) {
@@ -167,12 +212,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
     const plotData = [
         buildPlot({
+            customdata: TraceId.RecordTide,
             name: `Record Tide ${formatDate(
                 new Date(ctx.station.recordTideDate),
             )} (${ctx.station.recordTideMllw()})`,
             x: data.timeline,
             // We need this one filled across cuz it may appear on the hover text.
             y: expandConstant(ctx.station.recordTideMllw()),
+            visible: !stationDaily.legendOnly.includes(TraceId.RecordTide),
             lineType: 'solid',
             color: RecordTideColor,
             // We want hover text only for small screens, otherwise it clutters the hover.
@@ -183,18 +230,22 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 isNarrow ? `Record (${ctx.station.recordTideDate}) : %{y}<extra></extra>` : null,
         }),
         buildPlot({
+            customdata: TraceId.HighestAnnualPredicted,
             name: 'Highest Annual Predicted (' + data.highest_annual_prediction + ')',
             x: data.timeline,
             y: expandConstant(data.highest_annual_prediction),
+            visible: !stationDaily.legendOnly.includes(TraceId.HighestAnnualPredicted),
             lineType: 'solid',
             color: HighestAnnualPredictionColor,
             hoverinfo: isNarrow ? 'all' : 'skip',
             hovertemplate: isNarrow ? 'Highest Annual Predicted: %{y}<extra></extra>' : '',
         }),
         buildPlot({
+            customdata: TraceId.MeanHighWater,
             name: `Mean High Water (${ctx.station.meanHighWaterMllw})`,
             x: data.timeline,
             y: expandConstant(ctx.station.meanHighWaterMllw),
+            visible: !stationDaily.legendOnly.includes(TraceId.MeanHighWater),
             legendOnly: true,
             lineType: 'solid',
             color: MeanHighWaterColor,
@@ -203,15 +254,16 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.hist_tides !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.ObservedTide,
                     name: 'Observed Tide',
                     x: data.timeline,
                     y: data.hist_tides,
+                    visible: !stationDaily.legendOnly.includes(TraceId.ObservedTide),
                     lineType: 'solid',
                     markerSize: hiloMode ? tideMarkerSize : 0,
                     color: ObservedTideColor,
                     hovertext: data.hist_hilo_labels,
                     hovertemplate: '%{y} %{hovertext}',
-                    disableToggle: true,
                     connectgaps: false,
                 }),
             ]
@@ -219,9 +271,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(ctx.special && !hiloMode && data.past_surge_total_check !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.XPredictedStormTide,
                     name: 'CHECK Pred Storm Tide',
                     x: data.timeline,
                     y: data.past_surge_total_check,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPredictedStormTide),
                     lineType: 'dot',
                     markerSize: 0,
                     color: RecordTideColor,
@@ -232,9 +286,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(ctx.special && !hiloMode && data.past_surge_check_total_with_bias !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.BPredictedStormTide,
                     name: 'BIAS Pred Storm Tide',
                     x: data.timeline,
                     y: data.past_surge_check_total_with_bias,
+                    visible: !stationDaily.legendOnly.includes(TraceId.BPredictedStormTide),
                     lineType: 'dash',
                     markerSize: 0,
                     color: RecordTideColor,
@@ -243,23 +299,26 @@ export default function Chart({ error, loading, hiloMode, data }) {
             ]
         :   []),
         buildPlot({
+            customdata: TraceId.PredictedTide,
             name: 'Predicted Tide',
             x: data.timeline,
             y: data.astro_tides,
+            visible: !stationDaily.legendOnly.includes(TraceId.PredictedTide),
             lineType: 'solid',
             markerSize: hiloMode ? tideMarkerSize : 0,
             color: PredictedTideColor,
             hovertext: data.astro_hilo_labels,
             hovertemplate: '%{y} %{hovertext}',
-            disableToggle: false,
             connectgaps: false,
         }),
         ...(ctx.special && !hiloMode && data.past_surge_check !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.XPredictedStormSurge,
                     name: 'CHECK Pred Storm Surge',
                     x: data.timeline,
                     y: data.past_surge_check,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPredictedStormSurge),
                     lineType: 'dot',
                     markerSize: 0,
                     color: RecordTideColor,
@@ -270,9 +329,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(ctx.special && !hiloMode && data.past_surge_check_with_bias !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.BPredictedStormSurge,
                     name: 'BIAS Pred Storm Surge',
                     x: data.timeline,
                     y: data.past_surge_check_with_bias,
+                    visible: !stationDaily.legendOnly.includes(TraceId.BPredictedStormSurge),
                     lineType: 'dash',
                     markerSize: 0,
                     color: RecordTideColor,
@@ -283,9 +344,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.past_surge !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.RecordedStormSurge,
                     name: 'Recorded Storm Surge',
                     x: data.timeline,
                     y: data.past_surge,
+                    visible: !stationDaily.legendOnly.includes(TraceId.RecordedStormSurge),
                     lineType: 'solid',
                     markerSize: hiloMode ? tideMarkerSize : 0,
                     color: RecordedStormSurgeColor,
@@ -296,9 +359,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.future_tide !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.ProjectedStormTide,
                     name: 'Projected Storm Tide',
                     x: data.timeline,
                     y: data.future_tide,
+                    visible: !stationDaily.legendOnly.includes(TraceId.ProjectedStormTide),
                     lineType: 'dash',
                     markerSize: hiloMode ? tideMarkerSize : 0,
                     color: ProjectedStormTideColor,
@@ -308,9 +373,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.future_surge !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.ProjectedStormSurge,
                     name: 'Projected Storm Surge',
                     x: data.timeline,
                     y: data.future_surge,
+                    visible: !stationDaily.legendOnly.includes(TraceId.ProjectedStormSurge),
                     lineType: 'dash',
                     markerSize: hiloMode ? tideMarkerSize : 0,
                     color: ProjectedStormSurgeColor,
@@ -320,9 +387,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ...(data.wind_speeds !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.WindGust,
                     name: 'Wind Gust (points to source)',
                     x: data.timeline,
                     y: data.wind_gusts,
+                    visible: !stationDaily.legendOnly.includes(TraceId.WindGust),
                     markerSize: windMarkerSize,
                     markerSymbol: 'arrow-wide-open',
                     markerAngle: data.wind_dir,
@@ -330,13 +399,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     yaxis: 'y2',
                     hovertemplate: 'Wind Gust: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.wind_dir_hover,
-                    disableToggle: true,
                 }),
                 buildPlot({
                     // fig.update_traces(hovertemplate='X: %{x}<br>Y: %{y}<br>Angle: %{marker.angle}')
+                    customdata: TraceId.WindSpeed,
                     name: 'Wind Speed (points to source)',
                     x: data.timeline,
                     y: data.wind_speeds,
+                    visible: !stationDaily.legendOnly.includes(TraceId.WindSpeed),
                     markerSize: windMarkerSize,
                     markerSymbol: 'arrow-wide-open',
                     markerAngle: data.wind_dir,
@@ -344,16 +414,17 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     yaxis: 'y2',
                     hovertemplate: 'Wind Speed: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.wind_dir_hover,
-                    disableToggle: true,
                 }),
             ]
         :   []),
         ...(data.forecast_wind_speeds !== null ?
             [
                 buildPlot({
+                    customdata: TraceId.WindForecast,
                     name: 'Wind Forecast (points to source)',
                     x: data.timeline,
                     y: data.forecast_wind_speeds,
+                    visible: !stationDaily.legendOnly.includes(TraceId.WindForecast),
                     markerSize: windMarkerSize,
                     markerSymbol: 'arrow-wide-open',
                     markerAngle: data.forecast_wind_dir,
@@ -361,7 +432,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     yaxis: 'y2',
                     hovertemplate: 'Wind Forecast: %{y:.1f} mph from %{hovertext}<extra></extra>',
                     hovertext: data.forecast_wind_dir_hover,
-                    disableToggle: true,
                 }),
             ]
         :   []),
@@ -416,13 +486,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     setHelpIndex(data.index)
                 }}
                 onLegendClick={(e) => {
-                    // return false to disable toggle
-                    return !e.data[e.curveNumber].disableToggle
-                }}
-                onLegendDoubleClick={(e) => {
-                    // These are supposed to make that the only plot visible, but seem to
-                    // do nothing. Disabling anyway to be safe.
-                    return !e.data[e.curveNumber].disableToggle
+                    const trace = e.data[e.curveNumber]
+                    // Note this is the state *before* the toggle. So if it was legendonly, it'll now be visible.
+                    saveToggleState(trace.customdata, trace.visible === 'legendonly')
+                    return true // always enable click to toggle
                 }}
             />
             <p style={{ fontSize: '.95em', fontWeight: 700, textAlign: 'center' }}>

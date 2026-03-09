@@ -14,7 +14,7 @@ export const buildPlot = ({
     name,
     x,
     y,
-    legendOnly = false,
+    visible = true,
     lineType = null, // null means no lines
     markerSize = null, // 0 means no markers (this forces lines)
     markerSymbol = 'circle', // ignored if markerSize=0
@@ -24,15 +24,14 @@ export const buildPlot = ({
     hovertext = null, // ignored unless referred to in hovertemplate
     hovertemplate = null, // if given, hoverinfo is ignored.
     yaxis = 'y', // use 'y2' for 2nd graph (wind)
-    disableToggle = false, // for use by event handlers
     connectgaps = true,
+    customdata = null,
 } = {}) => {
     const p = {
         name: name,
         x: x,
         y: y,
-        disableToggle: disableToggle,
-        visible: legendOnly ? 'legendonly' : true,
+        visible: visible ? true : 'legendonly',
         type: 'scatter',
         legendgroup: 'grp1',
         connectgaps: connectgaps,
@@ -42,6 +41,7 @@ export const buildPlot = ({
         hovertemplate: hovertemplate,
         hovertext: hovertext,
         yaxis: yaxis,
+        customdata: customdata,
     }
     let mode = 'lines'
     if (lineType && markerSize) {
@@ -81,7 +81,7 @@ export const buildSyzygyAnnotations = (apiData, timeline) => {
             showarrow: false,
             hoverlabel: { bgcolor: 'black', font: { color: 'white' } },
             hovertext: `${event.config.name}: ${formatDatetime(
-                new Date(item.dt)
+                new Date(item.dt),
             )}<br>Click symbol for more.`,
         }
         annotations.push(annotation)
