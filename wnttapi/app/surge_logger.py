@@ -31,6 +31,12 @@ Translating to Eastern Standard Time:
 - ~13:15 EST: cycle 12. Use predictions for 14:00, 15:00, 16:00, 17:00, 18:00, 19:00
 - ~19:15 EST: cycle 18. Use predictions for 20:00, 21:00, 22:00, 23:00, 00:00, 01:00
 
+Translating to Eastern Daylight Time:
+- ~02:15 EDT: cycle 00. Use predictions for 03:00, 04:00, 05:00, 06:00, 07:00, 08;00
+- ~08:15 EDT: cycle 06. Use predictions for 09:00, 10:00, 11:00, 12:00, 13:00, 14:00
+- ~14:15 EDT: cycle 12. Use predictions for 15:00, 16:00, 17:00, 18:00, 19:00, 20:00
+- ~20:15 EDT: cycle 18. Use predictions for 21:00, 22:00, 23:00, 00:00, 01:00, 02:00
+
 Inputs:
 --station_id <station_id> : e.g. "welinwq" for wells
 --date <date> : date of file publication, YYYYmmdd
@@ -84,6 +90,7 @@ def main():
                     noaa_id=args.station_id,
                     tide_time=dt,
                     defaults={
+                        "cycle": int(args.cycle),
                         "tide": float(tide_str),
                         "surge": float(surge_str),
                         "bias": float(bias_str) if bias_str != NO_VALUE else None,
