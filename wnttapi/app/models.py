@@ -33,6 +33,7 @@ class Request(models.Model):
 
 class Surge(models.Model):
     noaa_id = models.CharField(max_length=7, null=False)
+    cycle = models.SmallIntegerField(null=True)
     tide_time = models.DateTimeField(auto_now=False, auto_now_add=False)
     tide = models.FloatField(null=False)
     surge = models.FloatField(null=False)
