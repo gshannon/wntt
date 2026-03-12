@@ -4,11 +4,38 @@ info() {
   echo "$(date) $@"
 }
 
+usage() {
+  echo "usage: $(basename $0) [-d] (dev mode)"
+}
+
+fail() {
+  [ -n "$1" ] && echo $1
+  usage
+  exit 1
+}
+
+devmode=0
+while getopts ":dh" opt; do
+  case $opt in
+    d ) devmode=1;;
+    h ) usage; exit 0;;
+    * ) fail;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+# Sanity check so we don't run prod in dev
+[ $(uname) == 'Darwin' ] && [ $devmode -eq 0 ] && fail "I don't think this is production"
+
 cwd=$(pwd)
 rootdir=$HOME/datamount/surge
 workdir=$rootdir/tmp
 archive=$rootdir/archive
 datadir=$rootdir/data
+[ -d $datadir ] || {
+  info "$datadir does not exist. Are you sure?"
+  exit 1
+}
 mkdir -p $workdir $archive $datadir
 
 # List of NOAA station ids to pull.  For example of UI for this data:
@@ -34,7 +61,7 @@ Translating to Eastern Standard Time:
 '
 
 # Calculate the most recent cycle available to download. All datetimes are UTC.
-filedate=$(date -u +%Y%m%d)
+filedate=$(date -u +%Y%m%d)  # e.g. 20240321
 curtime=$(date -u +%H%M)
 if [[ $curtime > "0629" ]] && [[ $curtime < "1230" ]]; then
     cycle='00'
@@ -42,29 +69,34 @@ elif [[ $curtime > "1229" ]] && [[ $curtime < "1830" ]]; then
     cycle='06'
 elif [[ $curtime > "1829" ]]; then
     cycle='12'
-elif [[ $curtime < "0030" ]]; then
-    cycle='12'
-    filedate=$(date -u -d '-1 day' +%Y%m%d)
 else
-    cycle='18'
+  if [[ $curtime < "0030" ]]; then
+      cycle='12'
+  else
+      cycle='18'
+  fi
+  if [ $(uname) == 'Darwin' ]; then
+    filedate=$(date -u -v-1d +%Y%m%d) # Macos 
+  else
     filedate=$(date -u -d '-1 day' +%Y%m%d)
+  fi
 fi
 
 info "Pulling cycle $cycle for filedate $filedate"
 
-# This is the expected most recent tar file.
+# This is the expected most recent tar file we want to download.
 target=etss.t${cycle}z.csv.tar.gz
 
 cd $workdir
-rm -rf *  # clean up files from previous run 
+# clean up files from previous run 
+rm -rf etss.*
 url="https://nomads.ncep.noaa.gov/pub/data/nccf/com/petss/prod/etss.${filedate}/${target}"
+info "downloading $url"
 curl --no-progress-meter --fail-with-body -o $target $url || {
-  info "Failed to download $url"
-  exit 1
+  fail "Failed to download $url"
 }
 tar zxf $target || {
-  info "Failed to extract $target"
-  exit 1
+  fail "Failed to extract $target"
 }
 
 # At this point we should have:
@@ -77,18 +109,24 @@ for ((i=0; i<${#stations[@]}; i++)); do
   if [ ! -f $datafile ]; then
     info "Expected file $datafile not found after extraction."
   else
-    cp $datafile $datadir
-    cp $datafile $archive/${stations[$i]}-${filedate}-${cycle}.csv
-    info "extracted ${stations[$i]}.csv"
-    # Run the surge_logger util in the api container
-    DJANGO_SETTINGS_MODULE=project.settings.prod docker compose -f $HOME/docker-compose.yml run --rm \
-      api app/surge_logger.py \
-      -d $filedate -c $cycle -s ${stations[$i]} && info "logged ${stations[$i]}.csv"
+    rm -f $datadir/${stations[$i]}*.csv  # remove prior files for this station
+    saved_filename=${stations[$i]}-${filedate}-${cycle}.csv
+    cp $datafile $datadir/$saved_filename
+
+    info "extracted ${stations[$i]}.csv and saved as $saved_filename"
+    # Run the surge_logger util in a temporary api container
+    if [ "$devmode" -eq 1 ]; then
+      export DJANGO_SETTINGS_MODULE=project.settings.dev
+      compose_path=$WNTT/local/docker-compose-local.yml
+    else
+      export DJANGO_SETTINGS_MODULE=project.settings.prod
+      compose_path=$HOME/docker-compose.yml
+    fi
+    docker compose -f $compose_path run --rm api app/surge_logger.py \
+      -d $filedate -c $cycle -n ${stations[$i]} && info "logged ${stations[$i]}.csv"
   fi
 done
 
-# We'll leave the tmp dir contents around for debugging.
-# rm -rf $workdir/*
-echo "$filedate $cycle" >> $rootdir/log
+[ "$devmode" -eq 0 ] && echo "$filedate $cycle" >> $rootdir/log
 
 exit 0

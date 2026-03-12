@@ -2,26 +2,29 @@ import csv
 import logging
 import os
 import os.path
+import re
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 import sentry_sdk
 from app import tzutil as tz
 from app.timeline import GraphTimeline
 from django.core.cache import cache
 
-from ..models import Surge
+from ..models import Surge, SurgeBias
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
 _max_surge = 20
 _min_surge = -20
+_no_value = "9999.000"
 
 logger = logging.getLogger(__name__)
 
 
 def get_future_surge_data(
-    timeline: GraphTimeline, noaa_station_id: str, last_recorded_dt: datetime
+    timeline: GraphTimeline,
+    noaa_station_id: str,
+    last_recorded_dt: datetime,
 ) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes which are past the
     last_recorded_dt param, if given, else the current system time. These are extracted from a csv file
@@ -34,7 +37,10 @@ def get_future_surge_data(
         last_recorded_dt (datetime): time of latest recorded tide, or None
 
     Returns:
-        dict: {dt: tide in mllw feet} latest predicted surge value for each time in timeline
+        dict: {
+            "surges": dict {<dt>: <surge>}
+            "bias": <calculated bias, or None>,
+        }
 
     """
     future_surge_dict = {}  # {dt: surge_value}
@@ -43,22 +49,31 @@ def get_future_surge_data(
     if timeline.end_dt >= timeline.now and timeline.start_dt < timeline.now + timedelta(
         days=6
     ):
-        future_surge_dict = get_or_load_projected_surge_file(
-            noaa_station_id, timeline.time_zone
-        )
+        future_surge_dict = get_or_load_projected_surge_file(noaa_station_id, timeline)
         # If there's any recorded tides in the timeline, we don't want any data for those times.
         if last_recorded_dt is not None:
-            future_surge_dict = {
+            future_surge_dict["surges"] = {
                 dt: val
-                for dt, val in future_surge_dict.items()
+                for dt, val in future_surge_dict["surges"].items()
                 if dt > last_recorded_dt
             }
 
     return future_surge_dict
 
 
-def get_historic_surge(timeline: GraphTimeline, noaa_station_id: str) -> dict:
-    """Get the last known surge predictions for the past times in the timeline."""
+"""
+    Get the last known surge predictions for the past times in the timeline.
+    Params:
+    - timeline: timeline
+    - noaa_station_id: the NOAA station code so we can get the right data
+    - use_calculated_bias: if True and station has calculated bias, add that to the surge values. This is for
+      A/B testing of calculated bias logic.
+"""
+
+
+def get_best_historic_surge(
+    timeline: GraphTimeline, noaa_station_id: str, use_calculated_bias: bool
+) -> dict:
     data = {}
     if timeline.is_all_future():
         return data
@@ -69,8 +84,17 @@ def get_historic_surge(timeline: GraphTimeline, noaa_station_id: str) -> dict:
 
     for rec in qs:
         in_tz = rec.tide_time.astimezone(timeline.time_zone)
-        data[in_tz] = rec.surge
+        if use_calculated_bias and rec.calc_bias is None:
+            # skip it, not worth showing on the graph.
+            continue
+        surge = rec.surge
+        if use_calculated_bias:
+            surge += rec.calc_bias or 0
+        else:
+            surge += rec.bias or 0
+        data[in_tz] = surge
 
+    logger.debug(data)
     return data
 
 
@@ -87,20 +111,24 @@ def calculate_past_storm_surge(astro_dict: dict, obs_dict: dict) -> dict:
 
 
 def get_or_load_projected_surge_file(
-    noaa_station_id: str, timezone: ZoneInfo, surge_file_dir=_default_surge_file_dir
+    noaa_station_id: str,
+    timeline: GraphTimeline,
+    surge_file_dir=_default_surge_file_dir,
 ) -> dict:
     """
-    The csv files containing projected surge data are updated on the NOAA site every 6 hours,
-    and are normally downloaded by a cron job. Once loaded, contents are cached in Django for performance.
-    This cache is shared by all workers. Here we determine if the file for the station in question has been
-    replaced since it was cached, and update the cache if so. When parsing the file, we throw out all but
-    xx:00 and xx:30 since the data is in 6-minute intervals and we show 15-min intervals.
+    The csv files containing projected surge data are updated on the NOAA web site every 6 hours,
+    and are normally downloaded by a cron job. Here, we cached the contents in Django for performance.
+    This cache is shared by all workers. When parsing the file, we throw out all but
+    xx:00 since only the data at the top of each hour is valid in the files.
 
-    If file is missing, unreadable, or corrupt, an error is logged and an empty dict is returned.
-    All datetimes in the file are in UTC, and are converted as requested timezone.
+    We do not load any data whose tide time is more than 2 hours older than the current time, as that data
+    cannot possibly be displayed in the application, and it would serve no purpose to cache it.
 
-    Cache structure:
-    { <station-id> : [ <file-id>, {data} ] }
+    If the latest data for the station is already in cache, we return that. Otherwise, we look for the latest
+    file for that station in the surge file directory, parse it and cache the data. We also look in the database
+    for a calculated bias value for that station, filedate and cycle, and if found, we return that as well so
+    users of this data can add it to the surge values if they want.  We don't do that here in order to enable
+    A/B testing of using this calculated bias or not.
 
     Args:
         noaa_station_id: the NOAA station id, so we know which file to read
@@ -108,74 +136,117 @@ def get_or_load_projected_surge_file(
         surge_file_dir (str, optional): for testing, use to override standard surge file location.
 
     Returns:
-        dict: key = datetime, value = surge value in MLLW feet
+        dict: {
+            "surges": dict {<dt>: <surge>}
+            "bias": <calculated bias, or None>,
+        }
     """
+    logger.debug(f"looking in surge cache for station {noaa_station_id}...")
 
-    # The cached data is a dict with key=(station_id,mtime) and value=data.
-    filepath = f"{surge_file_dir}/{noaa_station_id}.csv"
-    file_mtime = (
-        os.path.getmtime(filepath)
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK)
-        else None
-    )
-    [saved_mtime, data] = cache.get(noaa_station_id, [None, None])
-    logger.debug(f"current mtime: {file_mtime}, saved mtime: {saved_mtime}")
+    # pull the existing cache value, if any
+    entry = cache.get(noaa_station_id)
+    if entry is not None:
+        logger.debug(
+            f"cache exists for {noaa_station_id} filedate {entry.get('filedate', None)}, cycle {entry.get('cycle', None)}, data from {min(entry['data']) if entry['data'] else 'N/A'} to {max(entry['data']) if entry['data'] else 'N/A'}"
+        )
+    else:
+        logger.debug("nothing in cache")
+
+    # Find the last file available for this noaa station. Normally
+    # there should be just one file there.
+    pattern = r"(\d+)-(\d+)-(\d\d).csv$"  # e.t. 8419317-20260213-06.csv
+    filepath, filedate, cycle = None, None, None
+    with os.scandir(surge_file_dir) as entries:
+        for e in entries:
+            matches = re.findall(
+                pattern, e.name
+            )  # returns list of tuples, not None if no match
+            if len(matches) == 1 and matches[0][0] == noaa_station_id:
+                # Got it. Extract the filedate & cycle from the file name.
+                filepath = os.path.join(surge_file_dir, e.name)
+                filedate, cycle = (
+                    matches[0][1],
+                    int(matches[0][2]),
+                )
 
     # First handle the case of a missing file.
-    if file_mtime is None:
-        sentry_sdk.capture_message(f"missing surge file {filepath}")
-        if data is None:
+    if filedate is None:
+        sentry_sdk.capture_message(f"missing surge file for {noaa_station_id}")
+        if entry is None:
             logger.error(
-                "%s is not found, and there is no cached surge data for %s",
-                filepath,
+                "file not found, and there is no cached surge data for %s",
                 noaa_station_id,
             )
             return {}
-        logger.error(f"Can't read {filepath} file, forced to use cache")
-        return data
+        logger.error(f"No file for {noaa_station_id}, forced to use cache")
+        return entry.get("data", {})
 
-    # So now we know the file exists and is readable.  If we have cached data, check if the file has been updated.
-    if data is not None and file_mtime == saved_mtime:
-        logger.debug(f"cache id match id={file_mtime} {min(data)} - {max(data)} ")
-        return data
+    # If we have already cached this file, just return that.
+    if entry is not None:
+        if filedate == entry.get("filedate") and cycle == entry.get("cycle"):
+            logger.debug(
+                f"cache match: {noaa_station_id}, {filedate}/{cycle} {min(entry['data'])} - {max(entry['data'])} "
+            )
+            return entry["data"]
+        else:
+            # There's a newer file for this cached station. We'll be replacing with a new one..
+            logger.debug(
+                f"Will replace old cache for {noaa_station_id}, {filedate}/{cycle}"
+            )
 
-    logger.debug(f"will cache/re-cache surge data, file mtime = {file_mtime}")
+    # Get bias
+    calculated_bias = None
+    record = SurgeBias.objects.filter(
+        noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
+    ).first()
+    if record is None:
+        logger.debug(
+            f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
+        )
+    else:
+        calculated_bias = record.bias
+        logger.debug(
+            f"got bias id {record.id}: {record.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
+        )
 
-    data = {}  # key=datetime, value=surge
+    surges_dict = {}  # key=datetime, value=surge
     logger.debug(f"Reading {filepath}...")
     try:
         """
-        Surge files contain a data entry for every 6 minutes, but only the ones with a SURGE value < 9999
-        are real. Those line up with top of the hour so we skip every TIME that's not a multiple of 100.
-        Sample data:
                 TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
         202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
-        202502181206,   2.119,9999.000,9999.000,9999.000,9999.000
-        202502181212,   1.970,9999.000,9999.000,9999.000,9999.000
-        202502181218,   1.829,9999.000,9999.000,9999.000,9999.000
-        202502181224,   1.695,9999.000,9999.000,9999.000,9999.000
-        202502181230,   1.570,9999.000,9999.000,9999.000,9999.000
         ...
         """
+        cutoff = timeline.now - timedelta(hours=2)
         with open(filepath) as surge_file:
             error_cnt = 0
             reader = csv.reader(surge_file, skipinitialspace=True)
             next(reader)  # skip header row
             for row in reader:
+                date_str, surge_str, bias_str = row[0], row[3], row[4]
+
                 # Only the times that are multiples of 100 have actual surge data.
-                if int(row[0]) % 100 != 0:
+                if int(date_str) % 100 != 0:
                     continue
                 # All file datetimes are UTC. Convert to requested tz.
-                in_utc = datetime.strptime(row[0], "%Y%m%d%H%M").replace(tzinfo=tz.utc)
-                local_dt = in_utc.astimezone(timezone)
+                in_utc = datetime.strptime(date_str, "%Y%m%d%H%M").replace(
+                    tzinfo=tz.utc
+                )
+                local_dt = in_utc.astimezone(timeline.time_zone)
+                if local_dt < cutoff:
+                    continue
                 try:
-                    surge = float(row[3])
+                    surge = float(surge_str) + (
+                        float(bias_str)
+                        if calculated_bias is None and bias_str != _no_value
+                        else 0
+                    )
                     if _min_surge <= surge <= _max_surge:
-                        data[local_dt] = round(surge, 2)
+                        surges_dict[local_dt] = round(surge, 2)
                     else:
                         error_cnt += 1
                         logger.error(
-                            f"Found unexpected surge value [{surge}] for target {in_utc}"
+                            f"Out of range surge value [{surge}] for target {in_utc}"
                         )
                 except ValueError:
                     error_cnt += 1
@@ -190,9 +261,14 @@ def get_or_load_projected_surge_file(
         sentry_sdk.capture_message(msg)
         return {}
 
-    # Cache the data. We'll use a TTL of 24 hours to handle cases where download fails a few times.
-    cache.set(noaa_station_id, [file_mtime, data], timeout=60 * 60 * 24)
-    logger.debug(
-        f"{noaa_station_id}: cached {len(data)} recs from {filepath}, from {min(data)} to {max(data)}"
+    # Cache the data. We'll use a TTL of 48 hours to handle cases where download fails a few times.
+    payload = {"surges": surges_dict, "bias": calculated_bias}
+    cache.set(
+        noaa_station_id,
+        {"filedate": filedate, "cycle": cycle, "data": payload},
+        timeout=60 * 60 * 48,
     )
-    return data
+    logger.debug(
+        f"{noaa_station_id}: cached {len(surges_dict)} surge values, from {min(surges_dict)} to {max(surges_dict)}"
+    )
+    return payload

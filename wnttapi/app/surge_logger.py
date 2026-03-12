@@ -1,23 +1,38 @@
 #! /usr/bin/env python3
+# You must have this in the env.
+# DJANGO_SETTINGS_MODULE = project.settings.[dev|prod]
 import argparse
 import csv
+import logging
 import sys
 from datetime import datetime, time, timedelta
 
 # In the container, this is run from /wnttapi
 sys.path.append(".")
 
-import app.tzutil as tz
+# Django must be set up before importing models.
 from django import setup
 
-# Django must be set up before importing models.
 setup()
-from app.models import Surge
+
+import app.tzutil as tz
+from app.datasource import astrotide as astro
+from app.datasource import cdmo
+from app.models import Surge, SurgeBias
+from app.station import Station, get_all_stations
+from app.timeline import GraphTimeline
+
+logger = logging.getLogger(__name__)
+# minumum number of surge deltas required to calculate bias, out of possible 120
+_min_deltas_required = 100
+_no_value = "9999.000"
+
+BiaslessStations = ["8419317"]  # Wells surge data has no bias (anomaly)
+
 
 """
-Utility to log a batch of 6 storm surge predictions to a database.  It is intended to be run from 
-outside the container by the surge file download job, which does not have access to sqlite3, using
-docker compose.
+Utility to persist in the database certain data about a batch of 6 storm surge predictions to a database.  It is intended to be run from 
+outside the container by the surge file download job.
 
 Files are released daily as follows, in a 24-hour cycle which does not coincide with a single day.
 - ~00:15 UTC: cycle 18 of prior day. Use predictions for 01:00, 02:00, 03:00, 04:00, 05:00, 06:00
@@ -38,22 +53,27 @@ Translating to Eastern Daylight Time:
 - ~20:15 EDT: cycle 18. Use predictions for 21:00, 22:00, 23:00, 00:00, 01:00, 02:00
 
 Inputs:
---station_id <station_id> : e.g. "welinwq" for wells
+--noaa_station_id <noaa_station_id> : e.g. "8419317" for Wells
 --date <date> : date of file publication, YYYYmmdd
 --cycle <cycle> : 00, 06, 12 or 18 
+
+Logic:
+If reserve has no bias:
+    - Load dict of CDMO tide observations for last 5 days, keyed by datetime.
+    - Load dict of COOPS tide predictions for last 5 days, keyed by datetime.
+    - Load dict of surge predictions from for last 5 days from the surge file, keyed by datetime.
+    - Calculate bias based on these 3 dicts, log to bias table in database.
+- Extract the "best" surge values for the target 6 hours (keep original bias values), log to surge table.
 """
-
-# You must have this in the env.
-# DJANGO_SETTINGS_MODULE = project.settings.[dev|prod]
-
-NO_VALUE = "9999.000"
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--station_id", help="NOAA station id", required=True)
-    parser.add_argument("-d", "--date", help="YYYYMMDD", required=True)
-    parser.add_argument("-c", "--cycle", help="cycle: 0, 6, 12 or 18", required=True)
+    parser.add_argument(
+        "-n", "--noaa_station_id", help="NOAA station id", required=True
+    )
+    parser.add_argument("-d", "--date", help="file date, YYYYMMDD", required=True)
+    parser.add_argument("-c", "--cycle", help="cycle: 00, 06, 12 or 18", required=True)
 
     args = parser.parse_args()
 
@@ -67,7 +87,21 @@ def main():
     start_time = cycle_time + timedelta(hours=7)
     end_time = start_time + timedelta(hours=5)
 
-    filepath = f"/data/surge/data/{args.station_id}.csv"
+    # Note that /data should be a mount point to the host file system
+    filename = f"{args.noaa_station_id}-{args.date}-{args.cycle}.csv"
+    filepath = f"/data/surge/data/{filename}"
+
+    # Calculate a bias for stations that don't have one in the surge file.
+    calc_bias = (
+        calculate_bias(
+            args.noaa_station_id,
+            filepath,
+            args.date,
+            args.cycle,
+        )
+        if args.noaa_station_id in BiaslessStations
+        else None
+    )
 
     with open(filepath) as surge_file:
         reader = csv.reader(surge_file, skipinitialspace=True)
@@ -79,26 +113,87 @@ def main():
             # Only the times on the hour have actual surge data.
             if int(date_str) % 100 != 0:
                 continue
-            dt = datetime.strptime(row[0], "%Y%m%d%H%M").replace(tzinfo=tz.utc)
+            dt = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
             if start_time <= dt <= end_time:
                 # If there's a value in OBServed column, something is seriously wrong.
-                if obs_str != NO_VALUE:
-                    print(
-                        f"WARNING: {args.station_id}.csv at {date_str} has OBS value {obs_str}"
-                    )
+                if obs_str != _no_value:
+                    print(f"WARNING: {filename} at {date_str} has OBS value {obs_str}")
                 Surge.objects.update_or_create(
-                    noaa_id=args.station_id,
+                    noaa_id=args.noaa_station_id,
                     tide_time=dt,
                     defaults={
                         "cycle": int(args.cycle),
                         "tide": float(tide_str),
                         "surge": float(surge_str),
-                        "bias": float(bias_str) if bias_str != NO_VALUE else None,
+                        "bias": float(bias_str) if bias_str != _no_value else None,
+                        "calc_bias": calc_bias,
                         "total": float(total_str),
                     },
                 )
             if dt >= end_time:
                 break
+
+
+def get_swmp_station(noaa_station_id: str) -> Station:
+    for id, data in get_all_stations().items():
+        if data["noaaStationId"] == noaa_station_id:
+            return Station.from_dict(id, data)
+
+    raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
+    return None
+
+
+# Calculate anomaly/bias for this file, log it to the database and return it so it can be applied to surge values.  This is only needed for stations in the BiaslessStations list.
+def calculate_bias(
+    noaa_station_id: str,
+    filepath: str,
+    filedate: datetime.date,
+    cycle: int,
+) -> float:
+    swmp_station = get_swmp_station(noaa_station_id)
+    end_dt = datetime.now(tz=swmp_station.time_zone)
+    start_dt = end_dt - timedelta(days=5)
+    tline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
+    tide_preds = astro.get_15m_astro_tides(swmp_station, tline)
+    logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
+    obs_tides = cdmo.get_recorded_tides(swmp_station, tline)
+    logger.debug(f"got {len(obs_tides)} tide obs for bias calculation")
+
+    deltas = []
+    # read the trailing 5 days of surge predictions from the file
+    with open(filepath) as surge_file:
+        reader = csv.reader(surge_file, skipinitialspace=True)
+        next(reader)  # skip header
+        for row in reader:
+            date_str, surge_str = row[0], row[3]
+            if int(date_str) % 100 != 0:
+                continue
+            dt = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
+            local_dt = dt.astimezone(swmp_station.time_zone)
+            if start_dt <= local_dt <= end_dt and surge_str != _no_value:
+                if local_dt in obs_tides and local_dt in tide_preds:
+                    delta = obs_tides[local_dt] - (
+                        tide_preds[local_dt] + float(surge_str)
+                    )
+                    deltas.append(round(delta, 2))
+            elif local_dt > end_dt:
+                break
+
+    if len(deltas) < _min_deltas_required:
+        logger.error(
+            f"Only {len(deltas)} surge values found for bias calculation. Bias will not be calculated."
+        )
+        return None
+
+    bias = round(sum(deltas) / len(deltas), 2)
+    logger.info(
+        f"Calculated bias for {swmp_station.id} on {filedate} cycle {cycle}: {bias} using {len(deltas)} deltas"
+    )
+    # Save to database.
+    SurgeBias.objects.update_or_create(
+        noaa_id=noaa_station_id, filedate=filedate, cycle=cycle, defaults={"bias": bias}
+    )
+    return bias
 
 
 if __name__ == "__main__":

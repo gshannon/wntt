@@ -93,7 +93,15 @@ def get_graph_data(
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
 
     past_surge_check_dict = (
-        sg.get_historic_surge(timeline, station.noaa_station_id) if special else {}
+        sg.get_best_historic_surge(timeline, station.noaa_station_id, False)
+        if special
+        else {}
+    )
+
+    past_surge_check_dict_with_bias = (
+        sg.get_best_historic_surge(timeline, station.noaa_station_id, True)
+        if special
+        else {}
     )
 
     future_surge_dict = sg.get_future_surge_data(
@@ -123,6 +131,12 @@ def get_graph_data(
         timeline, past_surge_check_dict, astro_preds15_dict
     )
 
+    past_surge_check_with_bias_plot, past_surge_check_total_with_bias_plot = (
+        build_past_surge_check_plots(
+            timeline, past_surge_check_dict_with_bias, astro_preds15_dict
+        )
+    )
+
     past_surge_plot = (
         timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
         if not timeline.is_all_future()
@@ -130,7 +144,13 @@ def get_graph_data(
     )
 
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
-        timeline, future_surge_dict, astro_preds15_dict, astro_all_hilo_dict
+        timeline,
+        future_surge_dict.get("surges"),
+        # TODO: enable this once we like this approach
+        # future_surge_dict.get("bias"),
+        None,
+        astro_preds15_dict,
+        astro_all_hilo_dict,
     )
 
     # If we've prepared any predicted high or low tides times, which have actual times rather than the nearest
@@ -173,6 +193,8 @@ def get_graph_data(
         "forecast_wind_dir_hover": forecast_wind_dir_hover,
         "past_surge": past_surge_plot,
         "past_surge_check": past_surge_check_plot,
+        "past_surge_check_with_bias": past_surge_check_with_bias_plot,
+        "past_surge_check_total_with_bias": past_surge_check_total_with_bias_plot,
         "past_surge_total_check": past_surge_check_total_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
@@ -253,7 +275,8 @@ def build_hist_tide_plot(
 
 def build_future_surge_plots(
     timeline: GraphTimeline,
-    future_surge_dict: dict,
+    future_surges_dict: dict,
+    future_surge_calc_bias: float,
     reg_preds_dict: dict,
     astro_hilo_dict: dict,
 ) -> tuple[list, list]:
@@ -263,11 +286,14 @@ def build_future_surge_plots(
 
     Args:
         timeline: list of datetimes
-        future_surge_dict: what we read from the surge API {dt: surge_value}
+        future_surges_dict: what we read from the surge file {dt: surge_value}
+        future_surge_calc_bias: calculated bias to be applied the surge values, or None.
+            This will only be set for reserves like Wells, where there is no BIAS data in the files.
+            Bias values provided in the file are already applied to these surge values.
         reg_preds_dict: regular tide & currents tide predictions for the timeline {dt: value}
         future_hilo_dict: predicted highs and lows {timeline_dt: HighLowEvent}
     """
-    if len(future_surge_dict) == 0:
+    if future_surges_dict is None or len(future_surges_dict) == 0:
         # No future surge data, so return None for both plots.
         return None, None
 
@@ -277,8 +303,10 @@ def build_future_surge_plots(
         surge = None
         try_dt = dt
         while True:
-            surge = future_surge_dict.get(try_dt, None)
+            surge = future_surges_dict.get(try_dt, None)
             if surge is not None:
+                # Add the calculated bias if any.
+                surge += future_surge_calc_bias or 0
                 break
             try_dt -= timedelta(minutes=15)
             if try_dt < dt - timedelta(minutes=45):
