@@ -35,7 +35,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Run the application.
-CMD ["gunicorn", "--bind", "0.0.0.0:8001", "-w 2", "--access-logfile", "/var/log/wntt/api-access.log", "--error-logfile", "/var/log/wntt/api-error.log", "project.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--timeout=120", "-w 2", "--access-logfile", "/var/log/wntt/api-access.log", "--error-logfile", "/var/log/wntt/api-error.log", "project.wsgi"]
 ARG GITBRANCH=?
 ARG GITSHA=?
 LABEL gitbranch=$GITBRANCH gitsha=$GITSHA

@@ -6,7 +6,7 @@ import app.datasource.astrotide as astro
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
-from app.timeline import Timeline
+from app.timeline import GraphTimeline
 from django import setup
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
@@ -26,7 +26,7 @@ class TestAstro(TestCase):
         # file has entire day of data, but we'll extract just 1 hour
         start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
         end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=zone)
-        tline = Timeline(start_dt, end_dt)
+        tline = GraphTimeline(start_dt, end_dt)
         preds_dict = astro.pred15_json_to_dict(contents, tline, station)
         self.assertEqual(len(preds_dict), 4)
         self.assertEqual(
