@@ -222,6 +222,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     name: 'CHECK Pred Storm Tide',
                     x: data.timeline,
                     y: data.past_surge_total_check,
+                    lineType: 'dot',
+                    markerSize: 0,
+                    color: RecordTideColor,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
+        ...(ctx.special && !hiloMode && data.past_surge_check_total_with_bias !== null ?
+            [
+                buildPlot({
+                    name: 'BIAS Pred Storm Tide',
+                    x: data.timeline,
+                    y: data.past_surge_check_total_with_bias,
                     lineType: 'dash',
                     markerSize: 0,
                     color: RecordTideColor,
@@ -248,6 +261,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     x: data.timeline,
                     y: data.past_surge_check,
                     lineType: 'dot',
+                    markerSize: 0,
+                    color: RecordTideColor,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
+        ...(ctx.special && !hiloMode && data.past_surge_check_with_bias !== null ?
+            [
+                buildPlot({
+                    name: 'BIAS Pred Storm Surge',
+                    x: data.timeline,
+                    y: data.past_surge_check_with_bias,
+                    lineType: 'dash',
                     markerSize: 0,
                     color: RecordTideColor,
                     connectgaps: true,

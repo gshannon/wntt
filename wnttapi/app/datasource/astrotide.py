@@ -41,9 +41,7 @@ def get_15m_astro_tides(station: Station, timeline: GraphTimeline) -> dict:
     return pred15_json_to_dict(pred_json, timeline, station)
 
 
-def get_hilo_astro_tides(
-    station: Station, start_date: date, end_date: date
-) -> tuple[dict, dict]:
+def get_hilo_astro_tides(station: Station, start_date: date, end_date: date) -> dict:
     """
     Fetch high/low astronomical tide predictions for the date range.
     Args:
@@ -52,7 +50,8 @@ def get_hilo_astro_tides(
         end_date (date): ending date, should be in same timezone as station
 
     Returns:
-        dict of 15-min interval predictions for highs and lows only.
+        dict of 15-min interval predictions for highs and lows only. The PredictedHighOrLow object includes
+            the exact datetime of the prediction.
         {timeline_dt: PredictedHighOrLow}
     """
 
