@@ -17,7 +17,7 @@ class InternalError(Exception):
 
 def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:
     """Return (timeline index of 1st past point, or -1, and index of first point >= present, or -1"""
-    cutoff = asof if asof is not None else tz.now(timeline[0].tzinfo)
+    cutoff = asof or tz.now(timeline[0].tzinfo)
     if dbg:
         print(f"timeline: {timeline}")
     if cutoff >= timeline[-1]:

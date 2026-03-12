@@ -7,7 +7,7 @@ import requests
 from app import util
 from app.hilo import Hilo, PredictedHighOrLow
 from app.station import Station
-from app.timeline import Timeline
+from app.timeline import GraphTimeline
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ base_url = (
 )
 
 
-def get_15m_astro_tides(station: Station, timeline: Timeline) -> dict:
+def get_15m_astro_tides(station: Station, timeline: GraphTimeline) -> dict:
     """
     Fetch astronomical tide level predictions for the desired timeline.
 
@@ -69,7 +69,9 @@ def get_hilo_astro_tides(
     return preds_hilo_dict
 
 
-def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:
+def pred15_json_to_dict(
+    pred_json: list, timeline: GraphTimeline, station: Station
+) -> dict:
     """
     Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
     sparse dict of {dt: value} for all values that exist in the requested timeline.
