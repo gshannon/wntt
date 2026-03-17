@@ -46,6 +46,35 @@ export const LargeBase = 992
 export const XLBase = 1200
 export const XXLBase = 1400
 
+export const ScreenSize = Object.freeze({
+    XSmall: 'xsmall',
+    Small: 'small',
+    Medium: 'medium',
+    Large: 'large',
+    XLarge: 'xlarge',
+    XXLarge: 'xxlarge',
+})
+
+export const getScreenSize = () => {
+    const width = window.innerWidth
+    if (width >= XXLBase) {
+        return ScreenSize.XXLarge
+    }
+    if (width >= XLBase) {
+        return ScreenSize.XLarge
+    }
+    if (width >= LargeBase) {
+        return ScreenSize.Large
+    }
+    if (width >= MediumBase) {
+        return ScreenSize.Medium
+    }
+    if (width >= SmallBase) {
+        return ScreenSize.Small
+    }
+    return ScreenSize.XSmall
+}
+
 // This will allow handling of smart phones or other narrow screen devices.
 export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase - 1}px)`).matches
 

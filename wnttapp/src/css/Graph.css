@@ -9,11 +9,6 @@ image's container, which is the anchor tag. */
     justify-content: center;
 }
 
-.graph-col {
-    /* This controls the height of the Plotly graph. */
-    height: 65vh;
-}
-
 /* For xs, sm & md we prevent it from exceeding the column boundaries */
 @media (max-width: 991px) {
     .jumpdate .pic {

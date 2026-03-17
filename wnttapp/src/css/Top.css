@@ -75,7 +75,7 @@
 }
 
 /* Activate when less than large */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     .hamburger-menu {
         display: block;
     }
@@ -85,7 +85,7 @@
 }
 
 /* Activate when large */
-@media (min-width: 992px) {
+@media (min-width: 768px) {
     .hamburger-menu {
         display: none;
     }
@@ -111,18 +111,19 @@
 }
 
 /* Activate when small or smaller */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     .app-box-top .hamburger-menu {
         flex-grow: 3;
     }
 }
 
 /* Activate when medium or larger */
-@media (min-width: 992px) {
+@media (min-width: 768px) {
     .app-box-top .expanded-menu {
         flex-grow: 5;
     }
     .app-box-top .expanded-menu .nav .nav-link {
+        padding-left: 12px;
         padding-right: 4px;
     }
     .app-box-top .expanded-menu .nav .active {

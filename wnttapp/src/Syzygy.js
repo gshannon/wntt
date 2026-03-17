@@ -6,6 +6,25 @@ export const LastQuarter = 'LQ'
 export const Perigee = 'PG'
 export const Perihelion = 'PH'
 
+export const getDisplay0 = (code) => {
+    switch (code) {
+        case NewMoon:
+            return '\u{1F31A}'
+        case FirstQuarter:
+            return '\u{1F313}'
+        case FullMoon:
+            return '\u{1F31D}'
+        case LastQuarter:
+            return '\u{1F317}'
+        case Perigee:
+            return '\u{1F535}'
+        case Perihelion:
+            return '\u{2600}\u{fe0f}'
+        default:
+            return null
+    }
+}
+
 export const SyzygyConfig = {
     [NewMoon]: { name: 'New Moon', fontSize: 24, display: '\u{1F31A}' }, // 🌚
     [FirstQuarter]: { name: 'First Quarter', fontSize: 24, display: '\u{1F313}' }, // 🌓

@@ -57,13 +57,13 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
                 <Form className='address-body' onSubmit={(e) => handleSubmit(e)}>
                     <Row>
                         <Col>
-                            <Form.Group controlId='addressLookup'>
+                            <Form.Group controlid='addressLookup'>
                                 <Form.Control
                                     name='addr'
                                     type='text'
                                     required={true}
                                     autoFocus={true}
-                                    controlId='addressLookup'
+                                    controlid='addressLookup'
                                     placeholder='Enter address to locate on map'
                                     defaultValue={addressValue}
                                 />
