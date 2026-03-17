@@ -1,12 +1,11 @@
 import csv
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-
-from app.timeline import GraphTimeline
 from app import util
-from django.core.cache import cache
 import sentry_sdk
+from app.timeline import GraphTimeline
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/syzygy"  # default location of data files
@@ -69,7 +68,7 @@ def get_current_moon_phases(
     }
 
 
-def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> list:
+def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> dict:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
     sorted by datetime.
 
@@ -77,21 +76,29 @@ def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) 
         timeline: we are looking for syzygy events within this timeline
 
     Returns:
-        [ { code: <code>, dt: <datetime> }, ... ]  sorted by datetime
+        { <datetime>: [<code>, <real_dt>]] }
     """
-    data = []
-    phase_code, phase_dt = get_moon_phase(timeline, data_dir)
-    if phase_dt:
-        data.append({"code": phase_code, "dt": phase_dt})
-    perigee_dt = get_perigee(timeline, data_dir)
-    if perigee_dt:
-        data.append({"code": PERIGEE, "dt": perigee_dt})
-    perihelion_dt = get_perihelion(timeline, data_dir)
-    if perihelion_dt:
-        data.append({"code": PERIHELION, "dt": perihelion_dt})
 
-    # These must be sorted by time, the graph is depending on it.
-    return sorted(data, key=lambda d: d["dt"])
+    data = {}
+    code, dt = get_moon_phase(timeline, data_dir)
+    if dt:
+        data[util.round_to_quarter(dt)] = [code, dt]
+
+    dt = get_perigee(timeline, data_dir)
+    if dt:
+        key = util.round_to_quarter(dt)
+        if key in data:
+            key = key + timedelta(minutes=15)
+        data[key] = [PERIGEE, dt]
+
+    dt = get_perihelion(timeline, data_dir)
+    if dt:
+        key = util.round_to_quarter(dt)
+        if key in data:
+            key = max(data) + timedelta(minutes=15)
+        data[key] = [PERIHELION, dt]
+
+    return data
 
 
 def get_moon_phase(

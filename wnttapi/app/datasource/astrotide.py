@@ -7,7 +7,7 @@ import requests
 from app import util
 from app.hilo import Hilo, PredictedHighOrLow
 from app.station import Station
-from app.timeline import Timeline, GraphTimeline
+from app.timeline import GraphTimeline, Timeline
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20

@@ -3,7 +3,7 @@ import { useContext, useEffect, useEffectEvent, useReducer, useState } from 'rea
 import { Col, Row } from 'react-bootstrap'
 import { AppContext } from './AppContext'
 import GetDates from './GetDates'
-import Chart from './Chart'
+import Chart from './EChart'
 import Overlay from './Overlay'
 import useGraphData from './useGraphData'
 import {
@@ -79,11 +79,21 @@ export default function Graph() {
 
     useEffect(() => {
         // The dialog is created as hidden, and its size is 0 until shown. Once it's shown we must invalidate
-        // the map size so it can be redrawn correctly. 
+        // the map size so it can be redrawn correctly.
         const dialog = document.querySelector('dialog')
+        if (!dialog) {
+            console.error('dialog is null')
+            return
+        }
         if (showMap) {
             dialog.showModal()
             mapRef?.invalidateSize()
+            // This is how to get clicking outside modal to close it.
+            dialog.addEventListener('click', (event) => {
+                if (event.target === dialog) {
+                    setShowMap(false)
+                }
+            })
         } else {
             dialog.close()
         }
@@ -245,7 +255,7 @@ export default function Graph() {
                     station={ctx.station}
                     errorOrLoading={error || loading}
                 />
-                <Col className='col-10 px-0 graph-col'>
+                <Col className='col-10 px-0'>
                     <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
                 </Col>
                 <JumpDates

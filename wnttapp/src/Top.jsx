@@ -161,11 +161,6 @@ const HelpItems = ({ page, gotoPage }) => {
                 onClick={() => gotoPage(Page.HelpSyzygy)}>
                 Sun, Moon & Tides
             </NavDropdown.Item>
-            <NavDropdown.Item
-                className={page === Page.Tutorials ? 'active' : ''}
-                onClick={() => gotoPage(Page.Tutorials)}>
-                Tutorials
-            </NavDropdown.Item>
         </>
     )
 }
