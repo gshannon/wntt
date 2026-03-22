@@ -22,6 +22,10 @@ const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 const ForecastWindSpeedColor = '#8D89A6'
 
+const CheckColor1 = '#d62728'
+const CheckColor2 = '#0b7dcc'
+const CheckColor3 = '#2eb92e'
+
 // For uniquely identifying traces in event handling. Order doesn't matter, so long as they are unique.
 const TraceId = Object.freeze({
     RecordTide: 1,
@@ -35,10 +39,12 @@ const TraceId = Object.freeze({
     WindGust: 9,
     WindSpeed: 10,
     WindForecast: 11,
-    XPredictedStormTide: 12,
-    XPredictedStormSurge: 13,
-    BPredictedStormTide: 14,
-    BPredictedStormSurge: 15,
+    XPastStormTideCheck: 12,
+    XPastStormTideCheckBias1: 13,
+    XPastStormTideCheckBias2: 14,
+    XPastStormSurgeCheck: 15,
+    XPastStormSurgeCheckBias1: 16,
+    XPastStormSurgeCheckBias2: 17,
 })
 
 export default function Chart({ error, loading, hiloMode, data }) {
@@ -268,32 +274,47 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }),
             ]
         :   []),
-        ...(ctx.special && !hiloMode && data.past_surge_total_check !== null ?
+        ...(ctx.special && !hiloMode && data.past_storm_tide_check !== null ?
             [
                 buildPlot({
-                    customdata: TraceId.XPredictedStormTide,
+                    customdata: TraceId.XPastStormTideCheck,
                     name: 'CHECK Pred Storm Tide',
                     x: data.timeline,
-                    y: data.past_surge_total_check,
-                    visible: !stationDaily.legendOnly.includes(TraceId.XPredictedStormTide),
-                    lineType: 'dot',
+                    y: data.past_storm_tide_check,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormTideCheck),
+                    lineType: 'dash',
                     markerSize: 0,
-                    color: RecordTideColor,
+                    color: CheckColor1,
                     connectgaps: true,
                 }),
             ]
         :   []),
-        ...(ctx.special && !hiloMode && data.past_surge_check_total_with_bias !== null ?
+        ...(ctx.special && !hiloMode && data.past_storm_tide_check_bias1 !== null ?
             [
                 buildPlot({
-                    customdata: TraceId.BPredictedStormTide,
-                    name: 'BIAS Pred Storm Tide',
+                    customdata: TraceId.XPastStormTideCheckBias1,
+                    name: 'BIAS1 Pred Storm Tide',
                     x: data.timeline,
-                    y: data.past_surge_check_total_with_bias,
-                    visible: !stationDaily.legendOnly.includes(TraceId.BPredictedStormTide),
+                    y: data.past_storm_tide_check_bias1,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormTideCheckBias1),
                     lineType: 'dash',
                     markerSize: 0,
-                    color: RecordTideColor,
+                    color: CheckColor2,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
+        ...(ctx.special && !hiloMode && data.past_storm_tide_check_bias2 !== null ?
+            [
+                buildPlot({
+                    customdata: TraceId.XPastStormTideCheckBias2,
+                    name: 'BIAS2 Pred Storm Tide',
+                    x: data.timeline,
+                    y: data.past_storm_tide_check_bias2,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormTideCheckBias2),
+                    lineType: 'dash',
+                    markerSize: 0,
+                    color: CheckColor3,
                     connectgaps: true,
                 }),
             ]
@@ -311,32 +332,47 @@ export default function Chart({ error, loading, hiloMode, data }) {
             hovertemplate: '%{y} %{hovertext}',
             connectgaps: false,
         }),
-        ...(ctx.special && !hiloMode && data.past_surge_check !== null ?
+        ...(ctx.special && !hiloMode && data.past_storm_surge_check !== null ?
             [
                 buildPlot({
-                    customdata: TraceId.XPredictedStormSurge,
+                    customdata: TraceId.XPastStormSurgeCheck,
                     name: 'CHECK Pred Storm Surge',
                     x: data.timeline,
-                    y: data.past_surge_check,
-                    visible: !stationDaily.legendOnly.includes(TraceId.XPredictedStormSurge),
-                    lineType: 'dot',
+                    y: data.past_storm_surge_check,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormSurgeCheck),
+                    lineType: 'dash',
                     markerSize: 0,
-                    color: RecordTideColor,
+                    color: CheckColor1,
                     connectgaps: true,
                 }),
             ]
         :   []),
-        ...(ctx.special && !hiloMode && data.past_surge_check_with_bias !== null ?
+        ...(ctx.special && !hiloMode && data.past_storm_surge_check_bias1 !== null ?
             [
                 buildPlot({
-                    customdata: TraceId.BPredictedStormSurge,
-                    name: 'BIAS Pred Storm Surge',
+                    customdata: TraceId.XPastStormSurgeCheckBias1,
+                    name: 'BIAS1 Pred Storm Surge',
                     x: data.timeline,
-                    y: data.past_surge_check_with_bias,
-                    visible: !stationDaily.legendOnly.includes(TraceId.BPredictedStormSurge),
+                    y: data.past_storm_surge_check_bias1,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormSurgeCheckBias1),
                     lineType: 'dash',
                     markerSize: 0,
-                    color: RecordTideColor,
+                    color: CheckColor2,
+                    connectgaps: true,
+                }),
+            ]
+        :   []),
+        ...(ctx.special && !hiloMode && data.past_storm_surge_check_bias2 !== null ?
+            [
+                buildPlot({
+                    customdata: TraceId.XPastStormSurgeCheckBias2,
+                    name: 'BIAS2 Pred Storm Surge',
+                    x: data.timeline,
+                    y: data.past_storm_surge_check_bias2,
+                    visible: !stationDaily.legendOnly.includes(TraceId.XPastStormSurgeCheckBias2),
+                    lineType: 'dash',
+                    markerSize: 0,
+                    color: CheckColor3,
                     connectgaps: true,
                 }),
             ]
