@@ -23,8 +23,6 @@ from app.station import Station, get_all_stations
 from app.timeline import GraphTimeline
 
 logger = logging.getLogger(__name__)
-# minumum number of surge deltas required to calculate bias, out of possible 120
-_min_deltas_required = 100
 _no_value = "9999.000"
 
 BiaslessStations = ["8419317"]  # Wells surge data has no bias (anomaly)
@@ -92,16 +90,34 @@ def main():
     filepath = f"/data/surge/data/{filename}"
 
     # Calculate a bias for stations that don't have one in the surge file.
-    calc_bias = (
-        calculate_bias(
-            args.noaa_station_id,
-            filepath,
-            args.date,
-            args.cycle,
+
+    (calc_bias1, calc_bias2) = (None, None)
+    if args.noaa_station_id in BiaslessStations:
+        swmp_station = get_swmp_station(args.noaa_station_id)
+
+        end_dt = datetime.now(tz=swmp_station.time_zone)
+        start_dt = end_dt - timedelta(days=5)
+        timeline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
+
+        # 5-day bias
+        calc_bias1 = calculate_bias(swmp_station, timeline, filepath, 100)
+
+        # 6-hour bias
+        start_dt = end_dt - timedelta(hours=6)
+        timeline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
+        calc_bias2 = calculate_bias(swmp_station, timeline, filepath, 5)
+
+        logger.info(
+            f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2}"
         )
-        if args.noaa_station_id in BiaslessStations
-        else None
-    )
+
+        # Save to database.
+        SurgeBias.objects.update_or_create(
+            noaa_id=args.noaa_station_id,
+            filedate=args.date,
+            cycle=args.cycle,
+            defaults={"bias": calc_bias1, "bias2": calc_bias2},
+        )
 
     with open(filepath) as surge_file:
         reader = csv.reader(surge_file, skipinitialspace=True)
@@ -126,7 +142,8 @@ def main():
                         "tide": float(tide_str),
                         "surge": float(surge_str),
                         "bias": float(bias_str) if bias_str != _no_value else None,
-                        "calc_bias": calc_bias,
+                        "calc_bias": calc_bias1,
+                        "calc_bias2": calc_bias2,
                         "total": float(total_str),
                     },
                 )
@@ -140,27 +157,19 @@ def get_swmp_station(noaa_station_id: str) -> Station:
             return Station.from_dict(id, data)
 
     raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
-    return None
 
 
 # Calculate anomaly/bias for this file, log it to the database and return it so it can be applied to surge values.  This is only needed for stations in the BiaslessStations list.
 def calculate_bias(
-    noaa_station_id: str,
-    filepath: str,
-    filedate: datetime.date,
-    cycle: int,
+    swmp_station: Station, timeline: GraphTimeline, filepath: str, minimum_deltas: int
 ) -> float:
-    swmp_station = get_swmp_station(noaa_station_id)
-    end_dt = datetime.now(tz=swmp_station.time_zone)
-    start_dt = end_dt - timedelta(days=5)
-    tline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
-    tide_preds = astro.get_15m_astro_tides(swmp_station, tline)
+    tide_preds = astro.get_15m_astro_tides(swmp_station, timeline)
     logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
-    obs_tides = cdmo.get_recorded_tides(swmp_station, tline)
+    obs_tides = cdmo.get_recorded_tides(swmp_station, timeline)
     logger.debug(f"got {len(obs_tides)} tide obs for bias calculation")
 
     deltas = []
-    # read the trailing 5 days of surge predictions from the file
+    # Read the past surge predictions from the file for the given timeline.
     with open(filepath) as surge_file:
         reader = csv.reader(surge_file, skipinitialspace=True)
         next(reader)  # skip header
@@ -170,29 +179,25 @@ def calculate_bias(
                 continue
             dt = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
             local_dt = dt.astimezone(swmp_station.time_zone)
-            if start_dt <= local_dt <= end_dt and surge_str != _no_value:
+            if (
+                timeline.start_dt <= local_dt <= timeline.end_dt
+                and surge_str != _no_value
+            ):
                 if local_dt in obs_tides and local_dt in tide_preds:
                     delta = obs_tides[local_dt] - (
                         tide_preds[local_dt] + float(surge_str)
                     )
                     deltas.append(round(delta, 2))
-            elif local_dt > end_dt:
+            elif local_dt > timeline.end_dt:
                 break
 
-    if len(deltas) < _min_deltas_required:
+    if len(deltas) < minimum_deltas:
         logger.error(
-            f"Only {len(deltas)} surge values found for bias calculation. Bias will not be calculated."
+            f"Expected at least {minimum_deltas} deltas, found only {len(deltas)} for bias calculation. Bias will not be calculated."
         )
         return None
 
     bias = round(sum(deltas) / len(deltas), 2)
-    logger.info(
-        f"Calculated bias for {swmp_station.id} on {filedate} cycle {cycle}: {bias} using {len(deltas)} deltas"
-    )
-    # Save to database.
-    SurgeBias.objects.update_or_create(
-        noaa_id=noaa_station_id, filedate=filedate, cycle=cycle, defaults={"bias": bias}
-    )
     return bias
 
 

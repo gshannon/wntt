@@ -40,6 +40,7 @@ def get_future_surge_data(
         dict: {
             "surges": dict {<dt>: <surge>}
             "bias": <calculated bias, or None>,
+            "bias2": <calculated bias2, or None>,
         }
 
     """
@@ -66,13 +67,13 @@ def get_future_surge_data(
     Params:
     - timeline: timeline
     - noaa_station_id: the NOAA station code so we can get the right data
-    - use_calculated_bias: if True and station has calculated bias, add that to the surge values. This is for
+    - bias_number: 1 or 2 to add bias1 or bias 2 to the surge values. None for neither.  This is for
       A/B testing of calculated bias logic.
 """
 
 
 def get_best_historic_surge(
-    timeline: GraphTimeline, noaa_station_id: str, use_calculated_bias: bool
+    timeline: GraphTimeline, noaa_station_id: str, bias_number: int
 ) -> dict:
     data = {}
     if timeline.is_all_future():
@@ -84,12 +85,16 @@ def get_best_historic_surge(
 
     for rec in qs:
         in_tz = rec.tide_time.astimezone(timeline.time_zone)
-        if use_calculated_bias and rec.calc_bias is None:
+        if (bias_number == 1 and rec.calc_bias is None) or (
+            bias_number == 2 and rec.calc_bias2 is None
+        ):
             # skip it, not worth showing on the graph.
             continue
         surge = rec.surge
-        if use_calculated_bias:
-            surge += rec.calc_bias or 0
+        if bias_number == 1:
+            surge += rec.calc_bias
+        elif bias_number == 2:
+            surge += rec.calc_bias2
         else:
             surge += rec.bias or 0
         data[in_tz] = surge
@@ -194,7 +199,7 @@ def get_or_load_projected_surge_file(
             )
 
     # Get bias
-    calculated_bias = None
+    (calculated_bias1, calculated_bias2) = (None, None)
     record = SurgeBias.objects.filter(
         noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
     ).first()
@@ -203,7 +208,7 @@ def get_or_load_projected_surge_file(
             f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
         )
     else:
-        calculated_bias = record.bias
+        (calculated_bias1, calculated_bias2) = (record.bias, record.bias2)
         logger.debug(
             f"got bias id {record.id}: {record.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
         )
@@ -236,9 +241,7 @@ def get_or_load_projected_surge_file(
                     continue
                 try:
                     surge = float(surge_str) + (
-                        float(bias_str)
-                        if calculated_bias is None and bias_str != _no_value
-                        else 0
+                        float(bias_str) if bias_str != _no_value else 0
                     )
                     if _min_surge <= surge <= _max_surge:
                         surges_dict[local_dt] = round(surge, 2)
@@ -261,7 +264,11 @@ def get_or_load_projected_surge_file(
         return {}
 
     # Cache the data. We'll use a TTL of 48 hours to handle cases where download fails a few times.
-    payload = {"surges": surges_dict, "bias": calculated_bias}
+    payload = {
+        "surges": surges_dict,
+        "bias1": calculated_bias1,
+        "bias2": calculated_bias2,
+    }
     cache.set(
         noaa_station_id,
         {"filedate": filedate, "cycle": cycle, "data": payload},

@@ -39,6 +39,7 @@ class Surge(models.Model):
     surge = models.FloatField(null=False)
     bias = models.FloatField(null=True)
     calc_bias = models.FloatField(null=True)
+    calc_bias2 = models.FloatField(null=True)
     total = models.FloatField(null=False)
 
     class Meta:
@@ -56,6 +57,7 @@ class SurgeBias(models.Model):
     filedate = models.DateField(auto_now=False, auto_now_add=False)
     cycle = models.SmallIntegerField(null=False)
     bias = models.FloatField(null=False)
+    bias2 = models.FloatField(null=True)
 
     class Meta:
         constraints = [

@@ -92,18 +92,6 @@ def get_graph_data(
 
     past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
 
-    past_surge_check_dict = (
-        sg.get_best_historic_surge(timeline, station.noaa_station_id, False)
-        if special
-        else {}
-    )
-
-    past_surge_check_dict_with_bias = (
-        sg.get_best_historic_surge(timeline, station.noaa_station_id, True)
-        if special
-        else {}
-    )
-
     future_surge_dict = sg.get_future_surge_data(
         timeline, station.noaa_station_id, max(obs_dict) if len(obs_dict) > 0 else None
     )
@@ -127,15 +115,41 @@ def get_graph_data(
         timeline, astro_preds15_dict, hilo_event_dict
     )
 
-    past_surge_check_plot, past_surge_check_total_plot = build_past_surge_check_plots(
-        timeline, past_surge_check_dict, astro_preds15_dict
-    )
+    past_storm_surge_check_plot = None
+    past_storm_tide_check_plot = None
+    past_storm_surge_check_bias1_plot = None
+    past_storm_tide_check_bias1_plot = None
+    past_storm_surge_check_bias2_plot = None
+    past_storm_tide_check_bias2_plot = None
 
-    past_surge_check_with_bias_plot, past_surge_check_total_with_bias_plot = (
-        build_past_surge_check_plots(
-            timeline, past_surge_check_dict_with_bias, astro_preds15_dict
+    if special:
+        past_surge_check_dict = sg.get_best_historic_surge(
+            timeline, station.noaa_station_id, None
         )
-    )
+        past_surge_check_bias1_dict = sg.get_best_historic_surge(
+            timeline, station.noaa_station_id, 1
+        )
+        past_surge_check_bias2_dict = sg.get_best_historic_surge(
+            timeline, station.noaa_station_id, 2
+        )
+
+        past_storm_surge_check_plot, past_storm_tide_check_plot = (
+            build_past_surge_check_plots(
+                timeline, past_surge_check_dict, astro_preds15_dict
+            )
+        )
+
+        past_storm_surge_check_bias1_plot, past_storm_tide_check_bias1_plot = (
+            build_past_surge_check_plots(
+                timeline, past_surge_check_bias1_dict, astro_preds15_dict
+            )
+        )
+
+        past_storm_surge_check_bias2_plot, past_storm_tide_check_bias2_plot = (
+            build_past_surge_check_plots(
+                timeline, past_surge_check_bias2_dict, astro_preds15_dict
+            )
+        )
 
     past_surge_plot = (
         timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
@@ -147,7 +161,7 @@ def get_graph_data(
         timeline,
         future_surge_dict.get("surges"),
         # TODO: enable this once we like this approach
-        # future_surge_dict.get("bias"),
+        # future_surge_dict.get("bias1 or bias2"),
         None,
         astro_preds15_dict,
         astro_all_hilo_dict,
@@ -192,10 +206,12 @@ def get_graph_data(
         "forecast_wind_dir": forecast_wind_dir_plot,
         "forecast_wind_dir_hover": forecast_wind_dir_hover,
         "past_surge": past_surge_plot,
-        "past_surge_check": past_surge_check_plot,
-        "past_surge_check_with_bias": past_surge_check_with_bias_plot,
-        "past_surge_check_total_with_bias": past_surge_check_total_with_bias_plot,
-        "past_surge_total_check": past_surge_check_total_plot,
+        "past_storm_surge_check": past_storm_surge_check_plot,
+        "past_storm_tide_check": past_storm_tide_check_plot,
+        "past_storm_surge_check_bias1": past_storm_surge_check_bias1_plot,
+        "past_storm_tide_check_bias1": past_storm_tide_check_bias1_plot,
+        "past_storm_surge_check_bias2": past_storm_surge_check_bias2_plot,
+        "past_storm_tide_check_bias2": past_storm_tide_check_bias2_plot,
         "future_surge": future_surge_plot,
         "future_tide": future_storm_tide_plot,
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
