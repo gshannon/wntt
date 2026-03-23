@@ -41,6 +41,7 @@ class Surge(models.Model):
     calc_bias = models.FloatField(null=True)
     calc_bias2 = models.FloatField(null=True)
     total = models.FloatField(null=False)
+    obs = models.FloatField(null=True)
 
     class Meta:
         constraints = [
