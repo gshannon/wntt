@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import date, datetime
 from unittest import TestCase
 
 import app.datasource.syzygy as syzygy
@@ -44,8 +44,8 @@ class TestSyzygy(TestCase):
     def test_timeline_syzygy(self):
         """Able to get all syzygy data for a timeline from JSON data"""
         zone = tz.eastern
-        start_date = datetime(2026, 1, 1, tzinfo=zone)
-        end_date = datetime(2026, 1, 4, tzinfo=zone)
+        start_date = date(2026, 1, 1)
+        end_date = date(2026, 1, 4)
         timeline = GraphTimeline(start_date, end_date, zone)
 
         data = syzygy.get_syzygy_data(timeline, data_dir=csv_location)
@@ -62,8 +62,8 @@ class TestSyzygy(TestCase):
     def test_perigee_over_year(self):
         """Able to get perigee over year boundary"""
         zone = tz.eastern
-        start_date = datetime(2025, 12, 31, tzinfo=zone)
-        end_date = datetime(2026, 1, 4, tzinfo=zone)
+        start_date = date(2025, 12, 31)
+        end_date = date(2026, 1, 4)
         timeline = GraphTimeline(start_date, end_date, zone)
         expected = datetime(2026, 1, 1, 16, 45, tzinfo=zone)
         self.assertEqual(expected, syzygy.get_perigee(timeline, csv_location))
@@ -71,8 +71,8 @@ class TestSyzygy(TestCase):
     def test_perihelion_over_year(self):
         """Able to get perihelion over year boundary"""
         zone = tz.eastern
-        start_date = datetime(2025, 12, 31, tzinfo=zone)
-        end_date = datetime(2026, 1, 4, tzinfo=zone)
+        start_date = date(2025, 12, 31)
+        end_date = date(2026, 1, 4)
         timeline = GraphTimeline(start_date, end_date, zone)
         expected = datetime(2026, 1, 3, 12, 16, tzinfo=zone)
         self.assertEqual(expected, syzygy.get_perihelion(timeline, csv_location))

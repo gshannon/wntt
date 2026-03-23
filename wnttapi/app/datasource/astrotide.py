@@ -7,7 +7,7 @@ import requests
 from app import util
 from app.hilo import Hilo, PredictedHighOrLow
 from app.station import Station
-from app.timeline import GraphTimeline
+from app.timeline import Timeline, GraphTimeline
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +68,7 @@ def get_hilo_astro_tides(station: Station, start_date: date, end_date: date) -> 
     return preds_hilo_dict
 
 
-def pred15_json_to_dict(
-    pred_json: list, timeline: GraphTimeline, station: Station
-) -> dict:
+def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:
     """
     Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
     sparse dict of {dt: value} for all values that exist in the requested timeline.
@@ -146,6 +144,7 @@ def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
             { "t": "2025-05-06 01:00", "v": "-3.624" },
     """
     url = f"{base_url}&interval={interval}&station={noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
+    logger.debug(url)
 
     try:
         response = requests.get(url)
@@ -159,7 +158,7 @@ def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
     try:
         return extract_json(response.text)
     except ValueError as e:
-        e.add_note("Url: %s", url)
+        e.add_note(f"Url: {url}")
         raise e
 
 

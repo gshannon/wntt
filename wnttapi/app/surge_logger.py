@@ -16,11 +16,12 @@ from django import setup
 setup()
 
 import app.tzutil as tz
+import app.util as util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo
 from app.models import Surge, SurgeBias
 from app.station import Station, get_all_stations
-from app.timeline import GraphTimeline
+from app.timeline import Timeline
 
 logger = logging.getLogger(__name__)
 _no_value = "9999.000"
@@ -95,17 +96,21 @@ def main():
     if args.noaa_station_id in BiaslessStations:
         swmp_station = get_swmp_station(args.noaa_station_id)
 
-        end_dt = datetime.now(tz=swmp_station.time_zone)
-        start_dt = end_dt - timedelta(days=5)
-        timeline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
+        end_dt = util.round_to_quarter(datetime.now(tz=swmp_station.time_zone))
+        start_dt = end_dt - timedelta(
+            days=6
+        )  # extra day to allow for missing observations
+        timeline = Timeline(start_dt, end_dt)
 
         # 5-day bias
-        calc_bias1 = calculate_bias(swmp_station, timeline, filepath, 100)
+        calc_bias1 = calculate_bias(swmp_station, timeline, filepath, 120)
 
         # 6-hour bias
-        start_dt = end_dt - timedelta(hours=6)
-        timeline = GraphTimeline(start_dt, end_dt, swmp_station.time_zone)
-        calc_bias2 = calculate_bias(swmp_station, timeline, filepath, 5)
+        start_dt = end_dt - timedelta(
+            hours=12
+        )  # extra hours to allow for missing observations
+        timeline = Timeline(start_dt, end_dt)
+        calc_bias2 = calculate_bias(swmp_station, timeline, filepath, 6)
 
         logger.info(
             f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2}"
@@ -161,8 +166,15 @@ def get_swmp_station(noaa_station_id: str) -> Station:
 
 # Calculate anomaly/bias for this file, log it to the database and return it so it can be applied to surge values.  This is only needed for stations in the BiaslessStations list.
 def calculate_bias(
-    swmp_station: Station, timeline: GraphTimeline, filepath: str, minimum_deltas: int
+    swmp_station: Station, timeline: Timeline, filepath: str, minimum_deltas: int
 ) -> float:
+    """We want to look at a certain number of recent tide observations and calculate an average
+    delta between the observation and the predicted tide plus the published surge value.  We'll walk
+    through the file top to bottom (in chronological order) and pull all the records that match the given
+    timeline and for which there is sufficient data for calculating delta, then pull the last N of
+    those deltas to get the average. So the given timeline should be large enough to allow for missing
+    observations.
+    """
     tide_preds = astro.get_15m_astro_tides(swmp_station, timeline)
     logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
     obs_tides = cdmo.get_recorded_tides(swmp_station, timeline)
@@ -197,7 +209,13 @@ def calculate_bias(
         )
         return None
 
-    bias = round(sum(deltas) / len(deltas), 2)
+    # Now pull out the latest values that match the required minimum count.
+    my_deltas = deltas[-minimum_deltas:]
+    logger.info(
+        f"Using {len(my_deltas)} deltas out of the {len(deltas)} extracted from file"
+    )
+
+    bias = round(sum(my_deltas) / len(my_deltas), 2)
     return bias
 
 

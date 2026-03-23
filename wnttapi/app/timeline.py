@@ -150,6 +150,10 @@ class GraphTimeline(Timeline):
             time_zone (ZoneInfo): time zone data will be displayed in.
             now (datetime): For testing only. Default is current time.
         """
+        # Python will gladly convert a datetime to a date, but that's bad here.
+        if isinstance(start_date, datetime) or isinstance(end_date, datetime):
+            raise util.InternalError("start_date & end_date must be type date")
+
         self.start_date = start_date
         self.end_date = end_date
 
