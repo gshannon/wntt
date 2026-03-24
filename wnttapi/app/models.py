@@ -40,6 +40,7 @@ class Surge(models.Model):
     bias = models.FloatField(null=True)
     calc_bias = models.FloatField(null=True)
     calc_bias2 = models.FloatField(null=True)
+    calc_bias3 = models.FloatField(null=True)
     total = models.FloatField(null=False)
     obs = models.FloatField(null=True)
 
@@ -59,6 +60,7 @@ class SurgeBias(models.Model):
     cycle = models.SmallIntegerField(null=False)
     bias = models.FloatField(null=False)
     bias2 = models.FloatField(null=True)
+    bias3 = models.FloatField(null=True)
 
     class Meta:
         constraints = [

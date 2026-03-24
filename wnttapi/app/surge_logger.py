@@ -92,7 +92,7 @@ def main():
 
     # Calculate a bias for stations that don't have one in the surge file.
 
-    (calc_bias1, calc_bias2) = (None, None)
+    (calc_bias1, calc_bias2, calc_bias3) = (None, None, None)
     if args.noaa_station_id in BiaslessStations:
         swmp_station = get_swmp_station(args.noaa_station_id)
 
@@ -117,8 +117,15 @@ def main():
         timeline = Timeline(start_dt_stz, end_dt_stz)
         calc_bias2 = calculate_bias(swmp_station, timeline, filepath, obs_tides, 6)
 
+        # 24-hour bias
+        start_dt_stz = end_dt_stz - timedelta(
+            hours=36
+        )  # extra hours to allow for missing observations
+        timeline = Timeline(start_dt_stz, end_dt_stz)
+        calc_bias3 = calculate_bias(swmp_station, timeline, filepath, obs_tides, 24)
+
         logger.info(
-            f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2}"
+            f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2} bias3={calc_bias3}"
         )
 
         # Save to database.
@@ -126,7 +133,7 @@ def main():
             noaa_id=args.noaa_station_id,
             filedate=args.date,
             cycle=args.cycle,
-            defaults={"bias": calc_bias1, "bias2": calc_bias2},
+            defaults={"bias": calc_bias1, "bias2": calc_bias2, "bias3": calc_bias3},
         )
 
     with open(filepath) as surge_file:
@@ -154,6 +161,7 @@ def main():
                         "bias": float(bias_str) if bias_str != _no_value else None,
                         "calc_bias": calc_bias1,
                         "calc_bias2": calc_bias2,
+                        "calc_bias3": calc_bias3,
                         "total": float(total_str),
                     },
                 )
