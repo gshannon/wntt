@@ -37,11 +37,12 @@ class Surge(models.Model):
     tide_time = models.DateTimeField(auto_now=False, auto_now_add=False)
     tide = models.FloatField(null=False)
     surge = models.FloatField(null=False)
+    surge_1day = models.FloatField(null=True)
+    surge_2day = models.FloatField(null=True)
     bias = models.FloatField(null=True)
     calc_bias = models.FloatField(null=True)
     calc_bias2 = models.FloatField(null=True)
     calc_bias3 = models.FloatField(null=True)
-    total = models.FloatField(null=False)
     obs = models.FloatField(null=True)
 
     class Meta:

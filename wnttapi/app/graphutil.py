@@ -511,10 +511,10 @@ def build_wind_plots(
     minutes = [0, 15, 30, 45]  # show all
     if not isinstance(timeline, HiloTimeline):
         days = (timeline.end_dt.date() - timeline.start_dt.date()).days
-        if days > 4:
-            minutes = [0]  # only show 1 point per hour
-        elif days > 1:
+        if days == 2:
             minutes = [0, 30]  # show 2 per hour
+        elif days > 2:
+            minutes = [0]  # only show 1 point per hour
 
     def check_item(dt, key):
         nonlocal found
