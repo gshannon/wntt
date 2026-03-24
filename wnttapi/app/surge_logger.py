@@ -76,19 +76,24 @@ def main():
 
     args = parser.parse_args()
 
-    # Calculate range we're interested in. The cycle param really means first hour of the future,
-    # at the time the surge file was published.
+    # Calculate time window we're interested in. This is the next 6 hours after the file publication, which we
+    # calculate based on the cycle number.
     cycle_time_utc = datetime.combine(
         datetime.strptime(args.date, "%Y%m%d"), time(int(args.cycle))
     ).replace(tzinfo=tz.utc)
-    # We start with cycle + 7 hours, and get 6 hourly values.
-    # E.g. if it's 12:45 and we download cycle 06, this is our last chance to see 1300 - 1800.
-    start_time_utc = cycle_time_utc + timedelta(hours=7)
-    end_time_utc = start_time_utc + timedelta(hours=5)
+    # Define a 6-hour block representing the "near future", i.e. the 6 hours which will no longer
+    # be in the future in subsequent cycles.  This is the last -- and hopefully the most
+    # accurate -- prediction we will make for each of these 6 hours.
+    # The beginning of the block is "cycle + 7" hours.  E.g. if we download cycle 06 (usually done
+    # at 12:45UTC), this is our last chance to see (6+7) 1300 - 1800 UTC.
+    start_window_utc = cycle_time_utc + timedelta(hours=7)
+    end_window_utc = start_window_utc + timedelta(hours=5)
 
     # Note that /data should be a mount point to the host file system
     filename = f"{args.noaa_station_id}-{args.date}-{args.cycle}.csv"
     filepath = f"/data/surge/data/{filename}"
+
+    file_dict = load_file(filepath)
 
     # Calculate a bias for stations that don't have one in the surge file.
 
@@ -105,7 +110,7 @@ def main():
         # 5-day bias
         obs_tides = cdmo.get_recorded_tides(swmp_station, timeline)
         logger.debug(f"got {len(obs_tides)} tide obs for bias calculation")
-        calc_bias1 = calculate_bias(swmp_station, timeline, filepath, obs_tides, 120)
+        calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 120)
 
         # Since we now have 5 days of observations loaded, save them to the database as needed.
         save_observations(swmp_station, obs_tides)
@@ -115,20 +120,20 @@ def main():
             hours=12
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias2 = calculate_bias(swmp_station, timeline, filepath, obs_tides, 6)
+        calc_bias2 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 6)
 
         # 24-hour bias
         start_dt_stz = end_dt_stz - timedelta(
             hours=36
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias3 = calculate_bias(swmp_station, timeline, filepath, obs_tides, 24)
+        calc_bias3 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 24)
 
         logger.info(
             f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2} bias3={calc_bias3}"
         )
 
-        # Save to database.
+        # Save to database, for potential use by the app, to add bias to the surge from the file.
         SurgeBias.objects.update_or_create(
             noaa_id=args.noaa_station_id,
             filedate=args.date,
@@ -136,36 +141,28 @@ def main():
             defaults={"bias": calc_bias1, "bias2": calc_bias2, "bias3": calc_bias3},
         )
 
-    with open(filepath) as surge_file:
-        reader = csv.reader(surge_file, skipinitialspace=True)
-        next(reader)  # skip header row
-        for row in reader:
-            #         TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
-            # 202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
-            date_str, tide_str, obs_str, surge_str, bias_str, total_str = row
-            # Only the times on the hour have actual surge data.
-            if int(date_str) % 100 != 0:
-                continue
-            dt_utc = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
-            if start_time_utc <= dt_utc <= end_time_utc:
-                # If there's a value in OBServed column, something is seriously wrong.
-                if obs_str != _no_value:
-                    print(f"WARNING: {filename} at {date_str} has OBS value {obs_str}")
+        # Now save the 6 records in the target window.
+        for dt_utc, rec in file_dict.items():
+            if start_window_utc <= dt_utc <= end_window_utc:
+                # Look up the 24- and 48-hour surge predictions
+                future_dt_24 = dt_utc + timedelta(days=1)
+                future_dt_48 = dt_utc + timedelta(days=2)
                 Surge.objects.update_or_create(
                     noaa_id=args.noaa_station_id,
                     tide_time=dt_utc,
                     defaults={
                         "cycle": int(args.cycle),
-                        "tide": float(tide_str),
-                        "surge": float(surge_str),
-                        "bias": float(bias_str) if bias_str != _no_value else None,
+                        "tide": rec["tide"],
+                        "surge": rec["surge"],
+                        "surge_1day": file_dict[future_dt_24]["surge"],
+                        "surge_2day": file_dict[future_dt_48]["surge"],
+                        "bias": rec["bias"],
                         "calc_bias": calc_bias1,
                         "calc_bias2": calc_bias2,
                         "calc_bias3": calc_bias3,
-                        "total": float(total_str),
                     },
                 )
-            if dt_utc >= end_time_utc:
+            if dt_utc >= end_window_utc:
                 break
 
 
@@ -177,11 +174,35 @@ def get_swmp_station(noaa_station_id: str) -> Station:
     raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
 
 
+# Read the file into memory for convenience
+def load_file(filepath: str) -> dict:
+    file_dict = {}
+    with open(filepath) as surge_file:
+        reader = csv.reader(surge_file, skipinitialspace=True)
+        next(reader)  # skip header row
+        for row in reader:
+            #         TIME,    TIDE,      OB,   SURGE,    BIAS,      TWL
+            # 202502181200,   2.275,9999.000,  -1.600,9999.000,   0.675
+            date_str, tide_str, _, surge_str, bias_str, _ = row
+            # Only the times on the hour have actual surge data.
+            if int(date_str) % 100 != 0:
+                continue
+            if surge_str == _no_value:
+                continue
+            dt_utc = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
+            file_dict[dt_utc] = {
+                "tide": float(tide_str),
+                "surge": float(surge_str),
+                "bias": float(bias_str) if bias_str != _no_value else None,
+            }
+    return file_dict
+
+
 # Calculate anomaly/bias for this file, log it to the database and return it so it can be applied to surge values.  This is only needed for stations in the BiaslessStations list.
 def calculate_bias(
     swmp_station: Station,
     timeline: Timeline,
-    filepath: str,
+    file_dict: dict,
     obs_tides: dict,
     minimum_deltas: int,
 ) -> float:
@@ -196,25 +217,16 @@ def calculate_bias(
     logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
 
     deltas = []
-    # Read the past surge predictions from the file for the given timeline.
-    with open(filepath) as surge_file:
-        reader = csv.reader(surge_file, skipinitialspace=True)
-        next(reader)  # skip header
-        for row in reader:
-            date_str, surge_str = row[0], row[3]
-            if int(date_str) % 100 != 0:
-                continue
-            dt_utc = datetime.strptime(date_str, "%Y%m%d%H%M").replace(tzinfo=tz.utc)
-            # Note we don't have to convert the db's UTC into station zone, Python is smart.
-            if (
-                timeline.start_dt <= dt_utc <= timeline.end_dt
-                and surge_str != _no_value
-            ):
-                if dt_utc in obs_tides and dt_utc in tide_preds:
-                    delta = obs_tides[dt_utc] - (tide_preds[dt_utc] + float(surge_str))
-                    deltas.append(round(delta, 2))
-            elif dt_utc > timeline.end_dt:
-                break
+
+    # Walk through the file contents. This will be in order of insert, which in this case is in tide time order.
+    for dt_utc, rec in file_dict.items():
+        # Note we don't have to convert the db's UTC into station zone, Python is smart.
+        if timeline.contains(dt_utc) and dt_utc in obs_tides and dt_utc in tide_preds:
+            delta = obs_tides[dt_utc] - (tide_preds[dt_utc] + rec["surge"])
+            deltas.append(round(delta, 2))
+        # since items() returns in key-insert order, we're done here
+        elif dt_utc > timeline.end_dt:
+            break
 
     if len(deltas) < minimum_deltas:
         logger.error(

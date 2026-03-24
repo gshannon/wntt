@@ -54,6 +54,8 @@ export default function App() {
     const onStationSelected = (sid) => {
         setStation(stationsData[sid])
         storage.setMainStorage({ ...mainStore, stationId: sid })
+        const storedOptions = storage.getPermanentStorage(sid)
+        setCustomElevationNav(storedOptions.customElevationNav)
     }
 
     // handler for user setting custom elevation

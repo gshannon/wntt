@@ -40,3 +40,5 @@ alias logapi="docker logs -f api-c"
 alias doagent="docker run -d -v /proc:/host/proc:ro -v /sys:/host/sys:ro digitalocean/do-agent:stable"
 
 export LOG=/var/log/wntt
+alias tl='tail -50f /var/log/wntt/django.log'
+export DB=~/datamount/db/wntt.sqlite3
