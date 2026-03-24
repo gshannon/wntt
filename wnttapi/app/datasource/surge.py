@@ -41,6 +41,7 @@ def get_future_surge_data(
             "surges": dict {<dt>: <surge>}
             "bias": <calculated bias, or None>,
             "bias2": <calculated bias2, or None>,
+            "bias3": <calculated bias3, or None>,
         }
 
     """
@@ -85,8 +86,10 @@ def get_best_historic_surge(
 
     for rec in qs:
         in_tz = rec.tide_time.astimezone(timeline.time_zone)
-        if (bias_number == 1 and rec.calc_bias is None) or (
-            bias_number == 2 and rec.calc_bias2 is None
+        if (
+            (bias_number == 1 and rec.calc_bias is None)
+            or (bias_number == 2 and rec.calc_bias2 is None)
+            or (bias_number == 3 and rec.calc_bias3 is None)
         ):
             # skip it, not worth showing on the graph.
             continue
@@ -95,6 +98,8 @@ def get_best_historic_surge(
             surge += rec.calc_bias
         elif bias_number == 2:
             surge += rec.calc_bias2
+        elif bias_number == 3:
+            surge += rec.calc_bias3
         else:
             surge += rec.bias or 0
         data[in_tz] = surge
@@ -199,7 +204,7 @@ def get_or_load_projected_surge_file(
             )
 
     # Get bias
-    (calculated_bias1, calculated_bias2) = (None, None)
+    (calculated_bias1, calculated_bias2, calculated_bias3) = (None, None, None)
     record = SurgeBias.objects.filter(
         noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
     ).first()
@@ -208,7 +213,11 @@ def get_or_load_projected_surge_file(
             f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
         )
     else:
-        (calculated_bias1, calculated_bias2) = (record.bias, record.bias2)
+        (calculated_bias1, calculated_bias2, calculated_bias3) = (
+            record.bias,
+            record.bias2,
+            record.bias3,
+        )
         logger.debug(
             f"got bias id {record.id}: {record.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
         )
@@ -268,6 +277,7 @@ def get_or_load_projected_surge_file(
         "surges": surges_dict,
         "bias1": calculated_bias1,
         "bias2": calculated_bias2,
+        "bias3": calculated_bias3,
     }
     cache.set(
         noaa_station_id,
