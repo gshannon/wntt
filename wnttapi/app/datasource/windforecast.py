@@ -12,14 +12,14 @@ from app.timeline import GraphTimeline
 logger = logging.getLogger(__name__)
 
 # Max number of future days, including current day, to retrieve wind forecasts. Open-Meteo supports 16 days.
-max_forecast_days = 14
+_max_forecast_days = 14
+_request_timeout_seconds = 20
+_request_time_warning_seconds = 5
 
 """
+  Access Wind forecasts from open-meteo.com.
 """
-base_url = (
-    "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&timezone={}"
-    "&{}=wind_speed_10m,wind_direction_10m&forecast_days={}"
-)
+base_url = "https://api.open-meteo.com/v1/forecast"
 
 
 def get_wind_forecast(
@@ -59,7 +59,7 @@ def get_forecast_window(timeline: GraphTimeline) -> list:
     Build a list of datetimes which are a subset of the timeline for which we would like
     to get wind speed and direction forecasts.
     """
-    max_window_date = timeline.now.date() + timedelta(days=max_forecast_days - 1)
+    max_window_date = timeline.now.date() + timedelta(days=_max_forecast_days - 1)
     max_window_dt = datetime.combine(max_window_date, time(23, 0)).replace(
         tzinfo=timeline.time_zone
     )
@@ -76,17 +76,25 @@ def get_forecast_window(timeline: GraphTimeline) -> list:
 
 def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
     granularity = "hourly" if not hilo_mode else "minutely_15"
-    url = base_url.format(
-        station.weather_station_latitude,
-        station.weather_station_longitude,
-        station.time_zone.key,
-        granularity,
-        forecast_days,
-    )
+
+    params = {
+        "latitude": station.weather_station_latitude,
+        "longitude": station.weather_station_longitude,
+        "timezone": station.time_zone.key,
+        granularity: "wind_speed_10m,wind_direction_10m",
+        "forecast_days": forecast_days,
+    }
+
     reason = None
 
     try:
-        response = requests.get(url)
+        response = requests.get(
+            base_url, params=params, timeout=_request_timeout_seconds
+        )
+        seconds = response.elapsed.seconds
+        if seconds > _request_time_warning_seconds:
+            logger.warning(f"Call to {response.url} took {response.elapsed}")
+        logger.debug(f"Elapsed={response.elapsed} from {response.url}")
         json_dict = json.loads(response.text)
         if response.status_code != 200:
             if json_dict.get("error", False):
@@ -99,7 +107,7 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         return json_dict[granularity]
 
     except Exception as e:
-        e.add_note(f"Url: {url}")
+        e.add_note(f"Url: {response.url}")
         if reason:
             e.add_note(reason)
         logger.exception(str(e))

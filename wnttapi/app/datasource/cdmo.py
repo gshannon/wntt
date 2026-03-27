@@ -1,6 +1,7 @@
 import logging
 import os
 import xml.etree.ElementTree as ElTree
+import time
 from datetime import date, datetime, timedelta
 from enum import Enum
 
@@ -12,6 +13,10 @@ from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
 from suds.client import Client
+
+_request_timeout_seconds = 30
+_request_time_warning_seconds = 5
+
 
 """
 Access CDMO web services to retrieve observed tide, wind, and temperature data. 
@@ -41,7 +46,12 @@ def get_soap_client():
         user_name = os.environ.get("CDMO_USER")
         password = os.environ.get("CDMO_PASSWORD")
         transport = CustomTransport(user_name, password)
-        _client = Client(_cdmo_wsdl, timeout=90, retxml=True, transport=transport)
+        _client = Client(
+            _cdmo_wsdl,
+            timeout=_request_timeout_seconds,
+            retxml=True,
+            transport=transport,
+        )
     return _client
 
 
@@ -221,14 +231,16 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
         timeline.get_min(use_padding), timeline.get_max(use_padding)
     )
 
-    # soap_client = Client(cdmo_wsdl, timeout=90, retxml=True, transport=get_transport())
-
     try:
         client = get_soap_client()
+        start_time = time.time()
         xml = client.service.exportAllParamsDateRangeXMLNew(
             station_id, req_start_date, req_end_date, param
         )
-        # util.dump_xml(xml, f"/surgedata/{param}-cdmo.xml")
+        elapsed_sec = time.time() - start_time
+        if elapsed_sec > _request_time_warning_seconds:
+            logger.warning(f"Call to CDMO with param {param} took {elapsed_sec}")
+
     except Exception as exc:
         logger.error(
             "Error getting %s data %s to %s from CDMO: %s",
