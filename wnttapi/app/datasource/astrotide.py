@@ -10,6 +10,8 @@ from app.station import Station
 from app.timeline import Timeline, GraphTimeline
 
 logger = logging.getLogger(__name__)
+_request_timeout_seconds = 20
+_request_time_warning_seconds = 5
 
 """
     Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
@@ -18,10 +20,16 @@ logger = logging.getLogger(__name__)
     For timezones, we request LST_LDT, or local standard time / local daylight time. This means the data
     comes the the correct local time, accounting for DST as appropriate.
 """
-base_url = (
-    "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL"
-    "&datum=NAVD&time_zone=lst_ldt&units=english&format=json"
-)
+base_url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+
+base_params = {
+    "product": "predictions",
+    "application": "NOS.COOPS.TAC.WL",
+    "datum": "NAVD",
+    "time_zone": "lst_ldt",
+    "units": "english",
+    "format": "json",
+}
 
 
 def get_15m_astro_tides(station: Station, timeline: GraphTimeline) -> dict:
@@ -143,22 +151,33 @@ def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
         For interval=15:
             { "t": "2025-05-06 01:00", "v": "-3.624" },
     """
-    url = f"{base_url}&interval={interval}&station={noaa_station_id}&begin_date={begin_date}&end_date={end_date}"
-    logger.debug(url)
+    params = {
+        "interval": interval,
+        "station": noaa_station_id,
+        "begin_date": begin_date,
+        "end_date": end_date,
+    }
 
     try:
-        response = requests.get(url)
+        response = requests.get(
+            base_url, params=base_params | params, timeout=_request_timeout_seconds
+        )
+        seconds = response.elapsed.seconds
+        if seconds > _request_time_warning_seconds:
+            logger.warning(f"Call to {response.url} took {response.elapsed}")
+        logger.debug(f"Elapsed={response.elapsed} from {response.url}")
+
     except Exception as e:
-        e.add_note(f"Url: {url}")
+        e.add_note(f"Url: {response.url}")
         raise e
 
     if response.status_code != 200:
-        raise Exception(f"status {response.status_code} calling {url}")
+        raise Exception(f"status {response.status_code} calling {response.url}")
 
     try:
         return extract_json(response.text)
     except ValueError as e:
-        e.add_note(f"Url: {url}")
+        e.add_note(f"Url: {response.url}")
         raise e
 
 
