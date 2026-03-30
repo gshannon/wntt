@@ -40,7 +40,7 @@ class StationsView(APIView):
         except Exception as exc:
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc))
+            raise APIException(str(exc)) from exc
 
 
 class LatestInfoView(APIView):
@@ -60,7 +60,7 @@ class LatestInfoView(APIView):
         except Exception as exc:
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc))
+            raise APIException(str(exc)) from exc
 
 
 class CreateGraphView(APIView):
@@ -104,7 +104,7 @@ class CreateGraphView(APIView):
         except Exception as exc:
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc))
+            raise APIException(str(exc)) from exc
 
 
 class AddressView(APIView):
@@ -122,7 +122,7 @@ class AddressView(APIView):
         except Exception as exc:
             logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc))
+            raise APIException(str(exc)) from exc
 
 
 def log_user(uid: str) -> int:

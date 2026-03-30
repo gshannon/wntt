@@ -62,7 +62,8 @@ def get_graph_data(
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    obs_dict, wind_dict = get_cdmo_data(timeline, station)
+    obs_dict = cdmo.get_recorded_tides(station, timeline)
+    wind_dict = cdmo.get_recorded_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
@@ -222,39 +223,6 @@ def get_graph_data(
         "past_tl_index": past_tl_index,
         "future_tl_index": future_tl_index,
     }
-
-
-def get_cdmo_data(timeline: GraphTimeline, station: stn.Station) -> tuple[dict, dict]:
-    """Retrieve all cdmo historical data needed for the graph. We do these calls in parallel to save time.
-
-    Args:
-        timeline (GraphTimeline)
-        station (Station)
-
-    Returns:
-        tuple[dict, dict]: tide_dict, wind_dict.  Both will be empty if timeline is all in future.
-    """
-    if timeline.is_all_future():
-        return {}, {}
-
-    cdmo_calls = [
-        APICall(
-            "tide",
-            cdmo.get_recorded_tides,
-            station,
-            timeline,
-        ),
-        APICall(
-            "wind",
-            cdmo.get_recorded_wind_data,
-            station,
-            timeline,
-        ),
-    ]
-
-    run_parallel(cdmo_calls)
-
-    return cdmo_calls[0].data, cdmo_calls[1].data
 
 
 def build_hist_tide_plot(
