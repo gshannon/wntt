@@ -31,7 +31,7 @@ export default function useLatestData(station) {
                     throw error
                 })
         },
-        staleTime: 30_000, // 30 seconds. Allows for frequent checks without hammering the server.
-        gcTime: 30_000, // gcTime should be >= staleTime in case they move off the page and return
+        staleTime: 300_000, // 5 minutes.
+        gcTime: 300_000, // gcTime should be >= staleTime in case they move off the page and return
     })
 }
