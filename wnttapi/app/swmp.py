@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 
 from app import util
 from app.datasource import astrotide, cdmo, syzygy
-from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo
 from app.station import Station
 from app.timeline import Timeline
@@ -32,28 +31,19 @@ def get_latest_conditions(station: Station) -> dict:
     future_start_date = tz.now(station.time_zone).date()
     future_end_date = future_start_date + timedelta(days=1)
 
-    cdmo_calls = [
-        APICall("wind", cdmo.get_recorded_wind_data, station, cdmo_timeline),
-        APICall("tide", cdmo.get_recorded_tides, station, cdmo_timeline),
-        APICall("temp", cdmo.get_recorded_temps, station, cdmo_timeline),
-        APICall(
-            "nexttide",
-            astrotide.get_hilo_astro_tides,
-            station,
-            future_start_date,
-            future_end_date,
-        ),
-    ]
-
-    run_parallel(cdmo_calls)
-
+    wind_dict = cdmo.get_recorded_wind_data(station, cdmo_timeline)
+    tide_dict = cdmo.get_recorded_tides(station, cdmo_timeline)
+    temp_dict = cdmo.get_recorded_temps(station, cdmo_timeline)
+    astro_dict = astrotide.get_hilo_astro_tides(
+        station, future_start_date, future_end_date
+    )
     moon_dict = syzygy.get_current_moon_phases(station.time_zone)
 
     return extract_data(
-        cdmo_calls[0].data,
-        cdmo_calls[1].data,
-        cdmo_calls[2].data,
-        cdmo_calls[3].data,
+        wind_dict,
+        tide_dict,
+        temp_dict,
+        astro_dict,
         moon_dict,
         station.time_zone,
     )

@@ -38,11 +38,13 @@ _missing_data_value = -99.99
 # every request is causing the user/password to be rejected by CDMO. This could be
 # cleaned up once that issue is resolved.
 _client: Client = None
+_request_timeout_seconds = 30
 
 
 def get_soap_client():
     global _client
     if not _client:
+        logger.info("Creating Client object")
         user_name = os.environ.get("CDMO_USER")
         password = os.environ.get("CDMO_PASSWORD")
         transport = CustomTransport(user_name, password)
@@ -52,6 +54,7 @@ def get_soap_client():
             retxml=True,
             transport=transport,
         )
+        logger.info("Created Client object")
     return _client
 
 
@@ -304,7 +307,6 @@ def parse_cdmo_xml(timeline: Timeline, xml: str, param: str, converter) -> dict:
         # Since we query more data than we need, only save the data that is in the requested timeline.
         # For GraphTimeline's, this includes any padded times for hi/lo functionality.
         if dt_in_local not in past_timeline:
-            logger.debug(f"Skipping {param} for {dt_in_local}, not in timeline")
             ignored += 1
             continue
         data_str = reading.find(f"./{param}").text
