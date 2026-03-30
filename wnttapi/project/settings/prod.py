@@ -52,6 +52,11 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
             "propagate": False,
         },
+        "app.datasource.cdmo": {
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
     "formatters": {
         "my-format": {
