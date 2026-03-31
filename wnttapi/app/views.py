@@ -38,9 +38,8 @@ class StationsView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from exc
+            raise APIException(str(exc)) from None
 
 
 class LatestInfoView(APIView):
@@ -54,13 +53,12 @@ class LatestInfoView(APIView):
         try:
             info = swmp.get_latest_conditions(station)
             return Response(data=info)
-        except NotAcceptable as exc:
-            logger.warning(f"NotAcceptable {params}")
-            raise exc
+        except NotAcceptable:
+            logger.info(f"NotAcceptable {params}")
+            raise
         except Exception as exc:
-            logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from exc
+            raise APIException(str(exc)) from None
 
 
 class CreateGraphView(APIView):
@@ -102,9 +100,8 @@ class CreateGraphView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from exc
+            raise APIException(str(exc)) from None
 
 
 class AddressView(APIView):
@@ -120,9 +117,8 @@ class AddressView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
-            logger.exception(str(exc))
             sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from exc
+            raise APIException(str(exc)) from None
 
 
 def log_user(uid: str) -> int:

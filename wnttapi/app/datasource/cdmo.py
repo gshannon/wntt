@@ -1,7 +1,7 @@
 import logging
 import os
-import xml.etree.ElementTree as ElTree
 import time
+import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 from enum import Enum
 
@@ -44,17 +44,26 @@ _request_timeout_seconds = 30
 def get_soap_client():
     global _client
     if not _client:
-        logger.info("Creating Client object")
+        logger.debug("Creating Client object")
         user_name = os.environ.get("CDMO_USER")
         password = os.environ.get("CDMO_PASSWORD")
         transport = CustomTransport(user_name, password)
-        _client = Client(
-            _cdmo_wsdl,
-            timeout=_request_timeout_seconds,
-            retxml=True,
-            transport=transport,
-        )
-        logger.info("Created Client object")
+        start_time = time.time()
+        try:
+            _client = Client(
+                _cdmo_wsdl,
+                timeout=_request_timeout_seconds,
+                retxml=True,
+                transport=transport,
+            )
+        except Exception as exc:
+            elapsed_sec = time.time() - start_time
+            logger.error(
+                f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
+            )
+            raise exc
+        elapsed_sec = time.time() - start_time
+        logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
     return _client
 
 
@@ -237,30 +246,28 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
     try:
         client = get_soap_client()
         start_time = time.time()
+        logger.debug(
+            f"Calling CDMO for {param} data {req_start_date} to {req_end_date}"
+        )
         xml = client.service.exportAllParamsDateRangeXMLNew(
             station_id, req_start_date, req_end_date, param
         )
         elapsed_sec = time.time() - start_time
         if elapsed_sec > _request_time_warning_seconds:
-            logger.warning(f"Call to CDMO with param {param} took {elapsed_sec}")
+            logger.warning(
+                f"Call to CDMO with param {param} took {round(elapsed_sec, 2)}"
+            )
 
     except Exception as exc:
+        elapsed_sec = time.time() - start_time
         logger.error(
-            "Error getting %s data %s to %s from CDMO: %s",
-            param,
-            req_start_date,
-            req_end_date,
-            str(exc),
+            f"Error getting {param} data {req_start_date} to {req_end_date} from CDMO, time={round(elapsed_sec, 2)}: {str(exc)}"
         )
         exc.add_note("param: %s %s to %s" % (param, req_start_date, req_end_date))
         raise exc
 
     logger.debug(
-        "CDMO %s data retrieved for %s for %s to %s",
-        param,
-        station_id,
-        req_start_date,
-        req_end_date,
+        f"Got {param} data {req_start_date} to {req_end_date} time {round(elapsed_sec, 2)} sec"
     )
     return xml
 
@@ -418,7 +425,7 @@ def find_all_hilos(
     # a range of times surrounding the predicted value.
     # TODO: Handle edge case where observed high or low is missing and we falsely report a nearby value instead.
     for dt, pred in astro_pred_dict.items():
-        logger.debug(f"Considering predicted {pred} at {dt}")
+        # logger.debug(f"Considering predicted {pred} at {dt}")
         if len(past_padded_timeline) == 0 or dt > past_padded_timeline[-1]:
             hilomap[dt] = pred
             continue
@@ -433,22 +440,22 @@ def find_all_hilos(
         if len(observed) > 0:
             if pred.hilo == Hilo.HIGH:
                 observed_hilo_dt = max(observed, key=observed.get)
-                logger.debug(
-                    f"Highest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
-                )
+                # logger.debug(
+                #     f"Highest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
+                # )
             else:
                 observed_hilo_dt = min(observed, key=observed.get)
-                logger.debug(
-                    f"Lowest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
-                )
+                # logger.debug(
+                #     f"Lowest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
+                # )
             hilomap[observed_hilo_dt] = ObservedHighOrLow(
                 observed[observed_hilo_dt], pred.hilo
             )
         else:
             # No observed data near this predicted high/low. Just use the predicted time.
-            logger.debug(
-                f"No observed data near predicted {pred.hilo} at {dt}, using predicted time"
-            )
+            # logger.debug(
+            #     f"No observed data near predicted {pred.hilo} at {dt}, using predicted time"
+            # )
             hilomap[dt] = pred
 
     return hilomap
