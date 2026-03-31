@@ -4,15 +4,18 @@ import Button from 'react-bootstrap/Button'
 import { useContext } from 'react'
 import { AppContext } from './AppContext'
 import { Link } from './Links'
-import Conditions from './Conditions'
-import useLatestData from './useLatestData'
 import { Page, WELLS_STATION_ID } from './utils'
+import ErrorBlock from './ErrorBlock'
 
 const WELLS_BG_CLASS = 'wells-bg'
 const OTHER_BG_CLASS = 'other-bg'
 
 export default function Home() {
     const ctx = useContext(AppContext)
+
+    const banner = `NOTICE: The Tide Tracker is currently having technical problems when communicating with one of \
+    its data sources.  We apologize and thank you for your patience while we address the problem. \
+    You may continue to use the web app, but displaying past data on the graph page may result in timeouts.`
 
     const text1 = () => {
         if (ctx.special) {
@@ -64,9 +67,9 @@ export default function Home() {
             id='home'
             className={
                 'home ' +
-                (ctx.station && ctx.station.id === WELLS_STATION_ID
-                    ? WELLS_BG_CLASS
-                    : OTHER_BG_CLASS)
+                (ctx.station && ctx.station.id === WELLS_STATION_ID ?
+                    WELLS_BG_CLASS
+                :   OTHER_BG_CLASS)
             }>
             <div className='welcome p-2 my-3'>
                 <p>
@@ -95,18 +98,9 @@ export default function Home() {
                     </Col>
                 )}
             </Row>
-            <Row className='mt-3'>{ctx.station && <ConditionsSection station={ctx.station} />}</Row>
-        </div>
-    )
-}
-
-const ConditionsSection = ({ station }) => {
-    const { data, error } = useLatestData(station)
-
-    return (
-        <div className='conditions'>
-            <div className='title'>Latest Conditions -- {station.reserveName}</div>
-            <Conditions data={data} error={error} />
+            <Row className='mt-3 mx-3'>
+                <ErrorBlock error={banner} />
+            </Row>
         </div>
     )
 }
