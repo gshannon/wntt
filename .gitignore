@@ -6,6 +6,7 @@
 *.ipynb
 *.tar
 .version-dev
+.python-version
 .env
 .astro
 .vscode/

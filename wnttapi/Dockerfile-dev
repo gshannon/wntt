@@ -1,5 +1,5 @@
 
-FROM python:3.13.9-slim AS base
+FROM python:3.13.12-slim AS base
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
