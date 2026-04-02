@@ -33,38 +33,38 @@ _temp_param = "Temp"
 (_min_tide, _max_tide) = (-5.0, 20.0)
 _max_wind_speed = 120  # max sane wind speed in mph
 _missing_data_value = -99.99
-
-# This is a workaround to an issue where recreating the suds client on
-# every request is causing the user/password to be rejected by CDMO. This could be
-# cleaned up once that issue is resolved.
-_client: Client = None
 _request_timeout_seconds = 30
 
 
-def get_soap_client():
-    global _client
-    if not _client:
-        logger.debug("Creating Client object")
-        user_name = os.environ.get("CDMO_USER")
-        password = os.environ.get("CDMO_PASSWORD")
-        transport = CustomTransport(user_name, password)
-        start_time = time.time()
-        try:
-            _client = Client(
-                _cdmo_wsdl,
-                timeout=_request_timeout_seconds,
-                retxml=True,
-                transport=transport,
-            )
-        except Exception as exc:
+class SoapClient:
+    """Singleton class to hold the suds Client object, since creating it is expensive and seems to cause CDMO to reject the user/password if done on every request. This is a workaround until that issue is resolved."""
+
+    _client = None
+
+    @classmethod
+    def get_client(cls):
+        if cls._client is None:
+            logger.debug("Creating Client object")
+            user_name = os.environ.get("CDMO_USER")
+            password = os.environ.get("CDMO_PASSWORD")
+            transport = CustomTransport(user_name, password)
+            start_time = time.time()
+            try:
+                cls._client = Client(
+                    _cdmo_wsdl,
+                    timeout=_request_timeout_seconds,
+                    retxml=True,
+                    transport=transport,
+                )
+            except Exception as exc:
+                elapsed_sec = time.time() - start_time
+                logger.error(
+                    f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
+                )
+                raise exc
             elapsed_sec = time.time() - start_time
-            logger.error(
-                f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
-            )
-            raise exc
-        elapsed_sec = time.time() - start_time
-        logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
-    return _client
+            logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
+        return cls._client
 
 
 def get_recorded_tides(station: Station, timeline: Timeline) -> dict:
@@ -244,12 +244,11 @@ def get_cdmo_xml(timeline: Timeline, station_id: str, param: str) -> dict:
     )
 
     try:
-        client = get_soap_client()
         start_time = time.time()
         logger.debug(
             f"Calling CDMO for {param} data {req_start_date} to {req_end_date}"
         )
-        xml = client.service.exportAllParamsDateRangeXMLNew(
+        xml = SoapClient.get_client().service.exportAllParamsDateRangeXMLNew(
             station_id, req_start_date, req_end_date, param
         )
         elapsed_sec = time.time() - start_time
