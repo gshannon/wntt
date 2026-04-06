@@ -6,7 +6,6 @@ from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
-from app.datasource.apiutil import APICall, run_parallel
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
 
@@ -160,7 +159,7 @@ def get_graph_data(
 
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
         timeline,
-        future_surge_dict.get("surges"),
+        future_surge_dict.get("surges", None),
         # TODO: enable this once we like this approach
         # future_surge_dict.get("bias1 or bias2"),
         None,
@@ -192,6 +191,7 @@ def get_graph_data(
         if start_date == end_date
         else f"{start_date_str} - {end_date_str}"
     )
+
     return {
         "timeline": final_timeline,
         "syzygy": syzygy_data,

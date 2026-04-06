@@ -53,7 +53,7 @@ def get_future_surge_data(
     ):
         future_surge_dict = get_or_load_projected_surge_file(noaa_station_id, timeline)
         # If there's any recorded tides in the timeline, we don't want any data for those times.
-        if last_recorded_dt is not None:
+        if last_recorded_dt is not None and len(future_surge_dict) > 0:
             future_surge_dict["surges"] = {
                 dt: val
                 for dt, val in future_surge_dict["surges"].items()
@@ -178,6 +178,9 @@ def get_or_load_projected_surge_file(
                     int(matches[0][2]),
                 )
 
+    logger.debug(
+        f"surge file for station {noaa_station_id}: {filepath}, filedate {filedate}, cycle {cycle}"
+    )
     # First handle the case of a missing file.
     if filedate is None:
         sentry_sdk.capture_message(f"missing surge file for {noaa_station_id}")
@@ -270,6 +273,11 @@ def get_or_load_projected_surge_file(
         msg = f"Prediction file could not be opened: {surge_file}"
         logger.error(msg)
         sentry_sdk.capture_message(msg)
+        return {}
+
+    if len(surges_dict) == 0:
+        logger.error(f"No valid surge data found in file {filepath}!")
+        sentry_sdk.capture_message(f"No valid surge data found in file {filepath}!")
         return {}
 
     # Cache the data. We'll use a TTL of 48 hours to handle cases where download fails a few times.
