@@ -87,13 +87,13 @@ class TestCdmo(TestCase):
         # tide at 00:00 would not be annotated. Therefore, we need to always include the day preceding the
         # timeline start when pulling predicted high/lows.
 
-        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
-
         # A single-day timeline for the 21st. Remember we pull in extra padding for cdmo tide data.
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
         with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "r") as file:
             xml = file.read()
-        obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
+        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])[
+            cdmo.Param.Tide
+        ]
 
         # First, see what happens when we just pull the 21st high/low predictions.
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251221.json")
@@ -124,8 +124,9 @@ class TestCdmo(TestCase):
         # Get observed tides from CDMO for the timeline
         with open(f"{test_data_path}/data/cdmo-level-20251204-05.xml", "r") as file:
             xml = file.read()
-        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
-        obs_dict = cdmo.parse_cdmo_xml(timeline, xml, "Level", converter)
+        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])[
+            cdmo.Param.Tide
+        ]
 
         # Find the hilos in the observed data.
         hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
@@ -147,25 +148,33 @@ class TestCdmo(TestCase):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         with self.assertRaisesRegex(Exception, "Invalid ip"):
-            cdmo.parse_cdmo_xml(timeline, xml, "anyparam", None)
+            cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
 
     def test_handle_navd88(self):
-        converter = cdmo.make_navd88_level_converter(wells.navd88_meters_to_mllw_feet)
-        self.assertTrue(converter(None, None) is None)
+        converter = wells.navd88_meters_to_mllw_feet
+        self.assertTrue(converter(None) is None)
         self.assertTrue(cdmo.handle_windspeed("nONE", None) is None)
-        self.assertTrue(converter("", None) is None)
-        self.assertTrue(converter("13s", None) is None)
-        self.assertTrue(converter("\n\t", None) is None)
+        self.assertTrue(converter("") is None)
+        self.assertTrue(converter("13s") is None)
+        self.assertTrue(converter("\n\t") is None)
 
         max_meters = wells.mllw_feet_to_navd88_meters(cdmo._max_tide)
         min_meters = wells.mllw_feet_to_navd88_meters(cdmo._min_tide)
-        self.assertTrue(converter(f"{max_meters + 1.0}", None) is None)
-        self.assertTrue(converter(f"{max_meters - 1.0}", None) is not None)
-        self.assertTrue(converter(f"{min_meters - 1.0}", None) is None)
-        self.assertTrue(converter(f"{min_meters + 1.0}", None) is not None)
-        self.assertEqual(
-            converter("1.5", None),
-            wells.navd88_meters_to_mllw_feet(1.5),
+        self.assertTrue(
+            cdmo.handle_navd88_level(
+                f"{max_meters + 1.0}",
+                datetime.now(),
+                wells,
+            )
+            is None
+        )
+        self.assertTrue(
+            cdmo.handle_navd88_level(
+                f"{min_meters - 1.0}",
+                datetime.now(),
+                wells,
+            )
+            is None
         )
 
     def test_handle_windspeed(self):

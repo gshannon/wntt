@@ -62,7 +62,7 @@ def get_graph_data(
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
     obs_dict = cdmo.get_recorded_tides(station, timeline)
-    wind_dict = cdmo.get_recorded_wind_data(station, timeline)
+    wind_dict = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
