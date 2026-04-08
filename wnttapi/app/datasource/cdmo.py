@@ -44,18 +44,28 @@ class SoapClient:
     @classmethod
     def get_client(cls):
         if cls._client is None:
-            logger.debug("Creating Client object")
-            user_name = os.environ.get("CDMO_USER")
-            password = os.environ.get("CDMO_PASSWORD")
-            transport = CustomTransport(user_name, password)
+            user_name = os.environ.get("CDMO_USER", None)
+            password = os.environ.get("CDMO_PASSWORD", None)
+            transport = (
+                CustomTransport(user_name, password) if user_name and password else None
+            )
             start_time = time.time()
             try:
-                cls._client = Client(
-                    _cdmo_wsdl,
-                    timeout=_request_timeout_seconds,
-                    retxml=True,
-                    transport=transport,
-                )
+                if transport is not None:
+                    logger.debug(f"Creating Client with username {user_name}")
+                    cls._client = Client(
+                        _cdmo_wsdl,
+                        timeout=_request_timeout_seconds,
+                        retxml=True,
+                        transport=transport,
+                    )
+                else:
+                    logger.debug("Creating Client with no transport")
+                    cls._client = Client(
+                        _cdmo_wsdl,
+                        timeout=_request_timeout_seconds,
+                        retxml=True,
+                    )
             except Exception as exc:
                 elapsed_sec = time.time() - start_time
                 logger.error(
