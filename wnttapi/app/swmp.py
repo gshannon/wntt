@@ -31,9 +31,10 @@ def get_latest_conditions(station: Station) -> dict:
     future_start_date = tz.now(station.time_zone).date()
     future_end_date = future_start_date + timedelta(days=1)
 
-    wind_dict = cdmo.get_recorded_wind_data(station, cdmo_timeline)
-    tide_dict = cdmo.get_recorded_tides(station, cdmo_timeline)
-    temp_dict = cdmo.get_recorded_temps(station, cdmo_timeline)
+    all_wq = cdmo.get_water_data(
+        station, cdmo_timeline, [cdmo.Param.Tide, cdmo.Param.Temperature]
+    )
+    wind_dict = cdmo.get_wind_data(station, cdmo_timeline)
     astro_dict = astrotide.get_hilo_astro_tides(
         station, future_start_date, future_end_date
     )
@@ -41,8 +42,8 @@ def get_latest_conditions(station: Station) -> dict:
 
     return extract_data(
         wind_dict,
-        tide_dict,
-        temp_dict,
+        all_wq[cdmo.Param.Tide],
+        all_wq[cdmo.Param.Temperature],
         astro_dict,
         moon_dict,
         station.time_zone,

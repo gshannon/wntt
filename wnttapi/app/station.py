@@ -50,18 +50,33 @@ class Station:
         self.weather_station_longitude = weather_location_longitude
 
     def navd88_feet_to_mllw_feet(self, in_value: float) -> float:
+        if not self.is_valid_float(in_value):
+            return None
         return round(in_value + self.mllw_conversion, 2)
 
     def mllw_feet_to_navd88_feet(self, in_value: float) -> float:
+        if not self.is_valid_float(in_value):
+            return None
         return round(in_value - self.mllw_conversion, 2)
 
     def navd88_meters_to_mllw_feet(self, meters: float) -> float:
+        if not self.is_valid_float(meters):
+            return None
         feet = round(meters * 3.28084, 2)
         return round(self.navd88_feet_to_mllw_feet(feet), 2)
 
     def mllw_feet_to_navd88_meters(self, feet: float) -> float:
+        if not self.is_valid_float(feet):
+            return None
         feet = self.mllw_feet_to_navd88_feet(feet)
         return round(feet / 3.28084, 2)
+
+    def is_valid_float(self, value) -> bool:
+        try:
+            x = value + 0.0
+            return True
+        except (TypeError, ValueError):
+            return False
 
 
 def get_station_selection_data(data_dir=_default_file_dir) -> list:
