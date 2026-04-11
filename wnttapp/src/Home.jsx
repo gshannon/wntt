@@ -14,8 +14,9 @@ export default function Home() {
     const ctx = useContext(AppContext)
 
     const banner = `NOTICE: The Tide Tracker is currently having technical problems when communicating with one of \
-    its data sources.  We apologize and thank you for your patience while we address the problem. \
-    You may continue to use the web app, but displaying past data on the graph page may result in timeouts.`
+    its data sources.  We appreciate your patience while we address the problem. \
+    You may continue to use the web app, but displaying past data on the Graph page, or viewing Current \
+    Conditions may result in timeouts. WE EXPECT TO HAVE THIS RESOLVED BY THE END OF APRIL.`
 
     const text1 = () => {
         if (ctx.special) {
