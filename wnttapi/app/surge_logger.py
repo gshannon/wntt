@@ -108,7 +108,8 @@ def main():
         timeline = Timeline(start_dt_stz, end_dt_stz)
 
         # 5-day bias
-        obs_tides = cdmo.get_recorded_tides(swmp_station, timeline)
+        water_dict = cdmo.get_water_data(swmp_station, timeline, useDb=True)
+        obs_tides = water_dict.get(cdmo.Param.Tide, {})
         logger.debug(f"got {len(obs_tides)} tide obs for bias calculation")
         calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 120)
 

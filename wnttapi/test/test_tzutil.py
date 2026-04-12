@@ -9,9 +9,6 @@ fall_date = date(2024, 11, 3)
 
 class TestTzUtil(TestCase):
     def test_is_dst(self):
-        naive = datetime(2024, 3, 10, 1, 0)
-        self.assertRaises(ValueError, tz.isDst, naive)
-
         standard = datetime(2025, 2, 1, tzinfo=tz.eastern)
         self.assertFalse(tz.isDst(standard))
         self.assertFalse(

@@ -1,3 +1,6 @@
 # Download latest NOAA surge predictions, approx 30 min after the usual publish time.
 
 45 0,6,12,18 * * * /home/tides/bin/pull-surge-data >> /home/tides/cron.log 2>&1
+45 */2 * * * /home/tides/bin/pull-surge-data >> /home/tides/cron.log 2>&1
+
+0,30 * * * * /home/tides/bin/refresh-cdmo-data >> /home/tides/cron.log 2>&1

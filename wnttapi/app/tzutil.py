@@ -26,7 +26,7 @@ Is a datetime tz aware?
 dt.tzinfo is not None
 
 Is an aware datetime in DST?
-dst() returns None if dt is naive
+dst() returns None if dt is naive OR is in UTC
 dst() returns datetime.timedelta(seconds=0) if aware and not in DST
 dst() returns datetime.timedelta(seconds=3600) if aware and in DST
 
@@ -54,6 +54,4 @@ def now(tzone) -> datetime:
 def isDst(dt: datetime) -> bool:
     """Returns whether the given datetime is in DST."""
     dst = dt.dst()
-    if dst is None:
-        raise ValueError("isDst() requires an aware datetime")
-    return dst > timedelta(hours=0)
+    return dst is not None and dst > timedelta(hours=0)
