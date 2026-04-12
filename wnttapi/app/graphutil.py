@@ -61,8 +61,11 @@ def get_graph_data(
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    obs_dict = cdmo.get_recorded_tides(station, timeline)
-    wind_dict = cdmo.get_wind_data(station, timeline)
+    water_dict = cdmo.get_water_data(
+        station, timeline, params=[cdmo.Param.Tide], useDb=special
+    )
+    obs_dict = water_dict.get(cdmo.Param.Tide, {})
+    wind_dict = cdmo.get_wind_data(station, timeline, useDb=special)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from datetime import datetime
 
 import sentry_sdk
@@ -38,6 +39,8 @@ class StationsView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
+            exc_type, exc_value, _ = sys.exc_info()
+            logger.error(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -49,14 +52,17 @@ class LatestInfoView(APIView):
         verify_version(request.data)
         swmp_station_id = get_required(request.data, "station_id")
         station = stn.get_station(swmp_station_id)
+        is_special = request.data.get("special", False)
 
         try:
-            info = swmp.get_latest_conditions(station)
+            info = swmp.get_latest_conditions(station, is_special)
             return Response(data=info)
         except NotAcceptable:
             logger.info(f"NotAcceptable {params}")
             raise
         except Exception as exc:
+            exc_type, exc_value, _ = sys.exc_info()
+            logger.error(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -100,6 +106,8 @@ class CreateGraphView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
+            exc_type, exc_value, _ = sys.exc_info()
+            logger.error(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -117,6 +125,8 @@ class AddressView(APIView):
             logger.warning(f"NotAcceptable {params}")
             raise exc
         except Exception as exc:
+            exc_type, exc_value, _ = sys.exc_info()
+            logger.error(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 

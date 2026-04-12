@@ -32,14 +32,17 @@ class Timeline:
 
     # The "now" param is for testing only!
     def __init__(self, start_dt: datetime, end_dt: datetime, now: datetime = None):
+        if start_dt.tzinfo is None or end_dt.tzinfo is None:
+            raise util.InternalError("datetimes cannot be naive")
         self.requested_times = []
         self.start_dt = start_dt
         self.end_dt = end_dt
         self.time_zone = start_dt.tzinfo
         self.now = tz.now(self.time_zone) if now is None else now
-        if self.start_dt.tzinfo is None or self.end_dt.tzinfo is None:
-            raise util.InternalError("datetimes cannot be naive")
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
+            logger.error(
+                f"start is {type(start_dt.tzinfo)} end is {type(end_dt.tzinfo)}"
+            )
             raise util.InternalError(
                 f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}"
             )

@@ -139,7 +139,7 @@ def get_all_stations(data_dir=_default_file_dir) -> dict:
         data_dir: override for testing
 
     Returns:
-        list of station data objects
+        dict of station data objects
     """
     return get_or_load_stations(data_dir)
 
