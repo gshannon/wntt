@@ -71,9 +71,7 @@ def refresh_water(station):
     now = datetime.now(tz=tz.utc)
     max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
-    water_data = cdmo.get_water_data(
-        station, timeline, [cdmo.Param.Tide, cdmo.Param.Temperature], useDb=False
-    )
+    water_data = cdmo.get_water_data(station, timeline, useDb=False)
     tide_dict = water_data.get(cdmo.Param.Tide, None)
     temp_dict = water_data.get(cdmo.Param.Temperature, None)
     # TODO: Rework this
@@ -113,7 +111,7 @@ def refresh_wind(station):
     now = datetime.now(tz=tz.utc)
     max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
-    wind_dict = cdmo.get_wind_data(station, timeline)
+    wind_dict = cdmo.get_wind_data(station, timeline, useDb=False)
     if wind_dict is not None and len(wind_dict) > 0:
         # TODO: Rework this
         for dt, value in wind_dict.items():
