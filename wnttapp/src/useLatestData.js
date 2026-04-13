@@ -3,7 +3,7 @@ import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import * as storage from './storage'
 
-export default function useLatestData(station, special) {
+export default function useLatestData(station) {
     const mainStore = storage.getMainStorage()
 
     return useQuery({
@@ -17,7 +17,6 @@ export default function useLatestData(station, special) {
                     session: mainStore.session,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
-                    special: special,
                 })
                 .then((res) => res.data)
                 .catch((error) => {

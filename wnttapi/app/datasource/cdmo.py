@@ -35,7 +35,7 @@ _cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
 (_min_tide, _max_tide) = (-5.0, 20.0)
 _max_wind_speed = 120  # max sane wind speed in mph
 _missing_data_value = -99.99
-_request_timeout_seconds = 30
+_request_timeout_seconds = 300
 _request_time_warning_seconds = 5
 
 
@@ -74,14 +74,14 @@ class SoapClient:
                 )
                 raise exc
             # This is the only way to override the default 90 sec.  Doesn't work in constructor.
-            # cls._client.set_options(timeout=_request_timeout_seconds)
+            cls._client.set_options(timeout=_request_timeout_seconds)
             elapsed_sec = time.time() - start_time
             logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
         return cls._client
 
 
 def get_water_data(
-    station: Station, timeline: Timeline, params: list = None, useDb: bool = False
+    station: Station, timeline: Timeline, params: list = None, useDb: bool = True
 ) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
@@ -136,7 +136,7 @@ def get_water_data(
     return data
 
 
-def get_wind_data(station: Station, timeline: Timeline, useDb: bool = False) -> dict:
+def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
