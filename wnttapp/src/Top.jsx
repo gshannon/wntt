@@ -155,13 +155,7 @@ export default function Top({ page, gotoPage }) {
                     :   ' '}
                 </Row>
             :   null}
-            {showConditions && (
-                <ConditionsPopup
-                    station={ctx.station}
-                    onClose={onModalClose}
-                    special={ctx.special}
-                />
-            )}
+            {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
         </div>
     )
 }

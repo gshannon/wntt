@@ -3,8 +3,8 @@ import Modal from 'react-bootstrap/Modal'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
 
-export default function ConditionsPopup({ station, onClose, special }) {
-    const { data, error } = useLatestData(station, special)
+export default function ConditionsPopup({ station, onClose }) {
+    const { data, error } = useLatestData(station)
 
     return (
         <Modal id='conditions-modal' show={true} size='md' onHide={onClose}>
