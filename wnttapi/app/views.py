@@ -52,10 +52,9 @@ class LatestInfoView(APIView):
         verify_version(request.data)
         swmp_station_id = get_required(request.data, "station_id")
         station = stn.get_station(swmp_station_id)
-        is_special = request.data.get("special", False)
 
         try:
-            info = swmp.get_latest_conditions(station, is_special)
+            info = swmp.get_latest_conditions(station)
             return Response(data=info)
         except NotAcceptable:
             logger.info(f"NotAcceptable {params}")

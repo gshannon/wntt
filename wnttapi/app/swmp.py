@@ -13,7 +13,7 @@ from . import tzutil as tz
 logger = logging.getLogger(__name__)
 
 
-def get_latest_conditions(station: Station, special: bool) -> dict:
+def get_latest_conditions(station: Station) -> dict:
     """
     Pull the most recent wind, tide & temp readings from CDMO, some tide predictions and moon phase data.
     These API calls are done in parallel.
@@ -31,8 +31,8 @@ def get_latest_conditions(station: Station, special: bool) -> dict:
     future_start_date = tz.now(station.time_zone).date()
     future_end_date = future_start_date + timedelta(days=1)
 
-    all_wq = cdmo.get_water_data(station, cdmo_timeline, useDb=special)
-    wind_dict = cdmo.get_wind_data(station, cdmo_timeline, useDb=special)
+    all_wq = cdmo.get_water_data(station, cdmo_timeline)
+    wind_dict = cdmo.get_wind_data(station, cdmo_timeline)
     astro_dict = astrotide.get_hilo_astro_tides(
         station, future_start_date, future_end_date
     )
