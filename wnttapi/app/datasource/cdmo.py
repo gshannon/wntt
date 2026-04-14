@@ -69,9 +69,12 @@ class SoapClient:
                     )
             except Exception as exc:
                 elapsed_sec = time.time() - start_time
-                logger.error(
-                    f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
-                )
+                msg = f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
+                # unfortunately this happens often & we don't want to clutter the sentry logs
+                if "urlopen" in str(exc):
+                    logger.warning(msg)
+                else:
+                    logger.error(msg)
                 raise exc
             # This is the only way to override the default 90 sec.  Doesn't work in constructor.
             cls._client.set_options(timeout=_request_timeout_seconds)
@@ -314,9 +317,12 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
 
     except Exception as exc:
         elapsed_sec = time.time() - start_time
-        logger.error(
-            f"Error getting {param_str} data {req_start_date} to {req_end_date} from CDMO, time={round(elapsed_sec, 2)}: {str(exc)}"
-        )
+        msg = f"Error getting {param_str} data {req_start_date} to {req_end_date} from CDMO, time={round(elapsed_sec, 2)}: {str(exc)}"
+        if "urlopen" in str(exc):
+            # unfortunately this happens often & we don't want to clutter the sentry logs
+            logger.warning(msg)
+        else:
+            logger.error(msg)
         exc.add_note("param: %s %s to %s" % (param_str, req_start_date, req_end_date))
         raise exc
 
