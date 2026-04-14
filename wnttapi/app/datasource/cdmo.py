@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
@@ -7,18 +6,16 @@ from enum import Enum
 
 from app import tzutil as tz
 from app import util
-from app.datasource.custom_transport import CustomTransport
 from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
-from suds.client import Client
 
 from ..models import Water, Wind
+from .soap import SoapClient
 
 
 class Param(Enum):
     Tide = "Level"
-    AllWind = "Wspd,MaxWspd,Wdir"
     WindSpeed = "Wspd"
     WindGust = "MaxWspd"
     WindDir = "Wdir"
@@ -30,57 +27,11 @@ Access CDMO web services to retrieve observed tide, wind, and temperature data.
 """
 
 logger = logging.getLogger(__name__)
-_cdmo_wsdl = "https://cdmo.baruch.sc.edu/webservices2/requests.cfc?wsdl"
 # Min and max sane tide feet mllw/feet
 (_min_tide, _max_tide) = (-5.0, 20.0)
 _max_wind_speed = 120  # max sane wind speed in mph
 _missing_data_value = -99.99
-_request_timeout_seconds = 300
 _request_time_warning_seconds = 5
-
-
-class SoapClient:
-    """Singleton class to hold the suds Client object, since creating it is expensive and seems to cause CDMO to reject the user/password if done on every request. This is a workaround until that issue is resolved."""
-
-    _client = None
-
-    @classmethod
-    def get_client(cls):
-        if cls._client is None:
-            user_name = os.environ.get("CDMO_USER", None)
-            password = os.environ.get("CDMO_PASSWORD", None)
-            transport = (
-                CustomTransport(user_name, password) if user_name and password else None
-            )
-            start_time = time.time()
-            try:
-                if transport is not None:
-                    logger.debug(f"Creating Client with username {user_name}")
-                    cls._client = Client(
-                        _cdmo_wsdl,
-                        retxml=True,
-                        transport=transport,
-                    )
-                else:
-                    logger.debug("Creating Client with no transport")
-                    cls._client = Client(
-                        _cdmo_wsdl,
-                        retxml=True,
-                    )
-            except Exception as exc:
-                elapsed_sec = time.time() - start_time
-                msg = f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
-                # unfortunately this happens often & we don't want to clutter the sentry logs
-                if "urlopen" in str(exc):
-                    logger.warning(msg)
-                else:
-                    logger.error(msg)
-                raise exc
-            # This is the only way to override the default 90 sec.  Doesn't work in constructor.
-            cls._client.set_options(timeout=_request_timeout_seconds)
-            elapsed_sec = time.time() - start_time
-            logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
-        return cls._client
 
 
 def get_water_data(
