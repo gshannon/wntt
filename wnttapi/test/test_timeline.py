@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from unittest import TestCase
 
+import app.datasource.cdmo as cdmo
 import app.graphutil as gu
 import app.tzutil as tz
 import app.util as util
@@ -180,9 +181,24 @@ class TestHiloTimeline(TestCase):
         non_hilo_time_2 = datetime(2025, 2, 1, 9, 30, tzinfo=zone)
 
         wind_dict = {
-            non_hilo_time_1: {"speed": 8.1, "gust": 22, "dir": 0, "dir_str": "N"},
-            non_hilo_time_2: {"speed": 16, "gust": 35.2, "dir": 60, "dir_str": "ENE"},
-            past_hilo_time_1: {"speed": 12, "gust": 15.5, "dir": 325, "dir_str": "NW"},
+            non_hilo_time_1: {
+                cdmo.Param.WindSpeed.label: 8.1,
+                cdmo.Param.WindGust.label: 22,
+                cdmo.Param.WindDir.label: 0,
+                cdmo.WIND_DIRSTR_LABEL: "N",
+            },
+            non_hilo_time_2: {
+                cdmo.Param.WindSpeed.label: 16,
+                cdmo.Param.WindGust.label: 35.2,
+                cdmo.Param.WindDir.label: 60,
+                cdmo.WIND_DIRSTR_LABEL: "ENE",
+            },
+            past_hilo_time_1: {
+                cdmo.Param.WindSpeed.label: 12,
+                cdmo.Param.WindGust.label: 15.5,
+                cdmo.Param.WindDir.label: 325,
+                cdmo.WIND_DIRSTR_LABEL: "NW",
+            },
         }
 
         timeline = HiloTimeline(start_date, end_date, zone)

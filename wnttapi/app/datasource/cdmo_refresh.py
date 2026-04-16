@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
-# You must have this in the env.
+# To run, this must be set in the env:
 # DJANGO_SETTINGS_MODULE = project.settings.[dev|prod]
+# To run outside docker, cd to wnttapix.
 
 import sys
 
@@ -72,25 +73,24 @@ def refresh_water(station):
     max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
     water_data = cdmo.get_water_data(station, timeline, useDb=False)
-    tide_dict = water_data.get(cdmo.Param.Tide, None)
-    temp_dict = water_data.get(cdmo.Param.Temperature, None)
-    # TODO: Rework this
-    if tide_dict is not None and len(tide_dict) > 0:
-        if temp_dict is None or len(temp_dict) != len(tide_dict):
-            raise Exception("unexpected results")
-        logger.info(f"Got {len(tide_dict)} water records from CDMO")
-        for dt, value in tide_dict.items():
-            # logger.debug(f"dt {dt}, value {value}")
+    # TODO
+    # Clean the tide data of bogus zeros
+    # if Param.Tide in params:
+    #     data[Param.Tide] = clean_tide_data(data[Param.Tide], station)
+
+    if water_data is not None and len(water_data) > 0:
+        logger.info(f"Got {len(water_data)} water records from CDMO")
+        for dt, value in water_data.items():
             Water.objects.update_or_create(
                 station="WE",
                 time=dt.isoformat(),
                 defaults={
-                    "level": value,
-                    "temp": temp_dict[dt],
+                    "level": value.get(cdmo.Param.Tide.label, None),
+                    "temp": value.get(cdmo.Param.Temperature.label, None),
                 },
             )
         logger.info(
-            f"Last saved data was at {last_dt}, wrote {len(tide_dict)} water records to db"
+            f"Last saved data was at {last_dt}, wrote {len(water_data)} water records to db"
         )
     else:
         logger.info(
@@ -113,17 +113,15 @@ def refresh_wind(station):
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
     wind_dict = cdmo.get_wind_data(station, timeline, useDb=False)
     if wind_dict is not None and len(wind_dict) > 0:
-        # TODO: Rework this
         for dt, value in wind_dict.items():
-            logger.debug(f"dt {dt}, {value}")
             Wind.objects.update_or_create(
                 station="WE",
                 time=dt.isoformat(),
                 defaults={
-                    "speed": value["speed"],
-                    "gust": value["gust"],
-                    "dir_deg": value["dir"],
-                    "dir_str": value["dir_str"],
+                    "speed": value[cdmo.Param.WindSpeed.label],
+                    "gust": value[cdmo.Param.WindGust.label],
+                    "dir_deg": value[cdmo.Param.WindDir.label],
+                    "dir_str": value[cdmo.WIND_DIRSTR_LABEL],
                 },
             )
         logger.info(

@@ -11,6 +11,7 @@ from app.timeline import GraphTimeline
 from django.core.cache import cache
 
 from ..models import Surge, SurgeBias
+from .cdmo import Param
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -107,15 +108,15 @@ def get_best_historic_surge(
     return data
 
 
-def calculate_past_storm_surge(astro_dict: dict, obs_dict: dict) -> dict:
+def calculate_past_storm_surge(astro_dict: dict, water_dict: dict) -> dict:
     """Calculate the past storm surge, which is the difference between the observed tide and the
     predicted astronomical tide.  This is done for all datetimes in the timeline, and returned as a dict.
     The dict keys are the timeline datetimes, and the values are the calculated storm surge values.
     """
     past_surge = {}  # {dt: surge_value}
-    for dt in list(obs_dict.keys()):
+    for dt in water_dict.keys():
         if dt in astro_dict:
-            past_surge[dt] = round(obs_dict[dt] - astro_dict[dt], 2)
+            past_surge[dt] = round(water_dict[dt][Param.Tide.label] - astro_dict[dt], 2)
     return past_surge
 
 

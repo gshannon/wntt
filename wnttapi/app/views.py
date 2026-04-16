@@ -40,7 +40,7 @@ class StationsView(APIView):
             raise exc
         except Exception as exc:
             exc_type, exc_value, _ = sys.exc_info()
-            logger.error(f"Got {exc_type} with {exc_value}")
+            logger.exception(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -61,7 +61,7 @@ class LatestInfoView(APIView):
             raise
         except Exception as exc:
             exc_type, exc_value, _ = sys.exc_info()
-            logger.error(f"Got {exc_type} with {exc_value}")
+            logger.exception(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -106,7 +106,7 @@ class CreateGraphView(APIView):
             raise exc
         except Exception as exc:
             exc_type, exc_value, _ = sys.exc_info()
-            logger.error(f"Got {exc_type} with {exc_value}")
+            logger.exception(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 
@@ -125,7 +125,7 @@ class AddressView(APIView):
             raise exc
         except Exception as exc:
             exc_type, exc_value, _ = sys.exc_info()
-            logger.error(f"Got {exc_type} with {exc_value}")
+            logger.exception(f"Got {exc_type} with {exc_value}")
             sentry_sdk.capture_exception(exc)
             raise APIException(str(exc)) from None
 

@@ -31,7 +31,7 @@ def get_latest_conditions(station: Station) -> dict:
     future_start_date = tz.now(station.time_zone).date()
     future_end_date = future_start_date + timedelta(days=1)
 
-    all_wq = cdmo.get_water_data(station, cdmo_timeline)
+    water_dict = cdmo.get_water_data(station, cdmo_timeline)
     wind_dict = cdmo.get_wind_data(station, cdmo_timeline)
     astro_dict = astrotide.get_hilo_astro_tides(
         station, future_start_date, future_end_date
@@ -40,8 +40,7 @@ def get_latest_conditions(station: Station) -> dict:
 
     return extract_data(
         wind_dict,
-        all_wq[cdmo.Param.Tide],
-        all_wq[cdmo.Param.Temperature],
+        water_dict,
         astro_dict,
         moon_dict,
         station.time_zone,
@@ -49,36 +48,35 @@ def get_latest_conditions(station: Station) -> dict:
 
 
 def extract_data(
-    wind_dict, tide_dict, temp_dict, astro_dict, moon_dict, tzone: ZoneInfo = None
+    wind_dict, water_dict, astro_dict, moon_dict, tzone: ZoneInfo = None
 ) -> dict:
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
     # we don't have to worry about missing data.  All dict keys are in chronological order.
-    if len(tide_dict) > 0:
-        latest_tide_dt, latest_tide_val = max(tide_dict.items(), key=lambda x: x[0])
+    if len(water_dict) > 0:
+        latest_water_dt = max(water_dict)
+        latest_vals = water_dict[latest_water_dt]
+        latest_tide_val = latest_vals[cdmo.Param.Tide.label]
         tide_str = f"{latest_tide_val:.2f}"
-        del tide_dict[latest_tide_dt]
+        latest_temp_val = latest_vals[cdmo.Param.Temperature.label]
+        temp_str = f"{latest_temp_val:.1f}"
+        del water_dict[latest_water_dt]
     else:
-        tide_str = latest_tide_dt = None
+        tide_str = latest_water_dt = temp_str = None
 
-    if len(tide_dict) > 0:
-        _, prior_tide_val = max(tide_dict.items(), key=lambda x: x[0])
+    if len(water_dict) > 0:
+        prior_tide_dt = max(water_dict)
+        prior_tide_val = water_dict[prior_tide_dt][cdmo.Param.Tide.label]
         direction_str = "rising" if prior_tide_val < latest_tide_val else "falling"
     else:
         direction_str = None
 
     if len(wind_dict) > 0:
         latest_wind_dt, wind_data = max(wind_dict.items(), key=lambda x: x[0])
-        wind_speed_str = wind_data["speed"]
-        wind_gust_str = wind_data["gust"]
-        wind_dir_str = util.degrees_to_dir(wind_data["dir"])
+        wind_speed_str = wind_data[cdmo.Param.WindSpeed.label]
+        wind_gust_str = wind_data[cdmo.Param.WindGust.label]
+        wind_dir_str = wind_data[cdmo.WIND_DIRSTR_LABEL]
     else:
         latest_wind_dt = wind_speed_str = wind_gust_str = wind_dir_str = None
-
-    if len(temp_dict) > 0:
-        latest_temp_dt, temp = max(temp_dict.items(), key=lambda x: x[0])
-        temp_str = f"{temp:.1f}"
-    else:
-        latest_temp_dt = temp_str = None
 
     # Get the time and type of the next high or low tide prediction.
     # dict is already sorted by datetime, so we just need to get the first real_dt that's in the future.
@@ -96,8 +94,8 @@ def extract_data(
         "tide_dir": direction_str,
         "temp": temp_str,
         "wind_time": latest_wind_dt,
-        "tide_time": latest_tide_dt,
-        "temp_time": latest_temp_dt,
+        "tide_time": latest_water_dt,
+        "temp_time": latest_water_dt,
         "phase": moon_dict["current"],
         "phase_dt": moon_dict["currentdt"],
         "next_phase": moon_dict["nextphase"],

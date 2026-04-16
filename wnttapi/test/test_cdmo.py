@@ -91,15 +91,13 @@ class TestCdmo(TestCase):
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
         with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "r") as file:
             xml = file.read()
-        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])[
-            cdmo.Param.Tide
-        ]
+        water_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
 
         # First, see what happens when we just pull the 21st high/low predictions.
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251221.json")
         contents = astro.extract_json(raw)
         pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
-        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        hilos = cdmo.find_all_hilos(timeline, water_dict, pred_hilo_dict)
         midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
         # The predicted high tide from the 20th is not included in the 21st predictions.
         self.assertNotIn(midnight_high, hilos)
@@ -108,7 +106,7 @@ class TestCdmo(TestCase):
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251220-21.json")
         contents = astro.extract_json(raw)
         pred_hilo_dict = astro.hilo_json_to_dict(wells, contents, timeline.time_zone)
-        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        hilos = cdmo.find_all_hilos(timeline, water_dict, pred_hilo_dict)
         midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
         self.assertIn(midnight_high, hilos)
 
@@ -124,9 +122,7 @@ class TestCdmo(TestCase):
         # Get observed tides from CDMO for the timeline
         with open(f"{test_data_path}/data/cdmo-level-20251204-05.xml", "r") as file:
             xml = file.read()
-        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])[
-            cdmo.Param.Tide
-        ]
+        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
 
         # Find the hilos in the observed data.
         hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)

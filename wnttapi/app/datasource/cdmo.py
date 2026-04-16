@@ -15,12 +15,22 @@ from .soap import SoapClient
 
 
 class Param(Enum):
-    Tide = "Level"
-    WindSpeed = "Wspd"
-    WindGust = "MaxWspd"
-    WindDir = "Wdir"
-    Temperature = "Temp"
+    Tide = "Level", "level"
+    Temperature = "Temp", "temp"
+    WindSpeed = "Wspd", "speed"
+    WindGust = "MaxWspd", "gust"
+    WindDir = "Wdir", "dir_deg"
 
+    def __new__(cls, name, label):
+        obj = object.__new__(cls)
+        obj._value_ = name  # matches CDMO parameter name
+        obj.label = label  # matches the model property name
+        return obj
+
+
+WATER_PARAMS = [Param.Tide, Param.Temperature]
+WIND_PARAMS = [Param.WindSpeed, Param.WindGust, Param.WindDir]
+WIND_DIRSTR_LABEL = "dir_str"
 
 """
 Access CDMO web services to retrieve observed tide, wind, and temperature data. 
@@ -34,33 +44,27 @@ _missing_data_value = -99.99
 _request_time_warning_seconds = 5
 
 
-def get_water_data(
-    station: Station, timeline: Timeline, params: list = None, useDb: bool = True
-) -> dict:
+def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
-    Args:
-        station (Station): the station object
-        timeline (Timeline): the timeline of datetimes to fetch data for
-        params (list of Param): water params of interest. Default: all params
+    Paramters:
+    station (Station): the station object
+    timeline (Timeline): the timeline of datetimes to fetch data for
+    useDb (bool): pull from database instead of calling cdmo, default True
 
     Returns:
-        dict of {Param.Tide: {dt: level}, Param.Temperature: {dt: temp}}
-        Dictionaries should, but are not guaranteed to, have the same number of entries.
+    {dt: {"level": <value>, "temp": <value>}}
     """
-    params = [Param.Tide, Param.Temperature] if params is None else params
     data = {}
-    for p in params:
-        data[p] = {}
 
     if timeline.is_all_future():
         return data  # Nothing to fetch
 
-    logger.debug(
-        f"station.id={station.id} fetching {params} for {timeline.start_dt} to {timeline.end_dt}"
-    )
     if useDb:
+        logger.debug(
+            f"station.id={station.id} fetching water params for {timeline.start_dt} to {timeline.end_dt} from database"
+        )
         use_padding = isinstance(timeline, GraphTimeline)
         start_dt = timeline.get_min(use_padding)
         end_dt = timeline.get_max(use_padding)
@@ -72,21 +76,21 @@ def get_water_data(
         queryset = Water.objects.filter(time__range=(start_param, end_param)).order_by(
             "time"
         )
-        logger.info(f"Found {queryset.count()} rows in db for {start_dt} to {end_dt}")
+        logger.debug(f"Found {queryset.count()} rows in db for {start_dt} to {end_dt}")
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
-            if Param.Tide in params:
-                data[Param.Tide][dt_in_local] = rec.level
-            if Param.Temperature in params:
-                data[Param.Temperature][dt_in_local] = rec.temp
+            data[dt_in_local] = {
+                Param.Tide.label: rec.level,
+                Param.Temperature.label: rec.temp,
+            }
 
     else:
-        data = get_cdmo(timeline, station, params)
+        logger.debug(
+            f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
+        )
+        data = get_cdmo(timeline, station, WATER_PARAMS)
 
-    # Clean the tide data of bogus zeros
-    if Param.Tide in params:
-        data[Param.Tide] = clean_tide_data(data[Param.Tide], station)
     return data
 
 
@@ -95,11 +99,12 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
     Args:
-        station (Station): the station object
-        timeline (Timeline): the timeline of datetimes to fetch data for
+    station (Station): the station object
+    timeline (Timeline): the timeline of datetimes to fetch data for
+    useDb (bool): pull from database instead of calling cdmo, default True
 
     Returns:
-        dense dict of {dt: {speed, gust, dir, dir_str}}
+    -{dt: {"speed": <value>, "gust": <value>, "dir_deg": <value>, "dir_str": <value> }}
     """
 
     wind_dict = {}
@@ -117,11 +122,10 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         start_param = start_dt.astimezone(tz.utc).isoformat()
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
-        # logger.debug(f"timeline min/max is {start_dt}/{end_dt}")
         queryset = Wind.objects.filter(time__range=(start_param, end_param)).order_by(
             "time"
         )
-        logger.info(
+        logger.debug(
             f"Found {queryset.count()} rows in db for {start_param} to {end_param}"
         )
         if queryset.count() == 0:
@@ -134,70 +138,42 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
             dt_in_local = in_utc.astimezone(timeline.time_zone)
 
             wind_dict[dt_in_local] = {
-                "speed": rec.speed,
-                "gust": rec.gust,
-                "dir": rec.dir_deg,
-                "dir_str": rec.dir_str,
+                Param.WindSpeed.label: rec.speed,
+                Param.WindGust.label: rec.gust,
+                Param.WindDir.label: rec.dir_deg,
+                WIND_DIRSTR_LABEL: rec.dir_str,
             }
 
     else:
-        all_wind = get_cdmo(
+        wind_dict = get_cdmo(
             timeline,
             station,
             [Param.WindSpeed, Param.WindGust, Param.WindDir],
         )
-        logger.debug(f"Wind speed data points: {len(all_wind[Param.WindSpeed])}")
-        logger.debug(f"Wind gust data points: {len(all_wind[Param.WindGust])}")
-        logger.debug(f"Wind direction data points: {len(all_wind[Param.WindDir])}")
+        logger.debug(f"Wind data points: {len(wind_dict)}")
 
-        if len(all_wind[Param.WindSpeed]) == 0:
+        if len(wind_dict) == 0:
             logger.warning(
-                "Got no wind speed data, station %s, timeline %s - %s",
+                "Got no wind data, station %s, timeline %s - %s",
                 station.id,
                 timeline.start_dt,
                 timeline.end_dt,
             )
             return wind_dict
 
-        wind_dict = assemble_wind_data(all_wind)
+        decorate_wind_data(wind_dict)
 
     logger.debug(f"Using {len(wind_dict)} wind records in timeline")
     return wind_dict
 
 
-def assemble_wind_data(wind_data: dict) -> dict:
-    """Assemble wind data from the 3 component dicts into a single dict.
-
-    Args:
-        speed_dict (dict): dense dict of {dt: speed}
-        gust_dict (dict): dense dict of {dt: gust}
-        dir_dict (dict): dense dict of {dt: direction}
-    Returns:
-        dict: dense dict of {dt: {speed, gust, dir, dir_str}}
-    """
-    wind_dict = {}
-    speed_dict = wind_data[Param.WindSpeed]
-    gust_dict = wind_data[Param.WindGust]
-    dir_dict = wind_data[Param.WindDir]
-
-    # Assemble all the data.
-    error_found = False
-    for dt, speed in speed_dict.items():
-        # Make sure we have all values, or none.
-        if dt not in gust_dict or dt not in dir_dict:
-            if not error_found:
-                logger.error("Missing gust and/or direction wind data for %s", dt)
-            error_found = True
-            continue
-        wind_dict[dt] = {
-            "speed": speed,
-            "gust": gust_dict[dt],
-            "dir": dir_dict[dt],
-            # The graph will display compass point names, so translate the direction into strings for dir_str.
-            "dir_str": util.degrees_to_dir(dir_dict[dt]),
-        }
-
-    return wind_dict
+def decorate_wind_data(wind_dict: dict):
+    """The graph will display compass point names like 'N', 'SE' or 'WNW', so add that in."""
+    for dt, obj in wind_dict.items():
+        if Param.WindDir.label in obj:
+            wind_dict[dt][WIND_DIRSTR_LABEL] = util.degrees_to_dir(
+                obj[Param.WindDir.label]
+            )
 
 
 def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
@@ -209,13 +185,12 @@ def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
     else data at the beginning of the graph will be missing.
 
     Parameters:
-    timeline : datetimes (tz aware) requested by the user, in ordered 15-minute intervals
-    station_id : id of water or weather station
-    params : list of data parameter being requested
-    converter : a function to convert a data point into the desired type, e.g. float or int, or unit conversion
+    - timeline: list of datetime representing what will be displayed on the graph
+    - station: the swmp station object
+    - params: list of requested CDMO parameters
 
     Returns:
-        dense dict of values, {param: {datetime: value}}
+    - {dt: {<param-label>: <value}}
 
     """
     if station is None:
@@ -233,10 +208,14 @@ def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
 def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
     """
     Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
-    Params:
+
+    Parameters:
     - timeline: list of datetime representing what will be displayed on the graph
-    - station: the CDMO station code
-    - params: CDMO params to fetch
+    - station: the swmp station object
+    - params: list of requested CDMO parameters
+
+    Returns:
+    - {dt: {<param-label>: <value}}
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
@@ -289,16 +268,17 @@ def parse_cdmo_xml(
     """
     Parse the data returned from CDMO for the requested timeline. Returns a dense, key-ordered
     dict of {param: {dt: value}} where dt=datetime matching an element of the timeline and value = the data value.
-    Params:
+
+    Parameters:
     - timeline: list of datetime representing what will be displayed on the graph
-    - xml: string with the contents in XML format
-    - param: the CDMO param code
-    - converter: func to convert raw data to desired display value
-    - minutes of each hour to include. XML will contain an entry for every 15 minutes
+    - station: the swmp station object
+    - param: list of requested CDMO parameters
+
+    Returns:
+    - {dt: {<param-label>: <value> [, ...]}}
+
     """
     datadict = {}
-    for param in params:
-        datadict[param] = {}
 
     if xml is None or len(xml) == 0:
         return datadict
@@ -335,25 +315,31 @@ def parse_cdmo_xml(
             continue
 
         # Extract and convert all the params we're looking for.
+        obj = {}
         for param in params:
-            data_str = reading.find(f"./{param.value}").text
             try:
+                data_str = reading.find(f"./{param.value}").text
                 value = convert(data_str, param, station, dt_in_local)
                 if value is None:
                     none_or_bad += 1
                 else:
-                    datadict[param][dt_in_local] = value
-            except (TypeError, ValueError):
+                    obj[param.label] = value
+            except (TypeError, ValueError, AttributeError):
                 none_or_bad += 1
                 logger.error(
-                    "Invalid %s for %s: '%s'", param.value, naive_utc, data_str
+                    "Invalid or missing %s for %s: '%s'",
+                    param.value,
+                    naive_utc,
+                    data_str,
                 )
+        # Keep this data point only if we got valid values for all requested parameters.
+        if len(obj) == len(params):
+            datadict[dt_in_local] = obj
 
-    min_len = min(len(datadict[param]) for param in params)
     timeline_len = len(past_timeline)
-    failure_rate = 100 - int(round(min_len / len(past_timeline), 2) * 100)
+    failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
     message = (
-        f"For {param}, got {min_len} out of {timeline_len}, failrate={failure_rate}% "
+        f"For {params[0]}..., got {len(datadict)} out of {timeline_len}, failrate={failure_rate}% "
         + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] "
         + f"records={records} out-of-range={ignored} none+bad={none_or_bad}"
     )
@@ -366,15 +352,13 @@ def parse_cdmo_xml(
         logger.debug(message)
 
     # XML data is returned in reverse chronological order. Reverse it here.
-    for param in params:
-        datadict[param] = dict(reversed(list(datadict[param].items())))
-    return datadict
+    return dict(reversed(list(datadict.items())))
 
 
 def convert(
     data_str: str, param: Param, station: Station, local_dt: datetime
 ) -> callable:
-    """Get the appropriate converter function for the given param."""
+    """Perform the proper data conversion for the param value."""
     match param:
         case Param.Tide:
             return handle_navd88_level(data_str, local_dt, station)
@@ -441,7 +425,7 @@ def compute_cdmo_request_dates(
 
 
 def find_all_hilos(
-    timeline: GraphTimeline, obs_dict: dict, astro_pred_dict: dict
+    timeline: GraphTimeline, water_dict: dict, astro_pred_dict: dict
 ) -> dict:
     """Build a dense dict of high and low tides times from observed and predicted tide data. If there is missing
     observed data that makes it impossible to determine a high or low observed tide, we'll substitute the
@@ -449,7 +433,7 @@ def find_all_hilos(
 
     Args:
     - timeline: key-ordered Timeline of datetimes for the graph
-    - obs_dict: dense dict of observed tide readings {datetime: level}
+    - obs_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
     - astro_pred_dict: dense dict of predicted high and low tides covering the timeline.
         {timeline_dt: PredictedHighOrLow}
 
@@ -477,21 +461,19 @@ def find_all_hilos(
         candidate_times = list(
             filter(lambda t: search_start <= t <= search_end, past_padded_timeline)
         )
-        observed = {t: obs_dict.get(t, None) for t in candidate_times}
+        observed = {t: water_dict.get(t, None) for t in candidate_times}
         observed = {k: v for k, v in observed.items() if v is not None}
         if len(observed) > 0:
             if pred.hilo == Hilo.HIGH:
-                observed_hilo_dt = max(observed, key=observed.get)
-                # logger.debug(
-                #     f"Highest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
-                # )
+                observed_hilo_dt = max(
+                    observed.items(), key=lambda tup: tup[1].get(Param.Tide.label)
+                )[0]
             else:
-                observed_hilo_dt = min(observed, key=observed.get)
-                # logger.debug(
-                #     f"Lowest observed was {observed[observed_hilo_dt]} at {observed_hilo_dt}"
-                # )
+                observed_hilo_dt = min(
+                    observed.items(), key=lambda tup: tup[1].get(Param.Tide.label)
+                )[0]
             hilomap[observed_hilo_dt] = ObservedHighOrLow(
-                observed[observed_hilo_dt], pred.hilo
+                observed[observed_hilo_dt][Param.Tide.label], pred.hilo
             )
         else:
             # No observed data near this predicted high/low. Just use the predicted time.
