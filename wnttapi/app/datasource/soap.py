@@ -42,14 +42,14 @@ class SoapClient:
             start_time = time.time()
             try:
                 if transport is not None:
-                    logger.debug(f"Creating Client with username {user_name}")
+                    logger.info(f"Creating Client with username {user_name}")
                     cls._client = Client(
                         CDMO_WSDL,
                         retxml=True,
                         transport=transport,
                     )
                 else:
-                    logger.debug("Creating Client with no transport")
+                    logger.info("Creating Client with no transport")
                     cls._client = Client(
                         CDMO_WSDL,
                         retxml=True,
@@ -66,5 +66,5 @@ class SoapClient:
             # This is the only way to override the default 90 sec.  Doesn't work in constructor.
             cls._client.set_options(timeout=TIMEOUT_SEC)
             elapsed_sec = time.time() - start_time
-            logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
+            logger.info(f"Created Client object in {round(elapsed_sec, 2)} sec")
         return cls._client

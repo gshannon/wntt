@@ -1,10 +1,9 @@
 import json
 import logging
 from datetime import datetime, time, timedelta
-import sentry_sdk
 
 import requests
-from app import tzutil as tz
+import sentry_sdk
 from app import util as util
 from app.station import Station
 from app.timeline import GraphTimeline

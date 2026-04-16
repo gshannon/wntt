@@ -61,8 +61,7 @@ def get_graph_data(
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    water_dict = cdmo.get_water_data(station, timeline, params=[cdmo.Param.Tide])
-    obs_dict = water_dict.get(cdmo.Param.Tide, {})
+    water_dict = cdmo.get_water_data(station, timeline)
     wind_dict = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
@@ -85,23 +84,25 @@ def get_graph_data(
     )
 
     # Determine all highs and lows, whether observed or predicted.
-    hilo_event_dict = cdmo.find_all_hilos(timeline, obs_dict, astro_all_hilo_dict)
+    hilo_event_dict = cdmo.find_all_hilos(timeline, water_dict, astro_all_hilo_dict)
 
     if hilo_mode:
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, obs_dict)
+    past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, water_dict)
 
     future_surge_dict = sg.get_future_surge_data(
-        timeline, station.noaa_station_id, max(obs_dict) if len(obs_dict) > 0 else None
+        timeline,
+        station.noaa_station_id,
+        max(water_dict) if len(water_dict) > 0 else None,
     )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
     hist_tides_plot, hist_hilo_labels = build_hist_tide_plot(
-        timeline, obs_dict, hilo_event_dict
+        timeline, water_dict, hilo_event_dict
     )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot, wind_dir_hover = build_wind_plots(
@@ -227,14 +228,14 @@ def get_graph_data(
 
 
 def build_hist_tide_plot(
-    timeline: GraphTimeline, obs_dict: dict, hilo_event_dict: dict
+    timeline: GraphTimeline, water_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """Build historical tide plot and high or low tide labels. For timelines entirely in the future,
     each callback would return None, so we can just return None for both lists.
 
     Args:
         timeline (GraphTimeline): the timeline
-        obs_dict (dict): observed tides {dt: height MLLW feet}
+        water_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
         hilo_event_dict: dense dict of all high/low tides, {timeline_dt: HighOrLow}
 
     Returns:
@@ -253,7 +254,13 @@ def build_hist_tide_plot(
                 return "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)"
         return ""
 
-    hist_tides_plot = timeline.build_plot(lambda dt: obs_dict.get(dt, None))
+    def get_tide(dt: datetime):
+        if dt in water_dict:
+            return water_dict[dt][cdmo.Param.Tide.label]
+        else:
+            return None
+
+    hist_tides_plot = timeline.build_plot(get_tide)
     hist_hilo_labels = timeline.build_plot(get_hilo_label)
     return hist_tides_plot, hist_hilo_labels
 
@@ -461,7 +468,7 @@ def build_wind_plots(
 
     Args:
         timeline (GraphTimeline): timeline
-        wind_dict (dict):     )  dict of the form {dt: {speed, gust, dir, dir_str}}
+        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x, 'dir_str': x}}
 
     Returns:
         1. Wind speed
@@ -496,16 +503,16 @@ def build_wind_plots(
             return None
 
     def check_speed(dt):
-        return check_item(dt, "speed")
+        return check_item(dt, cdmo.Param.WindSpeed.label)
 
     def check_gust(dt):
-        return check_item(dt, "gust")
+        return check_item(dt, cdmo.Param.WindGust.label)
 
     def check_dir(dt):
-        return check_item(dt, "dir")
+        return check_item(dt, cdmo.Param.WindDir.label)
 
     def check_dir_str(dt):
-        return check_item(dt, "dir_str")
+        return check_item(dt, cdmo.WIND_DIRSTR_LABEL)
 
     wind_speed_plot = timeline.build_plot(check_speed)
     wind_gust_plot = timeline.build_plot(check_gust)
