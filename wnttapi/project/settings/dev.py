@@ -1,6 +1,8 @@
 # Do not delete this import -- it brings in the base settings
-from .base import *
+import os
 from pathlib import Path
+
+from .base import *
 
 DEBUG = True  # True = INFO and higher go to the console; False = ERROR and higher
 
@@ -18,11 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        # Temporarily use this NAME for "makemigrations" since that must be done directly on the
-        # file system, not docker container, so the created migration file persists.
-        # "NAME": str(BASE_DIR / "datamount" / "db" / "wntt.sqlite3"),
-        # Otherwise, use this NAME, which uses a docker mount for running the container.
-        "NAME": "/data/db/wntt.sqlite3",
+        # We keep the db files outside docker, so use an environment var that's only set when in docker
+        # to determine whether to point to the mount point or the host.
+        "NAME": "/data/db/wntt.sqlite3"
+        if os.environ.get("ENVIRONMENT")
+        else str(BASE_DIR / "datamount" / "db" / "wntt.sqlite3"),
     }
 }
 
