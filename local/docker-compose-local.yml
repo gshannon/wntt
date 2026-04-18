@@ -22,6 +22,7 @@ services:
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
             GEOCODE_KEY: ${GEOCODE_KEY}
+            CDMO_LOG_LEVEL: ${CDMO_LOG_LEVEL-INFO}
         ports:
             - 8000:8001
         restart: unless-stopped

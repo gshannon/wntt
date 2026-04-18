@@ -53,14 +53,9 @@ LOGGING = {
         },
         "app.datasource.cdmo": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
-        # "app.graphutil": {
-        #     "handlers": ["console"],
-        #     "level": "DEBUG",
-        #     "propagate": False,
-        # },
     },
     "formatters": {
         "verbose": {
