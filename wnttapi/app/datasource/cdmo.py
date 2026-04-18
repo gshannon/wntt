@@ -56,10 +56,10 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     Returns:
     {dt: {"level": <value>, "temp": <value>}}
     """
-    data = {}
+    water_dict = {}
 
     if timeline.is_all_future():
-        return data  # Nothing to fetch
+        return water_dict  # Nothing to fetch
 
     if useDb:
         logger.debug(
@@ -80,7 +80,7 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
-            data[dt_in_local] = {
+            water_dict[dt_in_local] = {
                 Param.Tide.label: rec.level,
                 Param.Temperature.label: rec.temp,
             }
@@ -89,9 +89,10 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         logger.debug(
             f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        data = get_cdmo(timeline, station, WATER_PARAMS)
+        water_dict = get_cdmo(timeline, station, WATER_PARAMS)
+        logger.debug(f"Total raw water data points: {len(water_dict)}")
 
-    return data
+    return water_dict
 
 
 def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
@@ -129,7 +130,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
             f"Found {queryset.count()} rows in db for {start_param} to {end_param}"
         )
         if queryset.count() == 0:
-            # logger.warning(f"Got no wind data from db for {start_dt} to {end_dt}")
             return wind_dict
 
         # TODO: make gust NOT NULL in database.
@@ -145,16 +145,19 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
             }
 
     else:
+        logger.debug(
+            f"station.id={station.id} pulling {WIND_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
+        )
         wind_dict = get_cdmo(
             timeline,
             station,
             [Param.WindSpeed, Param.WindGust, Param.WindDir],
         )
-        logger.debug(f"Wind data points: {len(wind_dict)}")
+        logger.debug(f"Total raw wind data points: {len(wind_dict)}")
 
         if len(wind_dict) == 0:
             logger.warning(
-                "Got no wind data, station %s, timeline %s - %s",
+                "Got no wind data for %s, %s - %s",
                 station.id,
                 timeline.start_dt,
                 timeline.end_dt,
@@ -163,7 +166,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
 
         decorate_wind_data(wind_dict)
 
-    logger.debug(f"Using {len(wind_dict)} wind records in timeline")
     return wind_dict
 
 
@@ -339,7 +341,7 @@ def parse_cdmo_xml(
     timeline_len = len(past_timeline)
     failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
     message = (
-        f"For {params[0]}..., got {len(datadict)} out of {timeline_len}, failrate={failure_rate}% "
+        f"For {params[0]}..., using {len(datadict)} out of {timeline_len}, failrate={failure_rate}% "
         + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] "
         + f"records={records} out-of-range={ignored} none+bad={none_or_bad}"
     )
@@ -349,7 +351,7 @@ def parse_cdmo_xml(
     ):
         logger.warning(message)
     else:
-        logger.debug(message)
+        logger.info(message)
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
@@ -451,7 +453,6 @@ def find_all_hilos(
     # a range of times surrounding the predicted value.
     # TODO: Handle edge case where observed high or low is missing and we falsely report a nearby value instead.
     for dt, pred in astro_pred_dict.items():
-        # logger.debug(f"Considering predicted {pred} at {dt}")
         if len(past_padded_timeline) == 0 or dt > past_padded_timeline[-1]:
             hilomap[dt] = pred
             continue
@@ -477,9 +478,9 @@ def find_all_hilos(
             )
         else:
             # No observed data near this predicted high/low. Just use the predicted time.
-            # logger.debug(
-            #     f"No observed data near predicted {pred.hilo} at {dt}, using predicted time"
-            # )
+            logger.debug(
+                f"No observed data near predicted {pred.hilo} at {dt}, using predicted time"
+            )
             hilomap[dt] = pred
 
     return hilomap
@@ -614,7 +615,7 @@ def handle_int(data_str: str, local_dt: datetime) -> int:
 def handle_navd88_level(level_str: str, local_dt: datetime, station: Station) -> float:
     """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
     if level_str is None or len(level_str.strip()) == 0:
-        logger.debug(f"skipping [{level_str}] at {local_dt}")
+        logger.warning(f"skipping [{level_str}] at {local_dt}")
         return None
     try:
         read_level = float(level_str)

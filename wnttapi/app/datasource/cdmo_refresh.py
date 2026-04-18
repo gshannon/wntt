@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
-from app.models import Water, Wind
+from app.models import Water, Wind, get_station
 from app.timeline import Timeline
 from django.db.models import Max
 
@@ -45,23 +45,26 @@ def main():
         station = stn.get_station(args.swmp_station_id, "../datamount/stations")
     else:
         station = stn.get_station(args.swmp_station_id)
-    repeat(refresh_water, station, 3)
-    repeat(refresh_wind, station, 3)
+    station_code = get_station(args.swmp_station_id)
+    repeat(refresh_water, station, station_code, 3)
+    repeat(refresh_wind, station, station_code, 3)
 
 
-def repeat(func: callable, station: stn.Station, tries: int):
+def repeat(func: callable, station: stn.Station, station_code: str, tries: int):
     for attempt in range(1, tries + 1):
         try:
             if attempt > 1:
                 logger.warning(f"trying attempt #{attempt}")
-            func(station)
+            func(station, station_code)
             break
         except Exception as exc:
             logger.error(str(exc))
 
 
-def refresh_water(station):
-    logger.info(f"Refreshing CDMO water data for station {station.id} ...")
+def refresh_water(station, station_code):
+    logger.info(
+        f"Refreshing CDMO water data for station {station.id} / {station_code}..."
+    )
 
     # Find the most recent time for water data.
     last_dt_str = Water.objects.aggregate(Max("time", default=None))["time__max"]
@@ -69,6 +72,7 @@ def refresh_water(station):
     # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
     # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
     last_dt = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
+    logger.info(f"Last saved water data was for {last_dt}")
     now = datetime.now(tz=tz.utc)
     max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
@@ -82,24 +86,22 @@ def refresh_water(station):
         logger.info(f"Got {len(water_data)} water records from CDMO")
         for dt, value in water_data.items():
             Water.objects.update_or_create(
-                station="WE",
+                station=station_code,
                 time=dt.isoformat(),
                 defaults={
                     "level": value.get(cdmo.Param.Tide.label, None),
                     "temp": value.get(cdmo.Param.Temperature.label, None),
                 },
             )
-        logger.info(
-            f"Last saved data was at {last_dt}, wrote {len(water_data)} water records to db"
-        )
+        logger.info(f"Wrote {len(water_data)} water records to db")
     else:
-        logger.info(
-            f"Last saved data was at {last_dt}. No new water data to refresh yet"
-        )
+        logger.info("No new water data to refresh yet")
 
 
-def refresh_wind(station):
-    logger.info(f"Refreshing CDMO wind data for station {station.id} ...")
+def refresh_wind(station, station_code):
+    logger.info(
+        f"Refreshing CDMO wind data for station {station.id} / {station_code} ..."
+    )
 
     # Find the most recent time for wind data.
     last_dt_str = Wind.objects.aggregate(Max("time", default=None))["time__max"]
@@ -108,6 +110,7 @@ def refresh_wind(station):
     # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
     # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
     last_dt = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
+    logger.info(f"Last saved wind data was for {last_dt}")
     now = datetime.now(tz=tz.utc)
     max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
     timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
@@ -115,7 +118,7 @@ def refresh_wind(station):
     if wind_dict is not None and len(wind_dict) > 0:
         for dt, value in wind_dict.items():
             Wind.objects.update_or_create(
-                station="WE",
+                station=station_code,
                 time=dt.isoformat(),
                 defaults={
                     "speed": value[cdmo.Param.WindSpeed.label],
@@ -134,7 +137,9 @@ def refresh_wind(station):
 
 
 if __name__ == "__main__":
+    logger.info("Starting")
     try:
         main()
     except Exception as e:
         print(str(e))
+    logger.info("Done")

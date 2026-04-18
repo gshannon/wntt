@@ -66,5 +66,8 @@ class SoapClient:
             # This is the only way to override the default 90 sec.  Doesn't work in constructor.
             cls._client.set_options(timeout=TIMEOUT_SEC)
             elapsed_sec = time.time() - start_time
-            logger.info(f"Created Client object in {round(elapsed_sec, 2)} sec")
+            if elapsed_sec > 5:
+                logger.info(f"Created Client object in {round(elapsed_sec, 2)} sec")
+            else:
+                logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
         return cls._client

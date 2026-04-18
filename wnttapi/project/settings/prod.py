@@ -54,7 +54,7 @@ LOGGING = {
         },
         "app.datasource.cdmo": {
             "handlers": ["file"],
-            "level": "DEBUG",
+            "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
     },
