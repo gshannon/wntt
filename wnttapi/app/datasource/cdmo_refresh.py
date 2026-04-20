@@ -68,14 +68,9 @@ def refresh_water(station, station_code):
 
     # Find the most recent time for water data.
     last_dt_str = Water.objects.aggregate(Max("time", default=None))["time__max"]
+    logger.info(f"Last saved water data was for {last_dt_str}")
     # Refresh the missing data, up to 7 days.
-    # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
-    # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
-    last_dt = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
-    logger.info(f"Last saved water data was for {last_dt}")
-    now = datetime.now(tz=tz.utc)
-    max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
-    timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
+    timeline = build_timeline(last_dt_str, station)
     water_data = cdmo.get_water_data(station, timeline, useDb=False)
     # TODO
     # Clean the tide data of bogus zeros
@@ -87,7 +82,7 @@ def refresh_water(station, station_code):
         for dt, value in water_data.items():
             Water.objects.update_or_create(
                 station=station_code,
-                time=dt.isoformat(),
+                time=dt.astimezone(tz.utc).isoformat(),
                 defaults={
                     "level": value.get(cdmo.Param.Tide.label, None),
                     "temp": value.get(cdmo.Param.Temperature.label, None),
@@ -105,21 +100,16 @@ def refresh_wind(station, station_code):
 
     # Find the most recent time for wind data.
     last_dt_str = Wind.objects.aggregate(Max("time", default=None))["time__max"]
-    # Refresh the missing data, up to 7 days.
-    # Note: we are working all in UTC here. time col in the db is ISO which is "+00:00" format. When
-    # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
-    # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
     last_dt = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
     logger.info(f"Last saved wind data was for {last_dt}")
-    now = datetime.now(tz=tz.utc)
-    max_dt = min(now, last_dt + timedelta(days=7))  # limit to 7 days
-    timeline = Timeline(last_dt + timedelta(minutes=15), max_dt)
+    # Refresh the missing data, up to 7 days.
+    timeline = build_timeline(last_dt_str, station)
     wind_dict = cdmo.get_wind_data(station, timeline, useDb=False)
     if wind_dict is not None and len(wind_dict) > 0:
         for dt, value in wind_dict.items():
             Wind.objects.update_or_create(
                 station=station_code,
-                time=dt.isoformat(),
+                time=dt.astimezone(tz.utc).isoformat(),
                 defaults={
                     "speed": value[cdmo.Param.WindSpeed.label],
                     "gust": value[cdmo.Param.WindGust.label],
@@ -127,13 +117,21 @@ def refresh_wind(station, station_code):
                     "dir_str": value[cdmo.WIND_DIRSTR_LABEL],
                 },
             )
-        logger.info(
-            f"Last saved data was at {last_dt}, wrote {len(wind_dict)} wind records to db"
-        )
+        logger.info(f"Wrote {len(wind_dict)} wind records to db")
     else:
-        logger.info(
-            f"Last saved data was at {last_dt}. No new wind data to refresh yet"
-        )
+        logger.info("No new wind data to refresh yet")
+
+
+def build_timeline(last_dt_str, station) -> Timeline:
+    # Note: we are working all in UTC here. time col in the db is ISO which is "+00:00" format. When
+    # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
+    # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
+    last_dt_utc = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
+    last_dt_local = last_dt_utc.astimezone(station.time_zone)
+    now = datetime.now(tz=station.time_zone)
+    max_dt_local = min(now, last_dt_local + timedelta(days=7))  # limit to 7 days
+    timeline = Timeline(last_dt_local + timedelta(minutes=15), max_dt_local)
+    return timeline
 
 
 if __name__ == "__main__":

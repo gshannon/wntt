@@ -341,7 +341,7 @@ def parse_cdmo_xml(
     timeline_len = len(past_timeline)
     failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
     message = (
-        f"For {params[0]}..., using {len(datadict)} out of {timeline_len}, failrate={failure_rate}% "
+        f"For {params[0]}..., using {len(datadict)} out of {timeline_len} requested, failrate={failure_rate}% "
         + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] "
         + f"records={records} out-of-range={ignored} none+bad={none_or_bad}"
     )
