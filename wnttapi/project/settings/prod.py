@@ -57,6 +57,11 @@ LOGGING = {
             "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
+        "app.surge_logger": {
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
     "formatters": {
         "my-format": {

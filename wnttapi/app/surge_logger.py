@@ -109,26 +109,25 @@ def main():
 
         # 5-day bias
         water_dict = cdmo.get_water_data(swmp_station, timeline, useDb=True)
-        obs_tides = water_dict.get(cdmo.Param.Tide, {})
-        logger.debug(f"got {len(obs_tides)} tide obs for bias calculation")
-        calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 120)
+        logger.debug(f"got {len(water_dict)} tide obs for bias calculation")
+        calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 120)
 
         # Since we now have 5 days of observations loaded, save them to the database as needed.
-        save_observations(swmp_station, obs_tides)
+        save_observations(swmp_station, water_dict)
 
         # 6-hour bias
         start_dt_stz = end_dt_stz - timedelta(
             hours=12
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias2 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 6)
+        calc_bias2 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 6)
 
         # 24-hour bias
         start_dt_stz = end_dt_stz - timedelta(
             hours=36
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias3 = calculate_bias(swmp_station, timeline, file_dict, obs_tides, 24)
+        calc_bias3 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 24)
 
         logger.info(
             f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2} bias3={calc_bias3}"
@@ -204,7 +203,7 @@ def calculate_bias(
     swmp_station: Station,
     timeline: Timeline,
     file_dict: dict,
-    obs_tides: dict,
+    water_dict: dict,
     minimum_deltas: int,
 ) -> float:
     """We want to look at a certain number of recent tide observations and calculate an average
@@ -222,8 +221,10 @@ def calculate_bias(
     # Walk through the file contents. This will be in order of insert, which in this case is in tide time order.
     for dt_utc, rec in file_dict.items():
         # Note we don't have to convert the db's UTC into station zone, Python is smart.
-        if timeline.contains(dt_utc) and dt_utc in obs_tides and dt_utc in tide_preds:
-            delta = obs_tides[dt_utc] - (tide_preds[dt_utc] + rec["surge"])
+        if timeline.contains(dt_utc) and dt_utc in water_dict and dt_utc in tide_preds:
+            delta = water_dict[dt_utc][cdmo.Param.Tide.label] - (
+                tide_preds[dt_utc] + rec["surge"]
+            )
             deltas.append(round(delta, 2))
         # since items() returns in key-insert order, we're done here
         elif dt_utc > timeline.end_dt:
@@ -246,7 +247,7 @@ def calculate_bias(
 
 
 # Update the Surge table obs column with any observations we have loaded.
-def save_observations(swmp_station: Station, obs_tides: dict):
+def save_observations(swmp_station: Station, water_dict: dict):
 
     # read all Surge records for tide times in past 24 hours from db where OBS is null
     end_dt = datetime.now(tz=swmp_station.time_zone)
@@ -265,8 +266,8 @@ def save_observations(swmp_station: Station, obs_tides: dict):
     count = 0
     for rec in qs:
         # Note we don't have to convert the db's UTC into station zone, Python is smart.
-        if rec.tide_time in obs_tides:
-            rec.obs = obs_tides[rec.tide_time]
+        if rec.tide_time in water_dict:
+            rec.obs = water_dict[rec.tide_time][cdmo.Param.Tide.label]
             rec.save()
             count += 1
     logger.info(f"updated obs value for {count} surge records")
