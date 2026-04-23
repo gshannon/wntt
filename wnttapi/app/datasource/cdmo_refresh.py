@@ -58,7 +58,11 @@ def repeat(func: callable, station: stn.Station, station_code: str, tries: int):
             func(station, station_code)
             break
         except Exception as exc:
-            logger.error(str(exc))
+            # Only log the error on the last attempt, since errors get sent to sentry.
+            if attempt == tries:
+                logger.error(f"Failed to refresh data after {tries} attempts")
+            else:
+                logger.warning(str(exc))
 
 
 def refresh_water(station, station_code):
@@ -78,7 +82,6 @@ def refresh_water(station, station_code):
     #     data[Param.Tide] = clean_tide_data(data[Param.Tide], station)
 
     if water_data is not None and len(water_data) > 0:
-        logger.info(f"Got {len(water_data)} water records from CDMO")
         for dt, value in water_data.items():
             Water.objects.update_or_create(
                 station=station_code,
@@ -100,11 +103,11 @@ def refresh_wind(station, station_code):
 
     # Find the most recent time for wind data.
     last_dt_str = Wind.objects.aggregate(Max("time", default=None))["time__max"]
-    last_dt = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
-    logger.info(f"Last saved wind data was for {last_dt}")
+    logger.info(f"Last saved wind data was for {last_dt_str}")
     # Refresh the missing data, up to 7 days.
     timeline = build_timeline(last_dt_str, station)
     wind_dict = cdmo.get_wind_data(station, timeline, useDb=False)
+
     if wind_dict is not None and len(wind_dict) > 0:
         for dt, value in wind_dict.items():
             Wind.objects.update_or_create(
