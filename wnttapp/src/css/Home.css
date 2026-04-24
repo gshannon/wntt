@@ -9,11 +9,11 @@
 }
 
 .wells-bg {
-    background-image: url('/src/images/aerial-4.jpg');
+    background-image: url('/src/images/aerial.webp');
 }
 
 .other-bg {
-    background-image: url('/src/images/beach1.jpg');
+    background-image: url('/src/images/beach.webp');
 }
 
 .home .welcome {
@@ -31,9 +31,12 @@
     border-radius: 15px;
 }
 
-@media (max-width: 525px) {
-    .home {
-        background-image: url('/src/images/beach1.jpg');
+@media (max-width: 575px) {
+    .other-bg {
+        background-image: url('/src/images/beach-small.webp');
+    }
+    .wells-bg {
+        background-image: url('/src/images/aerial-small.webp');
     }
     .home .welcome {
         max-width: 75%;
@@ -82,7 +85,7 @@
     font-weight: 600;
 }
 
-@media (max-width: 525px) {
+@media (max-width: 575px) {
     #home .conditions {
         padding: 5px;
     }
