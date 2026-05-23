@@ -10,8 +10,6 @@ import * as storage from './storage'
 
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
-const HighestAnnualPredictionColor = '#ff7f0e'
-const MeanHighWaterColor = '#8c564b'
 const ProjectedStormTideColor = '#e377c2'
 const ObservedTideColor = '#2ca02c'
 const PredictedTideColor = '#0b7dcc'
@@ -29,8 +27,6 @@ const CheckColor3 = '#2eb92e'
 // For uniquely identifying traces in event handling. Order doesn't matter, so long as they are unique.
 const TraceId = Object.freeze({
     RecordTide: 1,
-    HighestAnnualPredicted: 2,
-    MeanHighWater: 3,
     ObservedTide: 4,
     PredictedTide: 5,
     RecordedStormSurge: 6,
@@ -72,7 +68,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         // Not there yet, so initialize it.
         storage.setDailyStorage(ctx.station.id, {
             ...daily,
-            legendOnly: [TraceId.MeanHighWater], // Mean High Water is usually not relevant, so start with it hidden.
+            legendOnly: [],
         })
         return storage.getDailyStorage(ctx.station.id)
     }
@@ -115,7 +111,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
     const layout = {
         showlegend: !isNarrow,
-        height: 420,
+        autosize: true,
         template: 'plotly',
         plot_bgcolor: PlotBgColor,
         title: {
@@ -211,10 +207,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
     }
 
     // Building the plot data, we are aware that the order in the array determines the display order
-    // in the legend and the hover text. We start with record tide, followed by highest annual prediction, which
-    // should be the highest 2 values. If there's a custom elevation, that will be inserted in the proper place
-    // so the 1st 3 are in descending order. After that, the precise order could vary by time, so we just make our
-    // best guess here.
+    // in the legend and the hover text. We do our best to try for high-to-low order, but of course it can vary by time.
 
     const plotData = [
         buildPlot({
@@ -234,28 +227,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             // Otherwise must override default template of "{name} : %{y}".
             hovertemplate:
                 isNarrow ? `Record (${ctx.station.recordTideDate}) : %{y}<extra></extra>` : null,
-        }),
-        buildPlot({
-            customdata: TraceId.HighestAnnualPredicted,
-            name: 'Highest Annual Predicted (' + data.highest_annual_prediction + ')',
-            x: data.timeline,
-            y: expandConstant(data.highest_annual_prediction),
-            visible: !stationDaily.legendOnly.includes(TraceId.HighestAnnualPredicted),
-            lineType: 'solid',
-            color: HighestAnnualPredictionColor,
-            hoverinfo: isNarrow ? 'all' : 'skip',
-            hovertemplate: isNarrow ? 'Highest Annual Predicted: %{y}<extra></extra>' : '',
-        }),
-        buildPlot({
-            customdata: TraceId.MeanHighWater,
-            name: `Mean High Water (${ctx.station.meanHighWaterMllw})`,
-            x: data.timeline,
-            y: expandConstant(ctx.station.meanHighWaterMllw),
-            visible: !stationDaily.legendOnly.includes(TraceId.MeanHighWater),
-            legendOnly: true,
-            lineType: 'solid',
-            color: MeanHighWaterColor,
-            hoverinfo: 'skip',
         }),
         ...(data.hist_tides !== null ?
             [
@@ -474,23 +445,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
     ]
 
     if (customElevationMllw != null) {
-        // If they are showing a custom elevation, insert it into the plot data, so that the
-        // 1st 3 items are in descending order.
-        const index =
-            customElevationMllw >= ctx.station.recordTideMllw() ? 0
-            : customElevationMllw >= data.highest_annual_prediction ? 1
-            : 2
+        // If they are showing a custom elevation, insert it into the plot data either before or after record tide.
+        const index = customElevationMllw >= ctx.station.recordTideMllw() ? 0 : 1
         plotData.splice(
             index,
             0,
             buildPlot({
-                name: `Custom Elevation (${customElevationMllw})`,
+                name: `Custom Location (${customElevationMllw})`,
                 x: data.timeline,
                 // We need this one filled across cuz it may appear on the hover text.
                 y: expandConstant(customElevationMllw),
                 lineType: 'solid',
                 color: CustomElevationColor,
-                hovertemplate: 'Custom Elevation: %{y}<extra></extra>',
+                hovertemplate: 'Custom Location: %{y}<extra></extra>',
             }),
         )
     }

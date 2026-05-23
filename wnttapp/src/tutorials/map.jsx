@@ -56,14 +56,12 @@ export const getData = (station) => {
             render: () => {
                 return (
                     <>
-                        {isTouchScreen ? (
+                        {isTouchScreen ?
                             <span>
                                 To pan on a touchscreen device, tap and hold on the map, then drag
                                 the map.
                             </span>
-                        ) : (
-                            <span>To pan, click and hold, then drag the map.</span>
-                        )}
+                        :   <span>To pan, click and hold, then drag the map.</span>}
                     </>
                 )
             },
@@ -118,7 +116,7 @@ export const getData = (station) => {
             render: () => {
                 return (
                     <span>
-                        If you added it to the graph, you can now see your custom elevation there,
+                        If you added it to the graph, you can now see your custom location there,
                         and you can compare it to the past and predicted tide levels.
                     </span>
                 )

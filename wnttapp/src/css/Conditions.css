@@ -15,16 +15,16 @@
     height: 0;
 }
 
-.links {
+.footnotes {
     grid-column: span 3;
     font-style: italic;
 }
 
-#home .links a {
+#home .footnotes a {
     color: white;
 }
 
-#home .links a:hover {
+#home .footnotes a:hover {
     color: var(--federal-blue);
 }
 
@@ -35,8 +35,8 @@
 
 .cond-container {
     display: grid;
-    grid-template-columns: 2fr 5fr 2fr;
-    grid-template-rows: 5fr 1fr repeat(7, 5fr) 1fr 5fr; /* horiz separators are 1/5 height of data */
+    grid-template-columns: 5fr 10fr 4fr;
+    grid-template-rows: 5fr 1fr repeat(9, 5fr) 1fr 5fr; /* horiz separators are 1/5 height of data */
     background: var(--med-blue);
     font-size: 0.9rem;
 }
@@ -55,6 +55,7 @@
 
 .cond-container .cond-label {
     text-align: end;
+    white-space: nowrap;
 }
 
 .cond-container .cond-data {

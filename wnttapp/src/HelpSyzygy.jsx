@@ -4,19 +4,17 @@ import { SimpleLink, Link } from './Links'
 import { SyzygyConfig } from './Syzygy'
 
 const GoBack = ({ gotoPage, returnPage }) => {
-    return returnPage ? (
-        <Row className='justify-content-start my-3'>
-            <a
-                href='#'
-                onClick={() => {
-                    gotoPage(returnPage)
-                }}>
-                Back to Graph
-            </a>
-        </Row>
-    ) : (
-        ''
-    )
+    return returnPage ?
+            <Row className='justify-content-start my-3'>
+                <a
+                    href='#'
+                    onClick={() => {
+                        gotoPage(returnPage)
+                    }}>
+                    Back to Graph
+                </a>
+            </Row>
+        :   ''
 }
 
 export default function HelpSyzygy({ gotoPage, returnPage }) {
@@ -54,8 +52,8 @@ export default function HelpSyzygy({ gotoPage, returnPage }) {
                     gravitational pull due to its great distance from Earth. Once per year, two
                     weeks after the Winter Solstice, Earth is at its closest point to the Sun, or{' '}
                     <Link href='https://simple.wikipedia.org/wiki/Perihelion' text='perihelion' />.
-                    Here the Sun it will have its greatest effect, either to enhance or cancel out
-                    the Moon&apos;s gravitational pull.
+                    Here the Sun will have its greatest effect, either to enhance or cancel out the
+                    Moon&apos;s gravitational pull.
                 </p>
                 <p>
                     When the Sun, Moon & Earth are in alignment, the pull of the Sun and Moon are

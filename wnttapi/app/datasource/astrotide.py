@@ -63,17 +63,13 @@ def get_hilo_astro_tides(station: Station, start_date: date, end_date: date) -> 
         {timeline_dt: PredictedHighOrLow}
     """
 
-    preds_hilo_dict = {}
-
     start_date_str = start_date.strftime("%Y%m%d")
     end_date_str = end_date.strftime("%Y%m%d")
 
     future_preds_json = pull_data(
         station.noaa_station_id, "hilo", start_date_str, end_date_str
     )
-    preds_hilo_dict = hilo_json_to_dict(station, future_preds_json, station.time_zone)
-
-    return preds_hilo_dict
+    return hilo_json_to_dict(station, future_preds_json, station.time_zone)
 
 
 def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:

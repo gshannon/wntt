@@ -4,7 +4,6 @@ import os
 from datetime import date
 from zoneinfo import ZoneInfo
 
-import sentry_sdk
 from app import util
 from django.core.cache import cache
 
@@ -144,34 +143,6 @@ def get_all_stations(data_dir=_default_file_dir) -> dict:
     return get_or_load_stations(data_dir)
 
 
-def get_astro_high_tide_mllw(
-    station: Station, year: int, data_dir=_default_file_dir
-) -> float:
-    data = get_or_load_annual_highs(data_dir)
-    year_str = str(year)
-
-    if station.noaa_station_id not in data:
-        msg = "No annual highs found for station %s!" % (station.noaa_station_id)
-        logger.error(msg)
-        sentry_sdk.capture_message(msg)
-        return None
-
-    if year_str not in data[station.noaa_station_id]:
-        msg = "No annual high found for station %s for %d" % (
-            station.noaa_station_id,
-            year,
-        )
-        logger.error(msg)
-        sentry_sdk.capture_message(msg)
-        return None
-
-    navd88_high = data[station.noaa_station_id][year_str]
-    logger.debug(
-        f"for station {station.noaa_station_id} year {year_str}, navd88 high: {navd88_high}"
-    )
-    return station.navd88_feet_to_mllw_feet(navd88_high)
-
-
 def get_or_load_stations(data_dir: str = _default_file_dir) -> dict:
     """Get the cached stations, or load them from the json file if not cached yet."""
     cache_key = "stations_data"
@@ -187,27 +158,3 @@ def get_or_load_stations(data_dir: str = _default_file_dir) -> dict:
         f"Loaded {len(data)} stations from disk and cached with key {cache_key}"
     )
     return data
-
-
-def get_or_load_annual_highs(
-    data_dir: str = _default_file_dir,
-) -> dict:
-    """Get the cached annual highs, or load them from the json file if not cached yet."""
-    cache_key = "annual_highs_navd88"
-    data = cache.get(cache_key)
-    if data is not None:
-        return data
-
-    try:
-        filepath = os.path.join(data_dir, "annual_highs_navd88.json")
-        contents = util.read_file(filepath)
-        data = json.loads(contents)
-        cache.set(cache_key, data, timeout=None)  # Cache forever
-        logger.debug(
-            f"Loaded {len(data)} annual highs from disk and cached with key {cache_key}"
-        )
-        return data
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
-        logger.error("Error loading annual highs from %s: %s", filepath, str(e))
-        return {}

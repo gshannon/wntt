@@ -1,19 +1,8 @@
-.custom-elevation {
-    border: 1px solid black;
-}
-
-.form-check {
-    margin-bottom: 0;
+.map-label {
+    font-weight: 700;
 }
 
 @media (max-width: 767px) {
-    /* .options controls everthing except datepicker and buttons */
-    .options {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 525px) {
     .date-options {
         font-size: 0.8rem;
     }

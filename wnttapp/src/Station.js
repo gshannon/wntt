@@ -66,11 +66,10 @@ export default class Station {
     }
 
     stationOptionsWithDefaults = (options) => {
-        // Get station-specific fields from storage.  There will be no properties if it's a first time user
+        // Apply station-specific fields to storage defaults.  There will be no properties if it's a first time user
         // or storage was cleared. Make sure all properties at least exist with defaults.
-        options.markerElevationNav ||= null
         options.customElevationNav ||= null
-        options.markerLocation ||= null
+        options.customLocation ||= null
         options.mapCenter ||= this.swmpLocation
         options.mapType ||= 'basic'
         options.zoom ||= DefaultMapZoom

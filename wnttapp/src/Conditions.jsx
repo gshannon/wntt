@@ -1,14 +1,10 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
-import { Link } from './Links'
-import { Months } from './utils'
+import { Months, roundTo } from './utils'
 import { SyzygyConfig } from './Syzygy'
-import { AppContext } from './AppContext'
-import { useContext } from 'react'
 import ErrorBlock from './ErrorBlock'
 
 export default function Conditions({ data, error }) {
-    const ctx = useContext(AppContext)
     const noData = '--'
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here. Ah, javascript.
@@ -43,27 +39,56 @@ export default function Conditions({ data, error }) {
         )
     }
 
+    const now = format_dt(new Date())
+    const inches = data.next_tide_surge_str ? Number(data.next_tide_surge_str) * 12 : null
+
     return (
         <div className='cond-container'>
             <div className='cond-col-header'>Metric</div>
             <div className='cond-col-header'>Value</div>
             <div className='cond-col-header'>As of</div>
             <div className='horizontal-line'></div>
-            <div className='cond-label'>Tide Level</div>
+
+            {/* current tide */}
+            <div className='cond-label'>Water Level</div>
             <div className='cond-data'>
                 {data.tide_dir ? `${data.tide} ft MLLW ${data.tide_dir}` : noData}
             </div>
+            {/* this is observation time */}
             <div className='cond-time'>{data.tide_time ? format_dt(data.tide_time) : noData}</div>
 
-            <div className='cond-label'>Next Tide</div>
-            <div className='cond-data'>
-                {data.next_tide_dt
-                    ? `${format_tm(data.next_tide_dt)} (${
-                          data.next_tide_type === 'H' ? 'High' : 'Low'
-                      })`
-                    : noData}
+            {/* next tide level */}
+            <div className='cond-label'>
+                Next Tide Level<sup>*</sup>
             </div>
-            <div className='cond-time'>{format_dt(new Date())}</div>
+            <div className='cond-data'>
+                {data.next_tide_str ?
+                    `${data.next_tide_str} ft MLLW (${
+                        data.next_tide_type === 'H' ? 'High' : 'Low'
+                    })`
+                :   noData}
+            </div>
+            <div className='cond-time'>{now}</div>
+
+            {/* next tide time and type */}
+            <div className='cond-label'>Next Tide Time</div>
+            <div className='cond-data'>
+                {data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData}
+            </div>
+            <div className='cond-time'>{now}</div>
+
+            {/* storm surge */}
+            <div className='cond-label'>
+                Storm Surge<sup>*</sup>
+            </div>
+            <div className='cond-data'>
+                {data.next_tide_surge_str ?
+                    `${data.next_tide_surge_str} ft (${roundTo(inches, 1)} in)`
+                :   noData}
+            </div>
+            <div className='cond-time'>{format_dt(data.surge_time)}</div>
+
+            {/* wind speed */}
 
             <div className='cond-label'>Wind Speed</div>
             <div className='cond-data'>
@@ -71,22 +96,26 @@ export default function Conditions({ data, error }) {
             </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
 
+            {/* wind gust */}
             <div className='cond-label'>Wind Gust</div>
             <div className='cond-data'>
                 {data.wind_gust == null ? noData : `${data.wind_gust} mph`}
             </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
 
+            {/* water temp */}
             <div className='cond-label'>Water Temp</div>
             <div className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</div>
             <div className='cond-time'>{data.temp_time ? format_dt(data.temp_time) : noData}</div>
 
+            {/* current moon phase */}
             <div className='cond-label'>Moon Phase</div>
             <div className='cond-data'>
                 {data.phase ? `${SyzygyConfig[data.phase].name}` : noData}
             </div>
             <div className='cond-time'>{data.phase_dt ? format_dt(data.phase_dt) : noData}</div>
 
+            {/* next moon phase */}
             <div className='cond-label'>Next Phase</div>
             <div className='cond-data'>
                 {data.next_phase ? `${SyzygyConfig[data.next_phase].name}` : noData}
@@ -95,17 +124,8 @@ export default function Conditions({ data, error }) {
                 {data.next_phase_dt ? format_dt(data.next_phase_dt) : noData}
             </div>
             <div className='horizontal-line'></div>
-            <div className='links'>
-                Source of this data, and more:&nbsp; &nbsp;
-                <Link
-                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
-                    text='Water'
-                />
-                &nbsp; &nbsp;
-                <Link
-                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
-                    text='Weather'
-                />
+            <div className='footnotes'>
+                <sup>*</sup>Next Tide Level does not include Storm Surge.
             </div>
         </div>
     )

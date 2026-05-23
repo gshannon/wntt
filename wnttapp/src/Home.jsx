@@ -71,13 +71,7 @@ export default function Home() {
             <div className='welcome p-2 my-3'>
                 <p>
                     Welcome to the {ctx.special ? '' : 'Wells'} National Estuarine Research Reserve
-                    Tide Tracker. {text1()} To learn more, watch this{' '}
-                    <a
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        href='https://www.youtube.com/watch?v=wr2nfjE43Gg'>
-                        tutorial video.
-                    </a>{' '}
+                    Tide Tracker. {text1()}
                     {text2()}
                 </p>
             </div>

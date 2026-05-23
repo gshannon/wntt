@@ -1,8 +1,17 @@
+dialog:modal {
+    max-width: 80%;
+}
+
 /* To center the jump arrows, we have to to tweak the 
 image's container, which is the anchor tag. */
 .jumpdate a {
     display: flex;
     justify-content: center;
+}
+
+.graph-col {
+    /* This controls the height of the Plotly graph. */
+    height: 65vh;
 }
 
 /* For xs, sm & md we prevent it from exceeding the column boundaries */

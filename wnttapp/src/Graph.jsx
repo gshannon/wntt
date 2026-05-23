@@ -22,6 +22,7 @@ import * as storage from './storage'
 import prevButton from './images/util/previous.png'
 import nextButton from './images/util/next.png'
 import { useQueryClient } from '@tanstack/react-query'
+import Map from './Map'
 
 export default function Graph() {
     const ctx = useContext(AppContext)
@@ -44,6 +45,8 @@ export default function Graph() {
     const [startDateStr, setStartDateStr] = useState(stationDaily.start ?? defaultStartStr)
     const [endDateStr, setEndDateStr] = useState(stationDaily.end ?? defaultEndStr)
     const [isHiloMode, setIsHiloMode] = useState(stationDaily.hiloMode ?? isSmallScreen())
+    const [showMap, setShowMap] = useState(false)
+    const [mapRef, setMapRef] = useState(null)
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     const [, forceRerender] = useReducer((x) => x + 1, 0)
@@ -74,6 +77,18 @@ export default function Graph() {
         onDateChange(startDateStr, endDateStr, isHiloMode)
     }, [startDateStr, endDateStr, isHiloMode])
 
+    useEffect(() => {
+        // The dialog is created as hidden, and its size is 0 until shown. Once it's shown we must invalidate
+        // the map size so it can be redrawn correctly. 
+        const dialog = document.querySelector('dialog')
+        if (showMap) {
+            dialog.showModal()
+            mapRef?.invalidateSize()
+        } else {
+            dialog.close()
+        }
+    }, [showMap, mapRef])
+
     const queryClient = useQueryClient()
     const daysShown = daysBetween(startDateStr, endDateStr) + 1
 
@@ -91,6 +106,19 @@ export default function Graph() {
 
     const toggleHiloMode = () => {
         setIsHiloMode(!isHiloMode)
+    }
+
+    const onMapClose = () => {
+        setShowMap(false)
+    }
+
+    // We need a ref to the Map so we can invalidate its size when dialog is shown.
+    const saveMapRef = (mapRef) => {
+        setMapRef(mapRef)
+    }
+
+    const onMapRequest = () => {
+        setShowMap(true)
     }
 
     const setJumpDates = (directionFactor) => {
@@ -196,6 +224,8 @@ export default function Graph() {
                 setEndCtl={setEndCtl}
                 setDateRangeStrings={setDateRangeStrings}
                 isHiloMode={isHiloMode}
+                onMapRequest={onMapRequest}
+                onMapClose={onMapClose}
                 toggleHiloMode={toggleHiloMode}
                 resetDateControls={resetDateControls}
             />
@@ -215,7 +245,7 @@ export default function Graph() {
                     station={ctx.station}
                     errorOrLoading={error || loading}
                 />
-                <Col className='col-10 px-0'>
+                <Col className='col-10 px-0 graph-col'>
                     <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
                 </Col>
                 <JumpDates
@@ -228,6 +258,11 @@ export default function Graph() {
                     station={ctx.station}
                     errorOrLoading={error || loading}
                 />
+            </Row>
+            <Row>
+                <dialog className='mt-4'>
+                    <Map key={ctx.station?.id} onMapClose={onMapClose} saveMapRef={saveMapRef} />
+                </dialog>
             </Row>
         </>
     )
