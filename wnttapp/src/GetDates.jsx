@@ -1,5 +1,7 @@
 import './css/GetDates.css'
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
+// import HousePic from './images/housepic1.png'
+import HousePic from './images/housepic2.png'
 import Button from 'react-bootstrap/Button'
 import { Col, Form, FormLabel, FormText, Row } from 'react-bootstrap'
 import { DatePicker } from 'reactstrap-date-picker'
@@ -13,12 +15,9 @@ import {
     getMaxNumDays,
     maxGraphDate,
     Months,
-    Page,
 } from './utils'
-import Tutorial from './Tutorial'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
-import { getData as getGraphData } from './tutorials/graph'
 
 // Allow users to set start/end date range for the graph.
 
@@ -31,9 +30,9 @@ export default function GetDates({
     isHiloMode,
     toggleHiloMode,
     resetDateControls,
+    onMapRequest,
 }) {
     const ctx = useContext(AppContext)
-    const [showTut, setShowTut] = useState(false)
     const minDate = ctx.station.minGraphDate()
     const maxDate = maxGraphDate()
     const rangeMin = `${Months[minDate.getMonth()]} ${minDate.getFullYear()}`
@@ -83,10 +82,6 @@ export default function GetDates({
             const newEnd = new Date(formatted)
             setEndCtl({ ...endCtl, end: newEnd })
         }
-    }
-
-    const onModalClose = () => {
-        setShowTut(false)
     }
 
     return (
@@ -163,7 +158,7 @@ export default function GetDates({
                                         contents={
                                             <Form>
                                                 <Form.Check
-                                                    type='checkbox'
+                                                    type='switch'
                                                     label='Highs/Lows'
                                                     checked={isHiloMode}
                                                     onChange={handleHiloToggle}
@@ -172,59 +167,22 @@ export default function GetDates({
                                             </Form>
                                         }></Overlay>
                                 </Col>
-                                <Col className='d-flex justify-content-center'>
-                                    <Overlay
-                                        text='Open the Graph page tutorial in a popup window.'
-                                        placement='top'
-                                        contents={
-                                            <Button
-                                                variant='primary'
-                                                className='px-2 mb-1'
-                                                onClick={() => setShowTut(true)}>
-                                                Tutorial
-                                            </Button>
-                                        }></Overlay>
-                                </Col>
                             </Row>
                         </Col>
                     </Row>
                 </Col>
-                <Col sm={3}>
-                    <Row className='custom-elevation mx-0 py-2 align-items-center'>
-                        <Col xs={7} className='text-center flex-grow-1'>
-                            Custom Elevation:{' '}
-                            {ctx.customElevationNav ? (
-                                <strong>
-                                    {ctx.station.navd88ToMllw(ctx.customElevationNav)}
-                                    &nbsp;ft
-                                </strong>
-                            ) : (
-                                '-'
-                            )}
-                        </Col>
-                        <Col className='text-center'>
-                            <Overlay
-                                text='Go to Map page to manage your custom elevation.'
-                                placement='top'
-                                contents={
-                                    <Button
-                                        variant='custom-primary'
-                                        className='py-0'
-                                        onClick={() => ctx.gotoPage(Page.Map)}>
-                                        Edit
-                                    </Button>
-                                }></Overlay>
-                        </Col>
-                    </Row>
+                <Col sm={3} className='mx-0 py-2 text-center'>
+                    <Overlay
+                        text='Add the elevation of your place of interest to the graph.'
+                        placement='top'
+                        contents={
+                            <div className='mx-md-2 pointer' onClick={() => onMapRequest()}>
+                                <img src={HousePic} width={75} alt='Map popup' />
+                                <div className='map-label'>Graph my house!</div>
+                            </div>
+                        }></Overlay>
                 </Col>
             </Row>
-            {showTut && (
-                <Tutorial
-                    onClose={onModalClose}
-                    data={getGraphData(ctx.station)}
-                    title='Graph Tutorial'
-                />
-            )}
         </Container>
     )
 }

@@ -20,21 +20,6 @@ export default function Help() {
 
     return (
         <Container>
-            <Row className='justify-content-center fs-4 fw-bold'>Tutorials</Row>
-            <Row>
-                <Col className='text-center pt-4 pb-2 titles'>
-                    This video covers all the basics of the Tide Tracker.
-                </Col>
-            </Row>
-            <Row>
-                <Col className='text-center video'>
-                    <iframe
-                        className='video'
-                        allow='fullscreen'
-                        referrerPolicy='strict-origin-when-cross-origin'
-                        src='https://www.youtube.com/embed/wr2nfjE43Gg?autoplay=0'></iframe>
-                </Col>
-            </Row>
             <Row>
                 <Col className='text-center pt-4 pb-2 titles'>Slide show tutorials</Col>
             </Row>

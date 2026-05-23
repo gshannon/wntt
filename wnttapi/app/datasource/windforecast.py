@@ -106,7 +106,7 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         return json_dict[granularity]
 
     except Exception as e:
-        e.add_note(f"Url: {response.url}")
+        e.add_note(f"{base_url} {params}")
         if reason:
             e.add_note(reason)
         logger.exception(str(e))

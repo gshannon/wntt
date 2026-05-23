@@ -18,7 +18,7 @@ export default function Tutorial(props) {
     }
 
     return (
-        <Modal show={true} size='lg' onHide={props.onClose}>
+        <Modal show={true} size='xl' onHide={props.onClose}>
             <Modal.Header className='py-2 tut-header text-white' closeButton>
                 {props.title}
             </Modal.Header>

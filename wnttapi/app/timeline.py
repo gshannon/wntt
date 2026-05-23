@@ -3,6 +3,7 @@ from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from app import util
+
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ class Timeline:
         self.now = tz.now(self.time_zone) if now is None else now
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
             logger.error(
-                f"start is {type(start_dt.tzinfo)} end is {type(end_dt.tzinfo)}"
+                f"start tz is {start_dt.tzinfo}, but end tz is {end_dt.tzinfo}"
             )
             raise util.InternalError(
                 f"time zone mismatch: {start_dt.tzinfo}, {end_dt.tzinfo}"

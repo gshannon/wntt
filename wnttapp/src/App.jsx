@@ -1,7 +1,7 @@
 // Importing this here ensures that the CSS is applied globally.
 import './css/App.css'
 // uncomment to show bootstrap debug
-//import './bs-breakpoint.css'
+//import './css/bs-breakpoint.css'
 import { useEffect, useState } from 'react'
 import Top from './Top'
 import Control from './Control'
@@ -28,6 +28,7 @@ export default function App() {
 
     const [station, setStation] = useState(null)
     const [customElevationNav, setCustomElevationNav] = useState(undefined)
+    const [customLocation, setCustomLocation] = useState(undefined)
     if (!mainStore.uid) {
         const userId = mainStore.uid ?? crypto.randomUUID().substring(0, 13) // unique enough for our purpose
         storage.setMainStorage({ ...mainStore, uid: userId, since: stringify(new Date()) })
@@ -56,17 +57,20 @@ export default function App() {
         storage.setMainStorage({ ...mainStore, stationId: sid })
         const storedOptions = storage.getPermanentStorage(sid)
         setCustomElevationNav(storedOptions.customElevationNav)
+        setCustomLocation(storedOptions.customLocation)
     }
 
     // handler for user setting custom elevation
-    const onCustomElevationSet = (navd88Value) => {
+    const onCustomElevationSet = (navd88Value, location) => {
         if (navd88Value !== undefined && station != null) {
             setCustomElevationNav(navd88Value)
+            setCustomLocation(location)
             const storedOptions = storage.getPermanentStorage(station.id)
             const options = station.stationOptionsWithDefaults(storedOptions)
             storage.setPermanentStorage(station.id, {
                 ...options,
                 customElevationNav: navd88Value,
+                customLocation: location,
             })
         }
     }
@@ -91,6 +95,7 @@ export default function App() {
                 gotoPage,
                 customElevationNav,
                 onCustomElevationSet,
+                customLocation,
                 fatalError,
                 special,
                 toggleSpecial,

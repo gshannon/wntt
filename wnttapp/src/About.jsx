@@ -8,7 +8,7 @@ import {
     getSurgeStationUrl,
     SurgeUrl,
     TidesCurrentsUrl,
-    OpenMateoUrl,
+    OpenMeteoUrl,
     TidesCurrentsStationUrl,
 } from './utils'
 
@@ -174,7 +174,7 @@ export default function About() {
                                     <div className='fw-bold'>Wind Forecasts</div>
                                     <div>
                                         Wind forecasts come from{' '}
-                                        <Link href={OpenMateoUrl} text={`Open-Mateo`} />.
+                                        <Link href={OpenMeteoUrl} text={`Open-Meteo`} />.
                                     </div>
                                 </div>
                             </li>

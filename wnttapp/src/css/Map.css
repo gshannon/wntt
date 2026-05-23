@@ -1,49 +1,33 @@
-.table {
-    margin-bottom: 0;
+/* Adjust opacity (0.0 to 1.0) */
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
-.loc-container {
-    display: grid;
-    grid-template-rows: repeat(3, 1fr);
-    grid-template-columns: 2fr 3fr;
-    background: var(--powder-blue);
-    font-size: 0.9rem;
+.instructions-container {
+    font-size: 0.95rem;
+    line-height: 1.2;
 }
 
-.loc-container > * {
-    background: white;
-    margin: 1px 0px;
-    padding: 5px 8px;
-    text-align: center;
-    align-content: center;
+.address-container {
+    background: var(--steel-blue);
+    /* border: 2px solid black; */
 }
 
-.loc-container .loc-label {
-    text-align: end;
+/* This is used internally by leaflet, needed to define map placement */
+.leaflet-container {
+    height: 60vh;
+    width: 90%;
 }
-
-.loc-container .loc-data {
-    font-weight: bold;
+@media (min-width: 676px) {
+    .leaflet-container {
+        height: 70vh;
+        width: 90%;
+    }
 }
-
-.map-vertical-buttons {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    /* align-items: center; */
-}
-
-.map-container {
-    height: 65vh;
-    width: 100%;
-}
-
-.map-text {
-    display: flex;
-    align-items: center;
-    color: black;
-    font-size: 1.1rem;
-    text-align: center;
+@media (min-width: 1200px) {
+    .leaflet-container {
+        width: 80%;
+    }
 }
 
 /* Without this, the markers transparent images get white backgrounds and a border */

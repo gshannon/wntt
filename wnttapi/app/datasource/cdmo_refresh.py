@@ -127,8 +127,8 @@ def refresh_wind(station, station_code):
 
 def build_timeline(last_dt_str, station) -> Timeline:
     # Note: we are working all in UTC here. time col in the db is ISO which is "+00:00" format. When
-    # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This mismatch
-    # breaks our code, so to keep things simple, just replace that here with a ZoneInfo.
+    # calling fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This means it
+    # only knows about tz offsets, not DST. Here we convert to a DST-aware ZoneInfo.
     last_dt_utc = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
     last_dt_local = last_dt_utc.astimezone(station.time_zone)
     now = datetime.now(tz=station.time_zone)

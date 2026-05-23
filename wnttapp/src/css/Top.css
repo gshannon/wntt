@@ -52,15 +52,6 @@
     cursor: pointer;
 }
 
-.conditions-centered {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--federal-blue);
-    font-size: 0.9rem;
-}
-
 .conditions-img {
     border: solid;
     border-color: var(--federal-blue);
@@ -111,7 +102,7 @@
     .logo {
         width: 100px;
     }
-    .conditions-centered {
+    .image-label {
         display: none;
     }
     .conditions-img {

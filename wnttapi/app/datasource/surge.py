@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import sentry_sdk
 from app import tzutil as tz
-from app.timeline import GraphTimeline
+from app.timeline import Timeline
 from django.core.cache import cache
 
 from ..models import Surge, SurgeBias
@@ -23,9 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_future_surge_data(
-    timeline: GraphTimeline,
+    timeline: Timeline,
     noaa_station_id: str,
     last_recorded_dt: datetime,
+    surge_file_dir=_default_surge_file_dir,
 ) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes which are past the
     last_recorded_dt param, if given, else the current system time. These are extracted from a csv file
@@ -38,21 +39,25 @@ def get_future_surge_data(
         last_recorded_dt (datetime): time of latest recorded tide, or None
 
     Returns:
-        dict: {
-            "surges": dict {<dt>: <surge>}
-            "bias": <calculated bias, or None>,
-            "bias2": <calculated bias2, or None>,
-            "bias3": <calculated bias3, or None>,
-        }
+    {
+        "filedate": filedate string,
+        "cycle": cycle int,
+        "file_creation_utc_iso": file download datetime as utc iso string,
+        "surges": { <dt>: <surge> }
+        "bias1": calculated_bias1,
+        "bias2": calculated_bias2,
+        "bias3": calculated_bias3,
+    }
 
     """
-    future_surge_dict = {}  # {dt: surge_value}
-
+    future_surge_dict = {}
     # Don't bother looking for data more than 6 days in the future.
     if timeline.end_dt >= timeline.now and timeline.start_dt < timeline.now + timedelta(
         days=6
     ):
-        future_surge_dict = get_or_load_projected_surge_file(noaa_station_id, timeline)
+        future_surge_dict = get_or_load_projected_surge_file(
+            noaa_station_id, timeline, surge_file_dir
+        )
         # If there's any recorded tides in the timeline, we don't want any data for those times.
         if last_recorded_dt is not None and len(future_surge_dict) > 0:
             future_surge_dict["surges"] = {
@@ -75,7 +80,7 @@ def get_future_surge_data(
 
 
 def get_best_historic_surge(
-    timeline: GraphTimeline, noaa_station_id: str, bias_number: int
+    timeline: Timeline, noaa_station_id: str, bias_number: int
 ) -> dict:
     data = {}
     if timeline.is_all_future():
@@ -122,7 +127,7 @@ def calculate_past_storm_surge(astro_dict: dict, water_dict: dict) -> dict:
 
 def get_or_load_projected_surge_file(
     noaa_station_id: str,
-    timeline: GraphTimeline,
+    timeline: Timeline,
     surge_file_dir=_default_surge_file_dir,
 ) -> dict:
     """
@@ -146,10 +151,16 @@ def get_or_load_projected_surge_file(
         surge_file_dir (str, optional): for testing, use to override standard surge file location.
 
     Returns:
-        dict: {
-            "surges": dict {<dt>: <surge>}
-            "bias": <calculated bias, or None>,
-        }
+
+    {
+        "filedate": filedate string,
+        "cycle": cycle int,
+        "file_creation_utc_iso": file download datetime as utc iso string,
+        "surges": { <dt>: <surge> }
+        "bias1": calculated_bias1,
+        "bias2": calculated_bias2,
+        "bias3": calculated_bias3,
+    }
     """
     logger.debug(f"looking in surge cache for station {noaa_station_id}...")
 
@@ -164,7 +175,7 @@ def get_or_load_projected_surge_file(
 
     # Find the last file available for this noaa station. Normally
     # there should be just one file there.
-    pattern = r"(\d+)-(\d+)-(\d\d).csv$"  # e.t. 8419317-20260213-06.csv
+    pattern = r"(\d+)-(\d+)-(\d\d).csv$"  # e.g. 8419317-20260213-06.csv
     filepath, filedate, cycle = None, None, None
     with os.scandir(surge_file_dir) as entries:
         for e in entries:
@@ -173,10 +184,13 @@ def get_or_load_projected_surge_file(
             )  # returns list of tuples, not None if no match
             if len(matches) == 1 and matches[0][0] == noaa_station_id:
                 # Got it. Extract the filedate & cycle from the file name.
-                filepath = os.path.join(surge_file_dir, e.name)
                 filedate, cycle = (
                     matches[0][1],
                     int(matches[0][2]),
+                )
+                filepath = os.path.join(surge_file_dir, e.name)
+                file_creation_utc = datetime.fromtimestamp(
+                    os.path.getctime(filepath), tz=tz.utc
                 )
 
     logger.debug(
@@ -192,15 +206,15 @@ def get_or_load_projected_surge_file(
             )
             return {}
         logger.error(f"No file for {noaa_station_id}, forced to use cache")
-        return entry.get("data", {})
+        return entry
 
     # If we have already cached this file, just return that.
     if entry is not None:
         if filedate == entry.get("filedate") and cycle == entry.get("cycle"):
             logger.debug(
-                f"cache match: {noaa_station_id}, {filedate}/{cycle} {min(entry['data'])} - {max(entry['data'])} "
+                f"cache match: {noaa_station_id}, {filedate}/{cycle} {min(entry['surges'])} - {max(entry['surges'])} "
             )
-            return entry["data"]
+            return entry
         else:
             # There's a newer file for this cached station. We'll be replacing with a new one..
             logger.debug(
@@ -283,6 +297,9 @@ def get_or_load_projected_surge_file(
 
     # Cache the data. We'll use a TTL of 48 hours to handle cases where download fails a few times.
     payload = {
+        "filedate": filedate,
+        "cycle": cycle,
+        "file_creation_utc_iso": file_creation_utc.isoformat(),
         "surges": surges_dict,
         "bias1": calculated_bias1,
         "bias2": calculated_bias2,
@@ -290,7 +307,7 @@ def get_or_load_projected_surge_file(
     }
     cache.set(
         noaa_station_id,
-        {"filedate": filedate, "cycle": cycle, "data": payload},
+        payload,
         timeout=60 * 60 * 48,
     )
     logger.debug(

@@ -82,7 +82,7 @@ export const getData = (station) => {
                         For dates in the past, you see Predicted Tide, Observed Tide, and wind data.
                         Recorded Storm Surge is the difference between Predicted Tide and Observed
                         Tide, and is an indication of how much the weather affected the astronomical
-                        tide predictions. If you have set a custom elevation, that is shown also.
+                        tide predictions. If you have set a custom location, that is shown also.
                         This helps you visualize the potential risk posed by the tides.
                     </span>
                 )
@@ -102,22 +102,22 @@ export const getData = (station) => {
                 )
             },
         },
-        ...(!isSmallScreen()
-            ? [
-                  {
-                      img: toggle,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  In the legend, {clickOrTap} certain data lines to toggle their
-                                  visibility.
-                              </span>
-                          )
-                      },
-                  },
-              ]
-            : []),
+        ...(!isSmallScreen() ?
+            [
+                {
+                    img: toggle,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                In the legend, {clickOrTap} certain data lines to toggle their
+                                visibility.
+                            </span>
+                        )
+                    },
+                },
+            ]
+        :   []),
         {
             img: elevation,
             render: () => {
@@ -133,82 +133,82 @@ export const getData = (station) => {
                 )
             },
         },
-        ...(!isSmallScreen()
-            ? [
-                  {
-                      img: download,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  {clickOrTapCap} the camera icon to download a printable graph
-                                  image file.
-                              </span>
-                          )
-                      },
-                  },
-              ]
-            : []),
-        ...(!isSmallScreen() && !isTouchScreen
-            ? [
-                  {
-                      img: zoomArea,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  To zoom into the graph, {clickOrTap} and drag over an area, or use
-                                  the scroll wheel or touch pad.
-                              </span>
-                          )
-                      },
-                  },
-                  {
-                      img: panMode,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  When zoomed, you can {clickOrTap} the Pan Mode button to pan.
-                              </span>
-                          )
-                      },
-                  },
-                  {
-                      img: panning,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  In Pan mode, {clickOrTap} and drag up or down in the graph to pan.
-                              </span>
-                          )
-                      },
-                  },
-                  {
-                      img: zoomMode,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  In Pan mode, you can {clickOrTap} the Zoom button to zoom more.
-                              </span>
-                          )
-                      },
-                  },
-                  {
-                      img: reset,
-                      cls: 'pic-width-60-90',
-                      render: () => {
-                          return (
-                              <span>
-                                  To reset the graph to its original state, {clickOrTap} the Reset
-                                  icon.
-                              </span>
-                          )
-                      },
-                  },
-              ]
-            : []),
+        ...(!isSmallScreen() ?
+            [
+                {
+                    img: download,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                {clickOrTapCap} the camera icon to download a printable graph image
+                                file.
+                            </span>
+                        )
+                    },
+                },
+            ]
+        :   []),
+        ...(!isSmallScreen() && !isTouchScreen ?
+            [
+                {
+                    img: zoomArea,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                To zoom into the graph, {clickOrTap} and drag over an area, or use
+                                the scroll wheel or touch pad.
+                            </span>
+                        )
+                    },
+                },
+                {
+                    img: panMode,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                When zoomed, you can {clickOrTap} the Pan Mode button to pan.
+                            </span>
+                        )
+                    },
+                },
+                {
+                    img: panning,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                In Pan mode, {clickOrTap} and drag up or down in the graph to pan.
+                            </span>
+                        )
+                    },
+                },
+                {
+                    img: zoomMode,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                In Pan mode, you can {clickOrTap} the Zoom button to zoom more.
+                            </span>
+                        )
+                    },
+                },
+                {
+                    img: reset,
+                    cls: 'pic-width-60-90',
+                    render: () => {
+                        return (
+                            <span>
+                                To reset the graph to its original state, {clickOrTap} the Reset
+                                icon.
+                            </span>
+                        )
+                    },
+                },
+            ]
+        :   []),
     ]
 }

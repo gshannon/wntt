@@ -1,3 +1,4 @@
+/* eslint-disable */
 import './css/Map.css'
 import { useEffect, useEffectEvent, useMemo, useRef, useContext, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
@@ -9,64 +10,70 @@ import Container from 'react-bootstrap/Container'
 import { Col, Row } from 'react-bootstrap'
 import { RedPinIcon } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
-import AddressPopup from './AddressPopup'
-import { Page } from './utils'
 import { AppContext } from './AppContext'
-import Tutorial from './Tutorial'
-import Overlay from './Overlay'
-import { getData } from './tutorials/map'
 import * as mu from './mapUtils'
 import * as storage from './storage'
 import useElevationData from './useElevationData'
 import ErrorBlock from './ErrorBlock'
+import AddressForm from './AddressForm'
 
-const WaterStationEmoji = '\u{1F537}'
+const WaterStationEmoji = '\u{1F53B}'
 const WeatherStationEmoji = '\u{1F536}'
-const NoaaStationEmoji = '\u{1F53B}'
 
-export default function Map() {
+export default function Map({ onMapClose, saveMapRef }) {
     const ctx = useContext(AppContext)
 
     const storedOptions = storage.getPermanentStorage(ctx.station.id)
     const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
 
-    // This is used when user clicks on the map or finds by address, while we look up the elevation.
+    // Pending values are used when user clicks on the map or finds by address, before they add it to the graph.
     const [pendingMarkerLocation, setPendingMarkerLocation] = useState(null)
-    const [markerLocation, setMarkerLocation] = useState(stationOptions.markerLocation)
-    const [markerElevationNav, setMarkerElevationNav] = useState(stationOptions.markerElevationNav)
+    const [pendingElevationNav, setPendingElevationNav] = useState(null)
     const [mapType, setMapType] = useState(stationOptions.mapType)
+    const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
     const [mapCenter, setMapCenter] = useState(stationOptions.mapCenter)
     const [zoom, setZoom] = useState(stationOptions.zoom)
 
-    const [showAddressPopup, setShowAddressPopup] = useState(false)
-    const [showTut, setShowTut] = useState(false)
     const markerRef = useRef(null)
+    const mapRef = useRef(null)
 
-    const { isLoading, data, error: queryError } = useElevationData(pendingMarkerLocation)
+    // If they've selected a new location or done address lookup, get the elevation.
+    const {
+        isLoading,
+        data: elevation,
+        error: queryError,
+    } = useElevationData(pendingMarkerLocation)
 
-    if (data != null) {
-        setMarkerLocation(pendingMarkerLocation)
-        setPendingMarkerLocation(null)
-        setMarkerElevationNav(data)
+    if (elevation != null && elevation !== pendingElevationNav) {
+        setPendingElevationNav(elevation)
         setMapCenter(pendingMarkerLocation) // recenter on looked up location
+        // TODO: Consider zooming in also, but only after address lookup, not after map click/drag.
     }
 
     const addtoGraph = () => {
-        ctx.onCustomElevationSet(markerElevationNav)
-        ctx.gotoPage(Page.Graph) // start tracking elevation, goto graph
+        ctx.onCustomElevationSet(pendingElevationNav, pendingMarkerLocation)
+        resetPending()
+        onMapClose()
     }
 
-    const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
+    const cancel = () => {
+        resetPending()
+        onMapClose()
+    }
 
     const removeMarker = () => {
-        ctx.onCustomElevationSet(null)
-        setMarkerLocation(null)
-        setMarkerElevationNav(null)
+        ctx.onCustomElevationSet(null, null)
+        resetPending()
+        onMapClose()
+    }
+
+    const resetPending = () => {
+        setPendingElevationNav(null)
         setPendingMarkerLocation(null)
     }
 
-    const handleMapTypeChange = (event) => {
-        setMapType(event.target.value)
+    const handleMapTypeToggle = (event) => {
+        setMapType(mapType === 'basic' ? 'sat' : 'basic')
     }
 
     // Set the map marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
@@ -86,7 +93,7 @@ export default function Map() {
                 }
             },
         }),
-        []
+        [],
     )
 
     const MapClickHandler = () => {
@@ -104,30 +111,13 @@ export default function Map() {
         return null
     }
 
-    const onModalClose = () => {
-        setShowAddressPopup(false)
-        setShowTut(false)
-    }
-
-    const elevationLabelContent = () => {
-        if (isLoading) {
-            return <BarLoader loading={true} color={'green'} />
-        }
-        if (markerElevationNav != null) {
-            return <>{ctx.station.navd88ToMllw(markerElevationNav) + ' ft MLLW'}</>
-        }
-        return <>-</>
-    }
-
     // Keep the local storage of permanent station options in sync.
-    // We own all the values except customElevationNav, so we leave that alone.
+    // We own all the values except the 2 custom* fields, so we leave them alone.
     const onValueChange = useEffectEvent(() => {
         const storedOptions = storage.getPermanentStorage(ctx.station.id)
         const curOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
         storage.setPermanentStorage(ctx.station.id, {
             ...curOptions,
-            markerLocation,
-            markerElevationNav,
             mapCenter,
             mapType,
             zoom,
@@ -136,11 +126,17 @@ export default function Map() {
 
     useEffect(() => {
         onValueChange()
-    }, [markerLocation, markerElevationNav, mapCenter, mapType, zoom])
+    }, [mapCenter, mapType, zoom])
+
+    useEffect(() => {
+        if (mapRef.current) {
+            saveMapRef(mapRef.current)
+        }
+    }, [mapRef, saveMapRef])
 
     const toolTipCfg = mu.buildTooltipLocations(ctx.station)
 
-    const stationMarker = (key, loc, symbol, title, name, id) => {
+    const stationMarker = (key, loc, symbol, title) => {
         return (
             <Marker draggable={false} position={loc} icon={mu.stationIcon(symbol)}>
                 <LeafletTooltip
@@ -149,8 +145,6 @@ export default function Map() {
                     direction={toolTipCfg[key]['dir']}
                     offset={toolTipCfg[key]['offset']}>
                     {title}
-                    <br />
-                    {name} ({id})
                 </LeafletTooltip>
             </Marker>
         )
@@ -175,171 +169,162 @@ export default function Map() {
             return <></>
         }
     }
+
     return (
         <Container>
             <Row className='py-2'>
-                <Col className='px-0 d-flex justify-content-center align-items-center'>
-                    <div className='loc-container'>
-                        <div className='loc-label'>Latitude:</div>
-                        <div className='loc-data nowrap'>
-                            {markerLocation ? markerLocation.lat.toFixed(6) + ' º' : '-'}
-                        </div>
-                        <div className='loc-label'>Longitude:</div>
-                        <div className='loc-data nowrap'>
-                            {markerLocation ? markerLocation.lng.toFixed(6) + ' º' : '-'}
-                        </div>
-                        <div className='loc-label'>Elevation:</div>
-                        <div className='loc-data'>{elevationLabelContent()}</div>
+                <Col className='col-6 px-0 d-flex flex-column justify-content-center align-items-center'>
+                    <div className='instructions-container text-start mx-2'>
+                        {
+                            <Instructions
+                                isLoading={isLoading}
+                                pendingElevationNav={pendingElevationNav}
+                            />
+                        }
+                    </div>
+                    <div className='text-center'>
+                        <Button
+                            variant='custom-primary'
+                            className='mt-2 mb-0 mx-1'
+                            onClick={() => addtoGraph()}
+                            disabled={
+                                !pendingElevationNav ||
+                                pendingElevationNav > ctx.station.maxCustomElevationNavd88()
+                            }>
+                            Graph
+                        </Button>
+                        <Button
+                            variant='custom-primary'
+                            className='mt-2 mb-0 mx-1'
+                            onClick={() => removeMarker()}
+                            disabled={!ctx.customElevationNav}>
+                            Clear
+                        </Button>
+                        <Button
+                            variant='custom-primary'
+                            className='mt-2 mb-0 mx-1'
+                            onClick={() => cancel()}>
+                            Cancel
+                        </Button>
                     </div>
                 </Col>
-                <Col className='px-0 align-self-center'>
-                    <Row className='mx-0'>
-                        <Col className='col-12 text-center'>
-                            <Overlay
-                                text='Add your custom elevation to the graph and return
-                                        to the graph page.'
-                                placement='top'
-                                contents={
-                                    <Button
-                                        variant='custom-primary'
-                                        className='mt-2 mb-0 mx-1'
-                                        onClick={() => addtoGraph()}
-                                        disabled={
-                                            !markerElevationNav ||
-                                            markerElevationNav === ctx.customElevationNav ||
-                                            markerElevationNav >
-                                                ctx.station.maxCustomElevationNavd88()
-                                        }>
-                                        Add to Graph
-                                    </Button>
-                                }></Overlay>
-                            <Overlay
-                                text='Remove your custom marker from the map and the graph.'
-                                placement='top'
-                                contents={
-                                    <Button
-                                        variant='custom-primary'
-                                        className='mt-2 mb-0'
-                                        onClick={() => removeMarker()}
-                                        disabled={!markerLocation}>
-                                        Remove Marker
-                                    </Button>
-                                }></Overlay>
-                        </Col>
-                    </Row>
-                    <Row className='mx-0'>
-                        <Col className='text-center fw-bold'>Map Style</Col>
-                    </Row>
-                    <Row className='mx-0'>
-                        <Col className='col-6 text-end'>
-                            <Form.Check
-                                inline
-                                type='radio'
-                                label='Basic'
-                                value='basic'
-                                checked={mapType === 'basic'}
-                                onChange={handleMapTypeChange}
-                            />
-                        </Col>
-                        <Col className='col-6'>
-                            <Form.Check
-                                inline
-                                type='radio'
-                                label='Satellite'
-                                value='sat'
-                                checked={mapType === 'sat'}
-                                onChange={handleMapTypeChange}
-                            />
-                        </Col>
-                    </Row>
-                </Col>
-                <Col className='d-flex justify-content-center align-items-center'>
-                    <Row>
-                        <Col className='map-vertical-buttons'>
-                            <a className='pointer' onClick={() => setShowAddressPopup(true)}>
-                                Address&nbsp;Lookup
-                            </a>
-                            <a className='my-1 pointer' onClick={() => ctx.gotoPage(Page.Graph)}>
-                                Return&nbsp;to Graph
-                            </a>
-                            <Overlay
-                                text='Open the Map page tutorial in a popup window.'
-                                placement='top'
-                                contents={
-                                    <Button
-                                        variant='primary'
-                                        className='my-1'
-                                        onClick={() => setShowTut(true)}>
-                                        Map Tutorial
-                                    </Button>
-                                }></Overlay>
-                        </Col>
-                    </Row>
+                <Col className='px-0 align-self-center flex-column'>
+                    <div className='address-container'>
+                        <AddressForm
+                            setPendingMarkerLocation={setPendingMarkerLocation}
+                            station={ctx.station}
+                        />
+                    </div>
+                    <div className='mx-0'>
+                        <Form.Switch
+                            type='switch'
+                            label='Satellite View'
+                            checked={mapType === 'sat'}
+                            onChange={handleMapTypeToggle}
+                        />
+                    </div>
                 </Col>
             </Row>
             <ErrorSection />
             <Row className='justify-content-center mt-1'>
                 <MapContainer
                     center={mapCenter}
-                    maxBounds={ctx.station.mapBounds}
+                    boundsOptions={{ maxZoom: mu.MaxZoom }}
                     zoom={zoom}
-                    minZoom={mu.MinZoom}
-                    maxZoom={mu.MaxZoom}
-                    className='map-container'>
-                    <ChangeView center={mapCenter} zoom={zoom} />
+                    ref={mapRef}>
                     <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
+                    <ChangeView center={mapCenter} zoom={zoom} />
                     <MapClickHandler />
-                    {stationMarker(
-                        'wq',
-                        ctx.station.swmpLocation,
-                        WaterStationEmoji,
-                        'Water Quality Station:',
-                        ctx.station.waterStationName,
-                        ctx.station.id
-                    )}
+                    {stationMarker('wq', ctx.station.swmpLocation, WaterStationEmoji, 'Tide Gauge')}
                     {stationMarker(
                         'met',
                         ctx.station.weatherLocation,
                         WeatherStationEmoji,
-                        'Meteorological Station:',
-                        ctx.station.weatherStationName,
-                        ctx.station.weatherStationId
+                        'Weather Station',
                     )}
-                    {stationMarker(
-                        'noaa',
-                        ctx.station.noaaStationLocation,
-                        NoaaStationEmoji,
-                        'NOAA Station:',
-                        ctx.station.noaaStationName,
-                        ctx.station.noaaStationId
-                    )}
-                    {markerLocation && (
+                    {(pendingMarkerLocation || ctx.customLocation) && (
                         <Marker
                             draggable={true}
-                            position={markerLocation}
+                            position={pendingMarkerLocation || ctx.customLocation}
                             icon={RedPinIcon}
                             eventHandlers={markerEventHandlers}
                             ref={markerRef}>
-                            <LeafletTooltip opacity={0.75} direction={'right'} offset={[30, -27]}>
-                                Custom Elevation:{' '}
-                                {markerElevationNav
-                                    ? ctx.station.navd88ToMllw(markerElevationNav)
-                                    : '-'}
+                            <LeafletTooltip
+                                permanent
+                                opacity={0.75}
+                                direction={'right'}
+                                offset={[30, -27]}>
+                                Custom Location:{' '}
+                                {isLoading ?
+                                    '-'
+                                :   ctx.station.navd88ToMllw(
+                                        pendingElevationNav || ctx.customElevationNav,
+                                    ) + ' ft'
+                                }
                             </LeafletTooltip>
                         </Marker>
                     )}
                 </MapContainer>
             </Row>
-            {showAddressPopup && (
-                <AddressPopup
-                    setPendingMarkerLocation={setPendingMarkerLocation}
-                    onClose={onModalClose}
-                    station={ctx.station}
-                />
-            )}
-            {showTut && (
-                <Tutorial onClose={onModalClose} data={getData(ctx.station)} title='Map Tutorial' />
-            )}
         </Container>
     )
+}
+
+function Instructions({ pendingElevationNav, isLoading }) {
+    const ctx = useContext(AppContext)
+    const Cleartext = () => {
+        return (
+            <>
+                Click <b>Clear</b> to stop showing a custom location on the graph.
+            </>
+        )
+    }
+    if (isLoading) {
+        return <BarLoader loading={true} color={'green'} />
+    }
+
+    if (pendingElevationNav) {
+        const elevMllw = ctx.station.navd88ToMllw(pendingElevationNav)
+        if (pendingElevationNav > ctx.station.maxCustomElevationNavd88()) {
+            return (
+                <>
+                    <p>
+                        The selected location is at <b>{elevMllw} ft</b>, which is above the maximum
+                        elevation to be included on the graph (
+                        {ctx.station.maxCustomElevationMllw()} ft).
+                    </p>
+                    {ctx.customElevationNav && <Cleartext />}
+                </>
+            )
+        } else {
+            return (
+                <>
+                    <p>
+                        The selected location is at <b>{elevMllw} ft</b>.{' '}
+                    </p>
+                    Click the <b>Graph</b> button to add this to the graph as &quot;Custom
+                    Location&quot;. {ctx.customElevationNav && <Cleartext />}
+                </>
+            )
+        }
+    } else if (ctx.customElevationNav) {
+        return (
+            <>
+                <p>
+                    Your chosen elevation is{' '}
+                    <b>{ctx.station.navd88ToMllw(ctx.customElevationNav)} ft</b>. You may change it
+                    by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
+                    <b>looking up an address</b>.
+                </p>{' '}
+                Click <b>Clear</b> to stop showing a custom location on the graph.
+            </>
+        )
+    } else {
+        return (
+            <>
+                <b>Click on the map</b> or <b>look up by address</b> to find a location whose
+                elevation can be included on the graph.
+            </>
+        )
+    }
 }

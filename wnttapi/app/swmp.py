@@ -1,9 +1,9 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app import util
-from app.datasource import astrotide, cdmo, syzygy
+from app.datasource import astrotide, cdmo, surge, syzygy
 from app.hilo import Hilo
 from app.station import Station
 from app.timeline import Timeline
@@ -37,18 +37,25 @@ def get_latest_conditions(station: Station) -> dict:
         station, future_start_date, future_end_date
     )
     moon_dict = syzygy.get_current_moon_phases(station.time_zone)
+    surge_timeline = Timeline(
+        tz.now(station.time_zone), tz.now(station.time_zone) + timedelta(days=1)
+    )
+    surge_dict = surge.get_future_surge_data(
+        surge_timeline, station.noaa_station_id, None
+    )
 
     return extract_data(
         wind_dict,
         water_dict,
         astro_dict,
+        surge_dict,
         moon_dict,
         station.time_zone,
     )
 
 
 def extract_data(
-    wind_dict, water_dict, astro_dict, moon_dict, tzone: ZoneInfo = None
+    wind_dict, water_dict, astro_dict, surge_dict, moon_dict, tzone: ZoneInfo = None
 ) -> dict:
     # Get the most recent 2 tide readings, and compute whether rising or falling. Since these are dense dicts,
     # we don't have to worry about missing data.  All dict keys are in chronological order.
@@ -81,10 +88,14 @@ def extract_data(
     # Get the time and type of the next high or low tide prediction.
     # dict is already sorted by datetime, so we just need to get the first real_dt that's in the future.
     futures = [v for v in astro_dict.values() if v.real_dt > tz.now(tzone)]
-    next_tide_dt = futures[0].real_dt if len(futures) > 0 else None
-    next_tide_type = (
-        ("H" if futures[0].hilo == Hilo.HIGH else "L") if len(futures) > 0 else None
-    )
+    if len(futures) > 0:
+        next_tide_dt = futures[0].real_dt
+        next_tide_str = f"{futures[0].value:.2f}"
+        next_tide_type = "H" if futures[0].hilo == Hilo.HIGH else "L"
+    else:
+        next_tide_dt = next_tide_type = next_tide_str = None
+
+    surge_str, creation_dt = get_surge_info(surge_dict, next_tide_dt)
 
     return {
         "wind_speed": wind_speed_str,
@@ -101,5 +112,38 @@ def extract_data(
         "next_phase": moon_dict["nextphase"],
         "next_phase_dt": moon_dict["nextdt"],
         "next_tide_dt": next_tide_dt,
+        "next_tide_str": next_tide_str,
         "next_tide_type": next_tide_type,
+        "next_tide_surge_str": surge_str,
+        "surge_time": creation_dt,
     }
+
+
+def get_surge_info(surge_dict, next_tide_dt) -> tuple[str, datetime]:
+    # Get the storm surge value associated with the tide time, but only if it's within one hour.
+    # Returns estimated surge value as a string, and utc datetime
+    surge_str = None
+    if next_tide_dt is None or "surges" not in surge_dict:
+        logger.warning("Insufficent data to determine surge")
+        return surge_str
+
+    best_delta = None
+    best_dt_match = None
+    best_surge_match = None
+    for dt in surge_dict["surges"]:
+        delta_secs = abs((dt - next_tide_dt).total_seconds())
+        if delta_secs <= 3600 and (best_delta is None or delta_secs < best_delta):
+            best_delta = delta_secs
+            best_dt_match = dt
+            best_surge_match = surge_dict["surges"][dt]
+
+    if best_delta is None:
+        logger.debug(f"No surge value was found for tide date {next_tide_dt}")
+        return surge_str
+
+    logger.debug(
+        f"Storm surge: {best_surge_match}, surge dt {best_dt_match}, tide_dt {next_tide_dt}"
+    )
+    return f"{best_surge_match:.2f}", datetime.fromisoformat(
+        surge_dict["file_creation_utc_iso"]
+    )

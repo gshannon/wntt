@@ -58,7 +58,7 @@ export default function Glossary() {
                     point of reference. MLLW is the datum used by this application for all land and
                     sea elevations.
                 </Entry>
-                <Entry title='Custom Elevation'>
+                <Entry title='Custom Location'>
                     The elevation relative to MLLW of your selected location on the Map page. This
                     is an elevation you are interested in showing on the graph for purposes of
                     comparison to tide data. If you enter an address to look up, it is sent to{' '}

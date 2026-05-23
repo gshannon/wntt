@@ -88,6 +88,15 @@ a:hover {
     pointer-events: none;
 }
 
+.image-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--federal-blue);
+    font-size: 0.9rem;
+}
+
 /* Smaller button text on smaller screens */
 @media (max-width: 767px) {
     .btn {

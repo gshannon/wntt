@@ -25,14 +25,11 @@ export const satelliteMap = {
 export const buildTooltipLocations = (station) => {
     const offsets = {
         top: [9, -10],
-        left: [-10, 5],
-        right: [10, -5],
         bottom: [9, 30],
     }
     // These are the locations of the 3 station markers.
     const locs = [
         { key: 'wq', val: station.swmpLocation },
-        { key: 'noaa', val: station.noaaStationLocation },
         { key: 'met', val: station.weatherLocation },
     ]
     // We sort them by latitude, high to low (would be low to high in southern hemisphere)
@@ -40,13 +37,7 @@ export const buildTooltipLocations = (station) => {
     const data = {}
     // Highest latitude gets tooltip on top.
     data[locs[0].key] = { dir: 'top', offset: offsets.top }
-    // Middle latitude gets tooltip on right if its longitude is greater (eastward), else left
-    const startRight = locs[1].val.lng > locs[0].val.lng
-    data[locs[1].key] = startRight
-        ? { dir: 'right', offset: offsets.right }
-        : { dir: 'left', offset: offsets.left }
-    // Lowest latitude gets tooltop on bottom.
-    data[locs[2].key] = { dir: 'bottom', offset: offsets.bottom }
+    data[locs[1].key] = { dir: 'bottom', offset: offsets.bottom }
     return data
 }
 

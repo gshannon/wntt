@@ -38,12 +38,6 @@ export default function Top({ page, gotoPage }) {
                     active={page === Page.Graph}>
                     Graph
                 </NavLink>
-                <NavLink
-                    className={stationSelected ? '' : 'disabled'}
-                    onClick={() => gotoPage(Page.Map)}
-                    active={page === Page.Map}>
-                    Map
-                </NavLink>
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavLink>
@@ -67,12 +61,6 @@ export default function Top({ page, gotoPage }) {
                     onClick={() => gotoPage(Page.Graph)}
                     active={page === Page.Graph}>
                     Graph
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                    className={stationSelected ? '' : 'disabled'}
-                    onClick={() => gotoPage(Page.Map)}
-                    active={page === Page.Map}>
-                    Map
                 </NavDropdown.Item>
                 <NavDropdown.Item onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
@@ -122,7 +110,7 @@ export default function Top({ page, gotoPage }) {
                                         width={75}
                                         alt='Latest conditions'
                                     />
-                                    <div className='conditions-centered'>Latest Conditions</div>
+                                    <div className='image-label'>Latest Conditions</div>
                                 </div>
                             }
                         />
