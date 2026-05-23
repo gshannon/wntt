@@ -10,7 +10,7 @@ from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
 
-from ..models import Water, Wind
+from ..models import Water, Wind, get_station
 from .soap import SoapClient
 
 
@@ -73,10 +73,12 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         start_param = start_dt.astimezone(tz.utc).isoformat()
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
-        queryset = Water.objects.filter(time__range=(start_param, end_param)).order_by(
-            "time"
+        queryset = Water.objects.filter(
+            station__exact=get_station(station.id), time__range=(start_param, end_param)
+        ).order_by("time")
+        logger.debug(
+            f"Found {queryset.count()} rows in db for {station.id} from {start_dt} to {end_dt}"
         )
-        logger.debug(f"Found {queryset.count()} rows in db for {start_dt} to {end_dt}")
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
@@ -123,11 +125,11 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         start_param = start_dt.astimezone(tz.utc).isoformat()
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
-        queryset = Wind.objects.filter(time__range=(start_param, end_param)).order_by(
-            "time"
-        )
+        queryset = Wind.objects.filter(
+            station__exact=get_station(station.id), time__range=(start_param, end_param)
+        ).order_by("time")
         logger.debug(
-            f"Found {queryset.count()} rows in db for {start_param} to {end_param}"
+            f"Found {queryset.count()} rows in db for {station.id} from {start_dt} to {end_dt}"
         )
         if queryset.count() == 0:
             return wind_dict
@@ -453,7 +455,11 @@ def find_all_hilos(
     # a range of times surrounding the predicted value.
     # TODO: Handle edge case where observed high or low is missing and we falsely report a nearby value instead.
     for dt, pred in astro_pred_dict.items():
-        if len(past_padded_timeline) == 0 or dt > past_padded_timeline[-1]:
+        if (
+            len(past_padded_timeline) == 0
+            or dt < past_padded_timeline[0]
+            or dt > past_padded_timeline[-1]
+        ):
             hilomap[dt] = pred
             continue
         # Find the time with the highest or lowest observed value within 1 hour of the predicted time.
