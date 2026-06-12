@@ -87,11 +87,15 @@ def extract_data(
 
     # Get the time and type of the next high or low tide prediction.
     # dict is already sorted by datetime, so we just need to get the first real_dt that's in the future.
-    futures = [v for v in astro_dict.values() if v.real_dt > tz.now(tzone)]
+    futures = [
+        v
+        for v in astro_dict.values()
+        if v.real_dt > tz.now(tzone) and v.hilo == Hilo.HIGH
+    ]
     if len(futures) > 0:
         next_tide_dt = futures[0].real_dt
         next_tide_str = f"{futures[0].value:.2f}"
-        next_tide_type = "H" if futures[0].hilo == Hilo.HIGH else "L"
+        next_tide_type = "H"
     else:
         next_tide_dt = next_tide_type = next_tide_str = None
 
