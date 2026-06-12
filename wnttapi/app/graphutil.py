@@ -99,6 +99,12 @@ def get_graph_data(
         max(water_dict) if len(water_dict) > 0 else None,
     )
 
+    # Before we start building plots, add all syzygy events to the timeline
+    # so they can be shown at their precise times.
+    if len(syzygy_dict) > 0:
+        for dt in syzygy_dict:
+            timeline.add_time(dt)
+
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.

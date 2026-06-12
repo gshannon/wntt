@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import Enum
 
 """Convenience classes to manage up to 6 different types of auxiliary data, keyed by datetime. Keys are kept short
-to reduce the size of the json payload.
+to reduce the size of the json payload.  Auxiliary data is additional data used for labels, such as wind direction 
+as a numeric for arrow display, and string for label, and "High" or "Low" labels for high and low tide values.
 """
 
 

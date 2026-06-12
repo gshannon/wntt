@@ -1,27 +1,12 @@
-import NewMoonImg from './images/util/moon-new.png'
-import FirstQuarterImg from './images/util/moon-1q.png'
-import FullMoonImg from './images/util/moon-full.png'
-import LastQuarterImg from './images/util/moon-3q.png'
-import PerigeeImg from './images/util/perigee.png'
-import PerihelionImg from './images/util/perihelion.png'
 import { ScreenSize, getScreenSize } from './utils'
-
-// These must be kept in sync with the API
-export const NewMoon = 'NM'
-export const FirstQuarter = 'FQ'
-export const FullMoon = 'FM'
-export const LastQuarter = 'LQ'
-export const Perigee = 'PG'
-export const Perihelion = 'PH'
+import { getSyzygyUrl } from './Syzygy'
 
 export const Dimension = Object.freeze({
     DateTime: 'dt',
     RecordTide: 'rec',
-    HighestAnnual: 'highann',
     Syzygy: 'syzygy',
     SyzygyUrl: 'syurl',
     CustomElevation: 'custom-elevation',
-    MeanHighWater: 'mean-high-water',
     // These must match the data property name returned from the back end.
     HistTides: 'hist-tides',
     AstroTides: 'astro-tides',
@@ -34,11 +19,9 @@ export const Dimension = Object.freeze({
     ProjectedStormSurge: 'future-surge',
 })
 
-// For uniquely identifying traces in event handling. Order doesn't matter, so long as they are unique.
+// For uniquely identifying traces in event handling. Values don't matter, so long as they are unique.
 export const LegendId = Object.freeze({
     RecordTide: 1,
-    HighestAnnualPredicted: 2,
-    MeanHighWater: 3,
     CustomElevation: 4,
     ObservedTide: 5,
     PredictedTide: 6,
@@ -56,35 +39,22 @@ export const LegendId = Object.freeze({
     XPastStormSurgeCheckBias2: 18,
 })
 
-export const buildLocalDataSet = (
-    timeline,
-    syzygyData,
-    highestAnnualPrediction,
-    station,
-    customElevationMllw,
-) => {
+export const buildLocalDataSet = (timeline, syzygyData, station, customElevationMllw) => {
     // Build a second dataset for data that's better built here than the backend.
     const localDims = [
         { name: Dimension.DateTime, type: 'time' },
         { name: Dimension.RecordTide, type: 'number' },
-        { name: Dimension.HighestAnnual, type: 'number' },
-        { name: Dimension.MeanHighWater, type: 'number' },
         ...(customElevationMllw ? [Dimension.CustomElevation] : []),
         ...(syzygyData ? [Dimension.Syzygy, Dimension.SyzygyUrl] : []),
     ]
     const localBlob = timeline.map((dt) => {
-        const row = [
-            dt,
-            station.recordTideMllw(),
-            highestAnnualPrediction,
-            station.meanHighWaterMllw,
-        ]
+        const row = [dt, station.recordTideMllw()]
         if (customElevationMllw) {
             row.push(customElevationMllw)
         }
         if (syzygyData) {
             if (dt in syzygyData) {
-                const code = syzygyData[dt][0]
+                const code = syzygyData[dt]
                 row.push(...[1, getSyzygyUrl(code)])
             } else {
                 row.push(...[null, null])
@@ -94,26 +64,6 @@ export const buildLocalDataSet = (
     })
 
     return { source: localBlob, dimensions: localDims }
-}
-
-export const getSyzygyUrl = (code) => {
-    const prefix = 'image://'
-    switch (code) {
-        case NewMoon:
-            return prefix + NewMoonImg
-        case FirstQuarter:
-            return prefix + FirstQuarterImg
-        case FullMoon:
-            return prefix + FullMoonImg
-        case LastQuarter:
-            return prefix + LastQuarterImg
-        case Perigee:
-            return prefix + PerigeeImg
-        case Perihelion:
-            return prefix + PerihelionImg
-        default:
-            return null
-    }
 }
 
 export const getResponsiveGridDefs = (showingWind) => {

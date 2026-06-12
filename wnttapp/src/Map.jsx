@@ -172,7 +172,7 @@ export default function Map({ onMapClose, saveMapRef }) {
 
     return (
         <Container>
-            <Row className='py-2'>
+            <Row className='py-2 mx-0'>
                 <Col className='col-6 px-0 d-flex flex-column justify-content-center align-items-center'>
                     <div className='instructions-container text-start mx-2'>
                         {
@@ -209,13 +209,13 @@ export default function Map({ onMapClose, saveMapRef }) {
                     </div>
                 </Col>
                 <Col className='px-0 align-self-center flex-column'>
-                    <div className='address-container'>
+                    <div>
                         <AddressForm
                             setPendingMarkerLocation={setPendingMarkerLocation}
                             station={ctx.station}
                         />
                     </div>
-                    <div className='mx-0'>
+                    <div className='mx-0 mt-4 d-flex justify-content-end'>
                         <Form.Switch
                             type='switch'
                             label='Satellite View'
@@ -226,7 +226,7 @@ export default function Map({ onMapClose, saveMapRef }) {
                 </Col>
             </Row>
             <ErrorSection />
-            <Row className='justify-content-center mt-1'>
+            <Row className='justify-content-center mt-1 mx-0'>
                 <MapContainer
                     center={mapCenter}
                     boundsOptions={{ maxZoom: mu.MaxZoom }}

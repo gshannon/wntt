@@ -70,33 +70,28 @@ def get_current_moon_phases(
 
 def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> dict:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
-    sorted by datetime.
+    sorted by datetime. They don't have to align with any specific times, they just need
+    to be contained in its bounds.
 
     Args:
         timeline: we are looking for syzygy events within this timeline
 
     Returns:
-        { <datetime>: [<code>, <real_dt>]] }
+        { <datetime>: <code>] }
     """
 
     data = {}
     code, dt = get_moon_phase(timeline, data_dir)
     if dt:
-        data[util.round_to_quarter(dt)] = [code, dt]
+        data[dt] = code
 
     dt = get_perigee(timeline, data_dir)
     if dt:
-        key = util.round_to_quarter(dt)
-        if key in data:
-            key = key + timedelta(minutes=15)
-        data[key] = [PERIGEE, dt]
+        data[dt] = PERIGEE
 
     dt = get_perihelion(timeline, data_dir)
     if dt:
-        key = util.round_to_quarter(dt)
-        if key in data:
-            key = max(data) + timedelta(minutes=15)
-        data[key] = [PERIHELION, dt]
+        data[dt] = PERIHELION
 
     return data
 

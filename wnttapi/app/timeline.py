@@ -272,6 +272,20 @@ class HiloTimeline(GraphTimeline):
         )
         self._hilo_timeline.sort()
 
+    def add_time(self, dt: datetime):
+        """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
+        This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
+        in the timeline.
+
+        Args:
+            dt (datetime): time to add
+        """
+        if self._hilo_timeline is None:
+            raise util.InternalError("register_hilo_times must be called first")
+        if dt not in self._hilo_timeline:
+            self._hilo_timeline.append(dt)
+            self._hilo_timeline.sort()
+
     def build_plot(self, callback) -> list:
         """Using the caller's callback function, build an array of data values or None's -- which
             matches the known datetimes that correspond to a High or Low tide data value, suitable

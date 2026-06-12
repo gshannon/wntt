@@ -1,43 +1,46 @@
-// These must be kept in sync with the API
-export const NewMoon = 'NM'
-export const FirstQuarter = 'FQ'
-export const FullMoon = 'FM'
-export const LastQuarter = 'LQ'
-export const Perigee = 'PG'
-export const Perihelion = 'PH'
+// Any image that can be downloaded with the graph must be inlined to prevent CORS errors.
+import NewMoonImg from './images/util/moon-new.png?inline'
+import FirstQuarterImg from './images/util/moon-first.png?inline'
+import FullMoonImg from './images/util/moon-full.png?inline'
+import LastQuarterImg from './images/util/moon-last.png?inline'
+import PerigeeImg from './images/util/perigee.png?inline'
+import PerihelionImg from './images/util/perihelion.png?inline'
 
-export const getDisplay0 = (code) => {
-    switch (code) {
-        case NewMoon:
-            return '\u{1F31A}'
-        case FirstQuarter:
-            return '\u{1F313}'
-        case FullMoon:
-            return '\u{1F31D}'
-        case LastQuarter:
-            return '\u{1F317}'
-        case Perigee:
-            return '\u{1F535}'
-        case Perihelion:
-            return '\u{2600}\u{fe0f}'
-        default:
-            return null
-    }
-}
+// These values must be kept in sync with the API
+export const SyzygyCode = Object.freeze({
+    NewMoon: 'NM',
+    FirstQuarter: 'FQ',
+    FullMoon: 'FM',
+    LastQuarter: 'LQ',
+    Perigee: 'PG',
+    Perihelion: 'PH',
+})
 
 export const SyzygyConfig = {
-    [NewMoon]: { name: 'New Moon', fontSize: 24, display: '\u{1F31A}' }, // 🌚
-    [FirstQuarter]: { name: 'First Quarter', fontSize: 24, display: '\u{1F313}' }, // 🌓
-    [FullMoon]: { name: 'Full Moon', fontSize: 24, display: '\u{1F31D}' }, // 🌝
-    [LastQuarter]: { name: 'Last Quarter', fontSize: 24, display: '\u{1F317}' }, // 🌗
-    [Perigee]: { name: 'Perigee', fontSize: 24, display: '\u{1F535}' }, //  🔵 \u{1F53B} 🔻 \u{1F53A} 🔺
-    [Perihelion]: { name: 'Perihelion', fontSize: 28, display: '\u{2600}\u{fe0f}' }, // ☀️
+    [SyzygyCode.NewMoon]: { name: 'New Moon' },
+    [SyzygyCode.FirstQuarter]: { name: 'First Quarter' },
+    [SyzygyCode.FullMoon]: { name: 'Full Moon' },
+    [SyzygyCode.LastQuarter]: { name: 'Last Quarter' },
+    [SyzygyCode.Perigee]: { name: 'Perigee' },
+    [SyzygyCode.Perihelion]: { name: 'Perihelion' },
 }
 
-export const getSyzygyEvent = (apiData) => {
-    return {
-        dt: apiData.dt,
-        code: apiData.code,
-        config: SyzygyConfig[apiData.code],
+export const getSyzygyUrl = (code) => {
+    const prefix = 'image://'
+    switch (code) {
+        case SyzygyCode.NewMoon:
+            return prefix + NewMoonImg
+        case SyzygyCode.FirstQuarter:
+            return prefix + FirstQuarterImg
+        case SyzygyCode.FullMoon:
+            return prefix + FullMoonImg
+        case SyzygyCode.LastQuarter:
+            return prefix + LastQuarterImg
+        case SyzygyCode.Perigee:
+            return prefix + PerigeeImg
+        case SyzygyCode.Perihelion:
+            return prefix + PerihelionImg
+        default:
+            return null
     }
 }

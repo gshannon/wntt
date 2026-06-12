@@ -19,7 +19,6 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
             setErrorMessage(error)
         } else {
             if (location?.lat && location?.lng) {
-                console.log(`got location ${location.lat}, ${location.lng}`)
                 if (mu.isInBounds(station.mapBounds, location)) {
                     setPendingMarkerLocation({
                         lat: Number(location.lat),
@@ -42,7 +41,6 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        console.log('handleSubmit called, address is ', e.currentTarget.addressLookup.value)
         setAddressValue(e.currentTarget.addressLookup.value)
         setDoLookup(true)
     }
@@ -55,31 +53,35 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
 
             {errorMessage == null && (
                 <Form className='address-body' onSubmit={(e) => handleSubmit(e)}>
-                    <Row>
+                    <Row className='mx-0 mt-2'>
                         <Col>
-                            <Form.Group controlid='addressLookup'>
+                            <Form.Group controlId='addressLookup'>
                                 <Form.Control
                                     name='addr'
                                     type='text'
                                     required={true}
                                     autoFocus={true}
-                                    controlid='addressLookup'
-                                    placeholder='Enter address to locate on map'
+                                    controlId='addressLookup'
+                                    placeholder='Enter address'
                                     defaultValue={addressValue}
                                 />
                             </Form.Group>
                         </Col>
                     </Row>
-                    <Row className='align-items-end'>
-                        <Col className='col-8'>
-                            <Form.Text style={{ color: 'white' }}>
-                                Must be in the local area. Include city and state.
-                            </Form.Text>
-                        </Col>
-                        <Col className='justify-content-end align-items-center d-flex my-1'>
+                    <Row className='align-items-end mx-0'>
+                        <Form.Text style={{ color: 'white' }}>
+                            Must be in the local area. Include city and state.
+                        </Form.Text>
+                    </Row>
+                    <Row className='mx-0 my-1 justify-content-end'>
+                        <Col className='flex-grow-0'>
                             {isLoading ?
                                 <Spinner animation='grow' variant='light' />
-                            :   <Button variant='custom-primary' type='submit' disabled={isLoading}>
+                            :   <Button
+                                    variant='custom-primary'
+                                    size='md'
+                                    type='submit'
+                                    disabled={isLoading}>
                                     Search
                                 </Button>
                             }
@@ -93,10 +95,10 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
 
 function MyAlert({ errorMessage, closeError }) {
     return (
-        <Alert show={errorMessage != null} className='py-1 my-1' variant='warning'>
+        <Alert show={errorMessage != null} className='py-1 my-1' variant='secondary'>
             <div>{errorMessage}</div>
             <div className='d-flex justify-content-end'>
-                <Button onClick={() => closeError()} className='my-1' variant='outline-success'>
+                <Button onClick={() => closeError()} className='my-1' variant='secondary'>
                     OK
                 </Button>
             </div>

@@ -53,9 +53,14 @@ LOGGING = {
         },
         "app.datasource.cdmo": {
             "handlers": ["console"],
-            "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
+            "level": os.getenv("CDMO_LOG_LEVEL", "DEBUG"),
             "propagate": False,
         },
+        # "app.datasource.windforecast": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",
+        #     "propagate": False,
+        # },
     },
     "formatters": {
         "verbose": {
