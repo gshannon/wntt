@@ -19,8 +19,8 @@ import {
     maxGraphDate,
 } from './utils'
 import * as storage from './storage'
-import prevButton from './images/util/previous.png'
-import nextButton from './images/util/next.png'
+import prevButton from './images/util/previous.png?inline'
+import nextButton from './images/util/next.png?inline'
 import { useQueryClient } from '@tanstack/react-query'
 import Map from './Map'
 

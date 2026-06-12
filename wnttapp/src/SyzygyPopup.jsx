@@ -4,15 +4,7 @@ import Container from 'react-bootstrap/Container'
 import Modal from 'react-bootstrap/Modal'
 import { useContext } from 'react'
 import { Page } from './utils'
-import {
-    FirstQuarter,
-    LastQuarter,
-    NewMoon,
-    FullMoon,
-    Perigee,
-    Perihelion,
-    SyzygyConfig,
-} from './Syzygy'
+import { SyzygyCode, SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 
 export default function SyzygyPopup({ code, onClose }) {
@@ -47,7 +39,7 @@ const Help = ({ gotoPage }) => {
 }
 
 const Content = ({ code, gotoPage }) => {
-    if ([NewMoon, FullMoon].includes(code)) {
+    if ([SyzygyCode.NewMoon, SyzygyCode.FullMoon].includes(code)) {
         return (
             <>
                 <p>
@@ -60,7 +52,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if ([FirstQuarter, LastQuarter].includes(code)) {
+    } else if ([SyzygyCode.FirstQuarter, SyzygyCode.LastQuarter].includes(code)) {
         return (
             <>
                 <p>
@@ -72,7 +64,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === Perigee) {
+    } else if (code === SyzygyCode.Perigee) {
         return (
             <>
                 <p>
@@ -85,7 +77,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === Perihelion) {
+    } else if (code === SyzygyCode.Perihelion) {
         return (
             <>
                 <p>

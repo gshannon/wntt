@@ -1,7 +1,6 @@
 import './css/GetDates.css'
 import { useContext } from 'react'
-// import HousePic from './images/housepic1.png'
-import HousePic from './images/housepic2.png'
+import HousePic from './images/housepic2.png?inline'
 import Button from 'react-bootstrap/Button'
 import { Col, Form, FormLabel, FormText, Row } from 'react-bootstrap'
 import { DatePicker } from 'reactstrap-date-picker'

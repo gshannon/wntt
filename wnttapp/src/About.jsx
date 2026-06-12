@@ -266,7 +266,7 @@ export default function About() {
 
             <div className='p-3' style={{ fontSize: '.7em', float: 'right' }}>
                 <a onClick={() => toggle()}>Version </a> {import.meta.env.VITE_APP_VERSION ?? '?'} W
-                {window.innerWidth}.{window.outerWidth} H{window.innerHeight}.{window.outerHeight}
+                {window.innerWidth} H{window.innerHeight}
             </div>
         </Container>
     )

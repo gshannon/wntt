@@ -7,27 +7,15 @@ dialog::backdrop {
     font-size: 0.95rem;
     line-height: 1.2;
 }
-
-.address-container {
-    background: var(--steel-blue);
-    /* border: 2px solid black; */
+.instructions-container p {
+    margin-bottom: 12px;
 }
 
 /* This is used internally by leaflet, needed to define map placement */
 .leaflet-container {
     height: 60vh;
-    width: 90%;
-}
-@media (min-width: 676px) {
-    .leaflet-container {
-        height: 70vh;
-        width: 90%;
-    }
-}
-@media (min-width: 1200px) {
-    .leaflet-container {
-        width: 80%;
-    }
+    width: 100%;
+    padding: 0;
 }
 
 /* Without this, the markers transparent images get white backgrounds and a border */

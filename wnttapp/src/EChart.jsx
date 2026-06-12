@@ -10,9 +10,9 @@ import { Dimension, LegendId, buildLocalDataSet, getResponsiveGridDefs } from '.
 import SyzygyPopup from './SyzygyPopup'
 import { SyzygyConfig } from './Syzygy'
 import ErrorBlock from './ErrorBlock'
-import BlueArrow from './images/util/arrow-blue.png'
-import GreenArrow from './images/util/arrow-green.png'
-import BlackArrow from './images/util/arrow-black.png'
+import BlueArrow from './images/util/arrow-blue.png?inline'
+import GreenArrow from './images/util/arrow-green.png?inline'
+import BlackArrow from './images/util/arrow-black.png?inline'
 
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
@@ -38,13 +38,25 @@ const xAxisFormat = '{hh}:{mm} {A}\n{MMM} {d}'
 
 // These values must match the AuxDataType enum in the back end.
 const AuxDataKeys = Object.freeze({
-    HistTideHilo: 'HL',
-    AstroTideHilo: 'AHL',
-    WindDir: 'WD',
-    WindDirStr: 'WDS',
-    ForecastWindDir: 'FWD',
-    ForecastWindDirStr: 'FWDS',
+    HistTideHilo: 'HL', // for observed tide, '(High)' or '(Low)'
+    AstroTideHilo: 'AHL', // same, for predicted tides
+    WindDir: 'WD', // Int, wind direction 0-360
+    WindDirStr: 'WDS', // direction label, e.g. 'N', 'SW', 'SSE'
+    ForecastWindDir: 'FWD', // Int, wind direction 0-360
+    ForecastWindDirStr: 'FWDS', // direction label
 })
+
+/*
+ * Contents of data:
+ * 'timeline' : array of datetimes to define all x axes.
+ * 'blob' : data for all non-constant plots, array of arrays. Essentially provides an ordered list of "dimensions" (y) for each
+ *     time value (x). Values in inner arrays must correlate to data.dimensions, where [0] is always the datetime, and [1...]
+ *     represent values to be graphed, or null if that time has no data for that dimension.
+ * 'dimensions' : array of dimension names/keys used to identify discrete data herein. See the Dimensions object for defintions.
+ * 'aux_data': object keyed by datetime, for each time a charted value has any additional data for labels, etc.
+ *     Values are objects with key of AuxDataKeys and value for use in graph.
+ * 'syzygy' : object with data for sun/moon symbols may be empty. Key is datetime from timeline, value is code: e.g. 'NM' for new moon
+ */
 
 export default function Chart({ error, loading, hiloMode, data }) {
     const ctx = useContext(AppContext)
@@ -71,7 +83,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         // Not there yet, so initialize it.
         storage.setDailyStorage(ctx.station.id, {
             ...daily,
-            legendOnly: [LegendId.MeanHighWater], // Mean High Water is usually not relevant, so start with it hidden.
+            legendOnly: [],
         })
         return storage.getDailyStorage(ctx.station.id)
     }
@@ -132,7 +144,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 buffer += `<br/>${p.marker} ${p.seriesName}: `
                 const dimName = p.dimensionNames[dimIndex]
                 const dtstr = p.data[0]
-                // If only I could tell which Y axis were were on.
                 if ([Dimension.WindGusts, Dimension.WindSpeeds].includes(dimName)) {
                     buffer += `${val} mph from ${data.aux_data[dtstr]?.[AuxDataKeys.WindDirStr] ?? ''}`
                 } else if (dimName === Dimension.ForecastWindSpeeds) {
@@ -170,19 +181,25 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     datasetIndex: 1,
                     name: 'syzygy', // for this one, name is only needed for click handling
                     encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
-                    symbol: (value, _) => {
-                        if (value[5] === 1) {
-                            return value[6] // this is a url, like 'image://./images/util/moon-new.png'
+                    symbol: (values, params) => {
+                        // values is the array containing all values for x in this dataset. Elements with
+                        // the value 1 indicate a symbol, and the image url will be present also
+                        if (values[params.encode.y[0]]) {
+                            const urlIndex = params.dimensionNames.indexOf(Dimension.SyzygyUrl)
+                            return values[urlIndex]
                         } else {
                             return null
                         }
                     },
-                    symbolSize: 20,
+                    symbolSize: 30,
                     tooltip: {
                         trigger: 'item',
+                        // For these events we pull the data from the syzygy object using the x datetime value.
+                        // It's an array with the event code (e.g. FM) and the actual datetime, not aligned with timeline.
                         formatter: (param) => {
-                            const [code, real_dt] = data.syzygy[param.data[0]]
-                            const dtStr = format(new Date(real_dt), 'ccc, MMM d, yyyy h:mm aaa')
+                            const dt = param.data[0] // timeline datetime
+                            const code = data.syzygy[dt]
+                            const dtStr = format(new Date(dt), 'ccc, MMM d, yyyy h:mm aaa')
                             return `${SyzygyConfig[code].name}: ${dtStr}<br>Click symbol for more.`
                         },
                     },
@@ -221,6 +238,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.HistTides },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
+            connectNulls: true, // avoid gaps for syzygy events, which rarely align with other data
             symbolSize: tideMarkerSize,
             color: ObservedTideColor,
         })
@@ -236,6 +254,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.AstroTides },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
+            connectNulls: true,
             symbolSize: tideMarkerSize,
             color: PredictedTideColor,
         })
@@ -251,6 +270,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.RecordedStormSurge },
             smooth: true,
             symbol: 'none',
+            connectNulls: true,
             color: RecordedStormSurgeColor,
         })
         legendData.push({ name: RecordedStormSurgeTitle, legendId: LegendId.RecordedStormSurge })
@@ -266,6 +286,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormTide },
             smooth: true,
             symbol: 'none',
+            connectNulls: true,
             color: ProjectedStormTideColor,
         })
         legendData.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
@@ -281,6 +302,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormSurge },
             smooth: true,
             symbol: 'none',
+            connectNulls: true,
             color: ProjectedStormSurgeColor,
         })
         legendData.push({ name: ProjectedStormSurgeTitle, legendId: LegendId.ProjectedStormSurge })
@@ -293,7 +315,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             datasetIndex: 0,
             name: WindGustTitle,
             encode: { x: Dimension.DateTime, y: Dimension.WindGusts },
-            symbol: 'image://' + BlueArrow,
+            symbol: `image://${BlueArrow}`,
             color: WindGustColor,
             symbolRotate: (_, params) => {
                 const dtstr = params.data[0]
@@ -358,7 +380,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
         click: (param) => {
             if (param.componentType === 'series') {
                 if (param.seriesName === 'syzygy') {
-                    setSyzygyHelpCode(data.syzygy[param.data[0]][0])
+                    // Put the selected code (e.g. FM) in state to trigger the modal popup.
+                    setSyzygyHelpCode(data.syzygy[param.data[0]])
                 }
             } else if (param.componentType === 'legend') {
                 var legendId = 0
@@ -395,17 +418,22 @@ export default function Chart({ error, loading, hiloMode, data }) {
         }
     }
 
-    const showingWind = true // data.wind_dir || data.forecast_wind_dir
+    const showingWind =
+        data.dimensions.includes(Dimension.WindSpeeds) ||
+        data.dimensions.includes(Dimension.ForecastWindSpeeds)
     // this helps the 2 or 3 grids to line up on the x axis
     const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
 
     const localDataset = buildLocalDataSet(
         data.timeline,
         data.syzygy,
-        data.highest_annual_prediction,
         ctx.station,
         customElevationMllw,
     )
+
+    let xAxesForZoom = [1]
+    if (data.syzygy) xAxesForZoom = [0, ...xAxesForZoom]
+    if (showingWind) xAxesForZoom = [...xAxesForZoom, 2]
 
     const options = {
         backgroundColor: PlotBgColor,
@@ -421,10 +449,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             orient: 'vertical',
             borderWidth: 1,
             data: !isNarrow ? legendData : [],
-            selected: {
-                meanHighWaterTitle: false,
-                PredictedTideTitle: true,
-            },
             triggerEvent: true,
             formatter: (name) => {
                 if (name.startsWith('Wind ')) {
@@ -519,13 +543,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ],
         dataset: [{ source: data.blob, dimensions: data.dimensions }, localDataset],
         series: series,
-        dataZoom: [
-            { type: 'inside', xAxisIndex: [1, 2] },
-            { type: 'slider', xAxisIndex: [1, 2] },
-            // { type: 'inside', yAxisIndex: [1, 2] },
-            // { type: 'inside', yAxisIndex: [1, 2] },
-            // { type: 'slider', yAxisIndex: [1, 2] },
-        ],
+        dataZoom: [{ type: 'slider', xAxisIndex: xAxesForZoom }],
 
         toolbox: [
             {
@@ -533,13 +551,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 feature: {
                     restore: {},
                     saveAsImage: {
-                        show: false,
+                        show: true,
                         // Optional: Customize the button's tooltip title
-                        // title: 'Save as Image',
-                        // name: `tides_${ctx.station.id}_${format(new Date(), 'yyyyMMdd_HHmmss')}`,
-                        name: 'tides',
+                        title: 'Save as Image',
+                        name: `tides_${format(new Date(), 'yyyyMMddHHmmss')}`,
                         type: 'png',
-                        title: 'eChart sux',
+                    },
+                    magicType: {
+                        type: ['line', 'bar'], // allow conversion to bar graph
                     },
                 },
             },

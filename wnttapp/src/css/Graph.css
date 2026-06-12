@@ -16,6 +16,12 @@ image's container, which is the anchor tag. */
     }
 }
 
+@media (min-width: 1200px) {
+    dialog:modal {
+        max-width: 70%;
+    }
+}
+
 /* TODO: Here is how to disable the legend toggle! */
 /* .legendtoggle {
     cursor: default;
