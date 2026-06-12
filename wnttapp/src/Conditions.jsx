@@ -57,9 +57,9 @@ export default function Conditions({ data, error }) {
             {/* this is observation time */}
             <div className='cond-time'>{data.tide_time ? format_dt(data.tide_time) : noData}</div>
 
-            {/* next tide level */}
+            {/* next high tide level */}
             <div className='cond-label'>
-                Next Tide Level<sup>*</sup>
+                Next High Tide<sup>*</sup>
             </div>
             <div className='cond-data'>
                 {data.next_tide_str ?
@@ -71,7 +71,7 @@ export default function Conditions({ data, error }) {
             <div className='cond-time'>{now}</div>
 
             {/* next tide time and type */}
-            <div className='cond-label'>Next Tide Time</div>
+            <div className='cond-label'>Time</div>
             <div className='cond-data'>
                 {data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData}
             </div>
