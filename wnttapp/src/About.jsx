@@ -20,7 +20,7 @@ export default function About() {
     }
 
     return (
-        <Container>
+        <Container className='mt-3'>
             <Accordion alwaysOpen defaultActiveKey={['0']}>
                 <Accordion.Item eventKey='0'>
                     <Accordion.Header>DISCLAIMER</Accordion.Header>
