@@ -54,7 +54,7 @@ export default function Glossary() {
                     <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />)
                     representing the average of all lowest daily tides observed over the{' '}
                     <b>National Tidal Datum Epoch</b> for a particular tide station. When we say a
-                    tide is <i>9 feet MLLW</i>, we mean its height is 9 feet higher than than this{' '}
+                    tide is <i>9 feet MLLW</i>, we mean its height is 9 feet higher than than this
                     point of reference. MLLW is the datum used by this application for all land and
                     sea elevations.
                 </Entry>

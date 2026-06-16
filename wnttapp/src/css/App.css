@@ -1,7 +1,7 @@
 * {
     --federal-blue: #140d4f;
     --steel-blue: #347fc4;
-    --powder-blue: hsl(210, 63%, 87%);
+    --powder-blue: #c9def3;
     --platinum: #dae3e5;
     --med-blue: hsla(215, 34%, 54%, 0.815);
     --deep-blue: #003d79;
@@ -16,6 +16,8 @@
     --dark-background-1: var(--steel-blue);
     --light-background-1: var(--powder-blue);
     --light-background-2: var(--platinum);
+    --light-background-3: hsl(200, 40%, 65%);
+    --light-background-4: hsl(200, 40%, 85%);
     --med-background-1: var(--med-blue);
     --med-background-2: var(--dusk-blue);
 }
@@ -51,13 +53,23 @@ beneath the top header area that covers the full height of the viewport */
     flex-shrink: 1;
     flex-basis: auto;
     line-height: 12px;
-    background-color: var(--platinum);
+    background-color: var(--light-background-1);
 }
 
 .app-box-bottom {
+    background-color: var(--light-background-2); /* default */
     flex-grow: 1;
     flex-shrink: 1;
     flex-basis: 0;
+}
+/* Define some different backgrounds for some pages */
+.app-box-bottom.graph-page,
+.app-box-bottom.about-page {
+    background-color: var(--light-background-3);
+}
+.app-box-bottom.glossary-page,
+.app-box-bottom.help-syzygy-page {
+    background-color: var(--light-background-4);
 }
 
 a {
