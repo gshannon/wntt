@@ -41,9 +41,7 @@ export default function Top({ page, gotoPage }) {
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavLink>
-                <NavDropdown
-                    title='Help'
-                    active={[Page.Glossary, Page.HelpSyzygy, Page.Tutorials].includes(page)}>
+                <NavDropdown title='Help' active={[Page.Glossary, Page.HelpSyzygy].includes(page)}>
                     <HelpItems page={page} gotoPage={gotoPage} />
                 </NavDropdown>
             </Nav>
@@ -142,7 +140,7 @@ export default function Top({ page, gotoPage }) {
                         `${ctx.station.reserveName}, ${ctx.station.waterStationName}`
                     :   ' '}
                 </Row>
-            :   null}
+            :   <Row className='divider my-0 mx-0' />}
             {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
         </div>
     )

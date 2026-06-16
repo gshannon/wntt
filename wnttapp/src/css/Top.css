@@ -24,6 +24,11 @@
     background-color: var(--dusk-blue);
 }
 
+.divider {
+    height: 3px;
+    background-color: var(--dusk-blue);
+}
+
 .main-title .tide-tracker {
     line-height: 0.9;
     font-style: italic;
