@@ -20,7 +20,7 @@
     text-align: center;
     max-width: 60%;
     border-radius: 20px;
-    color: var(--platinum);
+    color: var(--light-background-2);
     background: var(--partial-gray);
 }
 
@@ -58,13 +58,13 @@
 
 .home .welcome a:hover {
     /* Don't know why this isn't picked up from App.css */
-    color: var(--link-blue);
+    color: var(--link-light-hover);
 }
 
 .home .conditions {
     padding: 1rem;
     border-radius: 20px;
-    background: var(--med-blue);
+    background: var(--med-background-1);
 }
 
 #home .cond-container {

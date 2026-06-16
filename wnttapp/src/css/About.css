@@ -4,7 +4,7 @@
 
 .accordion-button:not(.collapsed) {
     color: white;
-    background-color: var(--med-blue);
+    background-color: var(--med-background-1);
     font-weight: bold;
 }
 

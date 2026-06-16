@@ -13,15 +13,15 @@
 
 .main-title {
     font-size: 1rem;
-    color: var(--deep-blue);
+    color: var(--title-1);
 }
 
 .current-station {
     font-size: 0.9rem;
     height: 20px; /* needed in case there's no reserve selected */
-    color: var(--federal-blue);
+    color: var(--theme-1);
     color: white;
-    background-color: var(--dusk-blue);
+    background-color: var(--med-background-2);
 }
 
 .divider {
@@ -34,7 +34,7 @@
     font-style: italic;
     font-weight: bold;
     font-size: 1.3rem;
-    text-shadow: 3px 3px 2px var(--med-blue);
+    text-shadow: 3px 3px 2px var(--med-background-1);
 }
 
 .navbar-brand:hover {
@@ -43,11 +43,11 @@
 
 .nav-link,
 .nav-link.show {
-    color: var(--deep-blue);
+    color: var(--title-1);
 }
 
 .navbar-nav .nav-link.active {
-    color: var(--deep-blue);
+    color: var(--title-1);
     font-weight: bolder;
 }
 
@@ -59,14 +59,14 @@
 
 .conditions-img {
     border: solid;
-    border-color: var(--federal-blue);
+    border-color: var(--theme-1);
     border-radius: 10%;
     opacity: 0.2;
 }
 
 #reserve-dropdown button {
     color: white;
-    background: var(--deep-blue);
+    background: var(--title-1);
     border-radius: 6px;
     padding: 2px 6px;
     margin: 1px 0px;
@@ -76,7 +76,7 @@
 
 #reserve-dropdown button:hover {
     color: white;
-    background: var(--med-blue);
+    background: var(--med-background-1);
 }
 
 /* Activate when less than large */

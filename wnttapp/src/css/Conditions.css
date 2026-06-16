@@ -1,11 +1,11 @@
 #conditions-modal .modal-body {
     /* override bootstrap white. If I don't use the id prefix, this override
     seems to bleed into other modals in the app. */
-    background: var(--med-blue);
+    background: var(--med-background-1);
 }
 
 .cond-header {
-    background: var(--federal-blue);
+    background: var(--theme-1);
     border-bottom-width: 0;
 }
 
@@ -25,7 +25,7 @@
 }
 
 #home .footnotes a:hover {
-    color: var(--federal-blue);
+    color: var(--theme-1);
 }
 
 /* For popup, no bottom border */
@@ -37,13 +37,13 @@
     display: grid;
     grid-template-columns: 5fr 10fr 4fr;
     grid-template-rows: 5fr 1fr repeat(9, 5fr) 1fr 5fr; /* horiz separators are 1/5 height of data */
-    background: var(--med-blue);
+    background: var(--med-background-1);
     font-size: 0.9rem;
 }
 
 .cond-container > * {
-    color: var(--federal-blue);
-    background: var(--platinum);
+    color: var(--theme-1);
+    background: var(--light-background-2);
     padding-left: 1px;
     text-align: center;
     align-content: center;
