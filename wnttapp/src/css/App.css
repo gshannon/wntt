@@ -3,12 +3,21 @@
     --steel-blue: #347fc4;
     --powder-blue: hsl(210, 63%, 87%);
     --platinum: #dae3e5;
-    --partial-gray: rgba(60, 60, 60, 0.7);
-    --deep-blue: #003d79;
     --med-blue: hsla(215, 34%, 54%, 0.815);
-    --link-blue: #000dff;
-    --ocean-blue: #3dd0e0;
+    --deep-blue: #003d79;
+    --bright-blue: #000dff;
     --dusk-blue: #3d5a7b;
+
+    --partial-gray: rgba(60, 60, 60, 0.7);
+
+    --link-light-hover: var(--bright-blue);
+    --theme-1: var(--federal-blue);
+    --title-1: var(--deep-blue);
+    --dark-background-1: var(--steel-blue);
+    --light-background-1: var(--powder-blue);
+    --light-background-2: var(--platinum);
+    --med-background-1: var(--med-blue);
+    --med-background-2: var(--dusk-blue);
 }
 
 html {
@@ -16,7 +25,7 @@ html {
 }
 
 body {
-    background-color: var(--powder-blue);
+    background-color: var(--light-background-1);
     font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 0;
@@ -52,13 +61,8 @@ beneath the top header area that covers the full height of the viewport */
 }
 
 a {
-    color: var(--steel-blue);
     text-decoration: none;
     font-weight: bold;
-}
-
-a:hover {
-    color: var(--link-blue);
 }
 
 /* For making any element have a pointer cursor */
@@ -69,7 +73,7 @@ a:hover {
 /* For Button variant, can say "variant=custom-primary" instead of using className... */
 .btn-custom-primary {
     color: white;
-    background: var(--federal-blue);
+    background: var(--theme-1);
     border-radius: 6px;
 }
 
@@ -93,7 +97,7 @@ a:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: var(--federal-blue);
+    color: var(--theme-1);
     font-size: 0.9rem;
 }
 
