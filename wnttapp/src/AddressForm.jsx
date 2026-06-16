@@ -1,5 +1,5 @@
 import './css/AddressForm.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Form } from 'react-bootstrap'
 import { Col, Row, Alert } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
@@ -11,6 +11,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
     const [addressValue, setAddressValue] = useState('') // persist between renders
     const [errorMessage, setErrorMessage] = useState(null)
     const [doLookup, setDoLookup] = useState(false)
+    const [searchLocation, setSearchLocation] = useState(null)
 
     const { isLoading, data: location, error } = useAddressLookup(addressValue)
 
@@ -20,7 +21,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
         } else {
             if (location?.lat && location?.lng) {
                 if (mu.isInBounds(station.mapBounds, location)) {
-                    setPendingMarkerLocation({
+                    setSearchLocation({
                         lat: Number(location.lat),
                         lng: Number(location.lng),
                     })
@@ -45,6 +46,10 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
         setDoLookup(true)
     }
 
+    useEffect(() => {
+        setPendingMarkerLocation(searchLocation)
+    }, [searchLocation])
+
     return (
         <>
             {errorMessage != null && (
@@ -61,7 +66,6 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
                                     type='text'
                                     required={true}
                                     autoFocus={true}
-                                    controlId='addressLookup'
                                     placeholder='Enter address'
                                     defaultValue={addressValue}
                                 />
