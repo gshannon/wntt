@@ -469,19 +469,32 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const options = {
         backgroundColor: PlotBgColor,
         grid: getResponsiveGridDefs(showingWind),
-        title: {
-            text: `Tides at ${ctx.station.waterStationName}`,
-            subtext: data.subtitle,
-            subtextStyle: { fontWeight: 'bolder' },
-        },
+        title: [
+            {
+                text: `Tides at ${ctx.station.waterStationName}`,
+                subtext: data.subtitle,
+                subtextStyle: { fontWeight: 'bolder' },
+            },
+            ...(!isNarrow ?
+                [
+                    {
+                        text: 'Click lines below to toggle visibility.',
+                        left: '72%',
+                        top: '20%',
+                        textStyle: { fontSize: '.8em', fontWeight: 'bold' },
+                    },
+                ]
+            :   []),
+        ],
         tooltip: {
             trigger: 'axis',
             formatter: formatTooltip,
             order: 'seriesAsc',
         },
+
         legend: {
-            top: '20%',
-            right: '2%',
+            top: '25%',
+            left: '72%',
             orient: 'vertical',
             borderWidth: 1,
             data: !isNarrow ? legend : [],

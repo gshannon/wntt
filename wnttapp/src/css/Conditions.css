@@ -36,7 +36,7 @@
 .cond-container {
     display: grid;
     grid-template-columns: 5fr 10fr 4fr;
-    grid-template-rows: 5fr 1fr repeat(9, 5fr) 1fr 5fr; /* horiz separators are 1/5 height of data */
+    grid-template-rows: 5fr 1fr repeat(9, 5fr) 1fr 5fr 5fr; /* horiz separators are 1/5 height of data */
     background: var(--med-background-1);
     font-size: 0.9rem;
 }
