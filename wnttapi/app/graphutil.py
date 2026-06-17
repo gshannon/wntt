@@ -232,6 +232,9 @@ def get_graph_data(
         # These do not fit into the basic plot model
         "syzygy": {dt.isoformat(): val for (dt, val) in syzygy_dict.items()},
         "subtitle": subtitle,
+        "highest_annual_prediction": stn.get_astro_high_tide_mllw(
+            station, start_date.year
+        ),
         # This is datetime-based auxilary data used as lookups for various annotations in the chart. For these we'll build a
         # dense dict keyed by the datetime.  Note that json doesn't support datetime as object keys so we convert to ISO strings.
         "aux_data": {dt.isoformat(): val for (dt, val) in aux_data.data.items()},

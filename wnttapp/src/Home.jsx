@@ -23,7 +23,7 @@ export default function Home() {
                         href='https://coast.noaa.gov/nerrs/research/'
                         text='System-Wide Monitoring Program'
                     />{' '}
-                    (SWMP) to view historical tide and wind data, as well as predicted tides and
+                    (SWMP) to graph historical tide and wind data, as well as predicted tides and
                     storm surge, for certain sites within the{' '}
                     <Link
                         href='https://coast.noaa.gov/nerrs/'
@@ -36,7 +36,7 @@ export default function Home() {
         } else {
             return (
                 <>
-                    Here you can view historical tide and wind data, as well as predicted tides and
+                    Here you can graph historical tide and wind data, as well as predicted tides and
                     storm surge. You can also obtain the elevation of any location within our
                     boundaries (Kennebunk to Ogunquit), to assess the flood risk at that location.
                 </>
@@ -84,7 +84,7 @@ export default function Home() {
                             variant='custom-primary'
                             onClick={() => ctx.gotoPage(Page.Graph)}>
                             {' '}
-                            Get Started
+                            Go to Graph
                         </Button>
                     </Col>
                 )}

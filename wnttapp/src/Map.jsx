@@ -322,8 +322,8 @@ function Instructions({ pendingElevationNav, isLoading }) {
     } else {
         return (
             <>
-                <b>Click on the map</b> or <b>look up by address</b> to find a location whose
-                elevation can be included on the graph.
+                <b>Click on the map</b> or <b>look up by address</b> to find a location and add its
+                elevation to the graph. This can help you assess the flooding risk at that location.
             </>
         )
     }
