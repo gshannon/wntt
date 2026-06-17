@@ -1,10 +1,14 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
+import { Link } from './Links'
 import { Months, roundTo } from './utils'
 import { SyzygyConfig } from './Syzygy'
+import { AppContext } from './AppContext'
+import { useContext } from 'react'
 import ErrorBlock from './ErrorBlock'
 
 export default function Conditions({ data, error }) {
+    const ctx = useContext(AppContext)
     const noData = '--'
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here. Ah, javascript.
@@ -126,6 +130,18 @@ export default function Conditions({ data, error }) {
             <div className='horizontal-line'></div>
             <div className='footnotes'>
                 <sup>*</sup>Next Tide Level does not include Storm Surge.
+            </div>
+            <div className='footnotes'>
+                Source of this data:&nbsp; &nbsp;
+                <Link
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
+                    text='Water'
+                />
+                &nbsp; &nbsp;
+                <Link
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
+                    text='Weather'
+                />
             </div>
         </div>
     )
