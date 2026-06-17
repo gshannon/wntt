@@ -177,7 +177,7 @@ export default function GetDates({
                         contents={
                             <div className='mx-md-2 pointer' onClick={() => onMapRequest()}>
                                 <img src={HousePic} width={75} alt='Map popup' />
-                                <div className='map-label'>Graph my house!</div>
+                                <div className='map-label'>Find my house!</div>
                             </div>
                         }></Overlay>
                 </Col>

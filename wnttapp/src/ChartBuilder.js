@@ -7,6 +7,7 @@ export const Dimension = Object.freeze({
     Syzygy: 'syzygy',
     SyzygyUrl: 'syurl',
     CustomElevation: 'custom-elevation',
+    HighestAnnualPredicted: 'high-annual',
     // These must match the data property name returned from the back end.
     HistTides: 'hist-tides',
     AstroTides: 'astro-tides',
@@ -22,6 +23,7 @@ export const Dimension = Object.freeze({
 // For uniquely identifying traces in event handling. Values don't matter, so long as they are unique.
 export const LegendId = Object.freeze({
     RecordTide: 1,
+    HighestAnnualPredicted: 2,
     CustomElevation: 4,
     ObservedTide: 5,
     PredictedTide: 6,
@@ -39,16 +41,23 @@ export const LegendId = Object.freeze({
     XPastStormSurgeCheckBias2: 18,
 })
 
-export const buildLocalDataSet = (timeline, syzygyData, station, customElevationMllw) => {
+export const buildLocalDataSet = (
+    timeline,
+    syzygyData,
+    station,
+    highestAnnualPrediction,
+    customElevationMllw,
+) => {
     // Build a second dataset for data that's better built here than the backend.
     const localDims = [
         { name: Dimension.DateTime, type: 'time' },
         { name: Dimension.RecordTide, type: 'number' },
+        { name: Dimension.HighestAnnualPredicted, type: 'number' },
         ...(customElevationMllw ? [Dimension.CustomElevation] : []),
         ...(syzygyData ? [Dimension.Syzygy, Dimension.SyzygyUrl] : []),
     ]
     const localBlob = timeline.map((dt) => {
-        const row = [dt, station.recordTideMllw()]
+        const row = [dt, station.recordTideMllw(), highestAnnualPrediction]
         if (customElevationMllw) {
             row.push(customElevationMllw)
         }

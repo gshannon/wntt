@@ -48,7 +48,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
 
     useEffect(() => {
         setPendingMarkerLocation(searchLocation)
-    }, [searchLocation])
+    }, [setPendingMarkerLocation, searchLocation])
 
     return (
         <>

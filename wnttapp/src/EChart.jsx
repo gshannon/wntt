@@ -16,6 +16,7 @@ import BlackArrow from './images/util/arrow-black.png?inline'
 
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
+const HighestAnnualPredictedColor = '#ff7f0e'
 const ProjectedStormTideColor = '#e377c2'
 const ObservedTideColor = '#2ca02c'
 const PredictedTideColor = '#0b7dcc'
@@ -114,12 +115,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const recordTideTitle =
         `Record Tide ${formatDate(new Date(ctx.station.recordTideDate))}` +
         (isNarrow ? '' : ` (${ctx.station.recordTideMllw()})`)
-    const customElevationTitle = 'Custom Elevation' + (isNarrow ? '' : `(${customElevationMllw})`)
-
-    const legendData = [{ name: recordTideTitle, legendId: LegendId.RecordTide }]
+    const highestAnnualTitle =
+        'Highest Annual Predicted' + (isNarrow ? '' : ` (${data.highest_annual_prediction})`)
+    const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw})`)
 
     const legendIdToTitle = (legendId) => {
-        for (const obj of legendData) {
+        for (const obj of legend) {
             if (obj.legendId === legendId) {
                 return obj.name
             }
@@ -160,73 +161,102 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return buffer ? format(dt, 'ccc, MMM d, yyyy h:mm aaa') + buffer : ''
     }
 
-    const series = [
-        {
-            type: 'line',
-            xAxisIndex: 1,
-            yAxisIndex: 1,
+    const series = []
+    const legend = []
+
+    if (data.syzygy) {
+        series.push({
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
             datasetIndex: 1,
-            name: recordTideTitle,
-            encode: { x: Dimension.DateTime, y: Dimension.RecordTide },
-            symbol: 'none',
-            color: RecordTideColor,
-            tooltip: { show: isNarrow },
-        },
-        ...(data.syzygy ?
-            [
-                {
-                    type: 'scatter',
-                    xAxisIndex: 0,
-                    yAxisIndex: 0,
-                    datasetIndex: 1,
-                    name: 'syzygy', // for this one, name is only needed for click handling
-                    encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
-                    symbol: (values, params) => {
-                        // values is the array containing all values for x in this dataset. Elements with
-                        // the value 1 indicate a symbol, and the image url will be present also
-                        if (values[params.encode.y[0]]) {
-                            const urlIndex = params.dimensionNames.indexOf(Dimension.SyzygyUrl)
-                            return values[urlIndex]
-                        } else {
-                            return null
-                        }
-                    },
-                    symbolSize: 30,
-                    tooltip: {
-                        trigger: 'item',
-                        // For these events we pull the data from the syzygy object using the x datetime value.
-                        // It's an array with the event code (e.g. FM) and the actual datetime, not aligned with timeline.
-                        formatter: (param) => {
-                            const dt = param.data[0] // timeline datetime
-                            const code = data.syzygy[dt]
-                            const dtStr = format(new Date(dt), 'ccc, MMM d, yyyy h:mm aaa')
-                            return `${SyzygyConfig[code].name}: ${dtStr}<br>Click symbol for more.`
-                        },
-                    },
+            name: 'syzygy', // for this one, name is only needed for click handling
+            encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
+            symbol: (values, params) => {
+                // values is the array containing all values for x in this dataset. Elements with
+                // the value 1 indicate a symbol, and the image url will be present also
+                if (values[params.encode.y[0]]) {
+                    const urlIndex = params.dimensionNames.indexOf(Dimension.SyzygyUrl)
+                    return values[urlIndex]
+                } else {
+                    return null
+                }
+            },
+            symbolSize: 30,
+            tooltip: {
+                trigger: 'item',
+                // For these events we pull the data from the syzygy object using the x datetime value.
+                // It's an array with the event code (e.g. FM) and the actual datetime, not aligned with timeline.
+                formatter: (param) => {
+                    const dt = param.data[0] // timeline datetime
+                    const code = data.syzygy[dt]
+                    const dtStr = format(new Date(dt), 'ccc, MMM d, yyyy h:mm aaa')
+                    return `${SyzygyConfig[code].name}: ${dtStr}<br>Click symbol for more.`
                 },
-            ]
-        :   []),
-    ]
+            },
+        })
+    }
+
+    series.push({
+        type: 'line',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        datasetIndex: 1,
+        name: recordTideTitle,
+        encode: { x: Dimension.DateTime, y: Dimension.RecordTide },
+        symbol: 'none',
+        color: RecordTideColor,
+        tooltip: { show: isNarrow },
+        sortValue: ctx.station.recordTideMllw(),
+    })
+    legend.push({
+        name: recordTideTitle,
+        legendId: LegendId.RecordTide,
+        sortValue: ctx.station.recordTideMllw(),
+    })
+
+    series.push({
+        type: 'line',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        datasetIndex: 1,
+        name: highestAnnualTitle,
+        encode: { x: Dimension.DateTime, y: Dimension.HighestAnnualPredicted },
+        symbol: 'none',
+        color: HighestAnnualPredictedColor,
+        tooltip: { show: isNarrow },
+        sortValue: data.highest_annual_prediction,
+    })
+    legend.push({
+        name: highestAnnualTitle,
+        legendId: LegendId.HighestAnnualPredicted,
+        sortValue: data.highest_annual_prediction,
+    })
 
     if (customElevationMllw != null) {
         series.push({
-            // If they are showing a custom elevation, insert it into the plot data, so that the
-            // 1st 3 items are in descending order.
             type: 'line',
             xAxisIndex: 1,
             yAxisIndex: 1,
             datasetIndex: 1,
-            // Series name is used to display on tooltip AND to map to legend.data. Since this one is not in the tooltip,
-            // and is formatted in the legend, we'll just use the dimension key for convenience.
             name: customElevationTitle,
             encode: { x: Dimension.DateTime, y: Dimension.CustomElevation },
-            // smooth: true,
             symbol: 'none',
             color: CustomElevationColor,
             tooltip: { show: isNarrow },
+            sortValue: customElevationMllw,
         })
-        legendData.push({ name: customElevationTitle, legendId: LegendId.CustomElevation })
+        legend.push({
+            name: customElevationTitle,
+            legendId: LegendId.CustomElevation,
+            sortValue: customElevationMllw,
+        })
     }
+
+    // series order drives tooltip display order and legend order drives legend display order,
+    // so sort the unpredictable ones now, high-to-low. The rest are in a logical permanent order.
+    series.sort((a, b) => b.sortValue - a.sortValue)
+    legend.sort((a, b) => b.sortValue - a.sortValue)
 
     if (data.dimensions.includes(Dimension.HistTides)) {
         series.push({
@@ -242,7 +272,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             symbolSize: tideMarkerSize,
             color: ObservedTideColor,
         })
-        legendData.push({ name: ObservedTideTitle, legendId: LegendId.ObservedTide })
+        legend.push({ name: ObservedTideTitle, legendId: LegendId.ObservedTide })
     }
     if (data.dimensions.includes(Dimension.AstroTides)) {
         series.push({
@@ -258,7 +288,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             symbolSize: tideMarkerSize,
             color: PredictedTideColor,
         })
-        legendData.push({ name: PredictedTideTitle, legendId: LegendId.PredictedTide })
+        legend.push({ name: PredictedTideTitle, legendId: LegendId.PredictedTide })
     }
     if (data.dimensions.includes(Dimension.RecordedStormSurge)) {
         series.push({
@@ -273,7 +303,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true,
             color: RecordedStormSurgeColor,
         })
-        legendData.push({ name: RecordedStormSurgeTitle, legendId: LegendId.RecordedStormSurge })
+        legend.push({ name: RecordedStormSurgeTitle, legendId: LegendId.RecordedStormSurge })
     }
     if (data.dimensions.includes(Dimension.ProjectedStormTide)) {
         series.push({
@@ -289,7 +319,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true,
             color: ProjectedStormTideColor,
         })
-        legendData.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
+        legend.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
     }
     if (data.dimensions.includes(Dimension.ProjectedStormSurge)) {
         series.push({
@@ -305,7 +335,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true,
             color: ProjectedStormSurgeColor,
         })
-        legendData.push({ name: ProjectedStormSurgeTitle, legendId: LegendId.ProjectedStormSurge })
+        legend.push({ name: ProjectedStormSurgeTitle, legendId: LegendId.ProjectedStormSurge })
     }
     if (data.dimensions.includes(Dimension.WindGusts)) {
         series.push({
@@ -324,7 +354,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 return deg <= 180 ? -deg : 360 - deg
             },
         })
-        legendData.push({
+        legend.push({
             name: WindGustTitle,
             icon: 'image://' + BlueArrow,
             legendId: LegendId.WindGust,
@@ -346,7 +376,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 return deg <= 180 ? -deg : 360 - deg
             },
         })
-        legendData.push({
+        legend.push({
             name: WindSpeedTitle,
             icon: 'image://' + GreenArrow,
             legendId: LegendId.WindSpeed,
@@ -369,7 +399,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             },
             color: ForecastWindSpeedColor,
         })
-        legendData.push({
+        legend.push({
             name: ForecastWindSpeedTitle,
             icon: 'image://' + BlackArrow,
             legendId: LegendId.WindForecast,
@@ -385,7 +415,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }
             } else if (param.componentType === 'legend') {
                 var legendId = 0
-                for (const leg of legendData) {
+                for (const leg of legend) {
                     if (leg.name === param.value) {
                         legendId = leg.legendId
                         break
@@ -428,6 +458,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         data.timeline,
         data.syzygy,
         ctx.station,
+        data.highest_annual_prediction,
         customElevationMllw,
     )
 
@@ -446,13 +477,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
         tooltip: {
             trigger: 'axis',
             formatter: formatTooltip,
+            order: 'seriesAsc',
         },
         legend: {
             top: '20%',
             right: '2%',
             orient: 'vertical',
             borderWidth: 1,
-            data: !isNarrow ? legendData : [],
+            data: !isNarrow ? legend : [],
             triggerEvent: true,
             formatter: (name) => {
                 if (name.startsWith('Wind ')) {
