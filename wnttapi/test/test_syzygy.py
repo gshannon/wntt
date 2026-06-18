@@ -2,10 +2,11 @@ import os
 from datetime import date, datetime
 from unittest import TestCase
 
+from django import setup
+
 import app.datasource.syzygy as syzygy
 import app.tzutil as tz
 from app.timeline import GraphTimeline
-from django import setup
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
 csv_location = f"{cur_path}/../../datamount/syzygy"
@@ -50,18 +51,9 @@ class TestSyzygy(TestCase):
 
         data = syzygy.get_syzygy_data(timeline, data_dir=csv_location)
         expected = {
-            datetime(2026, 1, 3, 5, 0, tzinfo=zone): [
-                syzygy.FULL_MOON,
-                datetime(2026, 1, 3, 5, 3, tzinfo=zone),
-            ],
-            datetime(2026, 1, 1, 16, 45, tzinfo=zone): [
-                syzygy.PERIGEE,
-                datetime(2026, 1, 1, 16, 45, tzinfo=zone),
-            ],
-            datetime(2026, 1, 3, 12, 15, tzinfo=zone): [
-                syzygy.PERIHELION,
-                datetime(2026, 1, 3, 12, 16, tzinfo=zone),
-            ],
+            datetime(2026, 1, 3, 5, 3, tzinfo=zone): syzygy.FULL_MOON,
+            datetime(2026, 1, 1, 16, 45, tzinfo=zone): syzygy.PERIGEE,
+            datetime(2026, 1, 3, 12, 16, tzinfo=zone): syzygy.PERIHELION,
         }
         self.assertEqual(data, expected)
 
