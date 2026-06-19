@@ -30,7 +30,6 @@ class Param(Enum):
 
 WATER_PARAMS = [Param.Tide, Param.Temperature]
 WIND_PARAMS = [Param.WindSpeed, Param.WindGust, Param.WindDir]
-WIND_DIRSTR_LABEL = "dir_str"
 
 """
 Access CDMO web services to retrieve observed tide, wind, and temperature data. 
@@ -107,7 +106,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     useDb (bool): pull from database instead of calling cdmo, default True
 
     Returns:
-    -{dt: {"speed": <value>, "gust": <value>, "dir_deg": <value>, "dir_str": <value> }}
+    -{dt: {"speed": <value>, "gust": <value>, "dir_deg": <value> }}
     """
 
     wind_dict = {}
@@ -143,7 +142,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
                 Param.WindSpeed.label: rec.speed,
                 Param.WindGust.label: rec.gust,
                 Param.WindDir.label: rec.dir_deg,
-                WIND_DIRSTR_LABEL: rec.dir_str,
             }
 
     else:
@@ -166,18 +164,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
             )
             return wind_dict
 
-        decorate_wind_data(wind_dict)
-
     return wind_dict
-
-
-def decorate_wind_data(wind_dict: dict):
-    """The graph will display compass point names like 'N', 'SE' or 'WNW', so add that in."""
-    for dt, obj in wind_dict.items():
-        if Param.WindDir.label in obj:
-            wind_dict[dt][WIND_DIRSTR_LABEL] = util.degrees_to_dir(
-                obj[Param.WindDir.label]
-            )
 
 
 def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:

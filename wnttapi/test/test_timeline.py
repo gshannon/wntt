@@ -5,7 +5,6 @@ import app.datasource.cdmo as cdmo
 import app.graphutil as gu
 import app.tzutil as tz
 import app.util as util
-from app.aux_data import AuxData
 from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
 spring_date = date(2024, 3, 10)
@@ -186,19 +185,16 @@ class TestHiloTimeline(TestCase):
                 cdmo.Param.WindSpeed.label: 8.1,
                 cdmo.Param.WindGust.label: 22,
                 cdmo.Param.WindDir.label: 0,
-                cdmo.WIND_DIRSTR_LABEL: "N",
             },
             non_hilo_time_2: {
                 cdmo.Param.WindSpeed.label: 16,
                 cdmo.Param.WindGust.label: 35.2,
                 cdmo.Param.WindDir.label: 60,
-                cdmo.WIND_DIRSTR_LABEL: "ENE",
             },
             past_hilo_time_1: {
                 cdmo.Param.WindSpeed.label: 12,
                 cdmo.Param.WindGust.label: 15.5,
                 cdmo.Param.WindDir.label: 325,
-                cdmo.WIND_DIRSTR_LABEL: "NW",
             },
         }
 
@@ -207,9 +203,8 @@ class TestHiloTimeline(TestCase):
             [past_hilo_time_1, past_hilo_time_2, later_hilo_time_1, later_hilo_time_2]
         )
 
-        aux_data = AuxData()
-        wind_speed_plot, wind_gust_plot = gu.build_wind_plots(
-            timeline, wind_dict, aux_data
+        wind_speed_plot, wind_gust_plot, wind_dir_plot = gu.build_wind_plots(
+            timeline, wind_dict
         )
         self.assertEqual(wind_speed_plot, [None, 12, None, None, None, None])
         self.assertEqual(wind_gust_plot, [None, 15.5, None, None, None, None])

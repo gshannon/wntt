@@ -2,7 +2,6 @@ import logging
 from datetime import date, datetime, timedelta
 
 from app import util
-from app.aux_data import AuxData, AuxDataType
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
@@ -109,56 +108,21 @@ def get_graph_data(
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
 
-    aux_data = AuxData()
-    hist_tides_plot = build_hist_tide_plot(
-        timeline, water_dict, hilo_event_dict, aux_data
+    hist_tides_plot, hist_tides_label_plot = build_hist_tide_plot(
+        timeline, water_dict, hilo_event_dict
     )
 
-    wind_speed_plot, wind_gust_plot = build_wind_plots(timeline, wind_dict, aux_data)
-
-    forecast_wind_speed_plot = build_wind_forecast_plots(
-        timeline, forecast_wind_dict, aux_data
+    wind_speed_plot, wind_gust_plot, wind_dir_plot = build_wind_plots(
+        timeline, wind_dict
     )
 
-    astro_tides_plot = build_astro_plot(
-        timeline, astro_preds15_dict, hilo_event_dict, aux_data
+    astro_tides_plot, astro_label_plot = build_astro_plot(
+        timeline, astro_preds15_dict, hilo_event_dict
     )
 
-    past_storm_surge_check_plot = None
-    past_storm_tide_check_plot = None
-    past_storm_surge_check_bias1_plot = None
-    past_storm_tide_check_bias1_plot = None
-    past_storm_surge_check_bias2_plot = None
-    past_storm_tide_check_bias2_plot = None
-
-    # if special:
-    #     past_surge_check_dict = sg.get_best_historic_surge(
-    #         timeline, station.noaa_station_id, None
-    #     )
-    #     past_surge_check_bias1_dict = sg.get_best_historic_surge(
-    #         timeline, station.noaa_station_id, 1
-    #     )
-    #     past_surge_check_bias2_dict = sg.get_best_historic_surge(
-    #         timeline, station.noaa_station_id, 2
-    #     )
-
-    #     past_storm_surge_check_plot, past_storm_tide_check_plot = (
-    #         build_past_surge_check_plots(
-    #             timeline, past_surge_check_dict, astro_preds15_dict
-    #         )
-    #     )
-
-    #     past_storm_surge_check_bias1_plot, past_storm_tide_check_bias1_plot = (
-    #         build_past_surge_check_plots(
-    #             timeline, past_surge_check_bias1_dict, astro_preds15_dict
-    #         )
-    #     )
-
-    #     past_storm_surge_check_bias2_plot, past_storm_tide_check_bias2_plot = (
-    #         build_past_surge_check_plots(
-    #             timeline, past_surge_check_bias2_dict, astro_preds15_dict
-    #         )
-    #     )
+    forecast_wind_speed_plot, forecast_wind_dir_plot = build_wind_forecast_plots(
+        timeline, forecast_wind_dict
+    )
 
     past_surge_plot = (
         timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
@@ -209,6 +173,10 @@ def get_graph_data(
         "forecast-wind-speeds": forecast_wind_speed_plot,
         "future-tide": future_storm_tide_plot,
         "future-surge": future_surge_plot,
+        "hist-tides-labels": hist_tides_label_plot,
+        "wind-dir": wind_dir_plot,
+        "astro-tides-labels": astro_label_plot,
+        "forecast-wind-dir": forecast_wind_dir_plot,
     }
 
     keys = ["dt"]
@@ -235,22 +203,11 @@ def get_graph_data(
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
             station, start_date.year
         ),
-        # This is datetime-based auxilary data used as lookups for various annotations in the chart. For these we'll build a
-        # dense dict keyed by the datetime.  Note that json doesn't support datetime as object keys so we convert to ISO strings.
-        "aux_data": {dt.isoformat(): val for (dt, val) in aux_data.data.items()},
     }
-    #     "past_surge": past_surge_plot,
-    # "past_storm_surge_check": past_storm_surge_check_plot,
-    # "past_storm_tide_check": past_storm_tide_check_plot,
-    # "past_storm_surge_check_bias1": past_storm_surge_check_bias1_plot,
-    # "past_storm_tide_check_bias1": past_storm_tide_check_bias1_plot,
-    # "past_storm_surge_check_bias2": past_storm_surge_check_bias2_plot,
-    # "past_storm_tide_check_bias2": past_storm_tide_check_bias2_plot,
-    # }
 
 
 def build_hist_tide_plot(
-    timeline: GraphTimeline, water_dict: dict, hilo_event_dict: dict, aux_data: AuxData
+    timeline: GraphTimeline, water_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """Build historical tide plot and high or low tide labels. For timelines entirely in the future,
     each callback would return None, so we can just return None for both lists.
@@ -259,28 +216,24 @@ def build_hist_tide_plot(
         timeline (GraphTimeline): the timeline
         water_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
         hilo_event_dict: dense dict of all high/low tides, {timeline_dt: HighOrLow}
-        aux_data: AuxData instance to be populated with any aux data we want to return to the app.
 
 
     Returns:
         tuple[list, list]:
         - hist_tides_plot: list of historical tide heights in MLLW feet, or None if no data
+        - hist_tides_labels: corresponding "(HIGH)" or "(LOW)" labels, when applicable
     """
 
     if timeline.is_all_future():
-        return None
+        return None, None
 
     def get_hilo_label(dt: datetime):
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
             # If it's a PredictedHighOrLow, we don't want to annotate on the historical plot.
             if isinstance(event, ObservedHighOrLow):
-                aux_data.add(
-                    dt,
-                    AuxDataType.OBSERVED_HILO,
-                    "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)",
-                )
-        return ""
+                return "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)"
+        return None
 
     def get_tide(dt: datetime):
         if dt in water_dict:
@@ -289,8 +242,8 @@ def build_hist_tide_plot(
             return None
 
     hist_tides_plot = timeline.build_plot(get_tide)
-    timeline.build_plot(get_hilo_label)
-    return hist_tides_plot
+    hist_tides_labels = timeline.build_plot(get_hilo_label)
+    return hist_tides_plot, hist_tides_labels
 
 
 def build_future_surge_plots(
@@ -401,23 +354,21 @@ def build_past_surge_check_plots(
 
 
 def build_wind_forecast_plots(
-    timeline: GraphTimeline, forecast_dict: dict, aux_data: AuxData
-) -> list:
+    timeline: GraphTimeline, forecast_dict: dict
+) -> tuple[list, list]:
     """
-    Build data for 3 graph plots for wind forecast -- speed, direction (degrees), and direction label (e.g. NNE).
+    Build data for 2 graph plots for wind forecast -- speed and direction (degrees)
 
     Args:
         timeline (GraphTimeline): the timeline
         forecast_dict (dict): forecast data.
 
     Returns:
-        forecast_wind_speed_plot:
-    Side-effects:
-        * Wind direction (0-360, to drive marker angle) added to aux_data with key "FWD"
-        * Wind direction string (for hover text display) added to aux_data with key "FWDS"
+        - forecast_wind_speed_plot:
+        - Corresponding wind direction plost (0-360), to drive marker angle)
     """
     if len(forecast_dict) == 0:
-        return None
+        return None, None
 
     found = False
 
@@ -430,36 +381,23 @@ def build_wind_forecast_plots(
 
     def get_dir_degrees(dt):
         if dt in forecast_dict:
-            aux_data.add(
-                dt, AuxDataType.FORECAST_WIND_DIR, forecast_dict[dt].get("dir")
-            )
-        return None
-
-    def get_dir_label(dt):
-        if dt in forecast_dict:
-            aux_data.add(
-                dt,
-                AuxDataType.FORECAST_WIND_DIR_STR,
-                forecast_dict[dt].get("dir_str"),
-            )
+            return forecast_dict[dt].get("dir")
         return None
 
     forecast_speed_plot = timeline.build_plot(get_value)
-    timeline.build_plot(get_dir_degrees)
-    timeline.build_plot(get_dir_label)
+    forecast_wind_dir_plot = timeline.build_plot(get_dir_degrees)
 
     if not found:
         return None
 
-    return forecast_speed_plot
+    return forecast_speed_plot, forecast_wind_dir_plot
 
 
 def build_astro_plot(
     timeline: GraphTimeline,
     reg_preds_dict: dict,
     hilo_event_dict: dict,
-    aux_data: AuxData,
-) -> list:
+) -> tuple[list, list]:
     """
     Builds plots for the astronomical tide data. We essentially merge the regular 15-min predictions and the
     hilo data, preferring the hilo value if present, which is more accurate.
@@ -471,8 +409,7 @@ def build_astro_plot(
 
     Returns:
         - Matching plot data for the astronomical tide values, including Nones where data is missing (unlikely).
-    Side-effects:
-        * Aux data is populated with HiLo annotation labels, keyed by datetime
+        - Corresponding "(HIGH)" or "(LOW)" labels where applicable
     """
 
     def get_value(dt):
@@ -488,40 +425,33 @@ def build_astro_plot(
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
             if isinstance(event, PredictedHighOrLow):
-                aux_data.add(
-                    event.real_dt,
-                    AuxDataType.ASTRO_HILO,
-                    "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)",
-                )
-        return ""
+                return ("(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)",)
+        return None
 
     astro_tides_plot = timeline.build_plot(get_value)
-    timeline.build_plot(get_label)
+    astro_labels_plot = timeline.build_plot(get_label)
 
-    return astro_tides_plot
+    return astro_tides_plot, astro_labels_plot
 
 
 def build_wind_plots(
-    timeline: GraphTimeline, wind_dict: dict, aux_data: AuxData
-) -> tuple[list, list]:
+    timeline: GraphTimeline, wind_dict: dict
+) -> tuple[list, list, list]:
     """Convert the recorded wind data to 4 plots for Plotly scatter plots.
 
     Args:
         timeline (GraphTimeline): timeline
-        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x, 'dir_str': x}}
+        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x}}
 
     Returns:
-        1. Wind speed plot
-        2. Wind gust plot
-
-    Side-effects:
-        * Wind direction (0-360, to drive marker angle) added to aux_data with key "WD"
-        * Wind direction string (for hover text display) added to aux_data with key "WDS"
+        - Wind speed plot
+        - Wind gust plot
+        - Corresponding wind direction (0 - 360) to drive marker angle
     """
 
     if len(wind_dict) == 0:
         # There are no wind predictions, return None for all lists.
-        return None, None
+        return None, None, None
 
     found = False
 
@@ -551,26 +481,16 @@ def build_wind_plots(
         return check_item(dt, cdmo.Param.WindGust.label)
 
     def check_dir(dt):
-        val = check_item(dt, cdmo.Param.WindDir.label)
-        if val is not None:
-            aux_data.add(dt, AuxDataType.OBSERVED_WIND_DIR, val)
-        return ""
-
-    def check_dir_str(dt):
-        val = check_item(dt, cdmo.WIND_DIRSTR_LABEL)
-        if val is not None:
-            aux_data.add(dt, AuxDataType.OBSERVED_WIND_DIR_STR, val)
-        return ""
+        return check_item(dt, cdmo.Param.WindDir.label)
 
     wind_speed_plot = timeline.build_plot(check_speed)
     wind_gust_plot = timeline.build_plot(check_gust)
-    timeline.build_plot(check_dir)
-    timeline.build_plot(check_dir_str)
+    wind_dir_plot = timeline.build_plot(check_dir)
 
     if not found:
-        return None, None
+        return None, None, None
 
-    return wind_speed_plot, wind_gust_plot
+    return wind_speed_plot, wind_gust_plot, wind_dir_plot
 
 
 def validate_dates(start: date, end: date):

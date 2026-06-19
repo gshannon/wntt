@@ -81,9 +81,9 @@ def extract_data(
         latest_wind_dt, wind_data = max(wind_dict.items(), key=lambda x: x[0])
         wind_speed_str = wind_data[cdmo.Param.WindSpeed.label]
         wind_gust_str = wind_data[cdmo.Param.WindGust.label]
-        wind_dir_str = wind_data[cdmo.WIND_DIRSTR_LABEL]
+        wind_dir_deg = wind_data[cdmo.Param.WindDir.label]
     else:
-        latest_wind_dt = wind_speed_str = wind_gust_str = wind_dir_str = None
+        latest_wind_dt = wind_speed_str = wind_gust_str = wind_dir_deg = None
 
     # Get the time and type of the next high or low tide prediction.
     # dict is already sorted by datetime, so we just need to get the first real_dt that's in the future.
@@ -104,7 +104,7 @@ def extract_data(
     return {
         "wind_speed": wind_speed_str,
         "wind_gust": wind_gust_str,
-        "wind_dir": wind_dir_str,
+        "wind_dir_deg": wind_dir_deg,
         "tide": tide_str,
         "tide_dir": direction_str,
         "temp": temp_str,

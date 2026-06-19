@@ -110,9 +110,8 @@ class Wind(models.Model):
         max_length=25, null=False
     )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
     speed = models.FloatField(null=False)
-    gust = models.FloatField(null=True)
+    gust = models.FloatField(null=False)
     dir_deg = models.SmallIntegerField(null=False)
-    dir_str = models.CharField(max_length=3, null=False)
 
     class Meta:
         db_table = "wind"
