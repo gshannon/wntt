@@ -1,5 +1,9 @@
-import { ScreenSize, getScreenSize } from './utils'
 import { getSyzygyUrl } from './Syzygy'
+
+// These constants drive optimal placement settings in the EChar.  Adjust if needed.
+const LegendWidthPix = 220 // width of our legend currently
+const GridLeftFactor = 0.08 // this is treated by echarts as a minimum; it's widened when labels don't fit on small screens
+const ChartDisplayFactor = 0.833 // this is 10/12 -- the graph is in the middle of a bootstrap row of [col-1 + col-10 + col-1]
 
 export const Dimension = Object.freeze({
     DateTime: 'dt',
@@ -79,43 +83,54 @@ export const buildLocalDataSet = (
     return { source: localBlob, dimensions: localDims }
 }
 
-export const getResponsiveGridDefs = (showingWind) => {
-    const screenSize = getScreenSize()
+// Based on current screen width, determine best placement of the grid and legend and grid width so it looks
+// great on any screen size.  showingLegend should be false on small screens.
+export const getOptimalPlacement = (showingLegend) => {
+    const screenPix = window.innerWidth
+    const legendMarginPix = screenPix >= 1000 ? 20 : 10 // We can afford a wider margin on big screens
+    const colWidthPix = Math.ceil(screenPix * ChartDisplayFactor)
+    const gridLeftPix = Math.ceil(colWidthPix * GridLeftFactor)
 
+    const legendLeftPix = colWidthPix - LegendWidthPix - legendMarginPix
+    const gridWidthPix =
+        showingLegend ?
+            colWidthPix - gridLeftPix - LegendWidthPix - legendMarginPix * 2
+        :   colWidthPix - gridLeftPix * 2
+
+    return { gridLeftPix, gridWidthPix, legendLeftPix }
+}
+
+export const getResponsiveGridDefs = (showingWind, placement) => {
     const syzygyTop = '15%'
     const syzygyHeight = '5%'
     const tideGridTop = '20%'
     const windGridTop = '54%'
     const windGridHeight = '25%'
-    const leftMargin = '8%'
 
-    var gridWidth
-    switch (screenSize) {
-        case ScreenSize.Small:
-            gridWidth = '87%'
-            break
-        case ScreenSize.Medium:
-            gridWidth = '55%'
-            break
-        case ScreenSize.Large:
-            gridWidth = '62%'
-            break
-        case ScreenSize.XLarge:
-            gridWidth = '67%'
-            break
-        case ScreenSize.XXLarge:
-            gridWidth = '70%'
-            break
-        default: // xsmall
-            gridWidth = '87%'
-    }
     const tideGridHeight = showingWind ? '30%' : '57%'
     const grid = [
         // The top section of the grid is only for the moon/sun symbols
-        { left: leftMargin, top: syzygyTop, width: gridWidth, height: syzygyHeight },
-        { left: leftMargin, top: tideGridTop, width: gridWidth, height: tideGridHeight },
+        {
+            left: placement.gridLeftPix,
+            top: syzygyTop,
+            width: placement.gridWidthPix,
+            height: syzygyHeight,
+        },
+        {
+            left: placement.gridLeftPix,
+            top: tideGridTop,
+            width: placement.gridWidthPix,
+            height: tideGridHeight,
+        },
         ...(showingWind ?
-            [{ left: leftMargin, top: windGridTop, width: gridWidth, height: windGridHeight }]
+            [
+                {
+                    left: placement.gridLeftPix,
+                    top: windGridTop,
+                    width: placement.gridWidthPix,
+                    height: windGridHeight,
+                },
+            ]
         :   []),
     ]
     return grid

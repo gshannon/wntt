@@ -1,19 +1,17 @@
-/* eslint-disable */
 import { useContext, useState, useRef } from 'react'
 import { AppContext } from './AppContext'
-import {
-    calcWindspeedTickInterval,
-    degreesToDir,
-    formatDate,
-    isTouchScreen,
-    isSmallScreen,
-    toEchartDegrees,
-} from './utils'
+import { degreesToDir, formatDate, isSmallScreen, toEchartDegrees } from './utils'
 import * as storage from './storage'
 import ReactECharts from 'echarts-for-react'
 import { format } from 'date-fns'
 import Spinner from 'react-bootstrap/Spinner'
-import { Dimension, LegendId, buildLocalDataSet, getResponsiveGridDefs } from './ChartBuilder'
+import {
+    Dimension,
+    LegendId,
+    buildLocalDataSet,
+    getOptimalPlacement,
+    getResponsiveGridDefs,
+} from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
 import { SyzygyConfig } from './Syzygy'
 import ErrorBlock from './ErrorBlock'
@@ -125,13 +123,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return null
     }
 
-    // const fromBlob = (row, dimName) => {
-    //     const ndx =
-    //     return row[data.dimensions.indexOf(dimName)]
-    // }
-
-    // console.log(data.dimensions)
-    // console.log(data.blob)
     const formatTooltip = (params) => {
         // There's a param for each tooltip-enabled series that contains data associated with the Y axis under the cursor.
         // I hate building every possible tooltip with one function, but if I define the tooltips
@@ -148,7 +139,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             if (val != null) {
                 buffer += `<br/>${p.marker} ${p.seriesName}: `
                 const dimName = p.dimensionNames[dimIndex]
-                const dtstr = p.data[0]
                 if ([Dimension.WindGusts, Dimension.WindSpeeds].includes(dimName)) {
                     const deg = p.data[data.dimensions.indexOf(Dimension.WindDir)]
                     buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
@@ -463,9 +453,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
     if (data.syzygy) xAxesForZoom = [0, ...xAxesForZoom]
     if (showingWind) xAxesForZoom = [...xAxesForZoom, 2]
 
+    const placement = getOptimalPlacement(!isNarrow)
+    const gridDef = getResponsiveGridDefs(showingWind, placement)
+
     const options = {
         backgroundColor: PlotBgColor,
-        grid: getResponsiveGridDefs(showingWind),
+        grid: gridDef,
         title: [
             {
                 text: `Tides at ${ctx.station.waterStationName}`,
@@ -476,7 +469,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 [
                     {
                         text: 'Click lines below to toggle visibility.',
-                        left: '72%',
+                        left: placement.legendLeftPix,
                         top: '20%',
                         textStyle: { fontSize: '.8em', fontWeight: 'bold' },
                     },
@@ -491,9 +484,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
         legend: {
             top: '25%',
-            left: '72%',
+            left: placement.legendLeftPix,
             orient: 'vertical',
-            borderWidth: 1,
+            borderWidth: 2,
             data: !isNarrow ? legend : [],
             triggerEvent: true,
             formatter: (name) => {
