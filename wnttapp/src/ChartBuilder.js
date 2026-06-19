@@ -100,7 +100,7 @@ export const getOptimalPlacement = (showingLegend) => {
     return { gridLeftPix, gridWidthPix, legendLeftPix }
 }
 
-export const getResponsiveGridDefs = (showingWind, placement) => {
+export const getResponsiveGridDefs = (showingWind, placement, bgColor) => {
     const syzygyTop = '15%'
     const syzygyHeight = '5%'
     const tideGridTop = '20%'
@@ -117,6 +117,8 @@ export const getResponsiveGridDefs = (showingWind, placement) => {
             height: syzygyHeight,
         },
         {
+            show: true,
+            backgroundColor: bgColor,
             left: placement.gridLeftPix,
             top: tideGridTop,
             width: placement.gridWidthPix,
@@ -125,6 +127,8 @@ export const getResponsiveGridDefs = (showingWind, placement) => {
         ...(showingWind ?
             [
                 {
+                    show: true,
+                    backgroundColor: bgColor,
                     left: placement.gridLeftPix,
                     top: windGridTop,
                     width: placement.gridWidthPix,
