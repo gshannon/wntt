@@ -31,6 +31,8 @@ const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
 const ForecastWindSpeedColor = '#8D89A6'
+const gridLineDarkColor = '#3c3941'
+const gridLineLightColor = '#ccc'
 
 const PredictedTideTitle = 'Predicted Tide'
 const RecordedStormSurgeTitle = 'Recorded Storm Surge'
@@ -512,11 +514,13 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 splitLine: {
                     show: true,
                     lineStyle: {
-                        color: '#ccc',
+                        color: gridLineDarkColor,
                         type: 'solid',
                     },
                 },
-                axisLabel: { formatter: showingWind ? '' : xAxisFormat },
+                axisLabel: { hideOverlap: true, formatter: showingWind ? '' : xAxisFormat },
+                minorTick: { show: true, splitNumber: 2, length: 0 },
+                minorSplitLine: { show: true, lineStyle: { color: gridLineLightColor } },
                 min: minDate,
             },
             ...(showingWind ?
@@ -524,14 +528,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     {
                         type: 'time',
                         gridIndex: 2,
-                        axisLabel: { formatter: xAxisFormat },
+                        axisLabel: {
+                            hideOverlap: true,
+                            formatter: xAxisFormat,
+                        },
                         splitLine: {
                             show: true,
                             lineStyle: {
-                                color: '#ccc',
+                                color: gridLineDarkColor,
                                 type: 'solid',
                             },
                         },
+                        minorTick: { show: true, splitNumber: 2, length: 0 },
+                        minorSplitLine: { show: true, lineStyle: { color: gridLineLightColor } },
                         min: minDate,
                     },
                 ]
@@ -541,14 +550,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
             {
                 // This is for the Syzygy symbols.
                 type: 'value',
-                // name: '',
                 gridIndex: 0,
                 min: 1,
                 max: 1,
                 interval: 0,
-                // axisTick: { show: false },
-                // splitLine: { show: false },
-                // splitNumber: 1,
             },
             {
                 type: 'value',
@@ -560,7 +565,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 splitLine: {
                     show: true,
                     lineStyle: {
-                        color: '#ccc',
+                        color: gridLineDarkColor,
                         type: 'solid',
                     },
                 },
@@ -575,18 +580,24 @@ export default function Chart({ error, loading, hiloMode, data }) {
                         nameTextStyle: { fontWeight: 'bold' },
                         gridIndex: 2,
                         min: 0,
-                        // interval: calcWindspeedTickInterval(ctx.station),
+                        splitLine: {
+                            show: true, // Optional: make vertical lines dark too
+                            lineStyle: {
+                                color: gridLineDarkColor,
+                                width: 1,
+                            },
+                        },
                     },
                 ]
             :   []),
         ],
         dataset: [{ source: data.blob, dimensions: data.dimensions }, localDataset],
         series: series,
-        dataZoom: [{ type: 'slider', xAxisIndex: xAxesForZoom }],
+        dataZoom: [{ type: 'slider', xAxisIndex: xAxesForZoom, show: !isNarrow }],
 
         toolbox: [
             {
-                show: true,
+                show: !isNarrow,
                 feature: {
                     restore: {},
                     saveAsImage: {
