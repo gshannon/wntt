@@ -206,3 +206,29 @@ export const calcWindspeedTickInterval = (gusts, forecasts) => {
     }
     return interval
 }
+
+export const degreesToDir = (degrees) => {
+    let direction
+
+    if (degrees <= 11) direction = 'N'
+    else if (degrees <= 33) direction = 'NNE'
+    else if (degrees <= 56) direction = 'NE'
+    else if (degrees <= 78) direction = 'ENE'
+    else if (degrees <= 101) direction = 'E'
+    else if (degrees <= 123) direction = 'ESE'
+    else if (degrees <= 146) direction = 'SE'
+    else if (degrees <= 168) direction = 'SSE'
+    else if (degrees <= 191) direction = 'S'
+    else if (degrees <= 213) direction = 'SSW'
+    else if (degrees <= 236) direction = 'SW'
+    else if (degrees <= 258) direction = 'WSW'
+    else if (degrees <= 281) direction = 'W'
+    else if (degrees <= 303) direction = 'WNW'
+    else if (degrees <= 326) direction = 'NW'
+    else if (degrees <= 348) direction = 'NNW'
+    else direction = 'N'
+    return direction
+}
+
+// echarts uses 0 ... -180 for 0 ... 180, and 1 ... 179 for 359 ... 181
+export const toEchartDegrees = (deg) => (deg <= 180 ? -deg : 360 - deg)

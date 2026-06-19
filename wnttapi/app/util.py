@@ -57,44 +57,6 @@ def centigrade_to_fahrenheit(in_value: float) -> float:
     return round(in_value * 9 / 5 + 32, 1)
 
 
-def degrees_to_dir(degrees) -> str:
-    if degrees <= 11:  # 23
-        direction = "N"
-    elif degrees <= 33:  # 22
-        direction = "NNE"
-    elif degrees <= 56:
-        direction = "NE"
-    elif degrees <= 78:
-        direction = "ENE"
-    elif degrees <= 101:
-        direction = "E"
-    elif degrees <= 123:
-        direction = "ESE"
-    elif degrees <= 146:
-        direction = "SE"
-    elif degrees <= 168:
-        direction = "SSE"
-    elif degrees <= 191:
-        direction = "S"
-    elif degrees <= 213:
-        direction = "SSW"
-    elif degrees <= 236:
-        direction = "SW"
-    elif degrees <= 258:
-        direction = "WSW"
-    elif degrees <= 281:
-        direction = "W"
-    elif degrees <= 303:
-        direction = "WNW"
-    elif degrees <= 326:
-        direction = "NW"
-    elif degrees <= 348:
-        direction = "NNW"
-    else:
-        direction = "N"
-    return direction
-
-
 def read_file(filepath):
     with open(filepath) as file:
         contents = file.read()

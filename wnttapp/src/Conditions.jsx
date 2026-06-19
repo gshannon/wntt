@@ -1,7 +1,7 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
 import { Link } from './Links'
-import { Months, roundTo } from './utils'
+import { Months, degreesToDir, roundTo } from './utils'
 import { SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
@@ -45,6 +45,7 @@ export default function Conditions({ data, error }) {
 
     const now = format_dt(new Date())
     const inches = data.next_tide_surge_str ? Number(data.next_tide_surge_str) * 12 : null
+    const wind_dir_str = degreesToDir(data.wind_dir_deg)
 
     return (
         <div className='cond-container'>
@@ -96,7 +97,7 @@ export default function Conditions({ data, error }) {
 
             <div className='cond-label'>Wind Speed</div>
             <div className='cond-data'>
-                {data.wind_speed == null ? noData : `${data.wind_speed} mph from ${data.wind_dir}`}
+                {data.wind_speed == null ? noData : `${data.wind_speed} mph from ${wind_dir_str}`}
             </div>
             <div className='cond-time'>{data.wind_time ? format_dt(data.wind_time) : noData}</div>
 

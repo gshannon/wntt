@@ -117,7 +117,6 @@ def refresh_wind(station, station_code):
                     "speed": value[cdmo.Param.WindSpeed.label],
                     "gust": value[cdmo.Param.WindGust.label],
                     "dir_deg": value[cdmo.Param.WindDir.label],
-                    "dir_str": value[cdmo.WIND_DIRSTR_LABEL],
                 },
             )
         logger.info(f"Wrote {len(wind_dict)} wind records to db")

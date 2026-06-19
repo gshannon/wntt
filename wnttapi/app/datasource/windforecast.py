@@ -135,7 +135,6 @@ def pred_json_to_dict(pred_json: dict, timeline: GraphTimeline, overlap: list):
                     result[dt] = {
                         "mph": util.kilometers_to_miles(float(s)),
                         "dir": d,
-                        "dir_str": util.degrees_to_dir(int(d)),
                     }
 
         return result

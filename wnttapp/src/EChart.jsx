@@ -1,7 +1,14 @@
 /* eslint-disable */
 import { useContext, useState, useRef } from 'react'
 import { AppContext } from './AppContext'
-import { calcWindspeedTickInterval, formatDate, isTouchScreen, isSmallScreen } from './utils'
+import {
+    calcWindspeedTickInterval,
+    degreesToDir,
+    formatDate,
+    isTouchScreen,
+    isSmallScreen,
+    toEchartDegrees,
+} from './utils'
 import * as storage from './storage'
 import ReactECharts from 'echarts-for-react'
 import { format } from 'date-fns'
@@ -37,16 +44,6 @@ const WindGustTitle = 'Wind Gust'
 const ForecastWindSpeedTitle = 'Forecast Wind Speed'
 const xAxisFormat = '{hh}:{mm} {A}\n{MMM} {d}'
 
-// These values must match the AuxDataType enum in the back end.
-const AuxDataKeys = Object.freeze({
-    HistTideHilo: 'HL', // for observed tide, '(High)' or '(Low)'
-    AstroTideHilo: 'AHL', // same, for predicted tides
-    WindDir: 'WD', // Int, wind direction 0-360
-    WindDirStr: 'WDS', // direction label, e.g. 'N', 'SW', 'SSE'
-    ForecastWindDir: 'FWD', // Int, wind direction 0-360
-    ForecastWindDirStr: 'FWDS', // direction label
-})
-
 /*
  * Contents of data:
  * 'timeline' : array of datetimes to define all x axes.
@@ -54,9 +51,9 @@ const AuxDataKeys = Object.freeze({
  *     time value (x). Values in inner arrays must correlate to data.dimensions, where [0] is always the datetime, and [1...]
  *     represent values to be graphed, or null if that time has no data for that dimension.
  * 'dimensions' : array of dimension names/keys used to identify discrete data herein. See the Dimensions object for defintions.
- * 'aux_data': object keyed by datetime, for each time a charted value has any additional data for labels, etc.
- *     Values are objects with key of AuxDataKeys and value for use in graph.
  * 'syzygy' : object with data for sun/moon symbols may be empty. Key is datetime from timeline, value is code: e.g. 'NM' for new moon
+ * 'subtitle' : date range subtitle for graph
+ * 'highest_annual_prediction' : highest predicted astro tide for the year in mllw
  */
 
 export default function Chart({ error, loading, hiloMode, data }) {
@@ -128,6 +125,13 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return null
     }
 
+    // const fromBlob = (row, dimName) => {
+    //     const ndx =
+    //     return row[data.dimensions.indexOf(dimName)]
+    // }
+
+    // console.log(data.dimensions)
+    // console.log(data.blob)
     const formatTooltip = (params) => {
         // There's a param for each tooltip-enabled series that contains data associated with the Y axis under the cursor.
         // I hate building every possible tooltip with one function, but if I define the tooltips
@@ -146,13 +150,17 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 const dimName = p.dimensionNames[dimIndex]
                 const dtstr = p.data[0]
                 if ([Dimension.WindGusts, Dimension.WindSpeeds].includes(dimName)) {
-                    buffer += `${val} mph from ${data.aux_data[dtstr]?.[AuxDataKeys.WindDirStr] ?? ''}`
+                    const deg = p.data[data.dimensions.indexOf(Dimension.WindDir)]
+                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
                 } else if (dimName === Dimension.ForecastWindSpeeds) {
-                    buffer += `${val} mph from ${data.aux_data[dtstr]?.[AuxDataKeys.ForecastWindDirStr] ?? ''}`
+                    const deg = p.data[data.dimensions.indexOf(Dimension.ForecastWindDir)]
+                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
                 } else if (dimName === Dimension.HistTides) {
-                    buffer += `${val} ${data.aux_data[dtstr]?.[AuxDataKeys.HistTideHilo] ?? ''}`
+                    const label = p.data[data.dimensions.indexOf(Dimension.HistTidesLabels)]
+                    buffer += `${val} ${label ?? ''}`
                 } else if (dimName === Dimension.AstroTides) {
-                    buffer += `${val} ${data.aux_data[dtstr]?.[AuxDataKeys.AstroTideHilo] ?? ''}`
+                    const label = p.data[data.dimensions.indexOf(Dimension.AstroTidesLabels)]
+                    buffer += `${val} ${label ?? ''}`
                 } else {
                     buffer += val
                 }
@@ -347,12 +355,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.WindGusts },
             symbol: `image://${BlueArrow}`,
             color: WindGustColor,
-            symbolRotate: (_, params) => {
-                const dtstr = params.data[0]
-                const deg = data.aux_data[params.data[0]]?.[AuxDataKeys.WindDir] ?? 0
-                // echarts uses 0 ... -180 for 0 ... 180, and 0 ... 179 for 359 ... 181
-                return deg <= 180 ? -deg : 360 - deg
-            },
+            symbolRotate: (_, params) =>
+                toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.WindDir)]),
         })
         legend.push({
             name: WindGustTitle,
@@ -370,11 +374,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.WindSpeeds },
             symbol: 'image://' + GreenArrow,
             color: WindSpeedColor,
-            symbolRotate: (_, params) => {
-                const deg = data.aux_data[params.data[0]]?.[AuxDataKeys.WindDir] ?? 0
-                // echarts uses 0 ... -180 for 0 ... 180, and 0 ... 179 for 359 ... 181
-                return deg <= 180 ? -deg : 360 - deg
-            },
+            symbolRotate: (_, params) =>
+                toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.WindDir)]),
         })
         legend.push({
             name: WindSpeedTitle,
@@ -391,12 +392,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: ForecastWindSpeedTitle,
             encode: { x: Dimension.DateTime, y: Dimension.ForecastWindSpeeds },
             symbol: 'image://' + BlackArrow,
-            symbolRotate: (_, params) => {
-                const dtstr = params.data[0]
-                const deg = data.aux_data[params.data[0]]?.[AuxDataKeys.ForecastWindDir] ?? 0
-                // echarts uses 0 ... -180 for 0 ... 180, and 1 ... 179 for 359 ... 181
-                return deg <= 180 ? -deg : 360 - deg
-            },
+            symbolRotate: (_, params) =>
+                toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.ForecastWindDir)]),
             color: ForecastWindSpeedColor,
         })
         legend.push({

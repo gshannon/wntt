@@ -18,6 +18,10 @@ export const Dimension = Object.freeze({
     PastSurge: 'past-surge',
     ProjectedStormTide: 'future-tide',
     ProjectedStormSurge: 'future-surge',
+    HistTidesLabels: 'hist-tides-labels',
+    WindDir: 'wind-dir',
+    AstroTidesLabels: 'astro-tides-labels',
+    ForecastWindDir: 'forecast-wind-dir',
 })
 
 // For uniquely identifying traces in event handling. Values don't matter, so long as they are unique.

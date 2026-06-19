@@ -33,7 +33,6 @@ class TestWindForecast(TestCase):
             {
                 "mph": util.kilometers_to_miles(10.5),
                 "dir": 311,
-                "dir_str": util.degrees_to_dir(311),
             },
         )
         self.assertEqual(max(result), datetime(2026, 2, 3, 0, tzinfo=zone))
@@ -42,6 +41,5 @@ class TestWindForecast(TestCase):
             {
                 "mph": util.kilometers_to_miles(8.1),
                 "dir": 302,
-                "dir_str": util.degrees_to_dir(302),
             },
         )
