@@ -30,6 +30,7 @@ const ProjectedStormSurgeColor = '#9467bd'
 const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
+const GridBgColor = '#ededf3'
 const ForecastWindSpeedColor = '#8D89A6'
 const gridLineDarkColor = '#3c3941'
 const gridLineLightColor = '#ccc'
@@ -456,7 +457,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
     if (showingWind) xAxesForZoom = [...xAxesForZoom, 2]
 
     const placement = getOptimalPlacement(!isNarrow)
-    const gridDef = getResponsiveGridDefs(showingWind, placement)
+    const gridDef = getResponsiveGridDefs(showingWind, placement, GridBgColor)
 
     const options = {
         backgroundColor: PlotBgColor,
