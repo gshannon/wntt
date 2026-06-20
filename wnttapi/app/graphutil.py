@@ -193,7 +193,6 @@ def get_graph_data(
         blob.append(row)
 
     return {
-        "timeline": final_timeline,
         # This group is sparse data for the actual plots shown on the chart, with Nones for missing data.
         "dimensions": keys,
         "blob": blob,
