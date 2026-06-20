@@ -50,7 +50,7 @@ export const LegendId = Object.freeze({
 })
 
 export const buildLocalDataSet = (
-    timeline,
+    blob,
     syzygyData,
     station,
     highestAnnualPrediction,
@@ -64,7 +64,8 @@ export const buildLocalDataSet = (
         ...(customElevationMllw ? [Dimension.CustomElevation] : []),
         ...(syzygyData ? [Dimension.Syzygy, Dimension.SyzygyUrl] : []),
     ]
-    const localBlob = timeline.map((dt) => {
+    const localBlob = blob.map((xrow) => {
+        const dt = xrow[0] // the 1st element of every row is the datetime string
         const row = [dt, station.recordTideMllw(), highestAnnualPrediction]
         if (customElevationMllw) {
             row.push(customElevationMllw)
@@ -85,7 +86,7 @@ export const buildLocalDataSet = (
 
 // Based on current screen width, determine best placement of the grid and legend and grid width so it looks
 // great on any screen size.  showingLegend should be false on small screens.
-export const getOptimalPlacement = (showingLegend) => {
+export const getResponsivePlacement = (showingLegend) => {
     const screenPix = window.innerWidth
     const legendMarginPix = screenPix >= 1000 ? 20 : 10 // We can afford a wider margin on big screens
     const colWidthPix = Math.ceil(screenPix * ChartDisplayFactor)
@@ -100,7 +101,7 @@ export const getOptimalPlacement = (showingLegend) => {
     return { gridLeftPix, gridWidthPix, legendLeftPix }
 }
 
-export const getResponsiveGridDefs = (showingWind, placement, bgColor) => {
+export const buildGridLayout = (showingWind, placement, bgColor) => {
     const syzygyTop = '15%'
     const syzygyHeight = '5%'
     const tideGridTop = '20%'

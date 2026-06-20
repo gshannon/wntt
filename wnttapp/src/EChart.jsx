@@ -9,8 +9,8 @@ import {
     Dimension,
     LegendId,
     buildLocalDataSet,
-    getOptimalPlacement,
-    getResponsiveGridDefs,
+    getResponsivePlacement,
+    buildGridLayout,
 } from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
 import { SyzygyConfig } from './Syzygy'
@@ -46,15 +46,14 @@ const ForecastWindSpeedTitle = 'Forecast Wind Speed'
 const xAxisFormat = '{hh}:{mm} {A}\n{MMM} {d}'
 
 /*
- * Contents of data:
- * 'timeline' : array of datetimes to define all x axes.
- * 'blob' : data for all non-constant plots, array of arrays. Essentially provides an ordered list of "dimensions" (y) for each
- *     time value (x). Values in inner arrays must correlate to data.dimensions, where [0] is always the datetime, and [1...]
- *     represent values to be graphed, or null if that time has no data for that dimension.
- * 'dimensions' : array of dimension names/keys used to identify discrete data herein. See the Dimensions object for defintions.
- * 'syzygy' : object with data for sun/moon symbols may be empty. Key is datetime from timeline, value is code: e.g. 'NM' for new moon
- * 'subtitle' : date range subtitle for graph
- * 'highest_annual_prediction' : highest predicted astro tide for the year in mllw
+ * "data" param is an object that contains everything we need to display the graph.  Properties:
+ *   blob : data for all non-constant plots, array of arrays. Essentially provides an ordered list of "dimensions" (y) for each
+ *       time value (x). Values in inner arrays must correlate to data.dimensions, where [0] is always the datetime, and [1...]
+ *       represent values to be graphed, or null if that time has no data for that dimension.
+ *   dimensions : array of dimension names/keys used to identify discrete data herein. See the Dimensions object for defintions.
+ *   syzygy : object with data for sun/moon symbols may be empty. Key is datetime from timeline, value is code: e.g. 'NM' for new moon
+ *   subtitle : date range subtitle for graph
+ *   highest_annual_prediction : highest predicted astro tide for the year in mllw
  */
 
 export default function Chart({ error, loading, hiloMode, data }) {
@@ -109,6 +108,16 @@ export default function Chart({ error, loading, hiloMode, data }) {
         )
     }
 
+    // Build a dataset to use in addition to the supplied data, with the expected structure.  This is data
+    // that it's more practical (or necessary in the case of customElevation) to build here in the frontend.
+    const localDataset = buildLocalDataSet(
+        data.blob,
+        data.syzygy,
+        ctx.station,
+        data.highest_annual_prediction,
+        customElevationMllw,
+    )
+
     // We only include the values in parens when in non-narrow screen. In narrow mode, title is shown in tooltip and values are redundant.
     const recordTideTitle =
         `Record Tide ${formatDate(new Date(ctx.station.recordTideDate))}` +
@@ -116,6 +125,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
     const highestAnnualTitle =
         'Highest Annual Predicted' + (isNarrow ? '' : ` (${data.highest_annual_prediction})`)
     const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw})`)
+    const showingWind =
+        data.dimensions.includes(Dimension.WindSpeeds) ||
+        data.dimensions.includes(Dimension.ForecastWindSpeeds)
 
     const legendIdToTitle = (legendId) => {
         for (const obj of legend) {
@@ -126,42 +138,49 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return null
     }
 
-    const formatTooltip = (params) => {
-        // There's a param for each tooltip-enabled series that contains data associated with the Y axis under the cursor.
-        // I hate building every possible tooltip with one function, but if I define the tooltips
-        // at the series level, then I can't find a way to format the datetime.
-        // First, some ugliness to pull the datetime for this point in the chart. Could use any param.
-        const dt = new Date(params[0].data[0]) // technically s/b params[0].data[params[0].encode.x[0]]
-        var buffer = ''
-        for (const p of params) {
-            // p.data is an array where [0] is the y value (dt) and others are the values under the cursor on the yaxis, in series order.
-            // p.encode is an object with keys for x and y. Here we only care about y[0], which is the index of the dimension
-            // for which we are building a tooltip. This means it's also the index into p.data for the value of that dimension.
-            const dimIndex = p.encode.y[0]
-            const val = p.data[dimIndex] // data[0] is the datetime, and data[1...] are the values for the dimensions.
-            if (val != null) {
-                buffer += `<br/>${p.marker} ${p.seriesName}: `
-                const dimName = p.dimensionNames[dimIndex]
-                if ([Dimension.WindGusts, Dimension.WindSpeeds].includes(dimName)) {
-                    const deg = p.data[data.dimensions.indexOf(Dimension.WindDir)]
-                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
-                } else if (dimName === Dimension.ForecastWindSpeeds) {
-                    const deg = p.data[data.dimensions.indexOf(Dimension.ForecastWindDir)]
-                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
-                } else if (dimName === Dimension.HistTides) {
-                    const label = p.data[data.dimensions.indexOf(Dimension.HistTidesLabels)]
-                    buffer += `${val} ${label ?? ''}`
-                } else if (dimName === Dimension.AstroTides) {
-                    const label = p.data[data.dimensions.indexOf(Dimension.AstroTidesLabels)]
-                    buffer += `${val} ${label ?? ''}`
-                } else {
-                    buffer += val
+    const onEvents = {
+        click: (param) => {
+            if (param.componentType === 'series') {
+                if (param.seriesName === 'syzygy') {
+                    // Put the selected code (e.g. FM) in state to trigger the modal popup.
+                    setSyzygyHelpCode(data.syzygy[param.data[0]])
+                }
+            } else if (param.componentType === 'legend') {
+                var legendId = 0
+                for (const leg of legend) {
+                    if (leg.name === param.value) {
+                        legendId = leg.legendId
+                        break
+                    }
+                }
+                if (legendId > 0) {
+                    const stationDaily = getOrInitializeDaily()
+                    if (!stationDaily.legendOnly.includes(legendId)) {
+                        stationDaily.legendOnly.push(legendId)
+                    } else {
+                        stationDaily.legendOnly = stationDaily.legendOnly.filter(
+                            (v) => v !== legendId,
+                        )
+                    }
+                    storage.setDailyStorage(ctx.station.id, stationDaily)
                 }
             }
-        }
-        return buffer ? format(dt, 'ccc, MMM d, yyyy h:mm aaa') + buffer : ''
+        },
     }
 
+    const onReady = () => {
+        const chart = chartRef.current?.getEchartsInstance()
+        if (chart) {
+            for (const legendId of stationDaily.legendOnly) {
+                chart.dispatchAction({
+                    type: 'legendUnSelect',
+                    name: legendIdToTitle(legendId),
+                })
+            }
+        }
+    }
+
+    // Build the series and legend arrays.
     const series = []
     const legend = []
 
@@ -174,7 +193,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: 'syzygy', // for this one, name is only needed for click handling
             encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
             symbol: (values, params) => {
-                // values is the array containing all values for x in this dataset. Elements with
+                // values is the array containing all values for x in the dataset. Elements with
                 // the value 1 indicate a symbol, and the image url will be present also
                 if (values[params.encode.y[0]]) {
                     const urlIndex = params.dimensionNames.indexOf(Dimension.SyzygyUrl)
@@ -396,68 +415,50 @@ export default function Chart({ error, loading, hiloMode, data }) {
         })
     }
 
-    const onEvents = {
-        click: (param) => {
-            if (param.componentType === 'series') {
-                if (param.seriesName === 'syzygy') {
-                    // Put the selected code (e.g. FM) in state to trigger the modal popup.
-                    setSyzygyHelpCode(data.syzygy[param.data[0]])
+    const formatTooltip = (params) => {
+        // There's a param for each tooltip-enabled series that contains data associated with the Y axis under the cursor.
+        // I hate building every possible tooltip with one function, but if I define the tooltips
+        // at the series level, then I can't find a way to format the datetime.
+        // First, some ugliness to pull the datetime for this point in the chart. Could use any param.
+        const dt = new Date(params[0].data[0]) // technically s/b params[0].data[params[0].encode.x[0]]
+        var buffer = ''
+        for (const p of params) {
+            // p.data is an array where [0] is the y value (dt) and others are the values under the cursor on the yaxis, in series order.
+            // p.encode is an object with keys for x and y. Here we only care about y[0], which is the index of the dimension
+            // for which we are building a tooltip. This means it's also the index into p.data for the value of that dimension.
+            const dimIndex = p.encode.y[0]
+            const val = p.data[dimIndex] // data[0] is the datetime, and data[1...] are the values for the dimensions.
+            if (val != null) {
+                buffer += `<br/>${p.marker} ${p.seriesName}: `
+                const dimName = p.dimensionNames[dimIndex]
+                if ([Dimension.WindGusts, Dimension.WindSpeeds].includes(dimName)) {
+                    const deg = p.data[data.dimensions.indexOf(Dimension.WindDir)]
+                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
+                } else if (dimName === Dimension.ForecastWindSpeeds) {
+                    const deg = p.data[data.dimensions.indexOf(Dimension.ForecastWindDir)]
+                    buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
+                } else if (dimName === Dimension.HistTides) {
+                    const label = p.data[data.dimensions.indexOf(Dimension.HistTidesLabels)]
+                    buffer += `${val} ${label ?? ''}`
+                } else if (dimName === Dimension.AstroTides) {
+                    const label = p.data[data.dimensions.indexOf(Dimension.AstroTidesLabels)]
+                    buffer += `${val} ${label ?? ''}`
+                } else {
+                    buffer += val
                 }
-            } else if (param.componentType === 'legend') {
-                var legendId = 0
-                for (const leg of legend) {
-                    if (leg.name === param.value) {
-                        legendId = leg.legendId
-                        break
-                    }
-                }
-                if (legendId > 0) {
-                    const stationDaily = getOrInitializeDaily()
-                    if (!stationDaily.legendOnly.includes(legendId)) {
-                        stationDaily.legendOnly.push(legendId)
-                    } else {
-                        stationDaily.legendOnly = stationDaily.legendOnly.filter(
-                            (v) => v !== legendId,
-                        )
-                    }
-                    storage.setDailyStorage(ctx.station.id, stationDaily)
-                }
-            }
-        },
-    }
-
-    const onReady = () => {
-        const chart = chartRef.current?.getEchartsInstance()
-        if (chart) {
-            for (const legendId of stationDaily.legendOnly) {
-                chart.dispatchAction({
-                    type: 'legendUnSelect',
-                    name: legendIdToTitle(legendId),
-                })
             }
         }
+        return buffer ? format(dt, 'ccc, MMM d, yyyy h:mm aaa') + buffer : ''
     }
-
-    const showingWind =
-        data.dimensions.includes(Dimension.WindSpeeds) ||
-        data.dimensions.includes(Dimension.ForecastWindSpeeds)
-    // this helps the 2 or 3 grids to line up on the x axis
-    const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
-
-    const localDataset = buildLocalDataSet(
-        data.timeline,
-        data.syzygy,
-        ctx.station,
-        data.highest_annual_prediction,
-        customElevationMllw,
-    )
 
     let xAxesForZoom = [1]
     if (data.syzygy) xAxesForZoom = [0, ...xAxesForZoom]
     if (showingWind) xAxesForZoom = [...xAxesForZoom, 2]
 
-    const placement = getOptimalPlacement(!isNarrow)
-    const gridDef = getResponsiveGridDefs(showingWind, placement, GridBgColor)
+    const placement = getResponsivePlacement(!isNarrow) // determine key pixel locations
+    const gridDef = buildGridLayout(showingWind, placement, GridBgColor)
+    // this helps the 2 or 3 grids to line up on the x axis
+    const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
 
     const options = {
         backgroundColor: PlotBgColor,
