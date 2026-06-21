@@ -11,9 +11,3 @@ image's container, which is the anchor tag. */
         width: 60%;
     }
 }
-
-@media (min-width: 1200px) {
-    dialog:modal {
-        max-width: 70%;
-    }
-}
