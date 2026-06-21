@@ -86,6 +86,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return storage.getDailyStorage(ctx.station.id)
     }
 
+    const stationDaily = getOrInitializeDaily()
+
     if (error) {
         return (
             <>
@@ -127,6 +129,15 @@ export default function Chart({ error, loading, hiloMode, data }) {
         data.dimensions.includes(Dimension.WindSpeeds) ||
         data.dimensions.includes(Dimension.ForecastWindSpeeds)
 
+    const legendIdToTitle = (legendId) => {
+        for (const obj of legend) {
+            if (obj.legendId === legendId) {
+                return obj.name
+            }
+        }
+        return null
+    }
+
     const onEvents = {
         click: (param) => {
             if (param.componentType === 'series') {
@@ -155,6 +166,18 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 }
             }
         },
+    }
+
+    const onReady = () => {
+        const chart = chartRef.current?.getEchartsInstance()
+        if (chart) {
+            for (const legendId of stationDaily.legendOnly) {
+                chart.dispatchAction({
+                    type: 'legendUnSelect',
+                    name: legendIdToTitle(legendId),
+                })
+            }
+        }
     }
 
     // Build the series and legend arrays.
@@ -437,18 +460,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
     // this helps the 2 or 3 grids to line up on the x axis
     const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
 
-    // Gray out legend items (which hides the series) if user has turned them off.
-    const legendSelected = {}
-    const stationDaily = getOrInitializeDaily()
-    stationDaily.legendOnly.forEach((lid) => {
-        for (const leg of legend) {
-            if (leg.legendId === lid) {
-                legendSelected[leg.name] = false
-                break
-            }
-        }
-    })
-
     const options = {
         backgroundColor: PlotBgColor,
         grid: gridDef,
@@ -481,7 +492,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
             orient: 'vertical',
             borderWidth: 2,
             data: !isNarrow ? legend : [],
-            selected: legendSelected,
             triggerEvent: true,
             formatter: (name) => {
                 if (name.startsWith('Wind ')) {
@@ -613,6 +623,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 ref={chartRef}
                 option={options}
                 onEvents={onEvents}
+                onChartReady={onReady}
                 style={{ height: '65vh' }}
                 notMerge={true}
                 initopts={{
