@@ -1,7 +1,3 @@
-dialog:modal {
-    max-width: 80%;
-}
-
 /* To center the jump arrows, we have to to tweak the 
 image's container, which is the anchor tag. */
 .jumpdate a {
@@ -21,9 +17,3 @@ image's container, which is the anchor tag. */
         max-width: 70%;
     }
 }
-
-/* TODO: Here is how to disable the legend toggle! */
-/* .legendtoggle {
-    cursor: default;
-    pointer-events: none;
-} */

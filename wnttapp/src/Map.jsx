@@ -1,9 +1,9 @@
-/* eslint-disable */
 import './css/Map.css'
 import { useEffect, useEffectEvent, useMemo, useRef, useContext, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
+import Modal from 'react-bootstrap/Modal'
 import { Form } from 'react-bootstrap'
 import BarLoader from 'react-spinners/BarLoader'
 import Container from 'react-bootstrap/Container'
@@ -20,7 +20,7 @@ import AddressForm from './AddressForm'
 const WaterStationEmoji = '\u{1F53B}'
 const WeatherStationEmoji = '\u{1F536}'
 
-export default function Map({ onMapClose, saveMapRef }) {
+export default function Map({ onMapClose }) {
     const ctx = useContext(AppContext)
 
     const storedOptions = storage.getPermanentStorage(ctx.station.id)
@@ -35,7 +35,6 @@ export default function Map({ onMapClose, saveMapRef }) {
     const [zoom, setZoom] = useState(stationOptions.zoom)
 
     const markerRef = useRef(null)
-    const mapRef = useRef(null)
 
     // If they've selected a new location or done address lookup, get the elevation.
     const {
@@ -72,7 +71,7 @@ export default function Map({ onMapClose, saveMapRef }) {
         setPendingMarkerLocation(null)
     }
 
-    const handleMapTypeToggle = (event) => {
+    const handleMapTypeToggle = () => {
         setMapType(mapType === 'basic' ? 'sat' : 'basic')
     }
 
@@ -128,12 +127,6 @@ export default function Map({ onMapClose, saveMapRef }) {
         onValueChange()
     }, [mapCenter, mapType, zoom])
 
-    useEffect(() => {
-        if (mapRef.current) {
-            saveMapRef(mapRef.current)
-        }
-    }, [mapRef, saveMapRef])
-
     const toolTipCfg = mu.buildTooltipLocations(ctx.station)
 
     const stationMarker = (key, loc, symbol, title) => {
@@ -171,111 +164,115 @@ export default function Map({ onMapClose, saveMapRef }) {
     }
 
     return (
-        <Container>
-            <Row className='py-2 mx-0'>
-                <Col className='col-6 px-0 d-flex flex-column justify-content-center align-items-center'>
-                    <div className='instructions-container text-start mx-2'>
-                        {
-                            <Instructions
-                                isLoading={isLoading}
-                                pendingElevationNav={pendingElevationNav}
-                            />
-                        }
-                    </div>
-                    <div className='text-center'>
-                        <Button
-                            variant='custom-primary'
-                            className='mt-2 mb-0 mx-1'
-                            onClick={() => addtoGraph()}
-                            disabled={
-                                !pendingElevationNav ||
-                                pendingElevationNav > ctx.station.maxCustomElevationNavd88()
-                            }>
-                            Graph
-                        </Button>
-                        <Button
-                            variant='custom-primary'
-                            className='mt-2 mb-0 mx-1'
-                            onClick={() => removeMarker()}
-                            disabled={!ctx.customElevationNav}>
-                            Clear
-                        </Button>
-                        <Button
-                            variant='custom-primary'
-                            className='mt-2 mb-0 mx-1'
-                            onClick={() => cancel()}>
-                            Cancel
-                        </Button>
-                    </div>
-                </Col>
-                <Col className='px-0 align-self-center flex-column'>
-                    <div>
-                        <AddressForm
-                            setPendingMarkerLocation={setPendingMarkerLocation}
-                            station={ctx.station}
-                        />
-                    </div>
-                    <div className='mx-0 mt-4 d-flex justify-content-end'>
-                        <Form.Switch
-                            type='switch'
-                            label='Satellite View'
-                            checked={mapType === 'sat'}
-                            onChange={handleMapTypeToggle}
-                        />
-                    </div>
-                </Col>
-            </Row>
-            <ErrorSection />
-            <Row className='justify-content-center mt-1 mx-0'>
-                <MapContainer
-                    center={mapCenter}
-                    boundsOptions={{ maxZoom: mu.MaxZoom }}
-                    zoom={zoom}
-                    ref={mapRef}>
-                    <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
-                    <ChangeView center={mapCenter} zoom={zoom} />
-                    <MapClickHandler />
-                    {stationMarker('wq', ctx.station.swmpLocation, WaterStationEmoji, 'Tide Gauge')}
-                    {stationMarker(
-                        'met',
-                        ctx.station.weatherLocation,
-                        WeatherStationEmoji,
-                        'Weather Station',
-                    )}
-                    {(pendingMarkerLocation || ctx.customLocation) && (
-                        <Marker
-                            draggable={true}
-                            position={pendingMarkerLocation || ctx.customLocation}
-                            icon={RedPinIcon}
-                            eventHandlers={markerEventHandlers}
-                            ref={markerRef}>
-                            <LeafletTooltip
-                                permanent
-                                opacity={0.75}
-                                direction={'right'}
-                                offset={[30, -27]}>
-                                Custom Location:{' '}
-                                {isLoading ?
-                                    '-'
-                                :   ctx.station.navd88ToMllw(
-                                        pendingElevationNav || ctx.customElevationNav,
-                                    ) + ' ft'
-                                }
-                            </LeafletTooltip>
-                        </Marker>
-                    )}
-                </MapContainer>
-            </Row>
-        </Container>
+        <Modal id='address-modal' show={true} size='xl' onHide={onMapClose}>
+            <Modal.Body className='px-4 py-4'>
+                <Container>
+                    <Row className='py-2 mx-0'>
+                        <Col className='col-6 px-0 d-flex flex-column justify-content-around align-items-center'>
+                            <div className='instructions-container text-start mx-2'>
+                                {instructions(ctx, isLoading, pendingElevationNav)}
+                            </div>
+                            <div className='text-center'>
+                                <Button
+                                    variant='custom-primary'
+                                    className='mt-2 mb-0 mx-1'
+                                    onClick={() => addtoGraph()}
+                                    disabled={
+                                        !pendingElevationNav ||
+                                        pendingElevationNav > ctx.station.maxCustomElevationNavd88()
+                                    }>
+                                    Graph
+                                </Button>
+                                <Button
+                                    variant='custom-primary'
+                                    className='mt-2 mb-0 mx-1'
+                                    onClick={() => removeMarker()}
+                                    disabled={!ctx.customElevationNav}>
+                                    Clear
+                                </Button>
+                                <Button
+                                    variant='custom-primary'
+                                    className='mt-2 mb-0 mx-1'
+                                    onClick={() => cancel()}>
+                                    Cancel
+                                </Button>
+                            </div>
+                        </Col>
+                        <Col className='px-0 align-self-center flex-column'>
+                            <div>
+                                <AddressForm
+                                    setPendingMarkerLocation={setPendingMarkerLocation}
+                                    station={ctx.station}
+                                />
+                            </div>
+                            <div className='mx-0 mt-4 d-flex justify-content-end'>
+                                <Form.Switch
+                                    type='switch'
+                                    label='Satellite View'
+                                    checked={mapType === 'sat'}
+                                    onChange={handleMapTypeToggle}
+                                />
+                            </div>
+                        </Col>
+                    </Row>
+                    <ErrorSection />
+                    <Row className='justify-content-center mt-1 mx-0'>
+                        <MapContainer
+                            center={mapCenter}
+                            boundsOptions={{ maxZoom: mu.MaxZoom }}
+                            zoom={zoom}>
+                            <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
+                            <ChangeView center={mapCenter} zoom={zoom} />
+                            <MapClickHandler />
+                            {stationMarker(
+                                'wq',
+                                ctx.station.swmpLocation,
+                                WaterStationEmoji,
+                                'Tide Gauge',
+                            )}
+                            {stationMarker(
+                                'met',
+                                ctx.station.weatherLocation,
+                                WeatherStationEmoji,
+                                'Weather Station',
+                            )}
+                            {(pendingMarkerLocation || ctx.customLocation) && (
+                                <Marker
+                                    draggable={true}
+                                    position={pendingMarkerLocation || ctx.customLocation}
+                                    icon={RedPinIcon}
+                                    eventHandlers={markerEventHandlers}
+                                    ref={markerRef}>
+                                    <LeafletTooltip
+                                        permanent
+                                        opacity={0.75}
+                                        direction={'right'}
+                                        offset={[30, -27]}>
+                                        Custom Location:{' '}
+                                        {isLoading ?
+                                            '-'
+                                        :   ctx.station.navd88ToMllw(
+                                                pendingElevationNav || ctx.customElevationNav,
+                                            ) + ' ft'
+                                        }
+                                    </LeafletTooltip>
+                                </Marker>
+                            )}
+                        </MapContainer>
+                    </Row>
+                </Container>
+            </Modal.Body>
+        </Modal>
     )
 }
 
-function Instructions({ pendingElevationNav, isLoading }) {
-    const ctx = useContext(AppContext)
-    const Cleartext = () => {
+const instructions = (ctx, isLoading, pendingElevationNav) => {
+    // const ctx = useContext(AppContext)
+    const cleartext = () => {
         return (
             <>
-                Click <b>Clear</b> to stop showing a custom location on the graph.
+                Click <b>Clear</b> to erase the marker and stop showing a custom location on the
+                graph.
             </>
         )
     }
@@ -293,7 +290,7 @@ function Instructions({ pendingElevationNav, isLoading }) {
                         elevation to be included on the graph (
                         {ctx.station.maxCustomElevationMllw()} ft).
                     </p>
-                    {ctx.customElevationNav && <Cleartext />}
+                    {ctx.customElevationNav && cleartext()}
                 </>
             )
         } else {
@@ -303,7 +300,7 @@ function Instructions({ pendingElevationNav, isLoading }) {
                         The selected location is at <b>{elevMllw} ft</b>.{' '}
                     </p>
                     Click the <b>Graph</b> button to add this to the graph as &quot;Custom
-                    Location&quot;. {ctx.customElevationNav && <Cleartext />}
+                    Location&quot;. {ctx.customElevationNav && cleartext()}
                 </>
             )
         }
@@ -316,14 +313,18 @@ function Instructions({ pendingElevationNav, isLoading }) {
                     by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
                     <b>looking up an address</b>.
                 </p>{' '}
-                Click <b>Clear</b> to stop showing a custom location on the graph.
+                {cleartext()}
             </>
         )
     } else {
         return (
             <>
-                <b>Click on the map</b> or <b>look up by address</b> to find a location and add its
-                elevation to the graph. This can help you assess the flooding risk at that location.
+                <p>
+                    <b>Click on the map</b> or <b>enter an address</b> to get the elevation of a
+                    location.{' '}
+                </p>
+                You can then add that to the graph, and that can help you assess the flooding risk
+                at that location.
             </>
         )
     }

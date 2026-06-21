@@ -1,6 +1,6 @@
-/* Adjust opacity (0.0 to 1.0) */
-dialog::backdrop {
-    background-color: rgba(0, 0, 0, 0.7);
+.modal-dialog {
+    max-width: 80%;
+    /* override --var(bs-modal-width) of 500px when @media min-width: 576 */
 }
 
 .instructions-container {
