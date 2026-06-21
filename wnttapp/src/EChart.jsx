@@ -211,7 +211,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     const dt = param.data[0] // timeline datetime
                     const code = data.syzygy[dt]
                     const dtStr = format(new Date(dt), 'ccc, MMM d, yyyy h:mm aaa')
-                    return `${SyzygyConfig[code].name}: ${dtStr}<br>Click symbol for more.`
+                    return `${SyzygyConfig[code].name}: ${dtStr}<br>Click for more.`
                 },
             },
         })

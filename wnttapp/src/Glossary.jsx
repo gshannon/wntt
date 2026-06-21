@@ -59,9 +59,9 @@ export default function Glossary() {
                     sea elevations.
                 </Entry>
                 <Entry title='Custom Location'>
-                    The elevation relative to MLLW of your selected location on the Map page. This
-                    is an elevation you are interested in showing on the graph for purposes of
-                    comparison to tide data. If you enter an address to look up, it is sent to{' '}
+                    The elevation relative to MLLW of your selected location on the Map. This is an
+                    elevation you are interested in showing on the graph for purposes of comparison
+                    to tide data. If you enter an address to look up, it is sent to{' '}
                     <Link href='https://geocode.maps.co' text='Geocode' /> to get a
                     latitude/longitude. The elevation is determined by sending the selected
                     latitude/longitude coordinates to{' '}

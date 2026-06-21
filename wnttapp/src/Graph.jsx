@@ -46,7 +46,6 @@ export default function Graph() {
     const [endDateStr, setEndDateStr] = useState(stationDaily.end ?? defaultEndStr)
     const [isHiloMode, setIsHiloMode] = useState(stationDaily.hiloMode ?? isSmallScreen())
     const [showMap, setShowMap] = useState(false)
-    const [mapRef, setMapRef] = useState(null)
     // The user can refresh the graph using the same date range. but it seems React has no native support
     // for forcing a re-render without state change, so I'm doing this hack. Calling a reducer triggers re-render.
     const [, forceRerender] = useReducer((x) => x + 1, 0)
@@ -77,28 +76,6 @@ export default function Graph() {
         onDateChange(startDateStr, endDateStr, isHiloMode)
     }, [startDateStr, endDateStr, isHiloMode])
 
-    useEffect(() => {
-        // The dialog is created as hidden, and its size is 0 until shown. Once it's shown we must invalidate
-        // the map size so it can be redrawn correctly.
-        const dialog = document.querySelector('dialog')
-        if (!dialog) {
-            console.error('dialog is null')
-            return
-        }
-        if (showMap) {
-            dialog.showModal()
-            mapRef?.invalidateSize()
-            // This is how to get clicking outside modal to close it.
-            dialog.addEventListener('click', (event) => {
-                if (event.target === dialog) {
-                    setShowMap(false)
-                }
-            })
-        } else {
-            dialog.close()
-        }
-    }, [showMap, mapRef])
-
     const queryClient = useQueryClient()
     const daysShown = daysBetween(startDateStr, endDateStr) + 1
 
@@ -120,11 +97,6 @@ export default function Graph() {
 
     const onMapClose = () => {
         setShowMap(false)
-    }
-
-    // We need a ref to the Map so we can invalidate its size when dialog is shown.
-    const saveMapRef = (mapRef) => {
-        setMapRef(mapRef)
     }
 
     const onMapRequest = () => {
@@ -269,11 +241,7 @@ export default function Graph() {
                     errorOrLoading={error || loading}
                 />
             </Row>
-            <Row>
-                <dialog className='mt-4'>
-                    <Map key={ctx.station?.id} onMapClose={onMapClose} saveMapRef={saveMapRef} />
-                </dialog>
-            </Row>
+            {showMap && <Map key={ctx.station?.id} onMapClose={onMapClose} />}
         </>
     )
 }
