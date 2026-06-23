@@ -1,10 +1,10 @@
-.modal-dialog {
+#address-modal .modal-dialog {
     max-width: 80%;
     /* override --var(bs-modal-width) with hardcoded values based on @media */
 }
 
 @media (min-width: 1200px) {
-    .xmodal-dialog {
+    #address-modal .modal-dialog {
         max-width: 70%;
     }
 }
