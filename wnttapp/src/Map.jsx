@@ -286,8 +286,8 @@ const instructions = (ctx, isLoading, pendingElevationNav) => {
             return (
                 <>
                     <p>
-                        The selected location is at <b>{elevMllw} ft</b>, which is above the maximum
-                        elevation to be included on the graph (
+                        The selected location is at <b>{elevMllw} ft</b> MLLW, which is above the
+                        maximum elevation to be included on the graph (
                         {ctx.station.maxCustomElevationMllw()} ft).
                     </p>
                     {ctx.customElevationNav && cleartext()}
@@ -297,7 +297,7 @@ const instructions = (ctx, isLoading, pendingElevationNav) => {
             return (
                 <>
                     <p>
-                        The selected location is at <b>{elevMllw} ft</b>.{' '}
+                        The selected location is at <b>{elevMllw} ft</b> MLLW.{' '}
                     </p>
                     Click the <b>Graph</b> button to add this to the graph as &quot;Custom
                     Location&quot;. {ctx.customElevationNav && cleartext()}
@@ -309,8 +309,8 @@ const instructions = (ctx, isLoading, pendingElevationNav) => {
             <>
                 <p>
                     Your chosen elevation is{' '}
-                    <b>{ctx.station.navd88ToMllw(ctx.customElevationNav)} ft</b>. You may change it
-                    by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
+                    <b>{ctx.station.navd88ToMllw(ctx.customElevationNav)} ft</b> MLLW. You may
+                    change it by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
                     <b>looking up an address</b>.
                 </p>{' '}
                 {cleartext()}
