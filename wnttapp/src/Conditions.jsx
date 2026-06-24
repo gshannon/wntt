@@ -67,11 +67,7 @@ export default function Conditions({ data, error }) {
                 Next High Tide<sup>*</sup>
             </div>
             <div className='cond-data'>
-                {data.next_tide_str ?
-                    `${data.next_tide_str} ft MLLW (${
-                        data.next_tide_type === 'H' ? 'High' : 'Low'
-                    })`
-                :   noData}
+                {data.next_tide_str ? `${data.next_tide_str} ft MLLW` : noData}
             </div>
             <div className='cond-time'>{now}</div>
 

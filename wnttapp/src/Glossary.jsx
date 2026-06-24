@@ -49,14 +49,20 @@ export default function Glossary() {
                     .
                 </Entry>
                 <Entry title='MLLW (Mean Lower Low Water)'>
-                    <Link href={TidesCurrentsDatumsUrl} text='Mean Lower Low Water' /> is a fixed
-                    point of reference (
+                    <Link href={TidesCurrentsDatumsUrl} text='Mean Lower Low Water' /> is a point of
+                    reference (
                     <Link href='https://oceanservice.noaa.gov/facts/datum.html' text='datum' />)
                     representing the average of all lowest daily tides observed over the{' '}
-                    <b>National Tidal Datum Epoch</b> for a particular tide station. When we say a
-                    tide is <i>9 feet MLLW</i>, we mean its height is 9 feet higher than than this
-                    point of reference. MLLW is the datum used by this application for all land and
-                    sea elevations.
+                    <b>National Tidal Datum Epoch</b> for a particular tide station. If a tide is{' '}
+                    <i>9 feet MLLW</i>, that means it is 9 feet higher than than this point of
+                    reference. While MLLW is the datum commonly used by meterologists for tide
+                    forecasts, land elevations are usually measured using a different datum,{' '}
+                    <Link
+                        href='https://geodesy.noaa.gov/datums/vertical/north-american-vertical-datum-1988.shtml'
+                        text='NAVD88'
+                    />
+                    . However, in this application, we use MLLW for land as well, so tides and
+                    nearby land elevations may be meaningfully compared.
                 </Entry>
                 <Entry title='Custom Location'>
                     The elevation relative to MLLW of your selected location on the Map. This is an
@@ -79,10 +85,6 @@ export default function Glossary() {
                 <Entry title='Highest Annual Predicted'>
                     The highest predicted astronomical tide for the requested year, relative to
                     MLLW.
-                </Entry>
-                <Entry title='MHW (Mean High Water)'>
-                    The average of all the high water heights, relative to MLLW, observed over the{' '}
-                    <b>National Tidal Datum Epoch</b>, i.e. between 1983 and 2001.
                 </Entry>
                 <Entry title='Observed Tide'>
                     Recorded tide level relative to MLLW. Data is captured every 15 minutes, and
