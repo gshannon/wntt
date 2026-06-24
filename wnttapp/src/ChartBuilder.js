@@ -4,6 +4,7 @@ import { getSyzygyUrl } from './Syzygy'
 const LegendWidthPix = 220 // width of our legend currently
 const GridLeftFactor = 0.08 // this is treated by echarts as a minimum; it's widened when labels don't fit on small screens
 const ChartDisplayFactor = 0.833 // this is 10/12 -- the graph is in the middle of a bootstrap row of [col-1 + col-10 + col-1]
+const PrevFactor = 0.083 // 1/12 of screen width, size of the Prev/Next columns
 
 export const Dimension = Object.freeze({
     DateTime: 'dt',
@@ -87,18 +88,19 @@ export const buildLocalDataSet = (
 // Based on current screen width, determine best placement of the grid and legend and grid width so it looks
 // great on any screen size.  showingLegend should be false on small screens.
 export const getResponsivePlacement = (showingLegend) => {
-    const screenPix = window.innerWidth
+    const screenPix = document.body.clientWidth // window.innerWidth counts scrollbar space as usable
     const legendMarginPix = screenPix >= 1000 ? 20 : 10 // We can afford a wider margin on big screens
-    const colWidthPix = Math.ceil(screenPix * ChartDisplayFactor)
-    const gridLeftPix = Math.ceil(colWidthPix * GridLeftFactor)
+    const centerColWidthPix = Math.ceil(screenPix * ChartDisplayFactor)
+    const gridLeftPix = Math.ceil(centerColWidthPix * GridLeftFactor)
+    const leftColWidthPix = Math.ceil(screenPix * PrevFactor)
 
-    const legendLeftPix = colWidthPix - LegendWidthPix - legendMarginPix
+    const legendLeftPix = centerColWidthPix - LegendWidthPix - legendMarginPix
     const gridWidthPix =
         showingLegend ?
-            colWidthPix - gridLeftPix - LegendWidthPix - legendMarginPix * 2
-        :   colWidthPix - gridLeftPix * 2
+            centerColWidthPix - gridLeftPix - LegendWidthPix - legendMarginPix * 2
+        :   centerColWidthPix - gridLeftPix * 2
 
-    return { gridLeftPix, gridWidthPix, legendLeftPix }
+    return { gridLeftPix, gridWidthPix, legendLeftPix, leftColWidthPix }
 }
 
 export const buildGridLayout = (showingWind, placement, bgColor) => {
