@@ -463,6 +463,15 @@ export default function Chart({ error, loading, hiloMode, data }) {
             trigger: 'axis',
             formatter: formatTooltip,
             order: 'seriesAsc',
+            position: function (pt, _, domElement) {
+                // Prevent tooltip from partial obstruction. Keep to right of cursor as long as possible.
+                // We want upper left to be 20 pix right and below mouse.
+                const avail = document.body.clientWidth
+                const need = pt[0] + 20 + domElement.offsetWidth + placement.leftColWidthPix
+                const short = Math.max(need - avail, 0)
+                return [pt[0] + 20 - short, pt[1] + 20]
+            },
+            textStyle: { fontSize: isNarrow ? 11 : 14 },
         },
 
         legend: {
@@ -614,7 +623,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     locale: 'EN',
                 }}
             />
-            <p style={{ fontSize: '.95em', fontWeight: 700, textAlign: 'center' }}>
+            <p style={{ fontSize: '.9em', fontWeight: 700, textAlign: 'center' }}>
                 Times are shown in station local time ({ctx.station.timeZone}).
                 <br />
                 Tide and wind observation data may be missing due to equipment maintenance,

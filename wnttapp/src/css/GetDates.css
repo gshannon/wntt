@@ -7,7 +7,7 @@
 }
 
 @media (max-width: 767px) {
-    .date-options {
+    #get-dates {
         font-size: 0.8rem;
     }
     /* form-control is used by the datepicker */

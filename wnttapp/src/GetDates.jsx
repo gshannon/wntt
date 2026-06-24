@@ -13,7 +13,6 @@ import {
     stringify,
     getMaxNumDays,
     maxGraphDate,
-    Months,
 } from './utils'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
@@ -34,8 +33,8 @@ export default function GetDates({
     const ctx = useContext(AppContext)
     const minDate = ctx.station.minGraphDate()
     const maxDate = maxGraphDate()
-    const rangeMin = `${Months[minDate.getMonth()]} ${minDate.getFullYear()}`
-    const rangeMax = `${Months[maxDate.getMonth()]} ${maxDate.getFullYear()}`
+    const rangeMin = `${minDate.getFullYear()}`
+    const rangeMax = `${maxDate.getFullYear()}`
 
     const handleHiloToggle = () => {
         toggleHiloMode()
@@ -84,7 +83,7 @@ export default function GetDates({
     }
 
     return (
-        <Container className='my-2'>
+        <Container id='get-dates' className='my-2'>
             <Row className='align-items-center'>
                 <Col className='px-0'>
                     <Row className='align-items-center mx-0 date-options'>
