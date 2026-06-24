@@ -11,7 +11,7 @@ export default function Conditions({ data, error }) {
     const ctx = useContext(AppContext)
     const noData = '--'
 
-    // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here. Ah, javascript.
+    // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here.
     const format_dt = (dts) => {
         const dt = new Date(dts)
         const re = /:\d\d /
@@ -67,14 +67,9 @@ export default function Conditions({ data, error }) {
                 Next High Tide<sup>*</sup>
             </div>
             <div className='cond-data'>
-                {data.next_tide_str ? `${data.next_tide_str} ft MLLW` : noData}
-            </div>
-            <div className='cond-time'>{now}</div>
-
-            {/* next tide time and type */}
-            <div className='cond-label'>Time</div>
-            <div className='cond-data'>
-                {data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData}
+                {data.next_tide_str ?
+                    `${data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData} ${data.next_tide_str} ft `
+                :   noData}
             </div>
             <div className='cond-time'>{now}</div>
 
