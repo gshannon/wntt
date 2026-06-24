@@ -72,7 +72,7 @@ def refresh_water(station, station_code):
 
     # Find the most recent time for water data.
     last_dt_str = Water.objects.aggregate(Max("time", default=None))["time__max"]
-    logger.info(f"Last saved water data was for {last_dt_str}")
+    logger.debug(f"Last saved water data was for {last_dt_str}")
     # Refresh the missing data, up to 7 days.
     timeline = build_timeline(last_dt_str, station)
     water_data = cdmo.get_water_data(station, timeline, useDb=False)
@@ -93,7 +93,7 @@ def refresh_water(station, station_code):
             )
         logger.info(f"Wrote {len(water_data)} water records to db")
     else:
-        logger.info("No new water data to refresh yet")
+        logger.debug("No new water data to refresh yet")
 
 
 def refresh_wind(station, station_code):
@@ -103,7 +103,7 @@ def refresh_wind(station, station_code):
 
     # Find the most recent time for wind data.
     last_dt_str = Wind.objects.aggregate(Max("time", default=None))["time__max"]
-    logger.info(f"Last saved wind data was for {last_dt_str}")
+    logger.debug(f"Last saved wind data was for {last_dt_str}")
     # Refresh the missing data, up to 7 days.
     timeline = build_timeline(last_dt_str, station)
     wind_dict = cdmo.get_wind_data(station, timeline, useDb=False)
@@ -121,7 +121,7 @@ def refresh_wind(station, station_code):
             )
         logger.info(f"Wrote {len(wind_dict)} wind records to db")
     else:
-        logger.info("No new wind data to refresh yet")
+        logger.debug("No new wind data to refresh yet")
 
 
 def build_timeline(last_dt_str, station) -> Timeline:
@@ -137,9 +137,7 @@ def build_timeline(last_dt_str, station) -> Timeline:
 
 
 if __name__ == "__main__":
-    logger.info("Starting")
     try:
         main()
     except Exception as e:
         print(str(e))
-    logger.info("Done")

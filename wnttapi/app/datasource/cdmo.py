@@ -340,7 +340,7 @@ def parse_cdmo_xml(
     ):
         logger.warning(message)
     else:
-        logger.info(message)
+        logger.debug(message)
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
