@@ -42,14 +42,14 @@ class SoapClient:
             start_time = time.time()
             try:
                 if transport is not None:
-                    logger.info(f"Creating Client with username {user_name}")
+                    logger.debug(f"Creating Client with username {user_name}")
                     cls._client = Client(
                         CDMO_WSDL,
                         retxml=True,
                         transport=transport,
                     )
                 else:
-                    logger.info("Creating Client with no transport")
+                    logger.debug("Creating Client with no transport")
                     cls._client = Client(
                         CDMO_WSDL,
                         retxml=True,
@@ -67,7 +67,7 @@ class SoapClient:
             cls._client.set_options(timeout=TIMEOUT_SEC)
             elapsed_sec = time.time() - start_time
             if elapsed_sec > 5:
-                logger.info(f"Created Client object in {round(elapsed_sec, 2)} sec")
+                logger.warning(f"Created Client object in {round(elapsed_sec, 2)} sec")
             else:
                 logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
         return cls._client
