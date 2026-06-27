@@ -488,7 +488,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             triggerEvent: true,
             formatter: (name) => {
                 if (name.startsWith('Wind ')) {
-                    return `${name} (points to direction)`
+                    return `${name} (points downwind)`
                 }
                 return name
             },
