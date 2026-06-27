@@ -73,6 +73,13 @@ def main():
     )
     parser.add_argument("-d", "--date", help="file date, YYYYMMDD", required=True)
     parser.add_argument("-c", "--cycle", help="cycle: 00, 06, 12 or 18", required=True)
+    parser.add_argument(
+        "-l",
+        "--local",
+        action="store_true",
+        help="No container, for debugging",
+        required=False,
+    )
 
     args = parser.parse_args()
 
@@ -91,7 +98,10 @@ def main():
 
     # Note that /data should be a mount point to the host file system
     filename = f"{args.noaa_station_id}-{args.date}-{args.cycle}.csv"
-    filepath = f"/data/surge/data/{filename}"
+    if args.local:
+        filepath = f"../datamount/surge/data/{filename}"
+    else:
+        filepath = f"/data/surge/data/{filename}"
 
     file_dict = load_file(filepath)
 
@@ -99,7 +109,7 @@ def main():
 
     (calc_bias1, calc_bias2, calc_bias3) = (None, None, None)
     if args.noaa_station_id in BiaslessStations:
-        swmp_station = get_swmp_station(args.noaa_station_id)
+        swmp_station = get_swmp_station(args.noaa_station_id, args.local)
 
         end_dt_stz = util.round_to_quarter(datetime.now(tz=swmp_station.time_zone))
         start_dt_stz = end_dt_stz - timedelta(
@@ -166,8 +176,11 @@ def main():
                 break
 
 
-def get_swmp_station(noaa_station_id: str) -> Station:
-    for id, data in get_all_stations().items():
+def get_swmp_station(noaa_station_id: str, local: bool) -> Station:
+    stations = (
+        get_all_stations("../datamount/stations") if local else get_all_stations()
+    )
+    for id, data in stations.items():
         if data["noaaStationId"] == noaa_station_id:
             return Station.from_dict(id, data)
 

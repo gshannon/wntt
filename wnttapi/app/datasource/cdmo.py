@@ -328,18 +328,20 @@ def parse_cdmo_xml(
 
     timeline_len = len(past_timeline)
     failure_rate = 100 - int(round(len(datadict) / len(past_timeline), 2) * 100)
-    message = (
-        f"For {params[0]}..., using {len(datadict)} out of {timeline_len} requested, failrate={failure_rate}% "
-        + f"tl=[{past_timeline[0]} - {past_timeline[-1]}] "
-        + f"records={records} out-of-range={ignored} none+bad={none_or_bad}"
-    )
 
-    if (timeline_len >= 96 and failure_rate > 20) or (
-        timeline_len < 96 and failure_rate > 95
-    ):
-        logger.warning(message)
-    else:
-        logger.debug(message)
+    logger.debug(
+        "For {}, using {} out of {} requested, failrate={}% tl=[{} - {}] records={} out-of-range={} none+bad={}".format(
+            params[0],
+            len(datadict),
+            timeline_len,
+            failure_rate,
+            past_timeline[0],
+            past_timeline[-1],
+            records,
+            ignored,
+            none_or_bad,
+        )
+    )
 
     # XML data is returned in reverse chronological order. Reverse it here.
     return dict(reversed(list(datadict.items())))
