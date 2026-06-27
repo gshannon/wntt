@@ -181,7 +181,7 @@ def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
     - params: list of requested CDMO parameters
 
     Returns:
-    - {dt: {<param-label>: <value}}
+    - {dt: {<param-label>: <value}}  (Param labels are 'level' and 'temp")
 
     """
     if station is None:
@@ -257,8 +257,7 @@ def parse_cdmo_xml(
     timeline: Timeline, station: Station, xml: str, params: list
 ) -> dict:
     """
-    Parse the data returned from CDMO for the requested timeline. Returns a dense, key-ordered
-    dict of {param: {dt: value}} where dt=datetime matching an element of the timeline and value = the data value.
+    Parse the data returned from CDMO for the requested timeline.
 
     Parameters:
     - timeline: list of datetime representing what will be displayed on the graph

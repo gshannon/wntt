@@ -6,6 +6,18 @@ info() {
 
 usage() {
   echo "usage: $(basename $0) [-d] (dev mode)"
+  cat << EOF
+usage: $(basename $0) options
+
+Options:
+-h : this help
+-v : (optional) if given, dev mode
+-d : (optional) if given, debug mode (compares doesn't write)
+-t [T|W] : (opt) data type: T=tide/temp, W=wind. Default: both
+-S <starttime> : (opt) start of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
+-E <endtime> : (opt) end of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
+EOF
+
 }
 
 fail() {
@@ -15,9 +27,15 @@ fail() {
 }
 
 devmode=0
-while getopts ":dh" opt; do
+station=welinwq
+while getopts ":vdht:s:S:E:" opt; do
   case $opt in
-    d ) devmode=1;;
+    s ) station=$OPTARG;;
+    S ) startstr="-S $OPTARG";;
+    E ) endstr="-E $OPTARG";;
+    t ) typestr="-t $OPTARG";;
+    d ) debugstr='-d';;
+    v ) devmode=1;;
     h ) usage; exit 0;;
     * ) fail;;
   esac
@@ -29,10 +47,8 @@ shift $(($OPTIND - 1))
 
 
 : '
-Run the cdmo_refresh job to pull the latest cdmo water and wind data and save it to our data store.
-Data refreshes from CDMO sources to CDMO occur perhaps every 15 to 30 minutes.
-This should be run often enough to not keep users waiting to see data that is available in CDMO, but
-not so often as to be a resource hog.  Every 15 minutes is probably a good target.
+Run the cdmo_refresh job to pull and store the latest cdmo water and/or wind data or, if start & end 
+params are provided, upsert the data defined by that timeline.
 '
 
 if [ "$devmode" -eq 1 ]; then
@@ -42,6 +58,8 @@ else
   export DJANGO_SETTINGS_MODULE=project.settings.prod
   compose_path=$HOME/docker-compose.yml
 fi
-docker compose -f $compose_path run --rm api app/datasource/cdmo_refresh.py -s welinwq
+
+# Run the python script in a new, temporary api container
+docker compose -f $compose_path run --rm api app/datasource/cdmo_refresh.py -s $station ${debugstr} ${typestr} ${startstr} ${endstr}
 
 exit 0

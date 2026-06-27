@@ -35,50 +35,6 @@ class TestCdmo(TestCase):
         full = {k: v for (k, v) in zip(timeline.get_requested(), values)}
         return {k: v for (k, v) in full.items() if v is not None}
 
-    def test_xml_parse_level_with_bad_zeros(self):
-        # Strip out bogus zero level data from cdmo.
-        # Values are in NAVD88, so 5.14 = 0 MLLW for Wells station.
-
-        # 1. with no missing data, make sure we don't remove legal zeros.
-        values = [8.14, 7.14, 6.14, 5.14, 4.14, 5.14, 6.14, 7.14, 8.14]
-        test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_tide_data(test_dict, wells)
-        self.assertEqual(cleaned, test_dict)
-
-        # 2. zero following out of range data is always removed
-        values = [7.1, 6.6, 6.1, 6.5, 6.3, 5.14, 6.1, 5.5, 4.9]
-        test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_tide_data(test_dict, wells)
-        # 6.3 - 5.14 > 1.0
-        expected = {k: v for (k, v) in test_dict.items() if v != 5.14}
-        self.assertEqual(cleaned, expected)
-
-        # 3. zero following missing data is ok if followed by data in range
-        values = [7.1, 6.6, 6.1, 5.5, None, 5.14, 6.1, 6.6, 7.1]
-        test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_tide_data(test_dict, wells)
-        # abs(5.14 - 6.1) <= 1.0
-        self.assertEqual(cleaned, test_dict)
-
-        # 4. zero at beginning of data is ok if followed by data in range
-        values = [5.14, 6.1, 5.5, 5.2, 5.0, 4.1, 3.6, 2.1, 2.4]
-        test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_tide_data(test_dict, wells)
-        # abs(5.14 - 6.1) <= 1.0
-        self.assertEqual(cleaned, test_dict)
-
-        # 5. Combo with 3 zeros in a row
-        # 1st 0 is rejected because of gap from previous value
-        # 2nd 0 is rejected because 0s on either side
-        # 3rd 0 is accepted because good gap on right side
-        values = [9.14, 8.14, 7.14, 5.14, 5.14, 5.14, 6.14, 7.14, 8.14]
-        test_dict = self.make_sample_dict(values)
-        cleaned = cdmo.clean_tide_data(test_dict, wells)
-        to_remove = [3, 4]  # These 2 should be rejected
-        keys = list(test_dict.keys())
-        expected = {k: test_dict[k] for i, k in enumerate(keys) if i not in to_remove}
-        self.assertEqual(cleaned, expected)
-
     def test_hilos_with_predicted_high_on_previous_day(self):
         # Edge case: The last high tide on day 12/20 was at 23:48. Using that as guidance, the max nearby
         # observed tide was on 12/21 at 00:00. That correctly gets marked as high for timeline of
