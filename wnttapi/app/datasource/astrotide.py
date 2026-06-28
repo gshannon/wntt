@@ -1,13 +1,12 @@
 import json
 import logging
-from datetime import date, datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime
 
 import requests
+
 from app import util
 from app.hilo import Hilo, PredictedHighOrLow
-from app.station import Station
-from app.timeline import GraphTimeline, Timeline
+from app.timeline import Timeline
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
@@ -17,8 +16,10 @@ _request_time_warning_seconds = 5
     Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
         https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
     For values, we request data in NAVD88 feet, and convert to MLLW feet using station configuration.
-    For timezones, we request LST_LDT, or local standard time / local daylight time. This means the data
-    comes the the correct local time, accounting for DST as appropriate.
+    For timezones, we request lst_ldt, which returns it in the local time of the station as known to NOAA.
+    Since the times come back as strings with no TZ component, we use the timezone of the requested timeline
+    to convert the returned times into timezone-aware datetimes. Thus, for graphing, the requested timeline
+    must match the actual timezone of the station in question, and there's no way to guarantee that herein.
 """
 base_url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
@@ -32,7 +33,9 @@ base_params = {
 }
 
 
-def get_15m_astro_tides(station: Station, timeline: GraphTimeline) -> dict:
+def get_15m_astro_tides(
+    noaa_station_id: str, timeline: Timeline, navd88_func: callable
+) -> dict:
     """
     Fetch astronomical tide level predictions for the desired timeline.
 
@@ -43,19 +46,19 @@ def get_15m_astro_tides(station: Station, timeline: GraphTimeline) -> dict:
     Returns:
         - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
     """
-    begin_date = timeline.start_dt.strftime("%Y%m%d")
-    end_date = timeline.end_dt.strftime("%Y%m%d")
-    pred_json = pull_data(station.noaa_station_id, "15", begin_date, end_date)
-    return pred15_json_to_dict(pred_json, timeline, station)
+    pred_json = pull_data(noaa_station_id, "15", timeline)
+    return pred15_json_to_dict(pred_json, timeline, navd88_func)
 
 
-def get_hilo_astro_tides(station: Station, start_date: date, end_date: date) -> dict:
+def get_hilo_astro_tides(
+    noaa_station_id: str, timeline: Timeline, navd88_func: callable
+) -> dict:
     """
     Fetch high/low astronomical tide predictions for the date range.
     Args:
-        station (Station): the SWMP station
-        start_date (date): starting date, should be in same timezone as station
-        end_date (date): ending date, should be in same timezone as station
+        noaa_station_id: the 7-char station id, e.g. 8419317
+        timeline: defines the data we want in time
+        navd88_func: func to translate navd88 feet into mllw feet
 
     Returns:
         dict of 15-min interval predictions for highs and lows only. The PredictedHighOrLow object includes
@@ -63,34 +66,33 @@ def get_hilo_astro_tides(station: Station, start_date: date, end_date: date) -> 
         {timeline_dt: PredictedHighOrLow}
     """
 
-    start_date_str = start_date.strftime("%Y%m%d")
-    end_date_str = end_date.strftime("%Y%m%d")
-
-    future_preds_json = pull_data(
-        station.noaa_station_id, "hilo", start_date_str, end_date_str
-    )
-    return hilo_json_to_dict(station, future_preds_json, station.time_zone)
+    future_preds_json = pull_data(noaa_station_id, "hilo", timeline)
+    return hilo_json_to_dict(future_preds_json, timeline, navd88_func)
 
 
-def pred15_json_to_dict(pred_json: list, timeline: Timeline, station: Station) -> dict:
+def pred15_json_to_dict(
+    pred_json: list, timeline: Timeline, navd88_func: callable
+) -> dict:
     """
     Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
     sparse dict of {dt: value} for all values that exist in the requested timeline.
-    Converts tide values to MLLW and datetimes from UTC to the station's timezone.
+    Converts tide values to MLLW per the parameter and builds time-aware datetimes in the timeline's timezone.
     """
     reg_preds_dict = {}  # {dt: value}
     if len(pred_json) == 0:
         return reg_preds_dict
     for pred in pred_json:
         dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=station.time_zone)
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
         if timeline.contains(dt):
             val = pred["v"]
-            reg_preds_dict[dt] = station.navd88_feet_to_mllw_feet(float(val))
+            reg_preds_dict[dt] = navd88_func(float(val))
     return reg_preds_dict
 
 
-def hilo_json_to_dict(station: Station, hilo_json: list, tzone: ZoneInfo) -> dict:
+def hilo_json_to_dict(
+    hilo_json: list, timeline: Timeline, navd88_func: callable
+) -> dict:
     """
     Convert json returned from the api call into a dict of high or low data values.
     Args:
@@ -99,8 +101,8 @@ def hilo_json_to_dict(station: Station, hilo_json: list, tzone: ZoneInfo) -> dic
         tzone: timezone of the station
 
     Returns:
-        A sparse dict of {timeline_dt: PredictedHighOrLow} for all values that
-        exist in the requested timeline. Converts NAVD88 to MLLW.
+        A sparse dict of {timeline_dt: PredictedHighOrLow} for all values that exist in the requested timeline.
+        Converts tide values to MLLW per the parameter and builds time-aware datetimes in the timeline's timezone.
 
     Raises:
         APIException: Invalid data from API
@@ -110,48 +112,56 @@ def hilo_json_to_dict(station: Station, hilo_json: list, tzone: ZoneInfo) -> dic
         return future_hilo_dict
     for pred in hilo_json:
         dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=tzone)
-        # If we know the time of the last observation, use that as the cutoff instead of current time, since
-        # there's a ~1 hour latency for observed data, and it's better to show the most accurate predictions
-        # when we can. Remember hi/lo prediction dates are exact minutes, not aligned with 15-min intervals.
-        val = pred["v"]
-        if pred["type"] not in ["H", "L"]:
-            logger.error("Unknown type %s for date %s", pred["type"], dts)
-            continue
-        hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
-        # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
-        future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
-            station.navd88_feet_to_mllw_feet(float(val)), hilo, dt
-        )
+        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
+        if timeline.contains(dt):
+            val = pred["v"]
+            if pred["type"] not in ["H", "L"]:
+                logger.error("Unknown type %s for date %s", pred["type"], dts)
+                continue
+            hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
+            # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
+            future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
+                navd88_func(float(val)), hilo, dt
+            )
 
     return future_hilo_dict
 
 
-def pull_data(noaa_station_id, interval, begin_date, end_date) -> list:
+def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
     """Call the tides&currents API, using:
-        - time_zone=lst-ldt, which means local time, adjusted as appropriate for daylight savings time.
-            This will always be relative to the timezone of the station, which will match the timeline.
-        - datum=NAVD, which means the data will be in NAVD88 feet. We convert to MLLW feet. We don't ask for
-            MLLW because that is a non-static standard, and the conversion will change when the new NTDE is published.
+        - time_zone=lst_ldt
+        - datum=NAVD, which means the data will be in NAVD88 feet.
+
+        Example:
+        https://api.tidesandcurrents.noaa.gov/api/prod/datagetter
+            ?product=predictions
+            &application=NOS.COOPS.TAC.WL
+            &datum=NAVD
+            &time_zone=lst_ldt
+            &units=english
+            &format=json
+            &interval=15
+            &station=8419317
+            &begin_date=2026-06-27
+            &end_date=2026-06-28
 
     Args:
         noaa_station_id (string): the NOAA station id, e.g. "8419317" for Wells
         interval (string): "15" for 15-min predictions, "hilo" for high/low predictions
-        begin_date (string): YYYYMMDD
-        end_date (string): YYYYMMDD
+        timeline: defines the date bounds of the data we want.
 
     Returns:
        Json list of dicts. Tide values are relative to NAVD88 and datetimes are in UTC.
-        For interval=hilo:
-            { "t": "2025-05-06 05:07", "v": "-3.630", "type": "L" },
         For interval=15:
             { "t": "2025-05-06 01:00", "v": "-3.624" },
+        For interval=hilo:
+            { "t": "2025-05-06 05:07", "v": "-3.630", "type": "L" },
     """
     params = {
         "interval": interval,
         "station": noaa_station_id,
-        "begin_date": begin_date,
-        "end_date": end_date,
+        "begin_date": str(timeline.start_date),  # This yields "YYYY-dd-mm"
+        "end_date": str(timeline.end_date),
     }
 
     try:

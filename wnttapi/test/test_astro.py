@@ -2,12 +2,13 @@ import os.path
 from datetime import datetime
 from unittest import TestCase
 
+from django import setup
+
 import app.datasource.astrotide as astro
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
 from app.timeline import Timeline
-from django import setup
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
@@ -27,7 +28,9 @@ class TestAstro(TestCase):
         start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
         end_dt = datetime(2025, 5, 6, 1, 45, tzinfo=zone)
         tline = Timeline(start_dt, end_dt)
-        preds_dict = astro.pred15_json_to_dict(contents, tline, station)
+        preds_dict = astro.pred15_json_to_dict(
+            contents, tline, station.navd88_feet_to_mllw_feet
+        )
         self.assertEqual(len(preds_dict), 4)
         self.assertEqual(
             preds_dict[tline.requested_times[0]],

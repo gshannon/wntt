@@ -24,7 +24,7 @@ services:
             GEOCODE_KEY: ${GEOCODE_KEY}
             CDMO_LOG_LEVEL: ${CDMO_LOG_LEVEL-INFO}
             # Supports debugging:
-            DEBUGPY_ENABLE: 1
+            DEBUGPY_ENABLE: 0
         ports:
             - 8000:8001
             # Supports debugging:
