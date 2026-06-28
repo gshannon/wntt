@@ -23,8 +23,12 @@ services:
             CDMO_PASSWORD: ${CDMO_PASSWORD}
             GEOCODE_KEY: ${GEOCODE_KEY}
             CDMO_LOG_LEVEL: ${CDMO_LOG_LEVEL-INFO}
+            # Supports debugging:
+            DEBUGPY_ENABLE: 1
         ports:
             - 8000:8001
+            # Supports debugging:
+            - 5678:5678
         restart: unless-stopped
         volumes:
             # Path is relative to the location of this yml file

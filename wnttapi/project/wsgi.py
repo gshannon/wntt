@@ -13,4 +13,13 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SET-ME-CORRECTLY")
 
+if os.environ.get("DEBUGPY_ENABLE") == "1":
+    import debugpy
+
+    debugpy.listen(("0.0.0.0", 5678))
+    print("debugpy listening on 5678", flush=True)
+    debugpy.wait_for_client()
+    print("Debugger attached!", flush=True)
+
+
 application = get_wsgi_application()
