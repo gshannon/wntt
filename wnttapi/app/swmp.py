@@ -26,15 +26,16 @@ def get_latest_conditions(station: Station) -> dict:
     # Find recent cdmo data. If it's not in this time window, it's not current enough to display.
     cdmo_end_dt = util.round_to_quarter(tz.now(station.time_zone))
     cdmo_timeline = Timeline(cdmo_end_dt - timedelta(hours=4), cdmo_end_dt)
-
-    # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
-    future_start_date = tz.now(station.time_zone).date()
-    future_end_date = future_start_date + timedelta(days=1)
-
     water_dict = cdmo.get_water_data(station, cdmo_timeline)
     wind_dict = cdmo.get_wind_data(station, cdmo_timeline)
+
+    # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
+    future_start_dt = tz.now(station.time_zone)
+    future_end_dt = future_start_dt + timedelta(days=1)
     astro_dict = astrotide.get_hilo_astro_tides(
-        station, future_start_date, future_end_date
+        station.noaa_station_id,
+        Timeline(future_start_dt, future_end_dt),
+        station.navd88_feet_to_mllw_feet,
     )
     moon_dict = syzygy.get_current_moon_phases(station.time_zone)
     surge_timeline = Timeline(

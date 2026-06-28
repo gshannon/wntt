@@ -226,7 +226,9 @@ def calculate_bias(
     those deltas to get the average. So the given timeline should be large enough to allow for missing
     observations.
     """
-    tide_preds = astro.get_15m_astro_tides(swmp_station, timeline)
+    tide_preds = astro.get_15m_astro_tides(
+        swmp_station.noaa_station_id, timeline, swmp_station.navd88_feet_to_mllw_feet
+    )
     logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
 
     deltas = []

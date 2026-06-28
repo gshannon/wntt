@@ -7,7 +7,7 @@ from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
-from app.timeline import GraphTimeline, HiloTimeline
+from app.timeline import Timeline, GraphTimeline, HiloTimeline
 
 from . import station as stn
 
@@ -65,7 +65,9 @@ def get_graph_data(
     wind_dict = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
-    astro_preds15_dict = astro.get_15m_astro_tides(station, timeline)
+    astro_preds15_dict = astro.get_15m_astro_tides(
+        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet
+    )
 
     # Get wind forecasts.
     forecast_wind_dict = wind.get_wind_forecast(station, timeline, hilo_mode)
@@ -75,12 +77,13 @@ def get_graph_data(
     # need to pull in data for the day before the timeline to handle certain edge cases where a high or low
     # occurs just before the start of the timeline.
     hilo_start_date = (
-        timeline.start_dt.date() - timedelta(days=1)
+        timeline.start_date - timedelta(days=1)
         if timeline.is_past(timeline.start_dt)
-        else timeline.start_dt.date()
+        else timeline.start_date
     )
+    tmp_timeline = Timeline(hilo_start_date, timeline.end_date, timeline.time_zone)
     astro_all_hilo_dict = astro.get_hilo_astro_tides(
-        station, hilo_start_date, timeline.end_dt.date()
+        station.noaa_station_id, tmp_timeline, station.navd88_feet_to_mllw_feet
     )
 
     # Determine all highs and lows, whether observed or predicted.

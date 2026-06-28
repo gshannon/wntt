@@ -38,6 +38,8 @@ class Timeline:
         self.requested_times = []
         self.start_dt = start_dt
         self.end_dt = end_dt
+        self.start_date = start_dt.date()
+        self.end_date = end_dt.date()
         self.time_zone = start_dt.tzinfo
         self.now = tz.now(self.time_zone) if now is None else now
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
