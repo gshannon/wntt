@@ -122,7 +122,7 @@ for ((i=0; i<${#stations[@]}; i++)); do
       export DJANGO_SETTINGS_MODULE=project.settings.prod
       compose_path=$HOME/docker-compose.yml
     fi
-    docker compose -f $compose_path run --rm api app/surge_logger.py \
+    docker compose -f $compose_path run --rm api tools/surge_logger.py \
       -d $filedate -c $cycle -n ${stations[$i]} && info "logged ${stations[$i]}.csv"
   fi
 done
