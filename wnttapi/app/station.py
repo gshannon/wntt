@@ -4,8 +4,9 @@ import os
 from datetime import date
 from zoneinfo import ZoneInfo
 
-from app import util
 from django.core.cache import cache
+
+from app import util
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/stations"
@@ -111,6 +112,16 @@ def get_supported_years() -> list:
 def get_station(station_id: str, data_dir=_default_file_dir) -> Station:
     obj = get_station_data(station_id, data_dir=data_dir)
     return Station.from_dict(station_id, obj)
+
+
+def get_station_with_noaa_id(noaa_station_id: str, nocontainer: bool) -> Station:
+    stations = (
+        get_all_stations("../datamount/stations") if nocontainer else get_all_stations()
+    )
+    for id, data in stations.items():
+        if data["noaaStationId"] == noaa_station_id:
+            return Station.from_dict(id, data)
+    raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
 
 
 def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:

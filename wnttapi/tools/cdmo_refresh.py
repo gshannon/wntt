@@ -15,6 +15,7 @@ setup()
 
 import argparse
 import logging
+import os
 from datetime import datetime, timedelta
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -31,9 +32,11 @@ logger = logging.getLogger(__name__)
 
 def main():
 
+    nocontainer = os.environ.get("IN_CONTAINER", "-") != "1"
+
     parser = build_parser()
     args = parser.parse_args()
-    if args.nocontainer:
+    if nocontainer:
         station = stn.get_station(args.swmp_station_id, "../datamount/stations")
     else:
         station = stn.get_station(args.swmp_station_id)
@@ -114,7 +117,7 @@ def refresh(
         else:
             upsert(cdmo_data, type, db_station_code)
     else:
-        logger.debug(f"No new {name} data to refresh yet")
+        logger.info(f"No new {name} data to refresh yet")
 
 
 def diff(cdmo_data: dict, type: str, db_station_code: str):
@@ -211,13 +214,13 @@ def build_parser():
     parser.add_argument(
         "-s", "--swmp_station_id", help="SWMP station id", required=True
     )
-    parser.add_argument(
-        "-n",
-        "--nocontainer",
-        action="store_true",
-        help="No container, useful for debugging",
-        required=False,
-    )
+    # parser.add_argument(
+    #     "-l",
+    #     "--local",
+    #     action="store_true",
+    #     help="No container, useful for debugging",
+    #     required=False,
+    # )
     parser.add_argument(
         "-d",
         "--debug",

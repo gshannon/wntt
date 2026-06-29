@@ -118,3 +118,41 @@ class Wind(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["station", "time"], name="wind_uk1")
         ]
+
+
+class AstroTide15(models.Model):
+    noaa_id = models.CharField(max_length=7, null=False)
+    time = models.CharField(
+        max_length=25, null=False
+    )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
+    nav_level = models.FloatField(null=False)  # This is NAVD88 tide level, not MLLW
+
+    class Meta:
+        db_table = "astrotide15"
+        constraints = [
+            models.UniqueConstraint(fields=["noaa_id", "time"], name="astrotide15_uk1")
+        ]
+
+
+class AstroTideHilo(models.Model):
+    class Type(models.TextChoices):
+        HIGH = "H", "High"
+        LOW = "L", "Low"
+
+    noaa_id = models.CharField(max_length=7, null=False)
+    time = models.CharField(
+        max_length=25, null=False
+    )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
+    real_time = models.CharField(
+        max_length=25, null=False
+    )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
+    nav_level = models.FloatField(null=False)  # This is NAVD88 tide level, not MLLW
+    hilo = models.CharField(max_length=2, null=False, choices=Type.choices)
+
+    class Meta:
+        db_table = "astrotidehilo"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["noaa_id", "time"], name="astrotideHilo_uk1"
+            )
+        ]

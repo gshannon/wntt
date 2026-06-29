@@ -4,6 +4,7 @@
 import argparse
 import csv
 import logging
+import os
 import sys
 from datetime import datetime, time, timedelta
 
@@ -20,7 +21,7 @@ import app.util as util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo
 from app.models import Surge, SurgeBias
-from app.station import Station, get_all_stations
+from app.station import Station, get_station_with_noaa_id
 from app.timeline import Timeline
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ Translating to Eastern Daylight Time:
 - ~20:15 EDT: cycle 18. Use predictions for 21:00, 22:00, 23:00, 00:00, 01:00, 02:00
 
 Inputs:
---noaa_station_id <noaa_station_id> : e.g. "8419317" for Wells
+--noaa_id <noaa_station_id> : e.g. "8419317" for Wells
 --date <date> : date of file publication, YYYYmmdd
 --cycle <cycle> : 00, 06, 12 or 18 
 
@@ -67,19 +68,13 @@ If reserve has no bias:
 
 
 def main():
+
+    nocontainer = os.environ.get("IN_CONTAINER", "-") != "1"
+
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-n", "--noaa_station_id", help="NOAA station id", required=True
-    )
+    parser.add_argument("-n", "--noaa_id", help="NOAA station id", required=True)
     parser.add_argument("-d", "--date", help="file date, YYYYMMDD", required=True)
     parser.add_argument("-c", "--cycle", help="cycle: 00, 06, 12 or 18", required=True)
-    parser.add_argument(
-        "-l",
-        "--local",
-        action="store_true",
-        help="No container, for debugging",
-        required=False,
-    )
 
     args = parser.parse_args()
 
@@ -97,8 +92,8 @@ def main():
     end_window_utc = start_window_utc + timedelta(hours=5)
 
     # Note that /data should be a mount point to the host file system
-    filename = f"{args.noaa_station_id}-{args.date}-{args.cycle}.csv"
-    if args.local:
+    filename = f"{args.noaa_id}-{args.date}-{args.cycle}.csv"
+    if nocontainer:
         filepath = f"../datamount/surge/data/{filename}"
     else:
         filepath = f"/data/surge/data/{filename}"
@@ -108,8 +103,8 @@ def main():
     # Calculate a bias for stations that don't have one in the surge file.
 
     (calc_bias1, calc_bias2, calc_bias3) = (None, None, None)
-    if args.noaa_station_id in BiaslessStations:
-        swmp_station = get_swmp_station(args.noaa_station_id, args.local)
+    if args.noaa_id in BiaslessStations:
+        swmp_station = get_station_with_noaa_id(args.noaa_id, nocontainer)
 
         end_dt_stz = util.round_to_quarter(datetime.now(tz=swmp_station.time_zone))
         start_dt_stz = end_dt_stz - timedelta(
@@ -145,7 +140,7 @@ def main():
 
         # Save to database, for potential use by the app, to add bias to the surge from the file.
         SurgeBias.objects.update_or_create(
-            noaa_id=args.noaa_station_id,
+            noaa_id=args.noaa_id,
             filedate=args.date,
             cycle=args.cycle,
             defaults={"bias": calc_bias1, "bias2": calc_bias2, "bias3": calc_bias3},
@@ -158,7 +153,7 @@ def main():
                 future_dt_24 = dt_utc + timedelta(days=1)
                 future_dt_48 = dt_utc + timedelta(days=2)
                 Surge.objects.update_or_create(
-                    noaa_id=args.noaa_station_id,
+                    noaa_id=args.noaa_id,
                     tide_time=dt_utc,
                     defaults={
                         "cycle": int(args.cycle),
@@ -174,17 +169,6 @@ def main():
                 )
             if dt_utc >= end_window_utc:
                 break
-
-
-def get_swmp_station(noaa_station_id: str, local: bool) -> Station:
-    stations = (
-        get_all_stations("../datamount/stations") if local else get_all_stations()
-    )
-    for id, data in stations.items():
-        if data["noaaStationId"] == noaa_station_id:
-            return Station.from_dict(id, data)
-
-    raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
 
 
 # Read the file into memory for convenience
@@ -227,7 +211,10 @@ def calculate_bias(
     observations.
     """
     tide_preds = astro.get_15m_astro_tides(
-        swmp_station.noaa_station_id, timeline, swmp_station.navd88_feet_to_mllw_feet
+        swmp_station.noaa_station_id,
+        timeline,
+        swmp_station.navd88_feet_to_mllw_feet,
+        True,
     )
     logger.debug(f"got {len(tide_preds)} tide predictions for bias calculation")
 
