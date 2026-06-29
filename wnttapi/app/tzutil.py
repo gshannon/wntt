@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 """Provides some basic Timezone support. Isolating it here because timezone support in Python is confusing.
@@ -55,3 +55,14 @@ def isDst(dt: datetime) -> bool:
     """Returns whether the given datetime is in DST."""
     dst = dt.dst()
     return dst is not None and dst > timedelta(hours=0)
+
+
+# Return a datetime that is the first minute of a given date, in a time zone.
+def datetime_first(in_date: date, time_zone: ZoneInfo):
+    return datetime.combine(in_date, time(0)).replace(tzinfo=time_zone)
+
+
+# Return a datetime that is the last minute of a given date, in a time zone.
+def datetime_last(in_date, time_zone: ZoneInfo):
+    dt = datetime_first(in_date, time_zone)
+    return dt + timedelta(days=1) - timedelta(minutes=1)

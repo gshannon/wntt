@@ -2,12 +2,13 @@ import logging
 from datetime import date, datetime, timedelta
 
 from app import util
+from app import tzutil as tz
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
-from app.timeline import Timeline, GraphTimeline, HiloTimeline
+from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
 from . import station as stn
 
@@ -66,7 +67,7 @@ def get_graph_data(
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(
-        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet
+        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
     )
 
     # Get wind forecasts.
@@ -81,9 +82,12 @@ def get_graph_data(
         if timeline.is_past(timeline.start_dt)
         else timeline.start_date
     )
-    tmp_timeline = Timeline(hilo_start_date, timeline.end_date, timeline.time_zone)
+    tmp_timeline = Timeline(
+        tz.datetime_first(hilo_start_date, timeline.time_zone),
+        tz.datetime_last(timeline.end_date, timeline.time_zone),
+    )
     astro_all_hilo_dict = astro.get_hilo_astro_tides(
-        station.noaa_station_id, tmp_timeline, station.navd88_feet_to_mllw_feet
+        station.noaa_station_id, tmp_timeline, station.navd88_feet_to_mllw_feet, True
     )
 
     # Determine all highs and lows, whether observed or predicted.

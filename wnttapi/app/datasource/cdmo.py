@@ -133,7 +133,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         if queryset.count() == 0:
             return wind_dict
 
-        # TODO: make gust NOT NULL in database.
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)

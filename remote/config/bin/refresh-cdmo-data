@@ -5,7 +5,6 @@ info() {
 }
 
 usage() {
-  echo "usage: $(basename $0) [-d] (dev mode)"
   cat << EOF
 usage: $(basename $0) options
 
@@ -13,6 +12,7 @@ Options:
 -h : this help
 -v : (optional) if given, dev mode
 -d : (optional) if given, debug mode (compares doesn't write)
+-s : (optional) station id, default = welinwq
 -t [T|W] : (opt) data type: T=tide/temp, W=wind. Default: both
 -S <starttime> : (opt) start of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
 -E <endtime> : (opt) end of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
@@ -60,6 +60,6 @@ else
 fi
 
 # Run the python script in a new, temporary api container
-docker compose -f $compose_path run --rm api app/datasource/cdmo_refresh.py -s $station ${debugstr} ${typestr} ${startstr} ${endstr}
+docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} ${typestr} ${startstr} ${endstr}
 
 exit 0

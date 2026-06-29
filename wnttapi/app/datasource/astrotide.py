@@ -4,9 +4,12 @@ from datetime import datetime
 
 import requests
 
+from app import tzutil as tz
 from app import util
 from app.hilo import Hilo, PredictedHighOrLow
 from app.timeline import Timeline
+
+from ..models import AstroTide15, AstroTideHilo
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
@@ -34,27 +37,64 @@ base_params = {
 
 
 def get_15m_astro_tides(
-    noaa_station_id: str, timeline: Timeline, navd88_func: callable
+    noaa_station_id: str,
+    timeline: Timeline,
+    navd88_func: callable,
+    use_db: bool = False,
 ) -> dict:
     """
     Fetch astronomical tide level predictions for the desired timeline.
+    CAVEAT: time zone of the timeline MUST match the time zone that NOAA associates with the requested
+    tide gauge station. There is no way for this app to enforce this, since we cannot easily query
+    NOAA for the time zone of the station id.
 
     Args:
-        station (Station): the SWMP station
+        noaa_station_id: NOAA station id, e.g. "8419317"
         timeline (Timeline): the timeline
 
     Returns:
         - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
     """
-    pred_json = pull_data(noaa_station_id, "15", timeline)
-    return pred15_json_to_dict(pred_json, timeline, navd88_func)
+    if use_db:
+        reg_preds_dict = {}  # {dt: value}
+
+        start_dt = timeline.get_min(False)
+        end_dt = timeline.get_max(False)
+
+        # query must pass UTC datetimes as strings in ISO format: "2024-01-01T05:30:00+00:00"
+        start_param = start_dt.astimezone(tz.utc).isoformat()
+        end_param = end_dt.astimezone(tz.utc).isoformat()
+
+        queryset = AstroTide15.objects.filter(
+            noaa_id__exact=noaa_station_id, time__range=(start_param, end_param)
+        ).order_by("time")
+        logger.debug(
+            f"Found {queryset.count()} rows in db for {noaa_station_id} from {start_dt} to {end_dt}"
+        )
+        for rec in queryset:
+            in_utc = datetime.fromisoformat(rec.time)
+            dt_in_local = in_utc.astimezone(timeline.time_zone)
+            if timeline.contains(dt_in_local):
+                reg_preds_dict[dt_in_local] = navd88_func(rec.nav_level)
+        return reg_preds_dict
+
+    else:
+        pred_json = pull_data(noaa_station_id, "15", timeline)
+        return pred15_json_to_dict(pred_json, timeline, navd88_func)
 
 
 def get_hilo_astro_tides(
-    noaa_station_id: str, timeline: Timeline, navd88_func: callable
+    noaa_station_id: str,
+    timeline: Timeline,
+    navd88_func: callable,
+    use_db: bool = False,
 ) -> dict:
     """
     Fetch high/low astronomical tide predictions for the date range.
+    CAVEAT: time zone of the timeline MUST match the time zone that NOAA associates with the requested
+    tide gauge station. There is no way for this app to enforce this, since we cannot easily query
+    NOAA for the time zone of the station id.
+
     Args:
         noaa_station_id: the 7-char station id, e.g. 8419317
         timeline: defines the data we want in time
@@ -65,9 +105,34 @@ def get_hilo_astro_tides(
             the exact datetime of the prediction.
         {timeline_dt: PredictedHighOrLow}
     """
+    if use_db:
+        data = {}
+        start_dt = timeline.get_min(False)
+        end_dt = timeline.get_max(False)
 
-    future_preds_json = pull_data(noaa_station_id, "hilo", timeline)
-    return hilo_json_to_dict(future_preds_json, timeline, navd88_func)
+        # query must pass UTC datetimes as strings in ISO format: "2024-01-01T05:30:00+00:00"
+        start_param = start_dt.astimezone(tz.utc).isoformat()
+        end_param = end_dt.astimezone(tz.utc).isoformat()
+
+        queryset = AstroTideHilo.objects.filter(
+            noaa_id__exact=noaa_station_id, time__range=(start_param, end_param)
+        ).order_by("time")
+        for rec in queryset:
+            in_utc = datetime.fromisoformat(rec.time)
+            dt_in_local = in_utc.astimezone(timeline.time_zone)
+            if timeline.contains(dt_in_local):
+                data[dt_in_local] = PredictedHighOrLow(
+                    navd88_func(rec.nav_level),
+                    Hilo.HIGH if rec.hilo == "H" else Hilo.LOW,
+                    datetime.fromisoformat(rec.real_time).astimezone(
+                        timeline.time_zone
+                    ),
+                )
+        return data
+
+    else:
+        future_preds_json = pull_data(noaa_station_id, "hilo", timeline)
+        return hilo_json_to_dict(future_preds_json, timeline, navd88_func)
 
 
 def pred15_json_to_dict(
@@ -112,7 +177,9 @@ def hilo_json_to_dict(
         return future_hilo_dict
     for pred in hilo_json:
         dts = pred["t"]
+
         dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
+
         if timeline.contains(dt):
             val = pred["v"]
             if pred["type"] not in ["H", "L"]:

@@ -36,6 +36,7 @@ def get_latest_conditions(station: Station) -> dict:
         station.noaa_station_id,
         Timeline(future_start_dt, future_end_dt),
         station.navd88_feet_to_mllw_feet,
+        True,
     )
     moon_dict = syzygy.get_current_moon_phases(station.time_zone)
     surge_timeline = Timeline(
