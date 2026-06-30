@@ -23,6 +23,8 @@ services:
             CDMO_PASSWORD: ${CDMO_PASSWORD}
             GEOCODE_KEY: ${GEOCODE_KEY}
             CDMO_LOG_LEVEL: ${CDMO_LOG_LEVEL-INFO}
+            FORCE_API_CDMO: ${FORCE_API_CDMO-0}
+            FORCE_API_ASTRO: ${FORCE_API_ASTRO-0}
             # Supports debugging:
             DEBUGPY_ENABLE: 0
         ports:
