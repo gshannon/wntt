@@ -223,22 +223,27 @@ def get_or_load_projected_surge_file(
 
     # Get bias
     (calculated_bias1, calculated_bias2, calculated_bias3) = (None, None, None)
-    record = SurgeBias.objects.filter(
-        noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
-    ).first()
-    if record is None:
-        logger.debug(
-            f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
-        )
-    else:
-        (calculated_bias1, calculated_bias2, calculated_bias3) = (
-            record.bias,
-            record.bias2,
-            record.bias3,
-        )
-        logger.debug(
-            f"got bias id {record.id}: {record.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
-        )
+    try:
+        record = SurgeBias.objects.filter(
+            noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
+        ).first()
+        if record is None:
+            logger.debug(
+                f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
+            )
+        else:
+            (calculated_bias1, calculated_bias2, calculated_bias3) = (
+                record.bias,
+                record.bias2,
+                record.bias3,
+            )
+            logger.debug(
+                f"got bias id {record.id}: {record.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
+            )
+    except Exception as exc:
+        # Log but do not raise
+        logger.exception("Could not read history surge records from db")
+        sentry_sdk.capture_exception(exc)
 
     surges_dict = {}  # key=datetime, value=surge
     logger.debug(f"Reading {filepath}...")
