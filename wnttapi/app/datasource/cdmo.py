@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 import xml.etree.ElementTree as ElTree
@@ -50,7 +51,7 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     Paramters:
     station (Station): the station object
     timeline (Timeline): the timeline of datetimes to fetch data for
-    useDb (bool): pull from database instead of calling cdmo, default True
+    useDb: use database instead of calling API; can be overridden with FORCE_API_CDMO env setting
 
     Returns:
     {dt: {"level": <value>, "temp": <value>}}
@@ -60,7 +61,11 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     if timeline.is_all_future():
         return water_dict  # Nothing to fetch
 
-    if useDb:
+    force_api = os.environ.get("FORCE_API_CDMO", "0") == "1"
+    if force_api:
+        logger.warning("Forced to use API for CDMO data!")
+
+    if useDb or force_api:
         logger.debug(
             f"station.id={station.id} fetching water params for {timeline.start_dt} to {timeline.end_dt} from database"
         )
@@ -103,7 +108,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     Args:
     station (Station): the station object
     timeline (Timeline): the timeline of datetimes to fetch data for
-    useDb (bool): pull from database instead of calling cdmo, default True
+    useDb: use database instead of calling API; can be overridden with FORCE_API_CDMO env setting
 
     Returns:
     -{dt: {"speed": <value>, "gust": <value>, "dir_deg": <value> }}
@@ -115,7 +120,11 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     if timeline.is_all_future():
         return wind_dict
 
-    if useDb:
+    force_api = os.environ.get("FORCE_API_CDMO", "0") == "1"
+    if force_api:
+        logger.warning("Forced to use API for CDMO data!")
+
+    if useDb or force_api:
         use_padding = isinstance(timeline, GraphTimeline)
         start_dt = timeline.get_min(use_padding)
         end_dt = timeline.get_max(use_padding)

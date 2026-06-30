@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from datetime import datetime
@@ -23,6 +24,10 @@ _request_time_warning_seconds = 5
     Since the times come back as strings with no TZ component, we use the timezone of the requested timeline
     to convert the returned times into timezone-aware datetimes. Thus, for graphing, the requested timeline
     must match the actual timezone of the station in question, and there's no way to guarantee that herein.
+    We could request the data in GMT, but that complicates the date range we request. E.g. for 
+    US/Eastern, we would never care about the first 4 or 5 hours of data returned, and we'd have to ask for 
+    an extra day to get the last 4 or 5 hours we care about. 
+
 """
 base_url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
@@ -40,7 +45,7 @@ def get_15m_astro_tides(
     noaa_station_id: str,
     timeline: Timeline,
     navd88_func: callable,
-    use_db: bool = False,
+    useDb: bool = False,
 ) -> dict:
     """
     Fetch astronomical tide level predictions for the desired timeline.
@@ -51,11 +56,17 @@ def get_15m_astro_tides(
     Args:
         noaa_station_id: NOAA station id, e.g. "8419317"
         timeline (Timeline): the timeline
+        navd88_func: function to convert NAVD88 tide levels to desired reference, typicaly MLLW
+        useDb: use database instead of calling API; can be overridden with FORCE_API_ASTRO env setting
 
     Returns:
         - dict of 15-min interval predictions for the past portion of the timeline. {dt: level}.
     """
-    if use_db:
+    force_api = os.environ.get("FORCE_API_ASTRO", "0") == "1"
+    if force_api:
+        logger.warning("Forced to use API for tide predictions!")
+
+    if useDb or force_api:
         reg_preds_dict = {}  # {dt: value}
 
         start_dt = timeline.get_min(False)
@@ -87,7 +98,7 @@ def get_hilo_astro_tides(
     noaa_station_id: str,
     timeline: Timeline,
     navd88_func: callable,
-    use_db: bool = False,
+    useDb: bool = False,
 ) -> dict:
     """
     Fetch high/low astronomical tide predictions for the date range.
@@ -99,13 +110,18 @@ def get_hilo_astro_tides(
         noaa_station_id: the 7-char station id, e.g. 8419317
         timeline: defines the data we want in time
         navd88_func: func to translate navd88 feet into mllw feet
+        useDb: use database instead of calling API; can be overridden with FORCE_API_ASTRO env setting
 
     Returns:
         dict of 15-min interval predictions for highs and lows only. The PredictedHighOrLow object includes
             the exact datetime of the prediction.
         {timeline_dt: PredictedHighOrLow}
     """
-    if use_db:
+    force_api = os.environ.get("FORCE_API_ASTRO", "0") == "1"
+    if force_api:
+        logger.warning("Forced to use API for tide predictions!")
+
+    if useDb:
         data = {}
         start_dt = timeline.get_min(False)
         end_dt = timeline.get_max(False)
