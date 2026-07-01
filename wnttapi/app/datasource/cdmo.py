@@ -415,18 +415,25 @@ def compute_cdmo_request_dates(
 def find_all_hilos(
     timeline: GraphTimeline, water_dict: dict, astro_pred_dict: dict
 ) -> dict:
-    """Build a dense dict of high and low tides times from observed and predicted tide data. If there is missing
-    observed data that makes it impossible to determine a high or low observed tide, we'll substitute the
-    predicted value, so it can be labelled on the graph, and still appear in HiLo mode.
+    """
+    Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
+    timeline in the future, it will just use the provided PredictedHighOrLow as is. For the part of the
+    timeline in the past, it will try to discover the observed highs and lows, using the predicted values
+    as a guide. Ideally we are able to identify them, and if we do, they will be returned as ObservedHighOrLow.
+    But in the rare case where there is missing observed data such that it's impossible to accurately identify
+    the high or low, we'll use the *predicted* high/low -- a PredictedHighOrLow instead. This allows graphs
+    to display an accurate, labeled High/Low prediction value for parts of the timeline in the past, where
+    normally only the Observed tide plot would display and label its highs/lows.  The idea being is that it's
+    better to label the predicted high/low than have no high/low labled at all.
 
     Args:
-    - timeline: key-ordered Timeline of datetimes for the graph
+    - timeline: key-ordered Timeline of datetimes for the graph. May be any combination of past/future.
     - obs_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
-    - astro_pred_dict: dense dict of predicted high and low tides covering the timeline.
+    - astro_pred_dict: dense dict of predicted high and low tides covering the entire timeline.
         {timeline_dt: PredictedHighOrLow}
 
     Returns:
-        sparse dict of {dt: HighOrLow} indicating which datetimes are high or low tides.
+        sparse dict of {dt: <HighOrLow subclass>} best information on all high or low tides in timeline
     """
 
     hilomap = {}  # {dt: HighLowEvent}

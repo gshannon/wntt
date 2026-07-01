@@ -188,18 +188,26 @@ class GraphTimeline(Timeline):
             self.requested_times.append(dt)
             self.requested_times.sort()
 
-    def build_plot(self, callback):
-        """Build a list containing a combination of data values and None's, which correspond to
-            this timeline, suitable for using to build a Plotly scatter plot.
+    def build_plots(self, callback):
+        """Build one or more lists of data values corresponding to this timeline.
+
+        If the callback returns a single value (or None), a single list is returned.
+        If the callback returns a tuple of N values, a tuple of N lists is returned.
 
         Args:
             callback (function): Callback function that, based on the datetime in question,
-            returns the data that matches, or None as appropriate.
+                returns either a single data value (or None), or a tuple of N values.
 
         Returns:
-            list: The resulting list of data values or None
+            list | tuple[list, ...]: A single list of values, or a tuple of N lists.
         """
-        return list(map(callback, self.requested_times))
+        results = [callback(dt) for dt in self.requested_times]
+
+        if results and isinstance(results[0], tuple):
+            n = len(results[0])
+            return tuple([row[i] for row in results] for i in range(n))
+
+        return results
 
     def get_final_times(self, corrections: dict):
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
@@ -240,8 +248,6 @@ class HiloTimeline(GraphTimeline):
             now (datetime): For testing only. Default is current time.
         """
         self._hilo_timeline = None
-        self._start_has_data = False
-        self._end_has_data = False
         super().__init__(start_date, end_date, time_zone, now)
 
     def register_hilo_times(self, hilo_dts: list):
@@ -256,14 +262,9 @@ class HiloTimeline(GraphTimeline):
         Raises:
             util.InternalError: if any times are outside the timeline start/end times.
         """
-        # We'll need to know if the start and end times have data, to determine whether we include them
-        # in the final plot.
-
         if hilo_dts is None:
             raise util.InternalError("hilo_dts cannot be None")
 
-        self._start_has_data = self.start_dt in hilo_dts
-        self._end_has_data = self.end_dt in hilo_dts
         # putting into a set, so duplicates are removed
         self._hilo_timeline = list(
             set(
@@ -288,31 +289,18 @@ class HiloTimeline(GraphTimeline):
             self._hilo_timeline.append(dt)
             self._hilo_timeline.sort()
 
-    def build_plot(self, callback) -> list:
-        """Using the caller's callback function, build an array of data values or None's -- which
-            matches the known datetimes that correspond to a High or Low tide data value, suitable
-            for using to build a plot line.
-
-        Args:
-            - callback (function): Callback function that, based on the datetime in question, returns
-              the matching data, or None as appropriate.
-
-        Raises:
-            InternalError: If register_hilo_times has not been called.
-
-        Returns:
-            list: The resulting list of data values or None
-        """
+    def build_plots(self, callback) -> list:
+        """Same as parent class function, but uses the registered high/low times, plus start and end times."""
         if self._hilo_timeline is None:
             raise util.InternalError("register_hilo_times must be called first")
 
-        # Get caller's data plot, one for each high/low dt, either None or their data, using their callback.
-        # Note we only callback for the start and end times if they have data.
-        plot = []
-        plot.append(callback(self.start_dt) if self._start_has_data else None)
-        plot += list(map(callback, self._hilo_timeline[1:-1]))
-        plot.append(callback(self.end_dt) if self._end_has_data else None)
-        return plot
+        results = [callback(dt) for dt in self._hilo_timeline]
+
+        if results and isinstance(results[0], tuple):
+            n = len(results[0])
+            return tuple([row[i] for row in results] for i in range(n))
+
+        return results
 
     def get_final_times(self, corrections) -> list:
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
