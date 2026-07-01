@@ -65,21 +65,21 @@ export const buildLocalDataSet = (
         ...(customElevationMllw ? [Dimension.CustomElevation] : []),
         ...(syzygyData ? [Dimension.Syzygy, Dimension.SyzygyUrl] : []),
     ]
-    const localBlob = blob.map((xrow) => {
-        const dt = xrow[0] // the 1st element of every row is the datetime string
-        const row = [dt, station.recordTideMllw(), highestAnnualPrediction]
+    const localBlob = blob.map((rec) => {
+        const dt = rec[0] // the 1st element of every column is the datetime string
+        const col = [dt, station.recordTideMllw(), highestAnnualPrediction]
         if (customElevationMllw) {
-            row.push(customElevationMllw)
+            col.push(customElevationMllw)
         }
         if (syzygyData) {
             if (dt in syzygyData) {
                 const code = syzygyData[dt]
-                row.push(...[1, getSyzygyUrl(code)])
+                col.push(...[1, getSyzygyUrl(code)])
             } else {
-                row.push(...[null, null])
+                col.push(...[null, null])
             }
         }
-        return row
+        return col
     })
 
     return { source: localBlob, dimensions: localDims }

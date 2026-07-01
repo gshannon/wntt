@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from app import util
@@ -101,7 +101,8 @@ def extract_data(
     else:
         next_tide_dt = next_tide_type = next_tide_str = None
 
-    surge_str, creation_dt = get_surge_info(surge_dict, next_tide_dt)
+    surge_feet = find_nearest_surge_value(surge_dict, next_tide_dt)
+    surge_file_creation_dt = surge_dict.get("file_creation_dt", None)
 
     return {
         "wind_speed": wind_speed_str,
@@ -120,36 +121,33 @@ def extract_data(
         "next_tide_dt": next_tide_dt,
         "next_tide_str": next_tide_str,
         "next_tide_type": next_tide_type,
-        "next_tide_surge_str": surge_str,
-        "surge_time": creation_dt,
+        "next_tide_surge": surge_feet,
+        "surge_time": surge_file_creation_dt,
     }
 
 
-def get_surge_info(surge_dict, next_tide_dt) -> tuple[str, datetime]:
-    # Get the storm surge value associated with the tide time, but only if it's within one hour.
-    # Returns estimated surge value as a string, and utc datetime
-    surge_str = None
+def find_nearest_surge_value(surge_dict, next_tide_dt) -> float:
+    # Get the nearest storm surge value associated with the tide time, past or future,
+    # within one hour. Returns estimated surge value, or None if no value is found.
     if next_tide_dt is None or "surges" not in surge_dict:
         logger.warning("Insufficent data to determine surge")
-        return surge_str
+        return None
 
     best_delta = None
     best_dt_match = None
-    best_surge_match = None
+    best_surge = None
     for dt in surge_dict["surges"]:
         delta_secs = abs((dt - next_tide_dt).total_seconds())
         if delta_secs <= 3600 and (best_delta is None or delta_secs < best_delta):
             best_delta = delta_secs
             best_dt_match = dt
-            best_surge_match = surge_dict["surges"][dt]
+            best_surge = float(surge_dict["surges"][dt])
 
     if best_delta is None:
         logger.debug(f"No surge value was found for tide date {next_tide_dt}")
-        return surge_str
+        return None
 
     logger.debug(
-        f"Storm surge: {best_surge_match}, surge dt {best_dt_match}, tide_dt {next_tide_dt}"
+        f"Storm surge: {best_surge}, surge dt {best_dt_match}, tide_dt {next_tide_dt}"
     )
-    return f"{best_surge_match:.2f}", datetime.fromisoformat(
-        surge_dict["file_creation_utc_iso"]
-    )
+    return best_surge

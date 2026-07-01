@@ -128,14 +128,10 @@ def diff(cdmo_data: dict, type: str, db_station_code: str):
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
             if type == "T":
-                record = Water.objects.get(
-                    station__exact=db_station_code, time__exact=(qdt)
-                )
+                record = Water.objects.get(station=db_station_code, time=(qdt))
                 diff_cnt += diff_water_record(record, value)
             else:
-                record = Wind.objects.get(
-                    station__exact=db_station_code, time__exact=(qdt)
-                )
+                record = Wind.objects.get(station=db_station_code, time=(qdt))
                 diff_cnt += diff_wind_record(record, value)
         except ObjectDoesNotExist:
             print(f"{dt} not in database")

@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import time
 import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
@@ -78,7 +78,7 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
         queryset = Water.objects.filter(
-            station__exact=get_station(station.id), time__range=(start_param, end_param)
+            station=get_station(station.id), time__range=(start_param, end_param)
         ).order_by("time")
         logger.debug(
             f"Found {queryset.count()} rows in db for {station.id} from {start_dt} to {end_dt}"
@@ -134,7 +134,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
         queryset = Wind.objects.filter(
-            station__exact=get_station(station.id), time__range=(start_param, end_param)
+            station=get_station(station.id), time__range=(start_param, end_param)
         ).order_by("time")
         logger.debug(
             f"Found {queryset.count()} rows in db for {station.id} from {start_dt} to {end_dt}"

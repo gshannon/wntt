@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 from datetime import datetime
 
 import requests
@@ -77,7 +77,7 @@ def get_15m_astro_tides(
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
         queryset = AstroTide15.objects.filter(
-            noaa_id__exact=noaa_station_id, time__range=(start_param, end_param)
+            noaa_id=noaa_station_id, time__range=(start_param, end_param)
         ).order_by("time")
         logger.debug(
             f"Found {queryset.count()} rows in db for {noaa_station_id} from {start_dt} to {end_dt}"
@@ -131,7 +131,7 @@ def get_hilo_astro_tides(
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
         queryset = AstroTideHilo.objects.filter(
-            noaa_id__exact=noaa_station_id, time__range=(start_param, end_param)
+            noaa_id=noaa_station_id, time__range=(start_param, end_param)
         ).order_by("time")
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
