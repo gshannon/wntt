@@ -120,7 +120,7 @@ def get_graph_data(
     )
 
     forecast_wind_speed_plot, forecast_wind_dir_plot = gp.build_wind_forecast_plots(
-        timeline, forecast_wind_dict
+        timeline, forecast_wind_dict, hilo_event_dict
     )
 
     future_surge_plot, future_storm_tide_plot = gp.build_future_surge_plots(

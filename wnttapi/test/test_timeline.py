@@ -129,21 +129,23 @@ class TestGraphTimeline(TestCase):
         self.assertTrue(original_time_2 not in final)
         self.assertTrue(real_time_2 in final)
 
-    def test_build_plot(self):
+    def test_build_plots(self):
+        def my_callback(dt: datetime) -> tuple:
+            if dt.hour == 3 and dt.minute == 15:
+                return (12.51, "label1")
+            return (None, None)
+
         zone = tz.hawaii
         start_date = date(2025, 9, 1)
         end_date = date(2025, 9, 1)
         timeline = GraphTimeline(start_date, end_date, zone)
 
-        data = {}
-        plot = timeline.build_plot(lambda dt: data.get(dt, None))
+        plot, labels = timeline.build_plots(my_callback)
+        self.assertEqual(len(plot), len(labels))
         self.assertEqual(timeline.length_requested(), len(plot))
-        self.assertEqual(plot, [None] * len(plot))
-
-        data = {datetime(2025, 9, 1, 3, 15, tzinfo=zone): 12.51}
-        plot = timeline.build_plot(lambda dt: data.get(dt, None))
-        self.assertEqual(timeline.length_requested(), len(plot))
-        self.assertTrue(12.51 in plot)
+        self.assertEqual(plot.count(None), len(labels) - 1)
+        self.assertEqual(labels.count("label1"), 1)
+        self.assertEqual(labels.count(None), len(labels) - 1)
 
     def test_add_date_to_timeline(self):
         zone = tz.eastern
@@ -166,7 +168,7 @@ class TestHiloTimeline(TestCase):
         timeline = HiloTimeline(start_date, end_date, tz.central)
 
         with self.assertRaisesRegex(util.InternalError, "must be called first"):
-            timeline.build_plot(lambda _: None)
+            timeline.build_plots(lambda _: None)
         with self.assertRaisesRegex(util.InternalError, "must be called first"):
             timeline.get_final_times({})
 
@@ -229,7 +231,7 @@ class TestHiloTimeline(TestCase):
         dt3 = datetime(2025, 9, 2, 0, tzinfo=zone)
         data = {dt1: 8.0, dt2: 12.51, dt3: 9.3}
         timeline.register_hilo_times(list(data.keys()))
-        plot = timeline.build_plot(lambda dt: data.get(dt, None))
+        plot = timeline.build_plots(lambda dt: data.get(dt, None))
         self.assertEqual(plot, [8.0, 12.51, 9.3])
 
     def test_add(self):
