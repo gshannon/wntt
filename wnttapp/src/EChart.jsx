@@ -296,7 +296,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: RecordedStormSurgeTitle,
             encode: { x: Dimension.DateTime, y: Dimension.RecordedStormSurge },
             smooth: true,
-            symbol: 'none',
+            symbol: hiloMode ? 'circle' : 'none',
             connectNulls: true,
             color: RecordedStormSurgeColor,
         })

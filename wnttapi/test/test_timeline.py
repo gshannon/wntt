@@ -5,6 +5,7 @@ import app.datasource.cdmo as cdmo
 import app.graphutil as gu
 import app.tzutil as tz
 import app.util as util
+from app.hilo import Hilo, ObservedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
 spring_date = date(2024, 3, 10)
@@ -152,7 +153,7 @@ class TestGraphTimeline(TestCase):
         timeline = GraphTimeline(start_date, end_date, zone)
         len1 = timeline.length_requested()
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
-        timeline.add_time(adder)
+        timeline.add_syzygy_time(adder)
         self.assertEqual(timeline.length_requested(), len1 + 1)
         self.assertTrue(timeline.contains(adder))
 
@@ -199,18 +200,21 @@ class TestHiloTimeline(TestCase):
         }
 
         timeline = HiloTimeline(start_date, end_date, zone)
+        hilo_dict = {
+            past_hilo_time_1: ObservedHighOrLow(2.5, Hilo.LOW),
+            past_hilo_time_2: ObservedHighOrLow(8.1, Hilo.HIGH),
+            later_hilo_time_1: ObservedHighOrLow(2.3, Hilo.LOW),
+            later_hilo_time_2: ObservedHighOrLow(8.5, Hilo.HIGH),
+        }
         timeline.register_hilo_times(
             [past_hilo_time_1, past_hilo_time_2, later_hilo_time_1, later_hilo_time_2]
         )
 
         wind_speed_plot, wind_gust_plot, wind_dir_plot = gu.build_wind_plots(
-            timeline, wind_dict
+            timeline, wind_dict, hilo_dict
         )
         self.assertEqual(wind_speed_plot, [None, 12, None, None, None, None])
         self.assertEqual(wind_gust_plot, [None, 15.5, None, None, None, None])
-        # Note the 0 at index 0. Hack for plotly bug.
-        # self.assertEqual(wind_dir_plot, [0, 325, None, None, None, None])
-        # self.assertEqual(wind_dir_hover, [None, "NW", None, None, None, None])
 
     def test_hilo_plot_with_boundary_data(self):
         zone = tz.hawaii
@@ -236,6 +240,6 @@ class TestHiloTimeline(TestCase):
         timeline = GraphTimeline(start_date, end_date, zone)
         len1 = timeline.length_requested()
         adder = datetime(2025, 7, 15, 19, 54, tzinfo=zone)
-        timeline.add_time(adder)
+        timeline.add_syzygy_time(adder)
         self.assertEqual(timeline.length_requested(), len1 + 1)
         self.assertTrue(timeline.contains(adder))

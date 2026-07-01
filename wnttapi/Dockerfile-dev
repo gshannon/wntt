@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Copy the source code into the container.
 COPY . .
 
-# Run the application.
+# Run the application.  Normally timeout is 120 sec but use 0 for debugging.
 CMD ["gunicorn", "--bind=0.0.0.0:8001", "--timeout=120", "-w 1", "project.wsgi"]
 ARG GITBRANCH=?
 ARG GITSHA=?

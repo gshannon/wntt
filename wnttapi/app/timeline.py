@@ -60,7 +60,7 @@ class Timeline:
             self.requested_times.append(utc_cur.astimezone(self.time_zone))
             utc_cur += timedelta(minutes=15)
 
-        # For determining highs and lows for CDMO Level data, which is by definition only in the
+        # For determining highs and lows for observed tide Level data, which is by definition only in the
         # past (before "self.now"), we need to look a bit beyond the requested timeline in case
         # there is a high or low near or on the first or last displayed time. Here we define
         # the timeline extensions used for that purpose.
@@ -171,7 +171,7 @@ class GraphTimeline(Timeline):
             now,
         )
 
-    def add_time(self, dt: datetime):
+    def add_syzygy_time(self, dt: datetime):
         """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
         This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
         in the timeline.
@@ -274,7 +274,7 @@ class HiloTimeline(GraphTimeline):
         )
         self._hilo_timeline.sort()
 
-    def add_time(self, dt: datetime):
+    def add_syzygy_time(self, dt: datetime):
         """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
         This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
         in the timeline.
