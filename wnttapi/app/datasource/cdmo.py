@@ -139,9 +139,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         logger.debug(
             f"Found {queryset.count()} rows in db for {station.id} from {start_dt} to {end_dt}"
         )
-        if queryset.count() == 0:
-            return wind_dict
-
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
@@ -162,15 +159,6 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
             [Param.WindSpeed, Param.WindGust, Param.WindDir],
         )
         logger.debug(f"Total raw wind data points: {len(wind_dict)}")
-
-        if len(wind_dict) == 0:
-            logger.warning(
-                "Got no wind data for %s, %s - %s",
-                station.id,
-                timeline.start_dt,
-                timeline.end_dt,
-            )
-            return wind_dict
 
     return wind_dict
 
