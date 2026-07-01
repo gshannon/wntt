@@ -8,7 +8,7 @@ from app.datasource import address
 from rest_framework.exceptions import APIException, NotAcceptable
 from rest_framework.views import APIView, Response
 
-from . import graphutil as gr
+from . import graph as gr
 from . import station as stn
 from . import swmp
 from . import tzutil as tz

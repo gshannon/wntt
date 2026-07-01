@@ -2,7 +2,7 @@ from datetime import date, datetime
 from unittest import TestCase
 
 import app.datasource.cdmo as cdmo
-import app.graphutil as gu
+import app.graph_plot as gp
 import app.tzutil as tz
 import app.util as util
 from app.hilo import Hilo, ObservedHighOrLow
@@ -210,7 +210,7 @@ class TestHiloTimeline(TestCase):
             [past_hilo_time_1, past_hilo_time_2, later_hilo_time_1, later_hilo_time_2]
         )
 
-        wind_speed_plot, wind_gust_plot, wind_dir_plot = gu.build_wind_plots(
+        wind_speed_plot, wind_gust_plot, wind_dir_plot = gp.build_wind_plots(
             timeline, wind_dict, hilo_dict
         )
         self.assertEqual(wind_speed_plot, [None, 12, None, None, None, None])
