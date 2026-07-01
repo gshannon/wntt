@@ -143,7 +143,7 @@ export const Page = Object.freeze({
     HelpSyzygy: 5,
 })
 
-// Round a floating point value to n digits of precision
+// Round a floating point value string to n digits of precision
 export const roundTo = (value, digits) => Number(value.toFixed(digits))
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.

@@ -44,7 +44,7 @@ export default function Conditions({ data, error }) {
     }
 
     const now = format_dt(new Date())
-    const inches = data.next_tide_surge_str ? Number(data.next_tide_surge_str) * 12 : null
+    const inches = data.next_tide_surge ? data.next_tide_surge * 12 : null
     const wind_dir_str = degreesToDir(data.wind_dir_deg)
 
     return (
@@ -78,8 +78,8 @@ export default function Conditions({ data, error }) {
                 Storm Surge<sup>*</sup>
             </div>
             <div className='cond-data'>
-                {data.next_tide_surge_str ?
-                    `${data.next_tide_surge_str} ft (${roundTo(inches, 1)} in)`
+                {data.next_tide_surge ?
+                    `${data.next_tide_surge} ft (${roundTo(inches, 1)} in)`
                 :   noData}
             </div>
             <div className='cond-time'>{format_dt(data.surge_time)}</div>

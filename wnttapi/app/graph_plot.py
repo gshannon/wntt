@@ -9,28 +9,28 @@ from app.timeline import GraphTimeline, HiloTimeline
 logger = logging.getLogger(__name__)
 
 
-def build_hist_tide_plot(
+def build_observed_tide_plot(
     timeline: GraphTimeline, water_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
-    """Build historical tide plot and high or low tide labels. For timelines entirely in the future,
-    each callback would return None, so we can just return None for both lists. Never returns empty lists.
+    """Build lists for observed tide and high or low tide labels that match the timeline length. If there's
+    no observed tide data for the timeline, returns None for both lists.
 
     Args:
         timeline (GraphTimeline): the timeline
         water_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
-        hilo_event_dict: dense dict of all high/low tides, {timeline_dt: HighOrLow}
-
+        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline,
+            used to assign high/low labels to the tide plot.
 
     Returns:
-        tuple[list, list]:
-        - hist_tides_plot: list of historical tide heights in MLLW feet, or None if no data
-        - hist_tides_labels: corresponding "(HIGH)" or "(LOW)" labels, when applicable
+        tuple[list, list].
+        - hist_tides_plot: tide heights in MLLW feet, or None if no data;
+        - hist_tides_labels: corresponding "(HIGH)" or "(LOW)" labels, when applicable, else None
     """
 
     if timeline.is_all_future():
         return None, None
 
-    def get_elements(dt: datetime):
+    def callback(dt: datetime):
         # If this is a Hilo graph, we don't show tides that are not a high or low observed tide.
         tide = label = None
         if isinstance(timeline, HiloTimeline):
@@ -44,7 +44,7 @@ def build_hist_tide_plot(
             tide = water_dict[dt][cdmo.Param.Tide.label]
         return tide, label
 
-    tides, labels = timeline.build_plots(get_elements)
+    tides, labels = timeline.build_plots(callback)
     if all(x is None for x in tides):
         return None, None
     return tides, labels
@@ -53,18 +53,21 @@ def build_hist_tide_plot(
 def build_wind_plots(
     timeline: GraphTimeline, wind_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list, list]:
-    """Convert the recorded wind data to 4 plots for Plotly scatter plots.
+    """Build lists for wind data which correspond to the timeline.  Returns None for all lists if there
+    is no wind data.
 
     Args:
         timeline (GraphTimeline): timeline
-        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x}}
+        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x}}. We rely on the fact that all 3 values
+            are present for any given dt.
+        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline
+            used to restrict returned data to only those times if we have a HiloTimeline.
 
-    Returns:
+    Returns: tuple[list, list, list].  All 3 lists have None in the same indexes -- no partial data is allowed.
         - Wind speed plot
         - Wind gust plot
         - Corresponding wind direction (0 - 360) to drive marker angle
     """
-
     if len(wind_dict) == 0:
         # There are no wind predictions, return None for all lists.
         return None, None, None
@@ -78,7 +81,7 @@ def build_wind_plots(
         elif days > 2:
             minutes = [0]  # only show 1 point per hour
 
-    def get_elements(dt: datetime):
+    def callback(dt: datetime):
         if not isinstance(timeline, HiloTimeline) or dt in hilo_event_dict:
             if dt.minute in minutes and dt in wind_dict:
                 return (
@@ -88,7 +91,7 @@ def build_wind_plots(
                 )
         return None, None, None
 
-    wind_speed_plot, wind_gust_plot, wind_dir_plot = timeline.build_plots(get_elements)
+    wind_speed_plot, wind_gust_plot, wind_dir_plot = timeline.build_plots(callback)
 
     if all(x is None for x in wind_speed_plot):
         return None, None, None
@@ -102,8 +105,8 @@ def build_astro_plot(
     hilo_event_dict: dict,
 ) -> tuple[list, list]:
     """
-    Builds plots for the astronomical tide data. We essentially merge the regular 15-min predictions and the
-    hilo data, preferring the hilo value if present, which is more accurate.
+    Builds lists for the astronomical tide data. We essentially merge the regular 15-min predictions and the
+    hilo-only data, preferring the hilo value if present, which is more accurate.
 
     Args:
         timeline (GraphTimeline): the time line
@@ -114,8 +117,7 @@ def build_astro_plot(
         (list of predicted tide values/None, list of high/low labels/None) to match the timeline.
     """
 
-    def get_elements(dt: datetime):
-
+    def callback(dt: datetime):
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
             # If it's a PredictedHighOrLow, we use it no matter if we're in past or future.   If it's in the past,
@@ -124,12 +126,12 @@ def build_astro_plot(
                 return event.value, ("(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)",)
 
         if isinstance(timeline, HiloTimeline) and dt not in hilo_event_dict:
-            # If this is a Hilo graph, we don't show tides that are not a high or low tide.
+            # For HiloTimeline, we don't show tides that are not a high or low tide.
             return None, None
 
         return reg_preds_dict.get(dt, None), None
 
-    tides, labels = timeline.build_plots(get_elements)
+    tides, labels = timeline.build_plots(callback)
     if all(x is None for x in tides):
         return None, None
     return tides, labels
@@ -138,30 +140,30 @@ def build_astro_plot(
 def build_past_surge_plot(
     timeline: GraphTimeline, past_surge_dict: dict, hilo_event_dict: dict
 ):
-    """ 
-    Build a plot for recorded storm surge. 
+    """
+    Build a list for recorded storm surge that corresponds to the timeline, with None for missing data.
 
     Args:
         timeline (GraphTimeline): the time line
         past_surge_dict (dict): {dt: value} recorded storm surge values
-        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline
+        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline,
+            used to restrict returned data to only those times if we have a HiloTimeline.
 
     Returns:
         list of recorded storm surge values to match the timeline.  Returns None if all values are None.
     """
-
     if timeline.is_all_future():
         return None
 
     isHilo = isinstance(timeline, HiloTimeline)
 
-    def get_element(dt):
+    def callback(dt):
         if isHilo and dt not in hilo_event_dict:
             return None
         return past_surge_dict.get(dt, None)
 
-    plot = timeline.build_plots(get_element) 
-    return plot if all(x is None for x in plot) else None
+    plot = timeline.build_plots(callback)
+    return None if all(x is None for x in plot) else plot
 
 
 def build_future_surge_plots(
@@ -172,39 +174,38 @@ def build_future_surge_plots(
     astro_hilo_dict: dict,
 ) -> tuple[list, list]:
     """
-    Build 2 plots for future surge data. For each timeline datetime, we'll use the most accurate prediction we have
-    (future_hilo_dict if present), then add that to the surge value to produce predicted storm tide.
+    Build lists for predicted storm surge and predicted storm tide that correspond to the
+    timeline, with None for missing data. For each timeline datetime, we'll use the astronomical
+    tide prediction and add that to the surge value to produce predicted storm tide. Note
+    that the surge data is hourly and the timeline is 15-min, so for each timeline time, we
+    look for a surge value at that time, or up to 45 minutes earlier.
 
     Args:
         timeline: list of datetimes
-        future_surges_dict: what we read from the surge file {dt: surge_value}
+        future_surges_dict: hourly surge predictions, in feet {dt: surge_value}
         future_surge_calc_bias: calculated bias to be applied the surge values, or None.
             This will only be set for reserves like Wells, where there is no BIAS data in the files.
-            Bias values provided in the file are already applied to these surge values.
-        reg_preds_dict: regular tide & currents tide predictions for the timeline {dt: value}
-        future_hilo_dict: predicted highs and lows {timeline_dt: HighLowEvent}
+            Bias values provided in the file are already applied to the surge values.
+        reg_preds_dict: 15-minute astronomical tide predictions for the timeline {dt: value}
+
+    Returns: tuple[list, list].  Both lists have None in the same indexes -- no partial data.
+        - future_surge_plot: predicted surge values in feet, or None if no data
+        - future_storm_tide_plot: predicted storm tide values in MLLW feet, or None if no data
     """
     if future_surges_dict is None or len(future_surges_dict) == 0:
         return None, None
 
-    # If a dt doesn't have a surge value, we can use one up to 45 minutes older, since surge values
+    # If a dt doesn't have a surge value, we will use one up to 45 minutes older, since surge values
     # are on the hour.
     def find_nearby_surge(dt):
         surge = None
-        try_dt = dt
-        while True:
-            surge = future_surges_dict.get(try_dt, None)
-            if surge is not None:
-                # Add the calculated bias if any.
-                surge += future_surge_calc_bias or 0
-                break
-            try_dt -= timedelta(minutes=15)
-            if try_dt < dt - timedelta(minutes=45):
-                break
-        return surge
+        min_dt = dt - timedelta(minutes=45)
+        while surge is None and dt >= min_dt:
+            surge = future_surges_dict.get(dt, None)
+            dt -= timedelta(minutes=15)
+        return None if surge is None else surge + (future_surge_calc_bias or 0)
 
     def get_surge_and_hilo_prediction(dt):
-
         surge_val = find_nearby_surge(dt)
         if surge_val is None:
             return None, None
@@ -219,17 +220,17 @@ def build_future_surge_plots(
             raise util.InternalError(msg)
         return surge_val, hilo_pred
 
-    def get_elements(dt):
+    def callback(dt):
         if timeline.is_past(dt) or (
             isinstance(timeline, HiloTimeline) and dt not in astro_hilo_dict
         ):
-            return None, None  # This dt is in the past, or not in the hilo timeline
+            return None, None
         surge_val, hilo_pred = get_surge_and_hilo_prediction(dt)
         if surge_val and hilo_pred:
             return round(surge_val, 2), round(surge_val + hilo_pred, 2)
         return None, None
 
-    future_surge_plot, future_storm_tide_plot = timeline.build_plots(get_elements)
+    future_surge_plot, future_storm_tide_plot = timeline.build_plots(callback)
 
     if all(x is None for x in future_surge_plot):
         return None, None
@@ -241,21 +242,22 @@ def build_wind_forecast_plots(
     timeline: GraphTimeline, forecast_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """
-    Build data for 2 graph plots for wind forecast -- speed and direction (degrees)
+    Build lists for forecast wind speed and direction (0-360) which correspond to the timeline.
 
     Args:
         timeline (GraphTimeline): the timeline
         forecast_dict (dict): forecast data.
-        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline
+        hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline,
+            used to restrict returned data to only those times if we have a HiloTimeline.
 
-    Returns:
-        - forecast_wind_speed_plot:
-        - Corresponding wind direction plost (0-360), to drive marker angle)
+    Returns: tuple[list, list]. Both lists have None in the same indexes -- no partial data.
+        - wind speed (mph)
+        - wind direction (0-360)
     """
     if len(forecast_dict) == 0:
         return None, None
 
-    def get_element(dt):
+    def callback(dt):
         if isinstance(timeline, HiloTimeline) and dt not in hilo_event_dict:
             return None, None
         if dt in forecast_dict:
@@ -265,7 +267,7 @@ def build_wind_forecast_plots(
             )
         return None, None
 
-    forecast_speed_plot, forecast_wind_dir_plot = timeline.build_plots(get_element)
+    forecast_speed_plot, forecast_wind_dir_plot = timeline.build_plots(callback)
 
     if all(x is None for x in forecast_speed_plot):
         return None, None

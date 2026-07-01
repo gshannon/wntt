@@ -12,21 +12,6 @@ from app.timeline import GraphTimeline, HiloTimeline
 
 from . import station as stn
 
-"""
-Utility functions for plotting. 
-
-We want to show data in the the same time zone as that of the geographical area we are looking at. For now, 
-that's US/Eastern, but in future it could be others. That means when DST starts, there is no 02:00, and
-when DST ends, there are 2 01:00 hours. We build the timeline as so, to use as an index to give to the plotly library.
-Plotly will insert a blank 2AM hour for DST start, and will not repeat 1AM hour when DST ends. There, we'll see
-a break in the data, and the data zigzagging back over the same space for those 2 situations. 
-
-For most data, we build the full data arrays here which means passing lots of None values to the app. This
-increases the size of the data passed to the app, but it offloads the work of building the data arrays to this
-server instead of the browser. If this is ever considered to be a bad tradeoff, that can be changed. However, passing
-dictionaries of data keyed on datetime objects would entail a lot of bandwidth also -- many copies of the same datetimes.
-"""
-
 logger = logging.getLogger(__name__)
 
 
@@ -37,16 +22,17 @@ def get_graph_data(
     station: stn.Station,
     special: bool,
 ):
-    """Generate plot data.
+    """Generate data for an ECharts graph.
 
     Args:
         start_date (date): First day of data
-        end_date (date): Last day of data (may be same as first). 00:00 of following day will be added automatically.
+        end_date (date): Last day of data (may be same as first). 00:00 of following day will be added
+            automatically to give the graph a better right-hand boundary.
         hilo_mode (bool): If true, data will include only high and low tide data points.
         station (Station): Station for which to get data
 
     Returns:
-        dict: All data required for graph, suitable for json
+        dict: All data required for graph, convertible to json
     """
 
     validate_dates(start_date, end_date)
@@ -85,7 +71,7 @@ def get_graph_data(
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.calculate_past_storm_surge(astro_preds15_dict, water_dict)
+    past_surge_dict = sg.get_past_storm_surge(astro_preds15_dict, water_dict)
 
     future_surge_dict = sg.get_future_surge_data(
         timeline,
@@ -103,7 +89,7 @@ def get_graph_data(
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
 
-    hist_tides_plot, hist_tides_label_plot = gp.build_hist_tide_plot(
+    hist_tides_plot, hist_tides_label_plot = gp.build_observed_tide_plot(
         timeline, water_dict, hilo_event_dict
     )
 
@@ -126,8 +112,7 @@ def get_graph_data(
     future_surge_plot, future_storm_tide_plot = gp.build_future_surge_plots(
         timeline,
         future_surge_dict.get("surges", None),
-        # TODO: enable this once we like this approach
-        # future_surge_dict.get("bias1 or bias2"),
+        # TODO: future_surge_dict.get("bias1" or "bias2"),
         None,
         astro_preds15_dict,
         astro_all_hilo_dict,
@@ -149,15 +134,9 @@ def get_graph_data(
         )
     else:
         final_timeline = timeline.requested_times
-    start_date_str = timeline.start_date.strftime("%b %-d, %Y")
-    end_date_str = timeline.end_date.strftime("%b %-d, %Y")
-    subtitle = (
-        start_date_str
-        if start_date == end_date
-        else f"{start_date_str} - {end_date_str}"
-    )
 
-    driver = {
+    # Phase 3. Build the final data structure to return.
+    plots = {
         "hist-tides": hist_tides_plot,
         "astro-tides": astro_tides_plot,
         "wind-speeds": wind_speed_plot,
@@ -172,30 +151,39 @@ def get_graph_data(
         "forecast-wind-dir": forecast_wind_dir_plot,
     }
 
-    keys = ["dt"]
-    for k, plot in driver.items():
-        if plot is not None:
-            keys.append(k)
+    # Dimensions are the names of each column, in order.
+    dimensions = ["dt"] + [k for k in plots.keys() if plots[k] is not None]
 
+    # Each blob entry represents a "column" of data, with the first value being the datetime and
+    # the rest being all the data for that time, in the same order as the dimensions.
     blob = []
     for ndx, dt in enumerate(final_timeline):
-        row = [dt]
-        for k, plot in driver.items():
-            if plot is not None:
-                row.append(plot[ndx])
-        blob.append(row)
+        blob.append(
+            [dt] + [plots[k][ndx] for k in plots.keys() if plots[k] is not None]
+        )
 
     return {
-        # This group is sparse data for the actual plots shown on the chart, with Nones for missing data.
-        "dimensions": keys,
+        "dimensions": dimensions,
         "blob": blob,
-        # These do not fit into the basic plot model
+        # The rest is auxiliary data. Note we have to convert datetimes that are used as dict keys, or else the
+        # json serialization will fail. Keys have to be scalars, not objects.
         "syzygy": {dt.isoformat(): val for (dt, val) in syzygy_dict.items()},
-        "subtitle": subtitle,
+        "subtitle": build_subtitle(start_date, end_date),
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
             station, start_date.year
         ),
     }
+
+
+def build_subtitle(start_date, end_date) -> str:
+    # Build a subtitle for the graph, based on the start and end dates.
+    start_date_str = start_date.strftime("%b %-d, %Y")
+    end_date_str = end_date.strftime("%b %-d, %Y")
+    return (
+        start_date_str
+        if start_date == end_date
+        else f"{start_date_str} - {end_date_str}"
+    )
 
 
 def validate_dates(start: date, end: date):
