@@ -123,8 +123,8 @@ def get_hilo_astro_tides(
 
     if useDb:
         data = {}
-        start_dt = timeline.get_min(False)
-        end_dt = timeline.get_max(False)
+        start_dt = timeline.get_min(True)
+        end_dt = timeline.get_max(True)
 
         # query must pass UTC datetimes as strings in ISO format: "2024-01-01T05:30:00+00:00"
         start_param = start_dt.astimezone(tz.utc).isoformat()

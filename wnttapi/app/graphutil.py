@@ -1,8 +1,8 @@
 import logging
 from datetime import date, datetime, timedelta
 
-from app import util
 from app import tzutil as tz
+from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
@@ -73,21 +73,9 @@ def get_graph_data(
     # Get wind forecasts.
     forecast_wind_dict = wind.get_wind_forecast(station, timeline, hilo_mode)
 
-    # Pull all predicted high & low tides for the timeline. If the timeline starts in the past, it may
-    # include tide observations, and since we use predicted highs/lows to annotate observed highs/lows, we will
-    # need to pull in data for the day before the timeline to handle certain edge cases where a high or low
-    # occurs just before the start of the timeline.
-    hilo_start_date = (
-        timeline.start_date - timedelta(days=1)
-        if timeline.is_past(timeline.start_dt)
-        else timeline.start_date
-    )
-    tmp_timeline = Timeline(
-        tz.datetime_first(hilo_start_date, timeline.time_zone),
-        tz.datetime_last(timeline.end_date, timeline.time_zone),
-    )
+    # Get astronomical tide predictions
     astro_all_hilo_dict = astro.get_hilo_astro_tides(
-        station.noaa_station_id, tmp_timeline, station.navd88_feet_to_mllw_feet, True
+        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
     )
 
     # Determine all highs and lows, whether observed or predicted.
@@ -109,7 +97,7 @@ def get_graph_data(
     # so they can be shown at their precise times.
     if len(syzygy_dict) > 0:
         for dt in syzygy_dict:
-            timeline.add_time(dt)
+            timeline.add_syzygy_time(dt)
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
@@ -120,21 +108,17 @@ def get_graph_data(
     )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot = build_wind_plots(
-        timeline, wind_dict
+        timeline, wind_dict, hilo_event_dict
     )
 
     astro_tides_plot, astro_label_plot = build_astro_plot(
         timeline, astro_preds15_dict, hilo_event_dict
     )
 
+    past_surge_plot = build_past_surge_plot(timeline, past_surge_dict, hilo_event_dict)
+
     forecast_wind_speed_plot, forecast_wind_dir_plot = build_wind_forecast_plots(
         timeline, forecast_wind_dict
-    )
-
-    past_surge_plot = (
-        timeline.build_plot(lambda dt: past_surge_dict.get(dt, None))
-        if not timeline.is_all_future()
-        else None
     )
 
     future_surge_plot, future_storm_tide_plot = build_future_surge_plots(
@@ -156,9 +140,9 @@ def get_graph_data(
             {
                 key: val.real_dt
                 for key, val in hilo_event_dict.items()
-                # This means there was no observed value, else it would have been an ObservedHighOrLow.
-                # So we'll use the actual prediction time even if it's in the past.
                 if isinstance(val, PredictedHighOrLow)
+                # This means there was no observed value, else it would have been an ObservedHighOrLow.
+                # So we'll use the actual prediction time.
             }
         )
     else:
@@ -236,16 +220,17 @@ def build_hist_tide_plot(
     def get_hilo_label(dt: datetime):
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
-            # If it's a PredictedHighOrLow, we don't want to annotate on the historical plot.
+            # If it's a PredictedHighOrLow, that means there wasn't enough observed data to determine
+            # the observed high or low, so don't label it.
             if isinstance(event, ObservedHighOrLow):
                 return "(HIGH)" if event.hilo == Hilo.HIGH else "(LOW)"
         return None
 
     def get_tide(dt: datetime):
-        if dt in water_dict:
-            return water_dict[dt][cdmo.Param.Tide.label]
-        else:
-            return None
+        # If this is a Hilo graph, we don't show tides that are not a high or low.
+        if isinstance(timeline, HiloTimeline):
+            return hilo_event_dict[dt].value if dt in hilo_event_dict else None
+        return water_dict[dt][cdmo.Param.Tide.label] if dt in water_dict else None
 
     hist_tides_plot = timeline.build_plot(get_tide)
     hist_tides_labels = timeline.build_plot(get_hilo_label)
@@ -328,6 +313,24 @@ def build_future_surge_plots(
         raise util.InternalError(msg)
 
     return future_surge_plot, future_storm_tide_plot
+
+
+def build_past_surge_plot(
+    timeline: GraphTimeline, past_surge_dict: dict, hilo_event_dict: dict
+):
+
+    if timeline.is_all_future():
+        return None
+
+    isHilo = isinstance(timeline, HiloTimeline)
+
+    def check(dt):
+        nonlocal isHilo
+        if isHilo and dt not in hilo_event_dict:
+            return None
+        return past_surge_dict.get(dt, None)
+
+    return timeline.build_plot(check)
 
 
 def build_past_surge_check_plots(
@@ -418,15 +421,28 @@ def build_astro_plot(
         - Corresponding "(HIGH)" or "(LOW)" labels where applicable
     """
 
+    # For value, we'll almost always use the 15-min prediction. In the rare case we have a PredictedHighOrLow
+    # for the timeline dt, that indicates we didn't have enough observed data to build an ObservedHighOrOLow,
+    # and we'll be displaying this predicted value which came from the HILO dataset, not the 15-min predictions.
+    # That's obviously a more accurate number than the 15-min predictions.
     def get_value(dt):
-        # For value, prefer the predicted hilo value if present, else use the 15-min prediction.
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
             # ignore it if it's an ObservedHighOrLow
             if isinstance(event, PredictedHighOrLow):
                 return event.value
-        return reg_preds_dict.get(dt, None)
+            return reg_preds_dict.get(dt, None)
 
+        # It wasn't a high/low, so if this is a Hilo graph, it gets a None.
+        return (
+            reg_preds_dict.get(dt, None)
+            if not isinstance(timeline, HiloTimeline)
+            else None
+        )
+
+    # We almost never label past predicted highs/lows because we label the observed high/lows instead. But
+    # if there's a PredictedHighOrLow in the hilo events, that indicates we didn't have enough observed data
+    # to determine a high/low. Therefore it's better to label the prediction, else there would be no high/low labeled.
     def get_label(dt):
         if dt in hilo_event_dict:
             event = hilo_event_dict[dt]
@@ -441,7 +457,7 @@ def build_astro_plot(
 
 
 def build_wind_plots(
-    timeline: GraphTimeline, wind_dict: dict
+    timeline: GraphTimeline, wind_dict: dict, hilo_event_dict: dict
 ) -> tuple[list, list, list]:
     """Convert the recorded wind data to 4 plots for Plotly scatter plots.
 
@@ -472,6 +488,10 @@ def build_wind_plots(
 
     def check_item(dt, key):
         nonlocal found
+        # If this is a Hilo graph, we don't only show wind high or low.
+        if isinstance(timeline, HiloTimeline) and dt not in hilo_event_dict:
+            return None
+
         if dt.minute in minutes and dt in wind_dict:
             if key not in wind_dict[dt]:
                 raise util.InternalError(f"Missing {key} in wind data for {dt}")
