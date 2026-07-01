@@ -597,15 +597,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     restore: {},
                     saveAsImage: {
                         show: true,
-                        // Optional: Customize the button's tooltip title
                         title: 'Save as Image',
-                        name: `tides_${format(new Date(), 'yyyyMMddHHmmss')}`,
+                        name: `tides_${format(new Date(), 'yyyyMMdd')}`,
                         type: 'png',
                     },
-                    magicType: {
-                        type: ['line', 'bar'], // allow conversion to bar graph
-                    },
                 },
+                iconStyle: { borderColor: '#000' },
             },
         ],
     }
