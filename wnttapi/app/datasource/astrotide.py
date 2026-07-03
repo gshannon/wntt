@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 import requests
+import traceback
 
 from app import tzutil as tz
 from app import util
@@ -14,7 +15,6 @@ from ..models import AstroTide15, AstroTideHilo
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
-_request_time_warning_seconds = 5
 
 """
     Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
@@ -251,13 +251,12 @@ def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
         response = requests.get(
             base_url, params=base_params | params, timeout=_request_timeout_seconds
         )
-        seconds = response.elapsed.seconds
-        if seconds > _request_time_warning_seconds:
-            logger.warning(f"Call to {response.url} took {response.elapsed}")
         logger.debug(f"Elapsed={response.elapsed} from {response.url}")
 
     except Exception as e:
         e.add_note(f"Url: {response.url}")
+        exc_desc = "".join(traceback.format_exception_only(type(e), e)).rstrip()
+        logger.error(exc_desc)
         raise e
 
     if response.status_code != 200:

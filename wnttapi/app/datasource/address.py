@@ -3,10 +3,10 @@ import os
 import json
 
 import requests
+import traceback
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
-_request_time_warning_seconds = 5
 
 """
     API interface for retrieving the lat/lon of an url-encoded physical address in the reserve area.
@@ -32,12 +32,11 @@ def get_location(search: str) -> dict:
         response = requests.get(
             base_url, params=params, timeout=_request_timeout_seconds
         )
-        seconds = response.elapsed.seconds
-        if seconds > _request_time_warning_seconds:
-            logger.warning(f"Call to {response.url} took {response.elapsed}")
         logger.debug(f"Elapsed={response.elapsed} from {response.url}")
     except Exception as e:
         e.add_note("Url: %s", response.url)
+        exc_desc = "".join(traceback.format_exception_only(type(e), e)).rstrip()
+        logger.error(exc_desc)
         raise e
 
     if response.status_code != 200:
