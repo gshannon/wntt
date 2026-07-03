@@ -1,9 +1,11 @@
 import json
 import logging
+import traceback
 from datetime import datetime, time, timedelta
 
 import requests
 import sentry_sdk
+
 from app import util as util
 from app.station import Station
 from app.timeline import GraphTimeline
@@ -12,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Max number of future days, including current day, to retrieve wind forecasts. Open-Meteo supports 16 days.
 _max_forecast_days = 14
-_request_timeout_seconds = 20
-_request_time_warning_seconds = 5
+_request_timeout_seconds = 5
 
 """
   Access Wind forecasts from open-meteo.com.
@@ -88,11 +89,10 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
 
     try:
         response = requests.get(
-            base_url, params=params, timeout=_request_timeout_seconds
+            base_url,
+            params=params,
+            timeout=_request_timeout_seconds,
         )
-        seconds = response.elapsed.seconds
-        if seconds > _request_time_warning_seconds:
-            logger.warning(f"Call to {response.url} took {response.elapsed}")
         logger.debug(f"Elapsed={response.elapsed} from {response.url}")
         json_dict = json.loads(response.text)
         if response.status_code != 200:
@@ -109,7 +109,9 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         e.add_note(f"{base_url} {params}")
         if reason:
             e.add_note(reason)
-        logger.exception(str(e))
+        exc_desc = "".join(traceback.format_exception_only(type(e), e)).rstrip()
+        logger.error(exc_desc)
+        # We're logging to sentry here because we're not raising it.
         sentry_sdk.capture_exception(e)
         return {}
 
