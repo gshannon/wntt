@@ -155,9 +155,9 @@ def pred15_json_to_dict(
     pred_json: list, timeline: Timeline, navd88_func: callable
 ) -> dict:
     """
-    Given a list of predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" }, return a
-    sparse dict of {dt: value} for all values that exist in the requested timeline.
-    Converts tide values to MLLW per the parameter and builds time-aware datetimes in the timeline's timezone.
+    Given a list of NAVD88 feet predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" },
+    return a sparse dict of {dt: value} for all times that exist in the timeline.  Converts values to
+    MLLW per the callback param. Assumes datetimes are in the timezone of the timeline.
     """
     reg_preds_dict = {}  # {dt: value}
     if len(pred_json) == 0:

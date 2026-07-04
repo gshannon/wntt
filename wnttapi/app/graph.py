@@ -71,7 +71,7 @@ def get_graph_data(
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.get_past_storm_surge(astro_preds15_dict, water_dict)
+    past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, water_dict)
 
     future_surge_dict = sg.get_future_surge_data(
         timeline,

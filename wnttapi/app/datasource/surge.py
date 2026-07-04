@@ -71,7 +71,7 @@ def get_future_surge_data(
     return future_surge_dict
 
 
-def get_past_storm_surge(astro_dict: dict, water_dict: dict) -> dict:
+def get_recorded_storm_surge(astro_dict: dict, water_dict: dict) -> dict:
     """Calculate the past storm surge, which is the difference between the observed tide and the
     predicted tide.
 

@@ -210,13 +210,6 @@ def build_parser():
     parser.add_argument(
         "-s", "--swmp_station_id", help="SWMP station id", required=True
     )
-    # parser.add_argument(
-    #     "-l",
-    #     "--local",
-    #     action="store_true",
-    #     help="No container, useful for debugging",
-    #     required=False,
-    # )
     parser.add_argument(
         "-d",
         "--debug",
