@@ -268,6 +268,11 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true, // avoid gaps for syzygy events, which rarely align with other data
             symbolSize: tideMarkerSize,
             color: ObservedTideColor,
+            label: {
+                show: hiloMode && ctx.special,
+                position: [-5, -15],
+                formatter: (p) => p.data[p.encode.y[0]],
+            },
         })
         legend.push({ name: ObservedTideTitle, legendId: LegendId.ObservedTide })
     }
@@ -284,6 +289,20 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true,
             symbolSize: tideMarkerSize,
             color: PredictedTideColor,
+            label: {
+                show: hiloMode && ctx.special,
+                position: [-5, -15],
+                formatter: (p) => {
+                    // Only show label if no obs tide or projected tide labels are shown.
+                    const otherLabels = [Dimension.HistTides, Dimension.ProjectedStormTide].some(
+                        (dim) => {
+                            const ndx = data.dimensions.indexOf(dim)
+                            return ndx >= 0 && p.data[ndx] !== null
+                        },
+                    )
+                    return otherLabels ? '' : p.data[p.encode.y[0]]
+                },
+            },
         })
         legend.push({ name: PredictedTideTitle, legendId: LegendId.PredictedTide })
     }
@@ -312,9 +331,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: ProjectedStormTideTitle,
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormTide },
             smooth: true,
-            symbol: 'none',
+            symbol: hiloMode ? 'circle' : 'none',
             connectNulls: true,
             color: ProjectedStormTideColor,
+            label: {
+                show: hiloMode && ctx.special,
+                position: [-5, -15],
+                formatter: (p) => p.data[p.encode.y[0]],
+            },
         })
         legend.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
     }
@@ -328,7 +352,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: ProjectedStormSurgeTitle,
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormSurge },
             smooth: true,
-            symbol: 'none',
+            symbol: hiloMode ? 'circle' : 'none',
             connectNulls: true,
             color: ProjectedStormSurgeColor,
         })
