@@ -31,7 +31,7 @@ class TestSurge(TestCase):
         self.assertTrue(filepath is not None)
         self.assertEqual(filedate, "20260703")
         self.assertEqual(cycle, 0)
-        self.assertTrue(file_creation_dt is not None)
+        self.assertIsNotNone(file_creation_dt)
 
     def test_read_surge_file(self):
 
