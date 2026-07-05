@@ -11,6 +11,8 @@ export const getSurgeStationUrl = (noaaStationId) => {
     return `https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=${noaaStationId}&datum=MLLW&show=0-0-1-1-0`
 }
 
+export const HttpNotAcceptableCode = 406 // version out of date
+
 // prettier-ignore
 export const Months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',  'Dec']
 

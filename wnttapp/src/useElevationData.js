@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
-import { EpqsUrl, roundTo } from './utils'
+import { HttpNotAcceptableCode, EpqsUrl, roundTo } from './utils'
 
 export default function useElevationData(pendingMarkerLocation) {
     // We want the key to be different so it doesn't use cached data from previous query.
-    const subKey = pendingMarkerLocation
-        ? `${pendingMarkerLocation.lat},${pendingMarkerLocation.lng}`
-        : 'x'
+    const subKey =
+        pendingMarkerLocation ? `${pendingMarkerLocation.lat},${pendingMarkerLocation.lng}` : 'x'
     return useQuery({
         retry: false,
         enabled: !!pendingMarkerLocation,
@@ -19,17 +18,20 @@ export default function useElevationData(pendingMarkerLocation) {
                 .get(
                     `${EpqsUrl}?x=${pendingMarkerLocation.lng}&y=${pendingMarkerLocation.lat}` +
                         `&units=Feet&wkid=4326&includeDate=False`,
-                    { timeout: 30000, signal }
+                    { timeout: 30000, signal },
                 )
                 .then((res) => {
                     return roundTo(parseFloat(res.data.value), 2)
                 })
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
+                    if (
+                        error.name !== 'CanceledError' &&
+                        error.response?.status !== HttpNotAcceptableCode
+                    ) {
                         console.error(
                             error.message,
                             error.response?.status,
-                            error.response?.data?.detail
+                            error.response?.data?.detail,
                         )
                         // This endpoint is not part of our backend, so we'll log exceptions here.
                         Sentry.captureException(error)

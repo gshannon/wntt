@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import Station from './Station'
+import { HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
 
 // Fetch station selection data from the server, and keep it cached for the app lifetime.
@@ -31,7 +32,10 @@ export default function useStations() {
                     return Object.fromEntries(asArray)
                 })
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
+                    if (
+                        error.name !== 'CanceledError' &&
+                        error.response?.status !== HttpNotAcceptableCode
+                    ) {
                         console.error(
                             error.message,
                             error.response?.status,
