@@ -169,21 +169,20 @@ export default function Chart({ error, loading, hiloMode, data }) {
             datasetIndex: 1,
             name: 'syzygy', // for this one, name is only needed for click handling
             encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
-            symbol: (values, params) => {
+            symbol: (values, p) => {
                 // values is the array containing all values for x in the dataset. Elements with
                 // the value 1 indicate a symbol, and the image url will be present also
-                if (values[params.encode.y[0]]) {
-                    const urlIndex = params.dimensionNames.indexOf(Dimension.SyzygyUrl)
+                if (values[p.encode.y[0]]) {
+                    const urlIndex = p.dimensionNames.indexOf(Dimension.SyzygyUrl)
                     return values[urlIndex]
                 } else {
                     return null
                 }
             },
-            symbolSize: 30,
+            symbolSize: 25, // Controls the size of the moon/sun graphics, in pixels
             tooltip: {
                 trigger: 'item',
                 // For these events we pull the data from the syzygy object using the x datetime value.
-                // It's an array with the event code (e.g. FM) and the actual datetime, not aligned with timeline.
                 formatter: (param) => {
                     const dt = param.data[0] // timeline datetime
                     const code = data.syzygy[dt]
@@ -452,25 +451,19 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return buffer ? format(dt, 'ccc, MMM d, yyyy h:mm aaa') + buffer : ''
     }
 
-    let xAxesForZoom = [1]
-    if (data.syzygy) xAxesForZoom = [0, ...xAxesForZoom]
-    if (showingWind) xAxesForZoom = [...xAxesForZoom, 2]
-
     const placement = getResponsivePlacement(!isNarrow) // determine key pixel locations
-    const gridDef = buildGridLayout(showingWind, placement, GridBgColor)
     // this helps the 2 or 3 grids to line up on the x axis
     const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
-
     const stationDaily = getOrInitializeDaily()
 
     const options = {
         backgroundColor: PlotBgColor,
-        grid: gridDef,
+        grid: buildGridLayout(showingWind, placement, GridBgColor),
         title: [
             {
                 text: `Tides at ${ctx.station.waterStationName}`,
                 subtext: data.subtitle,
-                subtextStyle: { fontWeight: 'bolder' },
+                subtextStyle: { fontWeight: 'bolder', lineHeight: 6 },
             },
             ...(!isNarrow ?
                 [
@@ -612,7 +605,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
         ],
         dataset: [{ source: data.blob, dimensions: data.dimensions }, localDataset],
         series: series,
-        dataZoom: [{ type: 'slider', xAxisIndex: xAxesForZoom, show: !isNarrow }],
+        dataZoom: [
+            { type: 'slider', xAxisIndex: showingWind ? [0, 1, 2] : [0, 1], show: !isNarrow },
+        ],
 
         toolbox: [
             {

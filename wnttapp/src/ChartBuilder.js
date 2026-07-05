@@ -1,7 +1,7 @@
 import { getSyzygyUrl } from './Syzygy'
 
-// These constants drive optimal placement settings in the EChar.  Adjust if needed.
-const LegendWidthPix = 220 // width of our legend currently
+// These constants drive optimal placement settings in the EChart.  Adjust as needed.
+const LegendWidthPix = 220 // width of our legend
 const GridLeftFactor = 0.08 // this is treated by echarts as a minimum; it's widened when labels don't fit on small screens
 const ChartDisplayFactor = 0.833 // this is 10/12 -- the graph is in the middle of a bootstrap row of [col-1 + col-10 + col-1]
 const PrevFactor = 0.083 // 1/12 of screen width, size of the Prev/Next columns
@@ -104,8 +104,8 @@ export const getResponsivePlacement = (showingLegend) => {
 }
 
 export const buildGridLayout = (showingWind, placement, bgColor) => {
-    const syzygyTop = '15%'
-    const syzygyHeight = '5%'
+    const syzygyTop = '17%'
+    const syzygyHeight = '3%'
     const tideGridTop = '20%'
     const windGridTop = '54%'
     const windGridHeight = '25%'
