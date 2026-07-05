@@ -22,11 +22,11 @@ import BlackArrow from './images/util/arrow-black.png?inline'
 const CustomElevationColor = '#17becf'
 const RecordTideColor = '#d62728'
 const HighestAnnualPredictedColor = '#ff7f0e'
-const ProjectedStormTideColor = '#e377c2'
+const ProjectedStormTideColor = '#9467bd'
 const ObservedTideColor = '#2ca02c'
 const PredictedTideColor = '#0b7dcc'
 const RecordedStormSurgeColor = '#bcbd22'
-const ProjectedStormSurgeColor = '#9467bd'
+const ProjectedStormSurgeColor = '#e377c2'
 const WindGustColor = '#0b7dcc'
 const WindSpeedColor = '#17becf'
 const PlotBgColor = '#f3f2f2'
@@ -271,6 +271,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 show: hiloMode && ctx.special,
                 position: [-5, -15],
                 formatter: (p) => p.data[p.encode.y[0]],
+                color: ObservedTideColor,
             },
         })
         legend.push({ name: ObservedTideTitle, legendId: LegendId.ObservedTide })
@@ -291,6 +292,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             label: {
                 show: hiloMode && ctx.special,
                 position: [-5, -15],
+                color: PredictedTideColor,
                 formatter: (p) => {
                     // Only show label if no obs tide or projected tide labels are shown.
                     const otherLabels = [Dimension.HistTides, Dimension.ProjectedStormTide].some(
@@ -336,6 +338,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             label: {
                 show: hiloMode && ctx.special,
                 position: [-5, -15],
+                color: ProjectedStormTideColor,
                 formatter: (p) => p.data[p.encode.y[0]],
             },
         })
