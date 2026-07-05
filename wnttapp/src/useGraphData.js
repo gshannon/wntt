@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
-import { buildCacheKey } from './utils'
+import { buildCacheKey, HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
 
 export default function useGraphData(station, startDate, endDate, hiloMode, special) {
@@ -29,7 +29,10 @@ export default function useGraphData(station, startDate, endDate, hiloMode, spec
                 })
                 .then((res) => res.data)
                 .catch((error) => {
-                    if (error.name !== 'CanceledError') {
+                    if (
+                        error.name !== 'CanceledError' &&
+                        error.response?.status !== HttpNotAcceptableCode
+                    ) {
                         console.error(
                             error.message,
                             error.response?.status,

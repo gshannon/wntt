@@ -1,21 +1,22 @@
 import { useEffect } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import Button from 'react-bootstrap/Button'
+import { HttpNotAcceptableCode } from './utils'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
-
-// We're using 406-NotAcceptable on the backend to indicate we need to update.  This happens
-// when the a change was made on either end that effects the other, or just to force users
-// to update to get new functionality.
-const NotAcceptable = 406 // version out of date
 
 // Display an error message in a div. error param can be:
 // 1) string
 // 2) AxiosError with status NotAcceptable, and a page reload will be forced
 // 3) any other AxiosError, and a generic message is displayed.
+//
+// We're using 406-NotAcceptable on the backend to indicate we need to update.  This happens
+// when the a change was made on either end that effects the other, or just to force users
+// to update to get new functionality.
+
 export default function ErrorBlock({ error }) {
     const isUpgrade =
-        axios.isAxiosError(error) && (error.response?.status ?? null) === NotAcceptable
+        axios.isAxiosError(error) && (error.response?.status ?? null) === HttpNotAcceptableCode
     const upgradeSeconds = 10
 
     // If we're upgrading, force it with an effect.
@@ -61,9 +62,9 @@ export default function ErrorBlock({ error }) {
         )
     } else {
         const msg =
-            typeof error === 'string'
-                ? error
-                : 'There was a problem fetching the data. Please try again later.'
+            typeof error === 'string' ? error : (
+                'There was a problem fetching the data. Please try again later.'
+            )
         return (
             <Row>
                 <Col className='d-flex justify-content-center text-warning bg-dark py-3'>{msg}</Col>
