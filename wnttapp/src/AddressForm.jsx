@@ -5,6 +5,7 @@ import { Col, Row, Alert } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
 import Button from 'react-bootstrap/Button'
 import useAddressLookup from './useAddressLookup'
+import ErrorBlock from './ErrorBlock'
 import * as mu from './mapUtils'
 
 export default function AddressForm({ setPendingMarkerLocation, station }) {
@@ -13,7 +14,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
     const [doLookup, setDoLookup] = useState(false)
     const [searchLocation, setSearchLocation] = useState(null)
 
-    const { isLoading, data: location, error } = useAddressLookup(addressValue)
+    const { isLoading, data: location, error } = useAddressLookup(addressValue, doLookup)
 
     if (doLookup && !isLoading) {
         if (error) {
@@ -100,7 +101,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
 function MyAlert({ errorMessage, closeError }) {
     return (
         <Alert show={errorMessage != null} className='py-1 my-1' variant='secondary'>
-            <div>{errorMessage}</div>
+            <ErrorBlock error={errorMessage} />
             <div className='d-flex justify-content-end'>
                 <Button onClick={() => closeError()} className='my-1' variant='secondary'>
                     OK
