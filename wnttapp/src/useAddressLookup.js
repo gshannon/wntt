@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/react'
 import { HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
 
-export default function useAddressLookup(search) {
+export default function useAddressLookup(search, doLookup) {
     const mainStore = storage.getMainStorage()
     const address = search + ' USA'
     const encoded = address.replace(/\s+/gi, '+')
@@ -12,7 +12,7 @@ export default function useAddressLookup(search) {
 
     return useQuery({
         retry: false,
-        enabled: !!search,
+        enabled: doLookup && !!search,
         queryKey: ['geocode', subKey],
         queryFn: async ({ signal }) => {
             return await axios
