@@ -1,6 +1,6 @@
 import logging
 import os
-import time
+
 from suds.client import Client
 from suds.transport.https import HttpAuthenticated, HttpTransport
 
@@ -39,35 +39,19 @@ class SoapClient:
             transport = (
                 CustomTransport(user_name, password) if user_name and password else None
             )
-            start_time = time.time()
-            try:
-                if transport is not None:
-                    logger.debug(f"Creating Client with username {user_name}")
-                    cls._client = Client(
-                        CDMO_WSDL,
-                        retxml=True,
-                        transport=transport,
-                    )
-                else:
-                    logger.debug("Creating Client with no transport")
-                    cls._client = Client(
-                        CDMO_WSDL,
-                        retxml=True,
-                    )
-            except Exception as exc:
-                elapsed_sec = time.time() - start_time
-                msg = f"Error creating Client, time {round(elapsed_sec, 2)} sec: {str(exc)}"
-                # unfortunately this happens often & we don't want to clutter the sentry logs
-                if "urlopen" in str(exc):
-                    logger.warning(msg)
-                else:
-                    logger.error(msg)
-                raise exc
+            if transport is not None:
+                logger.debug(f"Creating Client with username {user_name}")
+                cls._client = Client(
+                    CDMO_WSDL,
+                    retxml=True,
+                    transport=transport,
+                )
+            else:
+                logger.debug("Creating Client with no transport")
+                cls._client = Client(
+                    CDMO_WSDL,
+                    retxml=True,
+                )
             # This is the only way to override the default 90 sec.  Doesn't work in constructor.
             cls._client.set_options(timeout=TIMEOUT_SEC)
-            elapsed_sec = time.time() - start_time
-            if elapsed_sec > 5:
-                logger.warning(f"Created Client object in {round(elapsed_sec, 2)} sec")
-            else:
-                logger.debug(f"Created Client object in {round(elapsed_sec, 2)} sec")
         return cls._client

@@ -158,23 +158,15 @@ def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> l
         with open(filepath, newline="") as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
-                try:
-                    dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(
-                        tzinfo=utc
-                    )
-                    data.append(dt_utc)
-                except Exception as exc:
-                    exc.add_note("Bad datetime in %s, [%s]" % (filepath, row[0]))
-                    raise exc
+                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
+                data.append(dt_utc)
 
         logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
         cache.set(cache_key, data, timeout=None)  # unlimited timeout
         return data
 
-    except Exception as exc:
-        msg = f"Processing {filepath}"
-        exc.add_note(msg)
-        raise exc
+    except Exception as e:
+        raise util.InternalError(f"Got {e} processing {filepath}") from None
 
 
 def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
@@ -192,26 +184,17 @@ def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
         with open(filepath, newline="") as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
-                try:
-                    dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(
-                        tzinfo=utc
+                dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
+                type = row[1]
+                if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
+                    raise util.InternalError(
+                        "Bad type in %s for %s: %s" % (filepath, dt_utc, type)
                     )
-                    type = row[1]
-                    if type not in [NEW_MOON, FIRST_QUARTER, FULL_MOON, LAST_QUARTER]:
-                        raise Exception(
-                            "Bad type in %s for %s: %s" % (filepath, dt_utc, type)
-                        )
-                    data[dt_utc] = type
-                except Exception as exc:
-                    exc.add_note("Bad datetime in %s: [%s]" % (filepath, row[0]))
-                    raise exc
+                data[dt_utc] = type
 
         logger.debug(f"Loaded {len(data)} moon phases from {filepath}")
         cache.set(cache_key, data, timeout=None)  # unlimited timeout
         return data
 
-    except Exception as exc:
-        msg = f"Processing {filepath}"
-        exc.add_note(msg)
-        logger.error(msg)
-        raise exc
+    except Exception as e:
+        raise util.InternalError(f"Got {e} processing {filepath}") from None

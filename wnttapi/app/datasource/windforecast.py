@@ -1,6 +1,5 @@
 import json
 import logging
-import traceback
 from datetime import datetime, time, timedelta
 
 import requests
@@ -74,6 +73,7 @@ def get_forecast_window(timeline: GraphTimeline) -> list:
     return overlap
 
 
+@util.request_logger
 def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
     granularity = "hourly" if not hilo_mode else "minutely_15"
 
@@ -85,35 +85,14 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         "forecast_days": forecast_days,
     }
 
-    reason = None
-
-    try:
-        response = requests.get(
-            base_url,
-            params=params,
-            timeout=_request_timeout_seconds,
-        )
-        logger.debug(f"Elapsed={response.elapsed} from {response.url}")
-        json_dict = json.loads(response.text)
-        if response.status_code != 200:
-            if json_dict.get("error", False):
-                # An error might look like this:
-                # {"error":true,"reason":"Forecast days is invalid. Allowed range 0 to 16. Given 16."}
-                reason = json_dict.get("reason", "(not given)")
-            else:
-                reason = "code {response.status_code}"
-            raise Exception
-        return json_dict[granularity]
-
-    except Exception as e:
-        e.add_note(f"{base_url} {params}")
-        if reason:
-            e.add_note(reason)
-        exc_desc = "".join(traceback.format_exception_only(type(e), e)).rstrip()
-        logger.error(exc_desc)
-        # We're logging to sentry here because we're not raising it.
-        sentry_sdk.capture_exception(e)
-        return {}
+    response = requests.get(
+        base_url,
+        params=params,
+        timeout=_request_timeout_seconds,
+    )
+    response.raise_for_status()
+    json_dict = json.loads(response.text)
+    return json_dict[granularity]
 
 
 def pred_json_to_dict(pred_json: dict, timeline: GraphTimeline, overlap: list):
