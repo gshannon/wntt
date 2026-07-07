@@ -1,4 +1,5 @@
 from django.db import models
+from app import util
 
 
 class Station(models.TextChoices):
@@ -13,7 +14,7 @@ def get_station(station_id: str) -> Station:
         return Station.WELLS
     if station_id == "nocrcwq":
         return Station.NOCAL
-    raise Exception(f"Unknown station: {station_id}")
+    raise util.InternalError(f"Unknown station: {station_id}")
 
 
 class User(models.Model):

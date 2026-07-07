@@ -1,11 +1,36 @@
 import copy
+import functools
 import logging
 import pprint
 from datetime import datetime, timedelta
+import sentry_sdk
 
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
+
+
+def request_logger(func):
+    """Decorator to handle error handling for calls to requests.get().  Since these are generally
+    expected errors, no stack trace is printed."""
+
+    logger = logging.getLogger(func.__module__)  # Use decorated func's logger, not ours
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.error(
+                f"{type(e)} in {func.__module__}.{func.__name__}: {e}", stack_info=False
+            )
+            # Wind forecast is non-essential, so for this we just log and go on.
+            if func.__module__.endswith("windforecast"):
+                sentry_sdk.capture_exception(e)
+                return {}
+            raise
+
+    return wrapper
 
 
 # This custom exception indicates a programming error.

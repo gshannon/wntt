@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 import requests
-import traceback
 
 from app import tzutil as tz
 from app import util
@@ -66,7 +65,7 @@ def get_15m_astro_tides(
     if force_api:
         logger.warning("Forced to use API for tide predictions!")
 
-    if useDb or force_api:
+    if useDb and not force_api:
         reg_preds_dict = {}  # {dt: value}
 
         start_dt = timeline.get_min(False)
@@ -121,7 +120,7 @@ def get_hilo_astro_tides(
     if force_api:
         logger.warning("Forced to use API for tide predictions!")
 
-    if useDb:
+    if useDb and not force_api:
         data = {}
         start_dt = timeline.get_min(True)
         end_dt = timeline.get_max(True)
@@ -210,6 +209,7 @@ def hilo_json_to_dict(
     return future_hilo_dict
 
 
+@util.request_logger
 def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
     """Call the tides&currents API, using:
         - time_zone=lst_ldt
@@ -247,26 +247,11 @@ def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
         "end_date": str(timeline.end_date),
     }
 
-    try:
-        response = requests.get(
-            base_url, params=base_params | params, timeout=_request_timeout_seconds
-        )
-        logger.debug(f"Elapsed={response.elapsed} from {response.url}")
-
-    except Exception as e:
-        e.add_note(f"Url: {response.url}")
-        exc_desc = "".join(traceback.format_exception_only(type(e), e)).rstrip()
-        logger.error(exc_desc)
-        raise e
-
-    if response.status_code != 200:
-        raise Exception(f"status {response.status_code} calling {response.url}")
-
-    try:
-        return extract_json(response.text)
-    except ValueError as e:
-        e.add_note(f"Url: {response.url}")
-        raise e
+    response = requests.get(
+        base_url, params=base_params | params, timeout=_request_timeout_seconds
+    )
+    response.raise_for_status()
+    return extract_json(response.text)
 
 
 def extract_json(raw) -> list:
@@ -276,6 +261,6 @@ def extract_json(raw) -> list:
     # This is what content may look like if it's an invalid request.
     #  {"error": {"message":"No Predictions data was found. Please make sure the Datum input is valid."}}
     if "error" in json_dict:
-        raise Exception(f"found in returned json: {json_dict['error']}")
+        raise util.InternalError(f"found in returned json: {json_dict['error']}")
 
     return json_dict["predictions"]

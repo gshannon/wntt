@@ -1,11 +1,14 @@
 import logging
 import os
-import sys
+
+import functools
 from datetime import datetime
 
 import sentry_sdk
 from app.datasource import address
 from rest_framework.exceptions import APIException, NotAcceptable
+
+from requests.exceptions import RequestException
 from rest_framework.views import APIView, Response
 
 from . import graph as gr
@@ -18,7 +21,47 @@ logger = logging.getLogger(__name__)
 version = os.getenv("APP_VERSION", "set-me")
 
 
+def endpoint_logger(func):
+    # Decorator for error handling. We want to do stack traces only for "unexpected" exceptions.
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except NotAcceptable:
+            # This is not a real error, it means caller's version is out of date.
+            logger.info(
+                f"NotAcceptable in {func.__module__}.{func.__name__}", stack_info=False
+            )
+            raise NotAcceptable from None
+        except APIException as e:
+            # General expected errors from SOAP calls or bad data from an API.
+            logger.error(
+                f"{type(e)} in {func.__module__}.{func.__name__}: {e}", stack_info=False
+            )
+            sentry_sdk.capture_exception(e)
+            raise APIException() from None
+        except RequestException as e:
+            # These come from calls to requests.get(), which can fail.
+            logger.error(
+                f"{type(e)} in {func.__module__}.{func.__name__}: {e}",
+                stack_info=False,
+            )
+            sentry_sdk.capture_exception(e)
+            raise APIException() from None
+        except Exception as e:
+            # These are unexpected, so stack trace is ok
+            logger.exception(
+                f"{type(e)} in {func.__module__}.{func.__name__}: {type(e)}"
+            )
+            sentry_sdk.capture_exception(e)
+            raise APIException() from None
+
+    return wrapper
+
+
 class StationsView(APIView):
+    @endpoint_logger
     def post(self, request, format=None):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
@@ -31,42 +74,22 @@ class StationsView(APIView):
             request.data.get("version"),
             request.data.get("screenWidth"),
         )
-
-        try:
-            stations = stn.get_all_stations()
-            return Response(data=stations)
-        except NotAcceptable as exc:
-            logger.warning(f"NotAcceptable {params}")
-            raise exc
-        except Exception as exc:
-            exc_type, exc_value, _ = sys.exc_info()
-            logger.exception(f"Got {exc_type} with {exc_value}")
-            sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from None
+        return Response(data=stn.get_all_stations())
 
 
 class LatestInfoView(APIView):
+    @endpoint_logger
     def post(self, request, format=None):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
         swmp_station_id = get_required(request.data, "station_id")
         station = stn.get_station(swmp_station_id)
-
-        try:
-            info = swmp.get_latest_conditions(station)
-            return Response(data=info)
-        except NotAcceptable:
-            logger.info(f"NotAcceptable {params}")
-            raise
-        except Exception as exc:
-            exc_type, exc_value, _ = sys.exc_info()
-            logger.exception(f"Got {exc_type} with {exc_value}")
-            sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from None
+        return Response(data=swmp.get_latest_conditions(station))
 
 
 class CreateGraphView(APIView):
+    @endpoint_logger
     def post(self, request, format=None):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
@@ -95,39 +118,22 @@ class CreateGraphView(APIView):
             customNav=request.data.get("customNav"),
         )
 
-        try:
-            # Gather all data needed for the graph and pass it back here
-            graph_data = gr.get_graph_data(
-                start_date, end_date, hilo_mode, station, is_special
-            )
-            return Response(data=graph_data)
-        except NotAcceptable as exc:
-            logger.warning(f"NotAcceptable {params}")
-            raise exc
-        except Exception as exc:
-            exc_type, exc_value, _ = sys.exc_info()
-            logger.exception(f"Got {exc_type} with {exc_value}")
-            sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from None
+        # Gather all data needed for the graph and pass it back here
+        graph_data = gr.get_graph_data(
+            start_date, end_date, hilo_mode, station, is_special
+        )
+        return Response(data=graph_data)
 
 
 class AddressView(APIView):
+    @endpoint_logger
     def post(self, request, format=None):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
         search = get_required(request.data, "search")
-        try:
-            latlng = address.get_location(search)
-            return Response(data=latlng)
-        except NotAcceptable as exc:
-            logger.warning(f"NotAcceptable {params}")
-            raise exc
-        except Exception as exc:
-            exc_type, exc_value, _ = sys.exc_info()
-            logger.exception(f"Got {exc_type} with {exc_value}")
-            sentry_sdk.capture_exception(exc)
-            raise APIException(str(exc)) from None
+        latlng = address.get_location(search)
+        return Response(data=latlng)
 
 
 def log_user(uid: str) -> int:
@@ -190,7 +196,7 @@ def log_request(
 
     except Exception as exc:
         # Log but do not raise
-        logger.exception(str(exc))
+        logger.error(str(exc), stack_info=False)
         sentry_sdk.capture_exception(exc)
 
 

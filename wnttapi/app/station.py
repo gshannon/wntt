@@ -121,7 +121,7 @@ def get_station_with_noaa_id(noaa_station_id: str, nocontainer: bool) -> Station
     for id, data in stations.items():
         if data["noaaStationId"] == noaa_station_id:
             return Station.from_dict(id, data)
-    raise Exception(f"Station with NOAA id {noaa_station_id} not found!")
+    raise util.InternalError(f"Station with NOAA id {noaa_station_id} not found!")
 
 
 def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:

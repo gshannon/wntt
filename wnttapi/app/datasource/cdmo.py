@@ -1,9 +1,10 @@
 import logging
 import os
-import time
 import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 from enum import Enum
+
+from rest_framework.exceptions import APIException
 
 from app import tzutil as tz
 from app import util
@@ -65,7 +66,7 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     if force_api:
         logger.warning("Forced to use API for CDMO data!")
 
-    if useDb or force_api:
+    if useDb and not force_api:
         logger.debug(
             f"station.id={station.id} fetching water params for {timeline.start_dt} to {timeline.end_dt} from database"
         )
@@ -124,7 +125,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     if force_api:
         logger.warning("Forced to use API for CDMO data!")
 
-    if useDb or force_api:
+    if useDb and not force_api:
         use_padding = isinstance(timeline, GraphTimeline)
         start_dt = timeline.get_min(use_padding)
         end_dt = timeline.get_max(use_padding)
@@ -212,7 +213,6 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
         timeline.get_min(use_padding), timeline.get_max(use_padding)
     )
 
-    # TODO: This should be a bit more robust?
     data_station_id = (
         station.id
         if Param.Tide in params or Param.Temperature in params
@@ -220,33 +220,19 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
     )
 
     try:
-        start_time = time.time()
         logger.debug(f"Calling CDMO for {params} {req_start_date} to {req_end_date}")
         param_str = ",".join(p.value for p in params)
         xml = SoapClient.get_client().service.exportAllParamsDateRangeXMLNew(
             data_station_id, req_start_date, req_end_date, param_str
         )
-        elapsed_sec = time.time() - start_time
-        if elapsed_sec > _request_time_warning_seconds:
-            logger.warning(
-                f"Call to CDMO with param {param_str} took {round(elapsed_sec, 2)}"
-            )
+        return xml
 
-    except Exception as exc:
-        elapsed_sec = time.time() - start_time
-        msg = f"Error getting {param_str} data {req_start_date} to {req_end_date} from CDMO, time={round(elapsed_sec, 2)}: {str(exc)}"
-        if "urlopen" in str(exc):
-            # unfortunately this happens often & we don't want to clutter the sentry logs
-            logger.warning(msg)
-        else:
-            logger.error(msg)
-        exc.add_note("param: %s %s to %s" % (param_str, req_start_date, req_end_date))
-        raise exc
-
-    logger.debug(
-        f"Got {param_str} data {req_start_date} to {req_end_date} time {round(elapsed_sec, 2)} sec"
-    )
-    return xml
+    except Exception as e:
+        logger.error(
+            f"{type(e)} getting {param_str} data {req_start_date} to {req_end_date} from CDMO: {e}",
+            stack_info=False,
+        )
+        raise APIException()
 
 
 def parse_cdmo_xml(
@@ -369,7 +355,7 @@ def text_error_check(rootElement):
         message = data_node.text.strip()
         if len(message) > 0:
             logger.error("Received unexpected message from CDMO: %s", message)
-            raise Exception(f"CDMO returned: {message}")
+            raise APIException(f"CDMO returned: {message}")
     except AttributeError:
         pass  # Not every payload has text in their data node
 
