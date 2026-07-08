@@ -140,11 +140,10 @@ def diff(cdmo_data: dict, type: str, db_station_code: str):
 
 
 def diff_water_record(db_rec, new_rec):
-    if db_rec.level != new_rec.get(cdmo.Param.Tide.label) or db_rec.temp != new_rec.get(
-        cdmo.Param.Temperature.label
-    ):
+    if db_rec.level != new_rec.get(cdmo.Param.Tide.label):
+        delta = round(new_rec["level"] - db_rec.level, 1)
         print(
-            f"{db_rec.time} old/new level: {db_rec.level}/{new_rec['level']}, temp: {db_rec.temp}/{new_rec['temp']}",
+            f"{db_rec.time} old/new level: {db_rec.level}/{new_rec['level']}, delta: {delta}",
         )
         return 1
     return 0

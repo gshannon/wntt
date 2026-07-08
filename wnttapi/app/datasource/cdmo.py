@@ -17,7 +17,7 @@ from .soap import SoapClient
 
 
 class Param(Enum):
-    Tide = "Level", "level"
+    Tide = "cLevel", "level"
     Temperature = "Temp", "temp"
     WindSpeed = "Wspd", "speed"
     WindGust = "MaxWspd", "gust"
