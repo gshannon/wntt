@@ -119,10 +119,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
     // We only include the values in parens when in non-narrow screen. In narrow mode, title is shown in tooltip and values are redundant.
     const recordTideTitle =
         `Record Tide ${formatDate(new Date(ctx.station.recordTideDate))}` +
-        (isNarrow ? '' : ` (${ctx.station.recordTideMllw()})`)
+        (isNarrow ? '' : ` (${ctx.station.recordTideMllw()}')`)
     const highestAnnualTitle =
-        'Highest Annual Predicted' + (isNarrow ? '' : ` (${data.highest_annual_prediction})`)
-    const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw})`)
+        'Highest Annual Predicted' + (isNarrow ? '' : ` (${data.highest_annual_prediction}')`)
+    const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw}')`)
     const showingWind =
         data.dimensions.includes(Dimension.WindSpeeds) ||
         data.dimensions.includes(Dimension.ForecastWindSpeeds)
@@ -268,9 +268,9 @@ export default function Chart({ error, loading, hiloMode, data }) {
             symbolSize: tideMarkerSize,
             color: ObservedTideColor,
             label: {
-                show: hiloMode && ctx.special,
+                show: hiloMode,
                 position: [-5, -15],
-                formatter: (p) => p.data[p.encode.y[0]],
+                formatter: (p) => `${p.data[p.encode.y[0]]}'`,
                 color: ObservedTideColor,
             },
         })
@@ -290,7 +290,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             symbolSize: tideMarkerSize,
             color: PredictedTideColor,
             label: {
-                show: hiloMode && ctx.special,
+                show: hiloMode,
                 position: [-5, -15],
                 color: PredictedTideColor,
                 formatter: (p) => {
@@ -301,7 +301,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                             return ndx >= 0 && p.data[ndx] !== null
                         },
                     )
-                    return otherLabels ? '' : p.data[p.encode.y[0]]
+                    return otherLabels ? '' : `${p.data[p.encode.y[0]]}'`
                 },
             },
         })
@@ -336,10 +336,10 @@ export default function Chart({ error, loading, hiloMode, data }) {
             connectNulls: true,
             color: ProjectedStormTideColor,
             label: {
-                show: hiloMode && ctx.special,
+                show: hiloMode,
                 position: [-5, -15],
                 color: ProjectedStormTideColor,
-                formatter: (p) => p.data[p.encode.y[0]],
+                formatter: (p) => `${p.data[p.encode.y[0]]}'`,
             },
         })
         legend.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
@@ -442,12 +442,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     buffer += `${val} mph from ${deg ? degreesToDir(deg) : ''}`
                 } else if (dimName === Dimension.HistTides) {
                     const label = p.data[data.dimensions.indexOf(Dimension.HistTidesLabels)]
-                    buffer += `${val} ${label ?? ''}`
+                    buffer += `${val}' ${label ?? ''}`
                 } else if (dimName === Dimension.AstroTides) {
                     const label = p.data[data.dimensions.indexOf(Dimension.AstroTidesLabels)]
-                    buffer += `${val} ${label ?? ''}`
+                    buffer += `${val}' ${label ?? ''}`
                 } else {
-                    buffer += val
+                    buffer += `${val}'`
                 }
             }
         }
