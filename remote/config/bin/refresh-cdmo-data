@@ -10,7 +10,8 @@ usage: $(basename $0) options
 
 Options:
 -h : this help
--v : (optional) if given, dev mode
+-x : (optional) if given, dev mode
+-v : (optional) if given, verbose mode
 -d : (optional) if given, debug mode (compares doesn't write)
 -s : (optional) station id, default = welinwq
 -t [T|W] : (opt) data type: T=tide/temp, W=wind. Default: both
@@ -28,14 +29,15 @@ fail() {
 
 devmode=0
 station=welinwq
-while getopts ":vdht:s:S:E:" opt; do
+while getopts ":xvdht:s:S:E:" opt; do
   case $opt in
     s ) station=$OPTARG;;
     S ) startstr="-S $OPTARG";;
     E ) endstr="-E $OPTARG";;
     t ) typestr="-t $OPTARG";;
     d ) debugstr='-d';;
-    v ) devmode=1;;
+    x ) devmode=1;;
+    v ) verbosestr='-v';;
     h ) usage; exit 0;;
     * ) fail;;
   esac
@@ -60,6 +62,6 @@ else
 fi
 
 # Run the python script in a new, temporary api container
-docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} ${typestr} ${startstr} ${endstr}
+docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} ${verbosestr} ${typestr} ${startstr} ${endstr}
 
 exit 0
