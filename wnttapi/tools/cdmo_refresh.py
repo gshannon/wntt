@@ -36,6 +36,10 @@ def main():
 
     parser = build_parser()
     args = parser.parse_args()
+    if args.verbose and args.debug:
+        print("Cannot have both verbose and debug")
+        parser.print_help()
+        return
     if nocontainer:
         station = stn.get_station(args.swmp_station_id, "../datamount/stations")
     else:
@@ -56,31 +60,9 @@ def main():
         timeline = None
 
     if args.type is None or args.type == "T":
-        repeat("T", station, db_station_code, timeline, args.debug, 3)
+        refresh("T", station, db_station_code, timeline, args)
     if args.type is None or args.type == "W":
-        repeat("W", station, db_station_code, timeline, args.debug, 3)
-
-
-def repeat(
-    type: str,
-    station: stn.Station,
-    db_station_code: str,
-    timeline: Timeline,
-    debug: bool,
-    tries: int,
-):
-    for attempt in range(1, tries + 1):
-        try:
-            if attempt > 1:
-                logger.warning(f"trying attempt #{attempt}")
-            refresh(type, station, db_station_code, timeline, debug)
-            break
-        except Exception as exc:
-            # Only log the error on the last attempt, since errors get sent to sentry.
-            if attempt == tries:
-                logger.error(f"Failed to refresh data after {tries} attempts")
-            else:
-                logger.error(str(exc))
+        refresh("W", station, db_station_code, timeline, args)
 
 
 def refresh(
@@ -88,7 +70,7 @@ def refresh(
     station: stn.Station,
     db_station_code: str,
     timeline: Timeline,
-    debug: bool,
+    args,
 ):
     name = "water" if type == "T" else "wind"
     logger.info(
@@ -112,9 +94,9 @@ def refresh(
         cdmo_data = cdmo.get_wind_data(station, timeline, useDb=False)
 
     if cdmo_data is not None and len(cdmo_data) > 0:
-        if debug:
+        if args.debug or args.verbose:
             diff(cdmo_data, type, db_station_code)
-        else:
+        if not args.debug:
             upsert(cdmo_data, type, db_station_code)
     else:
         logger.info(f"No new {name} data to refresh yet")
@@ -140,6 +122,7 @@ def diff(cdmo_data: dict, type: str, db_station_code: str):
 
 
 def diff_water_record(db_rec, new_rec):
+    # We only diff water level, as temp is not important in this app
     if db_rec.level != new_rec.get(cdmo.Param.Tide.label):
         delta = round(new_rec["level"] - db_rec.level, 1)
         print(
@@ -213,7 +196,14 @@ def build_parser():
         "-d",
         "--debug",
         action="store_true",
-        help="Debug mode",
+        help="Debug mode, don't use with verbose",
+        required=False,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Verbose mode, don't use with debug",
         required=False,
     )
     parser.add_argument(
