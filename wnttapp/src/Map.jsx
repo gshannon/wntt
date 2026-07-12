@@ -43,7 +43,7 @@ export default function Map({ onMapClose }) {
         error: queryError,
     } = useElevationData(pendingMarkerLocation)
 
-    if (elevation != null && elevation !== pendingElevationNav) {
+    if (!isLoading && !!elevation && elevation !== pendingElevationNav) {
         setPendingElevationNav(elevation)
         setMapCenter(pendingMarkerLocation) // recenter on looked up location
         // TODO: Consider zooming in also, but only after address lookup, not after map click/drag.
