@@ -226,7 +226,7 @@ def build_future_surge_plots(
         ):
             return None, None
         surge_val, hilo_pred = get_surge_and_hilo_prediction(dt)
-        if surge_val and hilo_pred:
+        if surge_val is not None and hilo_pred is not None:
             return round(surge_val, 2), round(surge_val + hilo_pred, 2)
         return None, None
 
