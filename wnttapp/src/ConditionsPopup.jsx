@@ -11,7 +11,7 @@ export default function ConditionsPopup({ station, onClose }) {
             <Modal.Header className='py-2 cond-header text-white' closeButton closeVariant='white'>
                 Latest Conditions - {station.waterStationName}
             </Modal.Header>
-            <Modal.Body className='px-4 py-4'>
+            <Modal.Body className='px-0 py-0 px-sm-4 py-sm-4'>
                 <Conditions data={data} error={error} />
             </Modal.Body>
         </Modal>
