@@ -75,7 +75,7 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
                     </Row>
                     <Row className='align-items-end mx-0'>
                         <Form.Text style={{ color: 'white' }}>
-                            Must be in the local area. Include city and state.
+                            Must be in the local area. Include city.
                         </Form.Text>
                     </Row>
                     <Row className='mx-0 my-1 justify-content-end'>

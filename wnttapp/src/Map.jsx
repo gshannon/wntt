@@ -5,8 +5,7 @@ import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-lea
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
 import Modal from 'react-bootstrap/Modal'
 import { Form } from 'react-bootstrap'
-import BarLoader from 'react-spinners/BarLoader'
-import Container from 'react-bootstrap/Container'
+import BeatLoader from 'react-spinners/BeatLoader'
 import { Col, Row } from 'react-bootstrap'
 import { RedPinIcon } from './MarkerIcon'
 import Button from 'react-bootstrap/Button'
@@ -164,57 +163,54 @@ export default function Map({ onMapClose }) {
     }
 
     return (
-        <Modal id='address-modal' show={true} size='xl' onHide={onMapClose}>
-            <Modal.Body className='px-4 py-4'>
-                <Container>
-                    <Row className='py-2 mx-0'>
-                        <Col className='col-6 px-0 d-flex flex-column justify-content-around align-items-center'>
-                            <div className='instructions-container text-start mx-2'>
-                                {instructions(ctx, isLoading, pendingElevationNav)}
-                            </div>
-                            <div className='text-center'>
-                                <Button
-                                    variant='custom-primary'
-                                    className='mt-2 mb-0 mx-1'
-                                    onClick={() => addtoGraph()}
-                                    disabled={
-                                        !pendingElevationNav ||
-                                        pendingElevationNav > ctx.station.maxCustomElevationNavd88()
-                                    }>
-                                    Graph
-                                </Button>
-                                <Button
-                                    variant='custom-primary'
-                                    className='mt-2 mb-0 mx-1'
-                                    onClick={() => removeMarker()}
-                                    disabled={!ctx.customElevationNav}>
-                                    Clear
-                                </Button>
-                                <Button
-                                    variant='custom-primary'
-                                    className='mt-2 mb-0 mx-1'
-                                    onClick={() => cancel()}>
-                                    Cancel
-                                </Button>
-                            </div>
-                        </Col>
-                        <Col className='px-0 align-self-center flex-column'>
-                            <div>
-                                <AddressForm
-                                    setPendingMarkerLocation={setPendingMarkerLocation}
-                                    station={ctx.station}
-                                />
-                            </div>
-                            <div className='mx-0 mt-4 d-flex justify-content-end'>
-                                <Form.Switch
-                                    type='switch'
-                                    label='Satellite View'
-                                    checked={mapType === 'sat'}
-                                    onChange={handleMapTypeToggle}
-                                />
-                            </div>
-                        </Col>
-                    </Row>
+        <Modal id='map-modal' show={true} size='xl' onHide={onMapClose}>
+            <Modal.Body className='px-1 py-1'>
+                <div>
+                    <div className='header-grid'>
+                        <div className='instructions-container px-2 py-2'>
+                            {isLoading ?
+                                <BeatLoader className='loading' loading={true} color={'green'} />
+                            :   <div className='text-start mx-3'>
+                                    {instructions(ctx, pendingElevationNav)}
+                                </div>
+                            }
+                        </div>
+                        <div className='map-address'>
+                            <AddressForm
+                                setPendingMarkerLocation={setPendingMarkerLocation}
+                                station={ctx.station}
+                            />
+                        </div>
+                        <div className='map-buttons py-1'>
+                            <Button
+                                variant='custom-primary'
+                                onClick={() => addtoGraph()}
+                                disabled={
+                                    !pendingElevationNav ||
+                                    pendingElevationNav > ctx.station.maxCustomElevationNavd88()
+                                }>
+                                Graph
+                            </Button>
+                            <Button
+                                variant='custom-primary'
+                                onClick={() => removeMarker()}
+                                disabled={!ctx.customElevationNav}>
+                                Clear
+                            </Button>
+                            <Button variant='custom-primary' onClick={() => cancel()}>
+                                Cancel
+                            </Button>
+                        </div>
+                        <div className='map-view pe-2'>
+                            <Form.Switch
+                                type='switch'
+                                label='Satellite View'
+                                checked={mapType === 'sat'}
+                                onChange={handleMapTypeToggle}
+                            />
+                        </div>
+                    </div>
+
                     <ErrorSection />
                     <Row className='justify-content-center mt-1 mx-0'>
                         <MapContainer
@@ -260,14 +256,13 @@ export default function Map({ onMapClose }) {
                             )}
                         </MapContainer>
                     </Row>
-                </Container>
+                </div>
             </Modal.Body>
         </Modal>
     )
 }
 
-const instructions = (ctx, isLoading, pendingElevationNav) => {
-    // const ctx = useContext(AppContext)
+const instructions = (ctx, pendingElevationNav) => {
     const cleartext = () => {
         return (
             <>
@@ -276,10 +271,6 @@ const instructions = (ctx, isLoading, pendingElevationNav) => {
             </>
         )
     }
-    if (isLoading) {
-        return <BarLoader loading={true} color={'green'} />
-    }
-
     if (pendingElevationNav) {
         const elevMllw = ctx.station.navd88ToMllw(pendingElevationNav)
         if (pendingElevationNav > ctx.station.maxCustomElevationNavd88()) {
