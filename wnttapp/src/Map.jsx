@@ -3,6 +3,8 @@ import { useEffect, useEffectEvent, useMemo, useRef, useContext, useState } from
 import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
+import { RecenterIcon1, RecenterIcon2, CloseBox } from './Icons'
+import Overlay from './Overlay'
 import Modal from 'react-bootstrap/Modal'
 import { Form } from 'react-bootstrap'
 import BeatLoader from 'react-spinners/BeatLoader'
@@ -34,6 +36,7 @@ export default function Map({ onMapClose }) {
     const [zoom, setZoom] = useState(stationOptions.zoom)
 
     const markerRef = useRef(null)
+    const closeRef = useRef(null)
 
     // If they've selected a new location or done address lookup, get the elevation.
     const {
@@ -50,22 +53,22 @@ export default function Map({ onMapClose }) {
 
     const addtoGraph = () => {
         ctx.onCustomElevationSet(pendingElevationNav, pendingMarkerLocation)
-        resetPending()
+        clearPending()
         onMapClose()
     }
 
     const cancel = () => {
-        resetPending()
+        clearPending()
         onMapClose()
     }
 
     const removeMarker = () => {
         ctx.onCustomElevationSet(null, null)
-        resetPending()
+        clearPending()
         onMapClose()
     }
 
-    const resetPending = () => {
+    const clearPending = () => {
         setPendingElevationNav(null)
         setPendingMarkerLocation(null)
     }
@@ -109,6 +112,14 @@ export default function Map({ onMapClose }) {
         return null
     }
 
+    const handleRecenterToMarker = () => {
+        setMapCenter(pendingMarkerLocation || ctx.customLocation)
+    }
+
+    const handleRecenterToDefault = () => {
+        setMapCenter(ctx.station.swmpLocation)
+    }
+
     // Keep the local storage of permanent station options in sync.
     // We own all the values except the 2 custom* fields, so we leave them alone.
     const onValueChange = useEffectEvent(() => {
@@ -125,6 +136,14 @@ export default function Map({ onMapClose }) {
     useEffect(() => {
         onValueChange()
     }, [mapCenter, mapType, zoom])
+
+    // After initial render, we want to keep focus off the address field b/c on phones, that brings up the keyboard
+    // and most people probably won't do address lookups, at least initially.
+    useEffect(() => {
+        if (closeRef.current) {
+            closeRef.current.focus()
+        }
+    }, [])
 
     const toolTipCfg = mu.buildTooltipLocations(ctx.station)
 
@@ -164,8 +183,13 @@ export default function Map({ onMapClose }) {
 
     return (
         <Modal id='map-modal' show={true} size='xl' onHide={onMapClose}>
-            <Modal.Body className='px-1 py-1'>
+            <Modal.Body className='px-0 py-0'>
                 <div>
+                    <div className='close-box'>
+                        <button ref={closeRef} onClick={onMapClose}>
+                            <CloseBox />
+                        </button>
+                    </div>
                     <div className='header-grid'>
                         <div className='instructions-container px-2 py-2'>
                             {isLoading ?
@@ -175,7 +199,7 @@ export default function Map({ onMapClose }) {
                                 </div>
                             }
                         </div>
-                        <div className='map-address'>
+                        <div className='map-address mx-2 my-1'>
                             <AddressForm
                                 setPendingMarkerLocation={setPendingMarkerLocation}
                                 station={ctx.station}
@@ -202,6 +226,24 @@ export default function Map({ onMapClose }) {
                             </Button>
                         </div>
                         <div className='map-view pe-2'>
+                            <Overlay
+                                text='Center on marker'
+                                contents={
+                                    <button
+                                        disabled={!pendingMarkerLocation && !ctx.customLocation}
+                                        onClick={handleRecenterToMarker}>
+                                        <RecenterIcon1 />
+                                    </button>
+                                }
+                            />
+                            <Overlay
+                                text='Center on Tide Guage'
+                                contents={
+                                    <button onClick={handleRecenterToDefault}>
+                                        <RecenterIcon2 />
+                                    </button>
+                                }
+                            />
                             <Form.Switch
                                 type='switch'
                                 label='Satellite'
@@ -212,7 +254,7 @@ export default function Map({ onMapClose }) {
                     </div>
 
                     <ErrorSection />
-                    <Row className='justify-content-center mt-1 mx-0'>
+                    <Row className='justify-content-center mt-0 mx-1 mx-sm-2'>
                         <MapContainer
                             center={mapCenter}
                             boundsOptions={{ maxZoom: mu.MaxZoom }}
@@ -266,8 +308,7 @@ const instructions = (ctx, pendingElevationNav) => {
     const cleartext = () => {
         return (
             <>
-                Click <b>Clear</b> to erase the marker and stop showing a custom location on the
-                graph.
+                Click <b>Clear</b> to stop showing a custom location on the graph.
             </>
         )
     }
