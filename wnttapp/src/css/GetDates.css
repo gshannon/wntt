@@ -10,11 +10,4 @@
     #get-dates {
         font-size: 0.8rem;
     }
-    /* form-control is used by the datepicker */
-    .form-control {
-        line-height: 1.1;
-        font-size: 0.8rem;
-        padding-left: 5px;
-        padding-right: 5px;
-    }
 }
