@@ -204,7 +204,7 @@ export default function Map({ onMapClose }) {
                         <div className='map-view pe-2'>
                             <Form.Switch
                                 type='switch'
-                                label='Satellite View'
+                                label='Satellite'
                                 checked={mapType === 'sat'}
                                 onChange={handleMapTypeToggle}
                             />
