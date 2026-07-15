@@ -1,13 +1,75 @@
+#get-dates {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 0.5rem 0;
+}
+
+.get-dates-range {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.get-dates-ctl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    justify-items: center;
+}
+
+.get-dates-ctl .get-dates-buttons {
+    grid-area: 1 / 1 / 2 / 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 5px;
+}
+
+.get-dates-ctl .get-dates-buttons button {
+    width: 80px;
+}
+
+.get-dates-ctl .hilo-box {
+    grid-area: 2 / 1 / 3 / 3;
+    margin: 5px 0;
+    padding-left: 5px;
+}
+
+.get-dates-custom {
+    text-align: center;
+}
+
+@media (max-width: 767px) {
+    #get-dates {
+        font-size: 0.9rem;
+    }
+    .get-dates-range {
+        margin: 0 5px;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .get-dates-range .form-label {
+        /* Override bootstrap's 8px */
+        margin-bottom: 2px;
+    }
+    .get-dates-buttons {
+        display: grid;
+        flex-direction: column;
+    }
+    .get-dates-buttons button {
+        width: 75px;
+    }
+    .get-dates-ctl .hilo-box {
+        margin-top: 15px;
+        margin-bottom: 0;
+    }
+}
 .map-label {
     font-weight: 700;
 }
 
 .form-label {
     font-weight: 600;
-}
-
-@media (max-width: 767px) {
-    #get-dates {
-        font-size: 0.8rem;
-    }
 }
