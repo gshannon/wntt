@@ -2,7 +2,10 @@ import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 from django import setup
+
+setup()
 
 import app.datasource.astrotide as astro
 import app.datasource.cdmo as cdmo
@@ -11,9 +14,6 @@ import app.tzutil as tz
 import app.util as util
 from app.hilo import ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, Timeline
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
-setup()
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
 

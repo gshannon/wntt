@@ -2,16 +2,16 @@ import os.path
 from datetime import datetime
 from unittest import TestCase
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 from django import setup
+
+setup()
 
 import app.datasource.astrotide as astro
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
 from app.timeline import Timeline
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
-setup()
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
 csv_location = f"{cur_path}/../../datamount/stations"
