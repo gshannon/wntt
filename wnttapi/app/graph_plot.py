@@ -30,16 +30,19 @@ def build_observed_tide_plot(
     if timeline.is_all_future():
         return None, None
 
+    def getObservedHiloLabel(dt: datetime):
+        if dt in hilo_event_dict and isinstance(hilo_event_dict[dt], ObservedHighOrLow):
+            hiOrLow = hilo_event_dict[dt]
+            return "(HIGH)" if hiOrLow.hilo == Hilo.HIGH else "(LOW)"
+        return None
+
     def callback(dt: datetime):
+        tide = None
+        label = getObservedHiloLabel(dt)
         # If this is a Hilo graph, we don't show tides that are not a high or low observed tide.
-        tide = label = None
         if isinstance(timeline, HiloTimeline):
-            if dt in hilo_event_dict and isinstance(
-                hilo_event_dict[dt], ObservedHighOrLow
-            ):
-                hiOrLow = hilo_event_dict[dt]
-                tide = hiOrLow.value
-                label = "(HIGH)" if hiOrLow.hilo == Hilo.HIGH else "(LOW)"
+            if label is not None:
+                return water_dict[dt][cdmo.Param.Tide.label], label
         elif dt in water_dict:
             tide = water_dict[dt][cdmo.Param.Tide.label]
         return tide, label
