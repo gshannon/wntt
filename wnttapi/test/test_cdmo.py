@@ -26,16 +26,6 @@ dst_end_date = date(2024, 11, 3)
 class TestCdmo(TestCase):
     tzone = tz.eastern  # Do not change, tests use hard-coded times
 
-    def make_sample_dict(self, values) -> dict:
-        # We make a 2-hour timeline and fill it with sample valid readings
-        timeline = Timeline(
-            datetime(2025, 7, 4, 0, tzinfo=self.tzone),
-            datetime(2025, 7, 4, 2, tzinfo=self.tzone),
-        )
-        self.assertEqual(len(values), timeline.length_requested())
-        full = {k: v for (k, v) in zip(timeline.get_requested(), values)}
-        return {k: v for (k, v) in full.items() if v is not None}
-
     def test_hilos_with_predicted_high_on_previous_day(self):
         # Edge case: The last high tide on day 12/20 was at 23:48. Using that as guidance, the max nearby
         # observed tide was on 12/21 at 00:00. That correctly gets marked as high for timeline of
@@ -48,7 +38,7 @@ class TestCdmo(TestCase):
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
         with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "r") as file:
             xml = file.read()
-        water_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
+        tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
 
         # First, see what happens when we just pull the 21st high/low predictions.
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251221.json")
@@ -56,7 +46,8 @@ class TestCdmo(TestCase):
         pred_hilo_dict = astro.hilo_json_to_dict(
             contents, timeline, wells.navd88_feet_to_mllw_feet
         )
-        hilos = cdmo.find_all_hilos(timeline, water_dict, pred_hilo_dict)
+        hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
+
         midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
         # The predicted high tide from the 20th is not included in the 21st predictions.
         self.assertNotIn(midnight_high, hilos)
@@ -67,7 +58,7 @@ class TestCdmo(TestCase):
         pred_hilo_dict = astro.hilo_json_to_dict(
             contents, timeline, wells.navd88_feet_to_mllw_feet
         )
-        hilos = cdmo.find_all_hilos(timeline, water_dict, pred_hilo_dict)
+        hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
         midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
         self.assertIn(midnight_high, hilos)
 
@@ -83,23 +74,25 @@ class TestCdmo(TestCase):
         )
 
         # Get observed tides from CDMO for the timeline
-        with open(f"{test_data_path}/data/cdmo-level-20251204-05.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-level-20251203-06.xml", "r") as file:
             xml = file.read()
-        obs_dict = cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
+        obs_tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
 
         # Find the hilos in the observed data.
-        hilos = cdmo.find_all_hilos(timeline, obs_dict, pred_hilo_dict)
+        hilos = cdmo.find_all_hilos(timeline, obs_tides, pred_hilo_dict)
         self.assertEqual(len(hilos), len(pred_hilo_dict))
+        # We're missing 12/5 00:30 - 07:15
         missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.tzone)
-        self.assertNotIn(missing_obs, obs_dict)
+        self.assertIsNone(obs_tides.getTide(missing_obs))
         self.assertIsInstance(hilos[missing_obs], PredictedHighOrLow)
+
         for dt, event in hilos.items():
             if dt != missing_obs:
                 self.assertIsInstance(event, ObservedHighOrLow)
 
         for dt, val in hilos.items():
             if isinstance(val, ObservedHighOrLow):
-                self.assertIn(dt, obs_dict)
+                self.assertIn(dt, obs_tides.data)
             else:
                 self.assertEqual(val.value, pred_hilo_dict[dt].value)
 
@@ -107,34 +100,7 @@ class TestCdmo(TestCase):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         with self.assertRaisesRegex(Exception, "Invalid ip"):
-            cdmo.parse_cdmo_xml(timeline, wells, xml, [cdmo.Param.Tide])
-
-    def test_handle_navd88(self):
-        converter = wells.navd88_meters_to_mllw_feet
-        self.assertTrue(converter(None) is None)
-        self.assertTrue(cdmo.handle_windspeed("nONE", None) is None)
-        self.assertTrue(converter("") is None)
-        self.assertTrue(converter("13s") is None)
-        self.assertTrue(converter("\n\t") is None)
-
-        max_meters = wells.mllw_feet_to_navd88_meters(cdmo._max_tide)
-        min_meters = wells.mllw_feet_to_navd88_meters(cdmo._min_tide)
-        self.assertTrue(
-            cdmo.handle_navd88_level(
-                f"{max_meters + 1.0}",
-                datetime.now(),
-                wells,
-            )
-            is None
-        )
-        self.assertTrue(
-            cdmo.handle_navd88_level(
-                f"{min_meters - 1.0}",
-                datetime.now(),
-                wells,
-            )
-            is None
-        )
+            cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
 
     def test_handle_windspeed(self):
         self.assertTrue(cdmo.handle_windspeed(None, None) is None)

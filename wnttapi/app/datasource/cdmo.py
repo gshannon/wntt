@@ -14,23 +14,29 @@ from app.timeline import GraphTimeline, Timeline
 
 from ..models import Water, Wind, get_station
 from .soap import SoapClient
+from .tides import Tides
 
 
 class Param(Enum):
-    Tide = "Level", "level"
-    Temperature = "Temp", "temp"
-    WindSpeed = "Wspd", "speed"
-    WindGust = "MaxWspd", "gust"
-    WindDir = "Wdir", "dir_deg"
+    # Tuple: (standard_value, custom_property)
+    # name = value, label
+    # Tide = "Level", "level"
+    LevelNav = ("Level", "level_nav", True)
+    CorrectedLevelNav = ("cLevel", "clevel_nav", True)
+    Temperature = ("Temp", "temp", False)
+    WindSpeed = ("Wspd", "speed", True)
+    WindGust = ("MaxWspd", "gust", True)
+    WindDir = ("Wdir", "dir_deg", True)
 
-    def __new__(cls, name, label):
+    def __new__(cls, value, label, required):
         obj = object.__new__(cls)
-        obj._value_ = name  # matches CDMO parameter name
+        obj._value_ = value  # matches CDMO parameter name
         obj.label = label  # matches the model property name
+        obj.required = required  # records will be rejected if not present
         return obj
 
 
-WATER_PARAMS = [Param.Tide, Param.Temperature]
+WATER_PARAMS = [Param.LevelNav, Param.CorrectedLevelNav, Param.Temperature]
 WIND_PARAMS = [Param.WindSpeed, Param.WindGust, Param.WindDir]
 
 """
@@ -45,7 +51,7 @@ _missing_data_value = -99.99
 _request_time_warning_seconds = 5
 
 
-def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
+def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> Tides:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -57,10 +63,10 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     Returns:
     {dt: {"level": <value>, "temp": <value>}}
     """
-    water_dict = {}
+    tides = Tides(mllw_offset=station.mllw_conversion)
 
     if timeline.is_all_future():
-        return water_dict  # Nothing to fetch
+        return tides
 
     force_api = os.environ.get("FORCE_API_CDMO", "0") == "1"
     if force_api:
@@ -87,19 +93,23 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
-            water_dict[dt_in_local] = {
-                Param.Tide.label: rec.level,
-                Param.Temperature.label: rec.temp,
-            }
+            tides.add_feet(
+                dt=dt_in_local,
+                temp_f=rec.temp,
+                mllw_feet=rec.level,
+                corrected_nav_feet=rec.clevel_nf,
+            )
 
     else:
         logger.debug(
             f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        water_dict = get_cdmo(timeline, station, WATER_PARAMS)
-        logger.debug(f"Total raw water data points: {len(water_dict)}")
+        tides = get_cdmo_tide(timeline, station, WATER_PARAMS)
+        tides.sort()  # It's handy to have keys in chrono order, not reverse order
 
-    return water_dict
+        logger.debug(f"Total raw water data points: {tides.length}")
+
+    return tides
 
 
 def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
@@ -154,7 +164,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
         logger.debug(
             f"station.id={station.id} pulling {WIND_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        wind_dict = get_cdmo(
+        wind_dict = get_cdmo_wind(
             timeline,
             station,
             [Param.WindSpeed, Param.WindGust, Param.WindDir],
@@ -164,7 +174,36 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     return wind_dict
 
 
-def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
+def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> Tides:
+    """
+    Get XML data from CDMO, parse it, convert to requested timezone.
+    As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
+    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
+    data points starting from the oldest data, not the latest.  So care should be taken not to ask for too much,
+    else data at the beginning of the graph will be missing.
+
+    Parameters:
+    - timeline: list of datetime representing what will be displayed on the graph
+    - station: the swmp station object
+    - params: list of requested CDMO parameters
+
+    Returns:
+    - Tides object, which may contain no data.
+
+    """
+    if station is None:
+        raise util.InternalError("station is required")
+
+    # validate that timeline datetimes are on 15-minute intervals and seconds=0
+    if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
+        # CDMO data is always on 15-minute intervals.
+        raise util.InternalError("datetimes must be on 15-minute intervals")
+
+    xml = get_cdmo_xml(timeline, station, params)
+    return parse_cdmo_tides_xml(timeline, station, xml)
+
+
+def get_cdmo_wind(timeline: Timeline, station: Station, params: list) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -190,7 +229,7 @@ def get_cdmo(timeline: Timeline, station: Station, params: list) -> dict:
         raise util.InternalError("datetimes must be on 15-minute intervals")
 
     xml = get_cdmo_xml(timeline, station, params)
-    return parse_cdmo_xml(timeline, station, xml, params)
+    return parse_cdmo_wind_xml(timeline, station, xml, params)
 
 
 def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
@@ -207,16 +246,14 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
-    use_padding = Param.Tide in params and isinstance(timeline, GraphTimeline)
+    use_padding = Param.LevelNav in params and isinstance(timeline, GraphTimeline)
 
     req_start_date, req_end_date = compute_cdmo_request_dates(
         timeline.get_min(use_padding), timeline.get_max(use_padding)
     )
 
     data_station_id = (
-        station.id
-        if Param.Tide in params or Param.Temperature in params
-        else station.weather_station_id
+        station.id if Param.LevelNav in params else station.weather_station_id
     )
 
     try:
@@ -235,7 +272,96 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> dict:
         raise APIException()
 
 
-def parse_cdmo_xml(
+def get_float(element, fieldName: str, required: bool, utc: datetime):
+    float_val = data_str = None
+    field = element.find(f"./{fieldName}")
+    if field is not None:
+        data_str = field.text
+        float_val = util.to_float(data_str)
+
+    if float_val is None and required:
+        logger.warning("Invalid or missing %s for %s: '%s'", fieldName, utc, data_str)
+
+    return float_val
+
+
+def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tides:
+    """
+    Parse the data returned from CDMO for the requested timeline.
+
+    Parameters:
+    - timeline: list of datetime representing what will be displayed on the graph
+    - station: the swmp station object
+    - xml: tide data xml from cdmo
+
+    Returns:
+    - Tides object, which may contain no data.
+
+    """
+    tides = Tides(mllw_offset=station.mllw_conversion)
+
+    if xml is None or len(xml) == 0:
+        return tides
+
+    # We need to pull data for the padded timeline, for hi/lo functionality, not just
+    # display times. No sense looking for future, these are observations. If asking for
+    # tide level, we need a padded timeline to identify highs and lows that are near the edges of the timeline.
+    past_timeline = timeline.get_all_past(padded=isinstance(timeline, GraphTimeline))
+
+    root = ElTree.fromstring(xml)  # ElementTree.Element
+    text_error_check(root)
+    records = ignored = none_or_bad = 0
+    for reading in root.findall(".//data"):  # use XPATH to dig out our data points
+        records += 1
+        # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
+        date_str = reading.find("./utcStamp").text
+        try:
+            naive_utc = datetime.strptime(date_str, "%m/%d/%Y %H:%M")
+        except ValueError:
+            none_or_bad += 1
+            logger.error("Skipping bad datetime '%s'", date_str)
+            continue
+
+        # We need this local time. First make our UTC date tz-aware.
+        in_utc = naive_utc.replace(tzinfo=tz.utc)
+        # Now convert to requested tzone, so DST is handled properly
+        dt_in_local = in_utc.astimezone(timeline.time_zone)
+        # Since we query more data than we need, only save the data that is in the requested timeline.
+        # For GraphTimeline's, this includes any padded times for hi/lo functionality.
+        if dt_in_local not in past_timeline:
+            ignored += 1
+            continue
+
+        # Extract and convert all the params we're looking for.
+        temp_c = get_float(reading, Param.Temperature.value, False, in_utc)
+        level_nav_meters = get_float(
+            reading, Param.LevelNav.value, Param.LevelNav.required, in_utc
+        )
+        if level_nav_meters is None:
+            none_or_bad += 1
+            continue
+
+        corrected_level_nav_meters = get_float(
+            reading,
+            Param.CorrectedLevelNav.value,
+            Param.CorrectedLevelNav.required,
+            in_utc,
+        )
+        if corrected_level_nav_meters is None:
+            none_or_bad += 1
+            continue
+
+        tides.add_meters(
+            dt=dt_in_local,
+            temp_c=temp_c,
+            nav_meters=level_nav_meters,
+            corrected_nav_meters=corrected_level_nav_meters,
+        )
+
+    return tides
+
+
+def parse_cdmo_wind_xml(
     timeline: Timeline, station: Station, xml: str, params: list
 ) -> dict:
     """
@@ -258,9 +384,7 @@ def parse_cdmo_xml(
     # We need to pull data for the padded timeline, for hi/lo functionality, not just
     # display times. No sense looking for future, these are observations. If asking for
     # tide level, we need a padded timeline to identify highs and lows that are near the edges of the timeline.
-    past_timeline = timeline.get_all_past(
-        padded=isinstance(timeline, GraphTimeline) and Param.Tide in params
-    )
+    past_timeline = timeline.get_all_past(False)
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
     text_error_check(root)
@@ -296,7 +420,7 @@ def parse_cdmo_xml(
                     none_or_bad += 1
                 else:
                     obj[param.label] = value
-            except (TypeError, ValueError, AttributeError):
+            except Exception:
                 none_or_bad += 1
                 logger.error(
                     "Invalid or missing %s for %s: '%s'",
@@ -324,9 +448,7 @@ def parse_cdmo_xml(
             none_or_bad,
         )
     )
-
-    # XML data is returned in reverse chronological order. Reverse it here.
-    return dict(reversed(list(datadict.items())))
+    return datadict
 
 
 def convert(
@@ -334,14 +456,10 @@ def convert(
 ) -> callable:
     """Perform the proper data conversion for the param value."""
     match param:
-        case Param.Tide:
-            return handle_navd88_level(data_str, local_dt, station)
         case Param.WindSpeed | Param.WindGust:
             return handle_windspeed(data_str, local_dt)
         case Param.WindDir:
             return handle_int(data_str, local_dt)
-        case Param.Temperature:
-            return handle_centigrade(data_str, local_dt)
         case _:
             raise util.InternalError(f"No converter defined for param {param}")
 
@@ -399,7 +517,7 @@ def compute_cdmo_request_dates(
 
 
 def find_all_hilos(
-    timeline: GraphTimeline, water_dict: dict, astro_pred_dict: dict
+    timeline: GraphTimeline, tides: Tides, astro_pred_dict: dict
 ) -> dict:
     """
     Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
@@ -445,19 +563,20 @@ def find_all_hilos(
         candidate_times = list(
             filter(lambda t: search_start <= t <= search_end, past_padded_timeline)
         )
-        observed = {t: water_dict.get(t, None) for t in candidate_times}
+        observed = {t: tides.getTide(t) for t in candidate_times}
+        # remove the times which have no tide data
         observed = {k: v for k, v in observed.items() if v is not None}
         if len(observed) > 0:
             if pred.hilo == Hilo.HIGH:
                 observed_hilo_dt = max(
-                    observed.items(), key=lambda tup: tup[1].get(Param.Tide.label)
+                    observed.items(), key=lambda tup: tup[1].corrected_mllw_feet
                 )[0]
             else:
                 observed_hilo_dt = min(
-                    observed.items(), key=lambda tup: tup[1].get(Param.Tide.label)
+                    observed.items(), key=lambda tup: tup[1].corrected_mllw_feet
                 )[0]
             hilomap[observed_hilo_dt] = ObservedHighOrLow(
-                observed[observed_hilo_dt][Param.Tide.label], pred.hilo
+                observed[observed_hilo_dt].corrected_mllw_feet, pred.hilo
             )
         else:
             # No observed data near this predicted high/low. Just use the predicted time.
@@ -559,30 +678,6 @@ def clean_tide_data(in_dict: dict, station: Station) -> dict:
     return cleaned
 
 
-def handle_float(data_str: str, local_dt: datetime) -> float:
-    """Convert string to float. Returns None if bad data."""
-    if data_str is None or len(data_str.strip()) == 0:
-        return None
-    try:
-        value = float(data_str)
-    except ValueError:
-        logger.error("Invalid float for %s: '%s'", local_dt, data_str)
-        value = None
-    return value
-
-
-def handle_centigrade(data_str: str, local_dt: datetime) -> float:
-    """Convert string to float. Returns None if bad data."""
-    if data_str is None or len(data_str.strip()) == 0:
-        return None
-    try:
-        value = util.centigrade_to_fahrenheit(float(data_str))
-    except ValueError:
-        logger.error("Invalid temperature for %s: '%s'", local_dt, data_str)
-        value = None
-    return value
-
-
 def handle_int(data_str: str, local_dt: datetime) -> int:
     """Convert string to float. Returns None if bad data."""
     if data_str is None or len(data_str.strip()) == 0:
@@ -593,29 +688,6 @@ def handle_int(data_str: str, local_dt: datetime) -> int:
         logger.error("Invalid int for %s: '%s'", local_dt, data_str)
         value = None
     return value
-
-
-def handle_navd88_level(level_str: str, local_dt: datetime, station: Station) -> float:
-    """Convert tide string in navd88 meters to MLLW feet. Returns None if bad data."""
-    if level_str is None or len(level_str.strip()) == 0:
-        logger.warning(f"skipping [{level_str}] at {local_dt}")
-        return None
-    try:
-        read_level = float(level_str)
-        level = station.navd88_meters_to_mllw_feet(read_level)
-        if level < _min_tide or level > _max_tide:
-            if read_level != _missing_data_value:  # CDMO missing data code
-                logger.error(
-                    "level out of range for %s: %s (raw: %s)",
-                    local_dt,
-                    level,
-                    read_level,
-                )
-            level = None
-    except ValueError:
-        logger.error("invalid level: [%s]", level_str)
-        level = None
-    return level
 
 
 def handle_windspeed(wspd_str: str, local_dt: datetime):

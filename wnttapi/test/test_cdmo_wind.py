@@ -2,12 +2,13 @@ import os.path
 from datetime import date, datetime
 from unittest import TestCase
 
+from django import setup
+
 import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
 import app.util as util
 from app.timeline import GraphTimeline
-from django import setup
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 setup()
@@ -28,7 +29,7 @@ class TestCdmo(TestCase):
         with open(f"{test_data_path}/data/cdmo-20251228-wind.xml", "r") as file:
             xml = file.read()
 
-        wind_data = cdmo.parse_cdmo_xml(timeline, wells, xml, cdmo.WIND_PARAMS)
+        wind_data = cdmo.parse_cdmo_wind_xml(timeline, wells, xml, cdmo.WIND_PARAMS)
 
         # Every data point should be present except for the missing gust at 00:15 on 12/28.
         # This should result in no wind data at all for that time.

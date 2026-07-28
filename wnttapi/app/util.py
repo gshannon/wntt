@@ -68,6 +68,33 @@ def round_to_quarter(dt: datetime) -> datetime:
         return floor + m15
 
 
+def to_float(value: str) -> float:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except Exception:
+        return None
+
+
+def is_valid_float(value: any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, float) or isinstance(value, int):
+        return True
+    if isinstance(value, str):
+        try:
+            float(value) + 0.0
+            return True
+        except Exception:
+            return False
+    return False
+
+
+def meters_to_feet(meters):
+    return round(meters * 3.28084, 2)
+
+
 def kilometers_to_miles(k: float) -> float:
     return round(k * 0.6213712, 1)
 

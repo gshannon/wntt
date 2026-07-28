@@ -10,9 +10,8 @@ usage: $(basename $0) options
 
 Options:
 -h : this help
--x : (optional) if given, dev mode
--v : (optional) if given, verbose mode
--d : (optional) if given, debug mode (compares doesn't write)
+-v : verbose mode, diffs and upserts
+-d : debug mode, diffs only
 -s : (optional) station id, default = welinwq
 -t [T|W] : (opt) data type: T=tide/temp, W=wind. Default: both
 -S <starttime> : (opt) start of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
@@ -29,14 +28,13 @@ fail() {
 
 devmode=0
 station=welinwq
-while getopts ":xvdht:s:S:E:" opt; do
+while getopts ":vdht:s:S:E:" opt; do
   case $opt in
     s ) station=$OPTARG;;
     S ) startstr="-S $OPTARG";;
     E ) endstr="-E $OPTARG";;
     t ) typestr="-t $OPTARG";;
     d ) debugstr='-d';;
-    x ) devmode=1;;
     v ) verbosestr='-v';;
     h ) usage; exit 0;;
     * ) fail;;
@@ -44,16 +42,12 @@ while getopts ":xvdht:s:S:E:" opt; do
 done
 shift $(($OPTIND - 1))
 
-# Sanity check so we don't run prod in dev
-[ $(uname) == 'Darwin' ] && [ $devmode -eq 0 ] && fail "I don't think this is production"
-
-
 : '
 Run the cdmo_refresh job to pull and store the latest cdmo water and/or wind data or, if start & end 
 params are provided, upsert the data defined by that timeline.
 '
 
-if [ "$devmode" -eq 1 ]; then
+if [ $(uname) == 'Darwin' ]; then
   export DJANGO_SETTINGS_MODULE=project.settings.dev
   compose_path=$WNTT/local/docker-compose-local.yml
 else

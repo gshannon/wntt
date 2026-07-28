@@ -48,7 +48,7 @@ def get_graph_data(
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
-    water_dict = cdmo.get_water_data(station, timeline)
+    obs_tides = cdmo.get_water_data(station, timeline)
     wind_dict = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
@@ -65,18 +65,18 @@ def get_graph_data(
     )
 
     # Determine all highs and lows, whether observed or predicted.
-    hilo_event_dict = cdmo.find_all_hilos(timeline, water_dict, astro_all_hilo_dict)
+    hilo_event_dict = cdmo.find_all_hilos(timeline, obs_tides, astro_all_hilo_dict)
 
     if hilo_mode:
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, water_dict)
+    past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, obs_tides)
 
     future_surge_dict = sg.get_future_surge_data(
         timeline,
         station.noaa_station_id,
-        max(water_dict) if len(water_dict) > 0 else None,
+        max(obs_tides.data) if obs_tides.length > 0 else None,
     )
 
     # Before we start building plots, add all syzygy events to the timeline
@@ -90,7 +90,7 @@ def get_graph_data(
     # They are sparse rather than dense -- they have None for any missing data.
 
     hist_tides_plot, hist_tides_label_plot = gp.build_observed_tide_plot(
-        timeline, water_dict, hilo_event_dict
+        timeline, obs_tides, hilo_event_dict
     )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot = gp.build_wind_plots(
