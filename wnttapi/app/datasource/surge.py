@@ -10,10 +10,10 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
 from app import tzutil as tz
+from app.datasource.tides import Tides
 from app.timeline import Timeline
 
 from ..models import Surge, SurgeBias
-from .cdmo import Param
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -71,21 +71,22 @@ def get_future_surge_data(
     return future_surge_dict
 
 
-def get_recorded_storm_surge(astro_dict: dict, water_dict: dict) -> dict:
+def get_recorded_storm_surge(astro_dict: dict, obs_tides: Tides) -> dict:
     """Calculate the past storm surge, which is the difference between the observed tide and the
     predicted tide.
 
     Args:
         astro_dict (dict): predicted tide values, in MLLW feet, keyed by datetime
-        water_dict (dict): observed tide values, in MLLW feet, keyed by datetime
+        tides (Tides): observed tide
 
     Returns:
         dict: A dictionary of past storm surge values, keyed by datetime
     """
     data = {}  # {dt: surge_value}
-    for dt in water_dict.keys():
+    for dt, tide in obs_tides.data.items():
+        # TODO: Use corrected_mllw_feet instead?
         if dt in astro_dict:
-            data[dt] = round(water_dict[dt][Param.Tide.label] - astro_dict[dt], 2)
+            data[dt] = round(tide.corrected_mllw_feet - astro_dict[dt], 2)
     return data
 
 

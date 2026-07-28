@@ -12,6 +12,12 @@
           <Level>1.39</Level>
 
       
+          <cLevel>1.42</cLevel>
+
+      
+          <Temp>6.0</Temp>
+
+      
           <utcStamp>12/07/2025 04:45</utcStamp>
 
       </data>
@@ -22,6 +28,12 @@
 
       
           <Level>1.34</Level>
+
+      
+          <cLevel>1.37</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/07/2025 04:30</utcStamp>
@@ -36,6 +48,12 @@
           <Level>1.27</Level>
 
       
+          <cLevel>1.30</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/07/2025 04:15</utcStamp>
 
       </data>
@@ -46,6 +64,12 @@
 
       
           <Level>1.16</Level>
+
+      
+          <cLevel>1.19</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/07/2025 04:00</utcStamp>
@@ -60,6 +84,12 @@
           <Level>1.02</Level>
 
       
+          <cLevel>1.05</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/07/2025 03:45</utcStamp>
 
       </data>
@@ -70,6 +100,12 @@
 
       
           <Level>0.88</Level>
+
+      
+          <cLevel>0.91</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/07/2025 03:30</utcStamp>
@@ -84,6 +120,12 @@
           <Level>0.71</Level>
 
       
+          <cLevel>0.75</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/07/2025 03:15</utcStamp>
 
       </data>
@@ -94,6 +136,12 @@
 
       
           <Level>0.51</Level>
+
+      
+          <cLevel>0.55</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/07/2025 03:00</utcStamp>
@@ -108,6 +156,12 @@
           <Level>0.32</Level>
 
       
+          <cLevel>0.36</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/07/2025 02:45</utcStamp>
 
       </data>
@@ -118,6 +172,12 @@
 
       
           <Level>0.12</Level>
+
+      
+          <cLevel>0.16</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/07/2025 02:30</utcStamp>
@@ -132,6 +192,12 @@
           <Level>-0.09</Level>
 
       
+          <cLevel>-0.05</cLevel>
+
+      
+          <Temp>5.7</Temp>
+
+      
           <utcStamp>12/07/2025 02:15</utcStamp>
 
       </data>
@@ -142,6 +208,12 @@
 
       
           <Level>-0.29</Level>
+
+      
+          <cLevel>-0.25</cLevel>
+
+      
+          <Temp>5.5</Temp>
 
       
           <utcStamp>12/07/2025 02:00</utcStamp>
@@ -156,6 +228,12 @@
           <Level>-0.48</Level>
 
       
+          <cLevel>-0.44</cLevel>
+
+      
+          <Temp>3.3</Temp>
+
+      
           <utcStamp>12/07/2025 01:45</utcStamp>
 
       </data>
@@ -166,6 +244,12 @@
 
       
           <Level>-0.69</Level>
+
+      
+          <cLevel>-0.65</cLevel>
+
+      
+          <Temp>3.5</Temp>
 
       
           <utcStamp>12/07/2025 01:30</utcStamp>
@@ -180,6 +264,12 @@
           <Level>-0.91</Level>
 
       
+          <cLevel>-0.87</cLevel>
+
+      
+          <Temp>3.4</Temp>
+
+      
           <utcStamp>12/07/2025 01:15</utcStamp>
 
       </data>
@@ -190,6 +280,12 @@
 
       
           <Level>-1.07</Level>
+
+      
+          <cLevel>-1.03</cLevel>
+
+      
+          <Temp>3.1</Temp>
 
       
           <utcStamp>12/07/2025 01:00</utcStamp>
@@ -204,6 +300,12 @@
           <Level>-1.28</Level>
 
       
+          <cLevel>-1.24</cLevel>
+
+      
+          <Temp>2.9</Temp>
+
+      
           <utcStamp>12/07/2025 00:45</utcStamp>
 
       </data>
@@ -214,6 +316,12 @@
 
       
           <Level>-1.44</Level>
+
+      
+          <cLevel>-1.40</cLevel>
+
+      
+          <Temp>2.9</Temp>
 
       
           <utcStamp>12/07/2025 00:30</utcStamp>
@@ -228,6 +336,12 @@
           <Level>-1.62</Level>
 
       
+          <cLevel>-1.58</cLevel>
+
+      
+          <Temp>3.6</Temp>
+
+      
           <utcStamp>12/07/2025 00:15</utcStamp>
 
       </data>
@@ -238,6 +352,12 @@
 
       
           <Level>-1.70</Level>
+
+      
+          <cLevel>-1.65</cLevel>
+
+      
+          <Temp>3.6</Temp>
 
       
           <utcStamp>12/07/2025 00:00</utcStamp>
@@ -252,6 +372,12 @@
           <Level>-1.81</Level>
 
       
+          <cLevel>-1.76</cLevel>
+
+      
+          <Temp>3.3</Temp>
+
+      
           <utcStamp>12/06/2025 23:45</utcStamp>
 
       </data>
@@ -262,6 +388,12 @@
 
       
           <Level>-1.94</Level>
+
+      
+          <cLevel>-1.89</cLevel>
+
+      
+          <Temp>3.4</Temp>
 
       
           <utcStamp>12/06/2025 23:30</utcStamp>
@@ -276,6 +408,12 @@
           <Level>-1.94</Level>
 
       
+          <cLevel>-1.89</cLevel>
+
+      
+          <Temp>3.4</Temp>
+
+      
           <utcStamp>12/06/2025 23:15</utcStamp>
 
       </data>
@@ -286,6 +424,12 @@
 
       
           <Level>-2.01</Level>
+
+      
+          <cLevel>-1.96</cLevel>
+
+      
+          <Temp>3.6</Temp>
 
       
           <utcStamp>12/06/2025 23:00</utcStamp>
@@ -300,6 +444,12 @@
           <Level>-1.99</Level>
 
       
+          <cLevel>-1.94</cLevel>
+
+      
+          <Temp>3.5</Temp>
+
+      
           <utcStamp>12/06/2025 22:45</utcStamp>
 
       </data>
@@ -310,6 +460,12 @@
 
       
           <Level>-1.97</Level>
+
+      
+          <cLevel>-1.92</cLevel>
+
+      
+          <Temp>3.5</Temp>
 
       
           <utcStamp>12/06/2025 22:30</utcStamp>
@@ -324,6 +480,12 @@
           <Level>-1.92</Level>
 
       
+          <cLevel>-1.87</cLevel>
+
+      
+          <Temp>3.4</Temp>
+
+      
           <utcStamp>12/06/2025 22:15</utcStamp>
 
       </data>
@@ -334,6 +496,12 @@
 
       
           <Level>-1.82</Level>
+
+      
+          <cLevel>-1.77</cLevel>
+
+      
+          <Temp>3.3</Temp>
 
       
           <utcStamp>12/06/2025 22:00</utcStamp>
@@ -348,6 +516,12 @@
           <Level>-1.69</Level>
 
       
+          <cLevel>-1.64</cLevel>
+
+      
+          <Temp>3.2</Temp>
+
+      
           <utcStamp>12/06/2025 21:45</utcStamp>
 
       </data>
@@ -360,6 +534,12 @@
           <Level>-1.56</Level>
 
       
+          <cLevel>-1.51</cLevel>
+
+      
+          <Temp>3.3</Temp>
+
+      
           <utcStamp>12/06/2025 21:30</utcStamp>
 
       </data>
@@ -369,7 +549,13 @@
           <DateTimeStamp>12/06/2025 16:15</DateTimeStamp>
 
       
-          <Level>-1.39</Level>
+          <Level>-1.40</Level>
+
+      
+          <cLevel>-1.35</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/06/2025 21:15</utcStamp>
@@ -384,6 +570,12 @@
           <Level>-1.22</Level>
 
       
+          <cLevel>-1.17</cLevel>
+
+      
+          <Temp>4.2</Temp>
+
+      
           <utcStamp>12/06/2025 21:00</utcStamp>
 
       </data>
@@ -394,6 +586,12 @@
 
       
           <Level>-1.03</Level>
+
+      
+          <cLevel>-0.98</cLevel>
+
+      
+          <Temp>3.7</Temp>
 
       
           <utcStamp>12/06/2025 20:45</utcStamp>
@@ -408,6 +606,12 @@
           <Level>-0.77</Level>
 
       
+          <cLevel>-0.72</cLevel>
+
+      
+          <Temp>4.1</Temp>
+
+      
           <utcStamp>12/06/2025 20:30</utcStamp>
 
       </data>
@@ -418,6 +622,12 @@
 
       
           <Level>-0.52</Level>
+
+      
+          <cLevel>-0.47</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/06/2025 20:15</utcStamp>
@@ -432,6 +642,12 @@
           <Level>-0.26</Level>
 
       
+          <cLevel>-0.21</cLevel>
+
+      
+          <Temp>4.9</Temp>
+
+      
           <utcStamp>12/06/2025 20:00</utcStamp>
 
       </data>
@@ -441,7 +657,13 @@
           <DateTimeStamp>12/06/2025 14:45</DateTimeStamp>
 
       
-          <Level>-0.03</Level>
+          <Level>-0.04</Level>
+
+      
+          <cLevel>0.01</cLevel>
+
+      
+          <Temp>4.9</Temp>
 
       
           <utcStamp>12/06/2025 19:45</utcStamp>
@@ -456,6 +678,12 @@
           <Level>0.20</Level>
 
       
+          <cLevel>0.25</cLevel>
+
+      
+          <Temp>4.5</Temp>
+
+      
           <utcStamp>12/06/2025 19:30</utcStamp>
 
       </data>
@@ -466,6 +694,12 @@
 
       
           <Level>0.44</Level>
+
+      
+          <cLevel>0.49</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/06/2025 19:15</utcStamp>
@@ -480,6 +714,12 @@
           <Level>0.67</Level>
 
       
+          <cLevel>0.72</cLevel>
+
+      
+          <Temp>4.9</Temp>
+
+      
           <utcStamp>12/06/2025 19:00</utcStamp>
 
       </data>
@@ -490,6 +730,12 @@
 
       
           <Level>0.89</Level>
+
+      
+          <cLevel>0.94</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/06/2025 18:45</utcStamp>
@@ -504,6 +750,12 @@
           <Level>1.10</Level>
 
       
+          <cLevel>1.14</cLevel>
+
+      
+          <Temp>5.3</Temp>
+
+      
           <utcStamp>12/06/2025 18:30</utcStamp>
 
       </data>
@@ -514,6 +766,12 @@
 
       
           <Level>1.28</Level>
+
+      
+          <cLevel>1.32</cLevel>
+
+      
+          <Temp>5.5</Temp>
 
       
           <utcStamp>12/06/2025 18:15</utcStamp>
@@ -528,6 +786,12 @@
           <Level>1.42</Level>
 
       
+          <cLevel>1.46</cLevel>
+
+      
+          <Temp>5.7</Temp>
+
+      
           <utcStamp>12/06/2025 18:00</utcStamp>
 
       </data>
@@ -538,6 +802,12 @@
 
       
           <Level>1.54</Level>
+
+      
+          <cLevel>1.57</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/06/2025 17:45</utcStamp>
@@ -552,6 +822,12 @@
           <Level>1.63</Level>
 
       
+          <cLevel>1.66</cLevel>
+
+      
+          <Temp>5.8</Temp>
+
+      
           <utcStamp>12/06/2025 17:30</utcStamp>
 
       </data>
@@ -562,6 +838,12 @@
 
       
           <Level>1.70</Level>
+
+      
+          <cLevel>1.73</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/06/2025 17:15</utcStamp>
@@ -576,6 +858,12 @@
           <Level>1.76</Level>
 
       
+          <cLevel>1.79</cLevel>
+
+      
+          <Temp>5.8</Temp>
+
+      
           <utcStamp>12/06/2025 17:00</utcStamp>
 
       </data>
@@ -586,6 +874,12 @@
 
       
           <Level>1.78</Level>
+
+      
+          <cLevel>1.81</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 16:45</utcStamp>
@@ -600,6 +894,12 @@
           <Level>1.77</Level>
 
       
+          <cLevel>1.80</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/06/2025 16:30</utcStamp>
 
       </data>
@@ -610,6 +910,12 @@
 
       
           <Level>1.73</Level>
+
+      
+          <cLevel>1.75</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 16:15</utcStamp>
@@ -624,6 +930,12 @@
           <Level>1.68</Level>
 
       
+          <cLevel>1.70</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/06/2025 16:00</utcStamp>
 
       </data>
@@ -634,6 +946,12 @@
 
       
           <Level>1.61</Level>
+
+      
+          <cLevel>1.63</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 15:45</utcStamp>
@@ -648,6 +966,12 @@
           <Level>1.53</Level>
 
       
+          <cLevel>1.55</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/06/2025 15:30</utcStamp>
 
       </data>
@@ -658,6 +982,12 @@
 
       
           <Level>1.42</Level>
+
+      
+          <cLevel>1.43</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 15:15</utcStamp>
@@ -672,6 +1002,12 @@
           <Level>1.30</Level>
 
       
+          <cLevel>1.31</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/06/2025 15:00</utcStamp>
 
       </data>
@@ -682,6 +1018,12 @@
 
       
           <Level>1.16</Level>
+
+      
+          <cLevel>1.17</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/06/2025 14:45</utcStamp>
@@ -696,6 +1038,12 @@
           <Level>0.99</Level>
 
       
+          <cLevel>1.00</cLevel>
+
+      
+          <Temp>5.9</Temp>
+
+      
           <utcStamp>12/06/2025 14:30</utcStamp>
 
       </data>
@@ -706,6 +1054,12 @@
 
       
           <Level>0.78</Level>
+
+      
+          <cLevel>0.79</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 14:15</utcStamp>
@@ -720,6 +1074,12 @@
           <Level>0.56</Level>
 
       
+          <cLevel>0.57</cLevel>
+
+      
+          <Temp>5.8</Temp>
+
+      
           <utcStamp>12/06/2025 14:00</utcStamp>
 
       </data>
@@ -730,6 +1090,12 @@
 
       
           <Level>0.34</Level>
+
+      
+          <cLevel>0.35</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/06/2025 13:45</utcStamp>
@@ -744,6 +1110,12 @@
           <Level>0.13</Level>
 
       
+          <cLevel>0.14</cLevel>
+
+      
+          <Temp>5.7</Temp>
+
+      
           <utcStamp>12/06/2025 13:30</utcStamp>
 
       </data>
@@ -753,7 +1125,13 @@
           <DateTimeStamp>12/06/2025 08:15</DateTimeStamp>
 
       
-          <Level>-0.08</Level>
+          <Level>-0.09</Level>
+
+      
+          <cLevel>-0.08</cLevel>
+
+      
+          <Temp>5.6</Temp>
 
       
           <utcStamp>12/06/2025 13:15</utcStamp>
@@ -768,6 +1146,12 @@
           <Level>-0.30</Level>
 
       
+          <cLevel>-0.29</cLevel>
+
+      
+          <Temp>5.5</Temp>
+
+      
           <utcStamp>12/06/2025 13:00</utcStamp>
 
       </data>
@@ -778,6 +1162,12 @@
 
       
           <Level>-0.51</Level>
+
+      
+          <cLevel>-0.50</cLevel>
+
+      
+          <Temp>2.8</Temp>
 
       
           <utcStamp>12/06/2025 12:45</utcStamp>
@@ -792,6 +1182,12 @@
           <Level>-0.71</Level>
 
       
+          <cLevel>-0.70</cLevel>
+
+      
+          <Temp>2.8</Temp>
+
+      
           <utcStamp>12/06/2025 12:30</utcStamp>
 
       </data>
@@ -802,6 +1198,12 @@
 
       
           <Level>-0.91</Level>
+
+      
+          <cLevel>-0.90</cLevel>
+
+      
+          <Temp>2.7</Temp>
 
       
           <utcStamp>12/06/2025 12:15</utcStamp>
@@ -816,6 +1218,12 @@
           <Level>-1.11</Level>
 
       
+          <cLevel>-1.10</cLevel>
+
+      
+          <Temp>2.3</Temp>
+
+      
           <utcStamp>12/06/2025 12:00</utcStamp>
 
       </data>
@@ -826,6 +1234,12 @@
 
       
           <Level>-1.26</Level>
+
+      
+          <cLevel>-1.25</cLevel>
+
+      
+          <Temp>2.0</Temp>
 
       
           <utcStamp>12/06/2025 11:45</utcStamp>
@@ -840,6 +1254,12 @@
           <Level>-1.40</Level>
 
       
+          <cLevel>-1.39</cLevel>
+
+      
+          <Temp>2.8</Temp>
+
+      
           <utcStamp>12/06/2025 11:30</utcStamp>
 
       </data>
@@ -850,6 +1270,12 @@
 
       
           <Level>-1.53</Level>
+
+      
+          <cLevel>-1.52</cLevel>
+
+      
+          <Temp>2.8</Temp>
 
       
           <utcStamp>12/06/2025 11:15</utcStamp>
@@ -864,6 +1290,12 @@
           <Level>-1.62</Level>
 
       
+          <cLevel>-1.61</cLevel>
+
+      
+          <Temp>2.8</Temp>
+
+      
           <utcStamp>12/06/2025 11:00</utcStamp>
 
       </data>
@@ -874,6 +1306,12 @@
 
       
           <Level>-1.72</Level>
+
+      
+          <cLevel>-1.71</cLevel>
+
+      
+          <Temp>2.6</Temp>
 
       
           <utcStamp>12/06/2025 10:45</utcStamp>
@@ -888,6 +1326,12 @@
           <Level>-1.74</Level>
 
       
+          <cLevel>-1.73</cLevel>
+
+      
+          <Temp>2.4</Temp>
+
+      
           <utcStamp>12/06/2025 10:30</utcStamp>
 
       </data>
@@ -898,6 +1342,12 @@
 
       
           <Level>-1.75</Level>
+
+      
+          <cLevel>-1.74</cLevel>
+
+      
+          <Temp>2.8</Temp>
 
       
           <utcStamp>12/06/2025 10:15</utcStamp>
@@ -912,6 +1362,12 @@
           <Level>-1.76</Level>
 
       
+          <cLevel>-1.75</cLevel>
+
+      
+          <Temp>2.8</Temp>
+
+      
           <utcStamp>12/06/2025 10:00</utcStamp>
 
       </data>
@@ -922,6 +1378,12 @@
 
       
           <Level>-1.71</Level>
+
+      
+          <cLevel>-1.70</cLevel>
+
+      
+          <Temp>2.8</Temp>
 
       
           <utcStamp>12/06/2025 09:45</utcStamp>
@@ -936,6 +1398,12 @@
           <Level>-1.71</Level>
 
       
+          <cLevel>-1.70</cLevel>
+
+      
+          <Temp>2.1</Temp>
+
+      
           <utcStamp>12/06/2025 09:30</utcStamp>
 
       </data>
@@ -946,6 +1414,12 @@
 
       
           <Level>-1.58</Level>
+
+      
+          <cLevel>-1.57</cLevel>
+
+      
+          <Temp>2.0</Temp>
 
       
           <utcStamp>12/06/2025 09:15</utcStamp>
@@ -960,6 +1434,12 @@
           <Level>-1.49</Level>
 
       
+          <cLevel>-1.49</cLevel>
+
+      
+          <Temp>2.0</Temp>
+
+      
           <utcStamp>12/06/2025 09:00</utcStamp>
 
       </data>
@@ -969,7 +1449,13 @@
           <DateTimeStamp>12/06/2025 03:45</DateTimeStamp>
 
       
-          <Level>-1.33</Level>
+          <Level>-1.34</Level>
+
+      
+          <cLevel>-1.34</cLevel>
+
+      
+          <Temp>2.3</Temp>
 
       
           <utcStamp>12/06/2025 08:45</utcStamp>
@@ -984,6 +1470,12 @@
           <Level>-1.22</Level>
 
       
+          <cLevel>-1.22</cLevel>
+
+      
+          <Temp>2.9</Temp>
+
+      
           <utcStamp>12/06/2025 08:30</utcStamp>
 
       </data>
@@ -993,7 +1485,13 @@
           <DateTimeStamp>12/06/2025 03:15</DateTimeStamp>
 
       
-          <Level>-1.01</Level>
+          <Level>-1.02</Level>
+
+      
+          <cLevel>-1.02</cLevel>
+
+      
+          <Temp>3.4</Temp>
 
       
           <utcStamp>12/06/2025 08:15</utcStamp>
@@ -1008,6 +1506,12 @@
           <Level>-0.83</Level>
 
       
+          <cLevel>-0.83</cLevel>
+
+      
+          <Temp>3.2</Temp>
+
+      
           <utcStamp>12/06/2025 08:00</utcStamp>
 
       </data>
@@ -1018,6 +1522,12 @@
 
       
           <Level>-0.63</Level>
+
+      
+          <cLevel>-0.63</cLevel>
+
+      
+          <Temp>3.8</Temp>
 
       
           <utcStamp>12/06/2025 07:45</utcStamp>
@@ -1032,6 +1542,12 @@
           <Level>-0.42</Level>
 
       
+          <cLevel>-0.42</cLevel>
+
+      
+          <Temp>4.3</Temp>
+
+      
           <utcStamp>12/06/2025 07:30</utcStamp>
 
       </data>
@@ -1042,6 +1558,12 @@
 
       
           <Level>-0.20</Level>
+
+      
+          <cLevel>-0.20</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/06/2025 07:15</utcStamp>
@@ -1056,6 +1578,12 @@
           <Level>0.00</Level>
 
       
+          <cLevel>0.00</cLevel>
+
+      
+          <Temp>5.2</Temp>
+
+      
           <utcStamp>12/06/2025 07:00</utcStamp>
 
       </data>
@@ -1066,6 +1594,12 @@
 
       
           <Level>0.20</Level>
+
+      
+          <cLevel>0.20</cLevel>
+
+      
+          <Temp>5.4</Temp>
 
       
           <utcStamp>12/06/2025 06:45</utcStamp>
@@ -1080,6 +1614,12 @@
           <Level>0.39</Level>
 
       
+          <cLevel>0.38</cLevel>
+
+      
+          <Temp>5.5</Temp>
+
+      
           <utcStamp>12/06/2025 06:30</utcStamp>
 
       </data>
@@ -1090,6 +1630,12 @@
 
       
           <Level>0.56</Level>
+
+      
+          <cLevel>0.55</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/06/2025 06:15</utcStamp>
@@ -1104,6 +1650,12 @@
           <Level>0.72</Level>
 
       
+          <cLevel>0.71</cLevel>
+
+      
+          <Temp>6.0</Temp>
+
+      
           <utcStamp>12/06/2025 06:00</utcStamp>
 
       </data>
@@ -1114,6 +1666,12 @@
 
       
           <Level>0.87</Level>
+
+      
+          <cLevel>0.86</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/06/2025 05:45</utcStamp>
@@ -1128,6 +1686,12 @@
           <Level>0.96</Level>
 
       
+          <cLevel>0.95</cLevel>
+
+      
+          <Temp>6.2</Temp>
+
+      
           <utcStamp>12/06/2025 05:30</utcStamp>
 
       </data>
@@ -1138,6 +1702,12 @@
 
       
           <Level>1.05</Level>
+
+      
+          <cLevel>1.03</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/06/2025 05:15</utcStamp>
@@ -1152,6 +1722,12 @@
           <Level>1.13</Level>
 
       
+          <cLevel>1.11</cLevel>
+
+      
+          <Temp>6.3</Temp>
+
+      
           <utcStamp>12/06/2025 05:00</utcStamp>
 
       </data>
@@ -1162,6 +1738,12 @@
 
       
           <Level>1.17</Level>
+
+      
+          <cLevel>1.15</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/06/2025 04:45</utcStamp>
@@ -1176,6 +1758,12 @@
           <Level>1.19</Level>
 
       
+          <cLevel>1.17</cLevel>
+
+      
+          <Temp>6.6</Temp>
+
+      
           <utcStamp>12/06/2025 04:30</utcStamp>
 
       </data>
@@ -1186,6 +1774,12 @@
 
       
           <Level>1.20</Level>
+
+      
+          <cLevel>1.17</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/06/2025 04:15</utcStamp>
@@ -1200,6 +1794,12 @@
           <Level>1.19</Level>
 
       
+          <cLevel>1.16</cLevel>
+
+      
+          <Temp>6.6</Temp>
+
+      
           <utcStamp>12/06/2025 04:00</utcStamp>
 
       </data>
@@ -1210,6 +1810,12 @@
 
       
           <Level>1.14</Level>
+
+      
+          <cLevel>1.11</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/06/2025 03:45</utcStamp>
@@ -1224,6 +1830,12 @@
           <Level>1.09</Level>
 
       
+          <cLevel>1.06</cLevel>
+
+      
+          <Temp>6.6</Temp>
+
+      
           <utcStamp>12/06/2025 03:30</utcStamp>
 
       </data>
@@ -1233,7 +1845,13 @@
           <DateTimeStamp>12/05/2025 22:15</DateTimeStamp>
 
       
-          <Level>0.88</Level>
+          <Level>1.01</Level>
+
+      
+          <cLevel>0.98</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/06/2025 03:15</utcStamp>
@@ -1245,7 +1863,13 @@
           <DateTimeStamp>12/05/2025 22:00</DateTimeStamp>
 
       
-          <Level>0.75</Level>
+          <Level>0.88</Level>
+
+      
+          <cLevel>0.85</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/06/2025 03:00</utcStamp>
@@ -1257,7 +1881,13 @@
           <DateTimeStamp>12/05/2025 21:45</DateTimeStamp>
 
       
-          <Level>0.61</Level>
+          <Level>0.75</Level>
+
+      
+          <cLevel>0.71</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/06/2025 02:45</utcStamp>
@@ -1269,7 +1899,13 @@
           <DateTimeStamp>12/05/2025 21:30</DateTimeStamp>
 
       
-          <Level>0.43</Level>
+          <Level>0.61</Level>
+
+      
+          <cLevel>0.57</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/06/2025 02:30</utcStamp>
@@ -1281,7 +1917,13 @@
           <DateTimeStamp>12/05/2025 21:15</DateTimeStamp>
 
       
-          <Level>0.24</Level>
+          <Level>0.43</Level>
+
+      
+          <cLevel>0.39</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/06/2025 02:15</utcStamp>
@@ -1293,7 +1935,13 @@
           <DateTimeStamp>12/05/2025 21:00</DateTimeStamp>
 
       
-          <Level>0.06</Level>
+          <Level>0.24</Level>
+
+      
+          <cLevel>0.20</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/06/2025 02:00</utcStamp>
@@ -1305,7 +1953,13 @@
           <DateTimeStamp>12/05/2025 20:45</DateTimeStamp>
 
       
-          <Level>-0.13</Level>
+          <Level>0.06</Level>
+
+      
+          <cLevel>0.02</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/06/2025 01:45</utcStamp>
@@ -1317,7 +1971,13 @@
           <DateTimeStamp>12/05/2025 20:30</DateTimeStamp>
 
       
-          <Level>-0.33</Level>
+          <Level>-0.13</Level>
+
+      
+          <cLevel>-0.17</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/06/2025 01:30</utcStamp>
@@ -1329,7 +1989,13 @@
           <DateTimeStamp>12/05/2025 20:15</DateTimeStamp>
 
       
-          <Level>-0.55</Level>
+          <Level>-0.33</Level>
+
+      
+          <cLevel>-0.37</cLevel>
+
+      
+          <Temp>5.7</Temp>
 
       
           <utcStamp>12/06/2025 01:15</utcStamp>
@@ -1341,7 +2007,13 @@
           <DateTimeStamp>12/05/2025 20:00</DateTimeStamp>
 
       
-          <Level>-0.74</Level>
+          <Level>-0.55</Level>
+
+      
+          <cLevel>-0.59</cLevel>
+
+      
+          <Temp>3.6</Temp>
 
       
           <utcStamp>12/06/2025 01:00</utcStamp>
@@ -1353,7 +2025,13 @@
           <DateTimeStamp>12/05/2025 19:45</DateTimeStamp>
 
       
-          <Level>-0.96</Level>
+          <Level>-0.74</Level>
+
+      
+          <cLevel>-0.78</cLevel>
+
+      
+          <Temp>3.1</Temp>
 
       
           <utcStamp>12/06/2025 00:45</utcStamp>
@@ -1365,7 +2043,13 @@
           <DateTimeStamp>12/05/2025 19:30</DateTimeStamp>
 
       
-          <Level>-1.36</Level>
+          <Level>-0.96</Level>
+
+      
+          <cLevel>-1.00</cLevel>
+
+      
+          <Temp>2.2</Temp>
 
       
           <utcStamp>12/06/2025 00:30</utcStamp>
@@ -1377,7 +2061,13 @@
           <DateTimeStamp>12/05/2025 19:15</DateTimeStamp>
 
       
-          <Level>-1.36</Level>
+          <Level>-1.17</Level>
+
+      
+          <cLevel>-1.21</cLevel>
+
+      
+          <Temp>2.1</Temp>
 
       
           <utcStamp>12/06/2025 00:15</utcStamp>
@@ -1389,7 +2079,13 @@
           <DateTimeStamp>12/05/2025 19:00</DateTimeStamp>
 
       
-          <Level>-1.52</Level>
+          <Level>-1.36</Level>
+
+      
+          <cLevel>-1.40</cLevel>
+
+      
+          <Temp>2.1</Temp>
 
       
           <utcStamp>12/06/2025 00:00</utcStamp>
@@ -1401,7 +2097,13 @@
           <DateTimeStamp>12/05/2025 18:45</DateTimeStamp>
 
       
-          <Level>-1.71</Level>
+          <Level>-1.53</Level>
+
+      
+          <cLevel>-1.58</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 23:45</utcStamp>
@@ -1413,7 +2115,13 @@
           <DateTimeStamp>12/05/2025 18:30</DateTimeStamp>
 
       
-          <Level>-1.85</Level>
+          <Level>-1.71</Level>
+
+      
+          <cLevel>-1.76</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 23:30</utcStamp>
@@ -1425,7 +2133,13 @@
           <DateTimeStamp>12/05/2025 18:15</DateTimeStamp>
 
       
-          <Level>-1.95</Level>
+          <Level>-1.85</Level>
+
+      
+          <cLevel>-1.90</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/05/2025 23:15</utcStamp>
@@ -1437,7 +2151,13 @@
           <DateTimeStamp>12/05/2025 18:00</DateTimeStamp>
 
       
-          <Level>-2.07</Level>
+          <Level>-1.95</Level>
+
+      
+          <cLevel>-2.00</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 23:00</utcStamp>
@@ -1449,7 +2169,13 @@
           <DateTimeStamp>12/05/2025 17:45</DateTimeStamp>
 
       
-          <Level>-2.13</Level>
+          <Level>-2.07</Level>
+
+      
+          <cLevel>-2.12</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 22:45</utcStamp>
@@ -1461,7 +2187,13 @@
           <DateTimeStamp>12/05/2025 17:30</DateTimeStamp>
 
       
-          <Level>-2.18</Level>
+          <Level>-2.13</Level>
+
+      
+          <cLevel>-2.18</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 22:30</utcStamp>
@@ -1476,6 +2208,12 @@
           <Level>-2.18</Level>
 
       
+          <cLevel>-2.23</cLevel>
+
+      
+          <Temp>2.8</Temp>
+
+      
           <utcStamp>12/05/2025 22:15</utcStamp>
 
       </data>
@@ -1485,7 +2223,13 @@
           <DateTimeStamp>12/05/2025 17:00</DateTimeStamp>
 
       
-          <Level>-2.16</Level>
+          <Level>-2.18</Level>
+
+      
+          <cLevel>-2.23</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 22:00</utcStamp>
@@ -1497,7 +2241,13 @@
           <DateTimeStamp>12/05/2025 16:45</DateTimeStamp>
 
       
-          <Level>-2.18</Level>
+          <Level>-2.16</Level>
+
+      
+          <cLevel>-2.22</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 21:45</utcStamp>
@@ -1509,7 +2259,13 @@
           <DateTimeStamp>12/05/2025 16:30</DateTimeStamp>
 
       
-          <Level>-1.99</Level>
+          <Level>-2.18</Level>
+
+      
+          <cLevel>-2.24</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 21:30</utcStamp>
@@ -1521,7 +2277,13 @@
           <DateTimeStamp>12/05/2025 16:15</DateTimeStamp>
 
       
-          <Level>-1.94</Level>
+          <Level>-1.99</Level>
+
+      
+          <cLevel>-2.05</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 21:15</utcStamp>
@@ -1533,7 +2295,13 @@
           <DateTimeStamp>12/05/2025 16:00</DateTimeStamp>
 
       
-          <Level>-1.78</Level>
+          <Level>-1.94</Level>
+
+      
+          <cLevel>-2.00</cLevel>
+
+      
+          <Temp>3.0</Temp>
 
       
           <utcStamp>12/05/2025 21:00</utcStamp>
@@ -1545,7 +2313,13 @@
           <DateTimeStamp>12/05/2025 15:45</DateTimeStamp>
 
       
-          <Level>-1.66</Level>
+          <Level>-1.78</Level>
+
+      
+          <cLevel>-1.84</cLevel>
+
+      
+          <Temp>2.9</Temp>
 
       
           <utcStamp>12/05/2025 20:45</utcStamp>
@@ -1557,7 +2331,13 @@
           <DateTimeStamp>12/05/2025 15:30</DateTimeStamp>
 
       
-          <Level>-1.47</Level>
+          <Level>-1.66</Level>
+
+      
+          <cLevel>-1.72</cLevel>
+
+      
+          <Temp>2.9</Temp>
 
       
           <utcStamp>12/05/2025 20:30</utcStamp>
@@ -1569,7 +2349,13 @@
           <DateTimeStamp>12/05/2025 15:15</DateTimeStamp>
 
       
-          <Level>-1.26</Level>
+          <Level>-1.47</Level>
+
+      
+          <cLevel>-1.53</cLevel>
+
+      
+          <Temp>2.6</Temp>
 
       
           <utcStamp>12/05/2025 20:15</utcStamp>
@@ -1581,7 +2367,13 @@
           <DateTimeStamp>12/05/2025 15:00</DateTimeStamp>
 
       
-          <Level>-1.04</Level>
+          <Level>-1.26</Level>
+
+      
+          <cLevel>-1.33</cLevel>
+
+      
+          <Temp>2.7</Temp>
 
       
           <utcStamp>12/05/2025 20:00</utcStamp>
@@ -1593,7 +2385,13 @@
           <DateTimeStamp>12/05/2025 14:45</DateTimeStamp>
 
       
-          <Level>-0.77</Level>
+          <Level>-1.05</Level>
+
+      
+          <cLevel>-1.12</cLevel>
+
+      
+          <Temp>3.1</Temp>
 
       
           <utcStamp>12/05/2025 19:45</utcStamp>
@@ -1605,7 +2403,13 @@
           <DateTimeStamp>12/05/2025 14:30</DateTimeStamp>
 
       
-          <Level>-0.52</Level>
+          <Level>-0.77</Level>
+
+      
+          <cLevel>-0.84</cLevel>
+
+      
+          <Temp>3.4</Temp>
 
       
           <utcStamp>12/05/2025 19:30</utcStamp>
@@ -1617,7 +2421,13 @@
           <DateTimeStamp>12/05/2025 14:15</DateTimeStamp>
 
       
-          <Level>-0.25</Level>
+          <Level>-0.52</Level>
+
+      
+          <cLevel>-0.59</cLevel>
+
+      
+          <Temp>4.0</Temp>
 
       
           <utcStamp>12/05/2025 19:15</utcStamp>
@@ -1629,7 +2439,13 @@
           <DateTimeStamp>12/05/2025 14:00</DateTimeStamp>
 
       
-          <Level>0.03</Level>
+          <Level>-0.25</Level>
+
+      
+          <cLevel>-0.32</cLevel>
+
+      
+          <Temp>4.6</Temp>
 
       
           <utcStamp>12/05/2025 19:00</utcStamp>
@@ -1641,7 +2457,13 @@
           <DateTimeStamp>12/05/2025 13:45</DateTimeStamp>
 
       
-          <Level>0.27</Level>
+          <Level>0.03</Level>
+
+      
+          <cLevel>-0.04</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/05/2025 18:45</utcStamp>
@@ -1653,7 +2475,13 @@
           <DateTimeStamp>12/05/2025 13:30</DateTimeStamp>
 
       
-          <Level>0.51</Level>
+          <Level>0.27</Level>
+
+      
+          <cLevel>0.19</cLevel>
+
+      
+          <Temp>4.8</Temp>
 
       
           <utcStamp>12/05/2025 18:30</utcStamp>
@@ -1665,7 +2493,13 @@
           <DateTimeStamp>12/05/2025 13:15</DateTimeStamp>
 
       
-          <Level>0.73</Level>
+          <Level>0.51</Level>
+
+      
+          <cLevel>0.43</cLevel>
+
+      
+          <Temp>4.8</Temp>
 
       
           <utcStamp>12/05/2025 18:15</utcStamp>
@@ -1677,7 +2511,13 @@
           <DateTimeStamp>12/05/2025 13:00</DateTimeStamp>
 
       
-          <Level>0.95</Level>
+          <Level>0.73</Level>
+
+      
+          <cLevel>0.65</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/05/2025 18:00</utcStamp>
@@ -1689,7 +2529,13 @@
           <DateTimeStamp>12/05/2025 12:45</DateTimeStamp>
 
       
-          <Level>1.16</Level>
+          <Level>0.95</Level>
+
+      
+          <cLevel>0.87</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/05/2025 17:45</utcStamp>
@@ -1701,7 +2547,13 @@
           <DateTimeStamp>12/05/2025 12:30</DateTimeStamp>
 
       
-          <Level>1.36</Level>
+          <Level>1.16</Level>
+
+      
+          <cLevel>1.07</cLevel>
+
+      
+          <Temp>5.5</Temp>
 
       
           <utcStamp>12/05/2025 17:30</utcStamp>
@@ -1713,7 +2565,13 @@
           <DateTimeStamp>12/05/2025 12:15</DateTimeStamp>
 
       
-          <Level>1.49</Level>
+          <Level>1.36</Level>
+
+      
+          <cLevel>1.27</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/05/2025 17:15</utcStamp>
@@ -1725,7 +2583,13 @@
           <DateTimeStamp>12/05/2025 12:00</DateTimeStamp>
 
       
-          <Level>1.61</Level>
+          <Level>1.49</Level>
+
+      
+          <cLevel>1.39</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/05/2025 17:00</utcStamp>
@@ -1737,7 +2601,13 @@
           <DateTimeStamp>12/05/2025 11:45</DateTimeStamp>
 
       
-          <Level>1.71</Level>
+          <Level>1.61</Level>
+
+      
+          <cLevel>1.51</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/05/2025 16:45</utcStamp>
@@ -1749,7 +2619,13 @@
           <DateTimeStamp>12/05/2025 11:30</DateTimeStamp>
 
       
-          <Level>1.79</Level>
+          <Level>1.71</Level>
+
+      
+          <cLevel>1.61</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 16:30</utcStamp>
@@ -1761,7 +2637,13 @@
           <DateTimeStamp>12/05/2025 11:15</DateTimeStamp>
 
       
-          <Level>1.84</Level>
+          <Level>1.79</Level>
+
+      
+          <cLevel>1.68</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/05/2025 16:15</utcStamp>
@@ -1773,7 +2655,13 @@
           <DateTimeStamp>12/05/2025 11:00</DateTimeStamp>
 
       
-          <Level>1.88</Level>
+          <Level>1.84</Level>
+
+      
+          <cLevel>1.73</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 16:00</utcStamp>
@@ -1785,7 +2673,13 @@
           <DateTimeStamp>12/05/2025 10:45</DateTimeStamp>
 
       
-          <Level>1.87</Level>
+          <Level>1.88</Level>
+
+      
+          <cLevel>1.77</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 15:45</utcStamp>
@@ -1797,7 +2691,13 @@
           <DateTimeStamp>12/05/2025 10:30</DateTimeStamp>
 
       
-          <Level>1.84</Level>
+          <Level>1.87</Level>
+
+      
+          <cLevel>1.76</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 15:30</utcStamp>
@@ -1809,7 +2709,13 @@
           <DateTimeStamp>12/05/2025 10:15</DateTimeStamp>
 
       
-          <Level>1.78</Level>
+          <Level>1.84</Level>
+
+      
+          <cLevel>1.73</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 15:15</utcStamp>
@@ -1821,7 +2727,13 @@
           <DateTimeStamp>12/05/2025 10:00</DateTimeStamp>
 
       
-          <Level>1.70</Level>
+          <Level>1.78</Level>
+
+      
+          <cLevel>1.66</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 15:00</utcStamp>
@@ -1833,7 +2745,13 @@
           <DateTimeStamp>12/05/2025 09:45</DateTimeStamp>
 
       
-          <Level>1.60</Level>
+          <Level>1.70</Level>
+
+      
+          <cLevel>1.58</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 14:45</utcStamp>
@@ -1845,7 +2763,13 @@
           <DateTimeStamp>12/05/2025 09:30</DateTimeStamp>
 
       
-          <Level>1.48</Level>
+          <Level>1.60</Level>
+
+      
+          <cLevel>1.48</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 14:30</utcStamp>
@@ -1857,7 +2781,13 @@
           <DateTimeStamp>12/05/2025 09:15</DateTimeStamp>
 
       
-          <Level>1.35</Level>
+          <Level>1.48</Level>
+
+      
+          <cLevel>1.36</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 14:15</utcStamp>
@@ -1869,7 +2799,13 @@
           <DateTimeStamp>12/05/2025 09:00</DateTimeStamp>
 
       
-          <Level>1.19</Level>
+          <Level>1.35</Level>
+
+      
+          <cLevel>1.23</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 14:00</utcStamp>
@@ -1881,7 +2817,13 @@
           <DateTimeStamp>12/05/2025 08:45</DateTimeStamp>
 
       
-          <Level>1.01</Level>
+          <Level>1.19</Level>
+
+      
+          <cLevel>1.07</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/05/2025 13:45</utcStamp>
@@ -1893,7 +2835,13 @@
           <DateTimeStamp>12/05/2025 08:30</DateTimeStamp>
 
       
-          <Level>0.80</Level>
+          <Level>1.01</Level>
+
+      
+          <cLevel>0.89</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/05/2025 13:30</utcStamp>
@@ -1905,7 +2853,13 @@
           <DateTimeStamp>12/05/2025 08:15</DateTimeStamp>
 
       
-          <Level>0.56</Level>
+          <Level>0.80</Level>
+
+      
+          <cLevel>0.68</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/05/2025 13:15</utcStamp>
@@ -1917,7 +2871,13 @@
           <DateTimeStamp>12/05/2025 08:00</DateTimeStamp>
 
       
-          <Level>0.36</Level>
+          <Level>0.56</Level>
+
+      
+          <cLevel>0.44</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/05/2025 13:00</utcStamp>
@@ -1929,7 +2889,13 @@
           <DateTimeStamp>12/05/2025 07:45</DateTimeStamp>
 
       
-          <Level>0.15</Level>
+          <Level>0.36</Level>
+
+      
+          <cLevel>0.24</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/05/2025 12:45</utcStamp>
@@ -1941,67 +2907,30 @@
           <DateTimeStamp>12/05/2025 07:30</DateTimeStamp>
 
       
-          <Level>0.00</Level>
+          <Level>0.15</Level>
+
+      
+          <cLevel>0.03</cLevel>
+
+      
+          <Temp>5.8</Temp>
 
       
           <utcStamp>12/05/2025 12:30</utcStamp>
 
       </data>
-
       
-          <data count="163">
-          <DateTimeStamp>12/05/2025 01:15</DateTimeStamp>
-
-      
-          <Level/>
-
-      
-          <utcStamp>12/05/2025 06:15</utcStamp>
-
-      </data>
-
-      
-          <data count="164">
-          <DateTimeStamp>12/05/2025 01:00</DateTimeStamp>
-
-      
-          <Level/>
-
-      
-          <utcStamp>12/05/2025 06:00</utcStamp>
-
-      </data>
-
-      
-          <data count="165">
-          <DateTimeStamp>12/05/2025 00:45</DateTimeStamp>
-
-      
-          <Level/>
-
-      
-          <utcStamp>12/05/2025 05:45</utcStamp>
-
-      </data>
-
-      
-          <data count="166">
-          <DateTimeStamp>12/05/2025 00:30</DateTimeStamp>
-
-      
-          <Level/>
-
-      
-          <utcStamp>12/05/2025 05:30</utcStamp>
-
-      </data>
-
-      
-          <data count="167">
+          <data count="191">
           <DateTimeStamp>12/05/2025 00:15</DateTimeStamp>
 
       
           <Level>0.34</Level>
+
+      
+          <cLevel>0.26</cLevel>
+
+      
+          <Temp>5.5</Temp>
 
       
           <utcStamp>12/05/2025 05:15</utcStamp>
@@ -2009,11 +2938,17 @@
       </data>
 
       
-          <data count="168">
+          <data count="192">
           <DateTimeStamp>12/05/2025 00:00</DateTimeStamp>
 
       
           <Level>0.47</Level>
+
+      
+          <cLevel>0.39</cLevel>
+
+      
+          <Temp>5.6</Temp>
 
       
           <utcStamp>12/05/2025 05:00</utcStamp>
@@ -2021,11 +2956,17 @@
       </data>
 
       
-          <data count="169">
+          <data count="193">
           <DateTimeStamp>12/04/2025 23:45</DateTimeStamp>
 
       
           <Level>0.59</Level>
+
+      
+          <cLevel>0.51</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/05/2025 04:45</utcStamp>
@@ -2033,11 +2974,17 @@
       </data>
 
       
-          <data count="170">
+          <data count="194">
           <DateTimeStamp>12/04/2025 23:30</DateTimeStamp>
 
       
           <Level>0.69</Level>
+
+      
+          <cLevel>0.61</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/05/2025 04:30</utcStamp>
@@ -2045,11 +2992,17 @@
       </data>
 
       
-          <data count="171">
+          <data count="195">
           <DateTimeStamp>12/04/2025 23:15</DateTimeStamp>
 
       
           <Level>0.78</Level>
+
+      
+          <cLevel>0.70</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 04:15</utcStamp>
@@ -2057,11 +3010,17 @@
       </data>
 
       
-          <data count="172">
+          <data count="196">
           <DateTimeStamp>12/04/2025 23:00</DateTimeStamp>
 
       
           <Level>0.83</Level>
+
+      
+          <cLevel>0.75</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/05/2025 04:00</utcStamp>
@@ -2069,11 +3028,17 @@
       </data>
 
       
-          <data count="173">
+          <data count="197">
           <DateTimeStamp>12/04/2025 22:45</DateTimeStamp>
 
       
           <Level>0.86</Level>
+
+      
+          <cLevel>0.78</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/05/2025 03:45</utcStamp>
@@ -2081,11 +3046,17 @@
       </data>
 
       
-          <data count="174">
+          <data count="198">
           <DateTimeStamp>12/04/2025 22:30</DateTimeStamp>
 
       
           <Level>0.90</Level>
+
+      
+          <cLevel>0.83</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/05/2025 03:30</utcStamp>
@@ -2093,11 +3064,17 @@
       </data>
 
       
-          <data count="175">
+          <data count="199">
           <DateTimeStamp>12/04/2025 22:15</DateTimeStamp>
 
       
           <Level>0.91</Level>
+
+      
+          <cLevel>0.84</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/05/2025 03:15</utcStamp>
@@ -2105,11 +3082,17 @@
       </data>
 
       
-          <data count="176">
+          <data count="200">
           <DateTimeStamp>12/04/2025 22:00</DateTimeStamp>
 
       
           <Level>0.89</Level>
+
+      
+          <cLevel>0.83</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/05/2025 03:00</utcStamp>
@@ -2117,11 +3100,17 @@
       </data>
 
       
-          <data count="177">
+          <data count="201">
           <DateTimeStamp>12/04/2025 21:45</DateTimeStamp>
 
       
           <Level>0.86</Level>
+
+      
+          <cLevel>0.80</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/05/2025 02:45</utcStamp>
@@ -2129,11 +3118,17 @@
       </data>
 
       
-          <data count="178">
+          <data count="202">
           <DateTimeStamp>12/04/2025 21:30</DateTimeStamp>
 
       
           <Level>0.80</Level>
+
+      
+          <cLevel>0.74</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/05/2025 02:30</utcStamp>
@@ -2141,11 +3136,17 @@
       </data>
 
       
-          <data count="179">
+          <data count="203">
           <DateTimeStamp>12/04/2025 21:15</DateTimeStamp>
 
       
           <Level>0.69</Level>
+
+      
+          <cLevel>0.63</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/05/2025 02:15</utcStamp>
@@ -2153,11 +3154,17 @@
       </data>
 
       
-          <data count="180">
+          <data count="204">
           <DateTimeStamp>12/04/2025 21:00</DateTimeStamp>
 
       
           <Level>0.56</Level>
+
+      
+          <cLevel>0.51</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/05/2025 02:00</utcStamp>
@@ -2165,11 +3172,17 @@
       </data>
 
       
-          <data count="181">
+          <data count="205">
           <DateTimeStamp>12/04/2025 20:45</DateTimeStamp>
 
       
           <Level>0.45</Level>
+
+      
+          <cLevel>0.40</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/05/2025 01:45</utcStamp>
@@ -2177,11 +3190,17 @@
       </data>
 
       
-          <data count="182">
+          <data count="206">
           <DateTimeStamp>12/04/2025 20:30</DateTimeStamp>
 
       
           <Level>0.30</Level>
+
+      
+          <cLevel>0.25</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/05/2025 01:30</utcStamp>
@@ -2189,11 +3208,17 @@
       </data>
 
       
-          <data count="183">
+          <data count="207">
           <DateTimeStamp>12/04/2025 20:15</DateTimeStamp>
 
       
           <Level>0.14</Level>
+
+      
+          <cLevel>0.10</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/05/2025 01:15</utcStamp>
@@ -2201,11 +3226,17 @@
       </data>
 
       
-          <data count="184">
+          <data count="208">
           <DateTimeStamp>12/04/2025 20:00</DateTimeStamp>
 
       
           <Level>-0.03</Level>
+
+      
+          <cLevel>-0.07</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/05/2025 01:00</utcStamp>
@@ -2213,11 +3244,17 @@
       </data>
 
       
-          <data count="185">
+          <data count="209">
           <DateTimeStamp>12/04/2025 19:45</DateTimeStamp>
 
       
           <Level>-0.19</Level>
+
+      
+          <cLevel>-0.23</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/05/2025 00:45</utcStamp>
@@ -2225,11 +3262,17 @@
       </data>
 
       
-          <data count="186">
+          <data count="210">
           <DateTimeStamp>12/04/2025 19:30</DateTimeStamp>
 
       
           <Level>-0.42</Level>
+
+      
+          <cLevel>-0.45</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/05/2025 00:30</utcStamp>
@@ -2237,11 +3280,17 @@
       </data>
 
       
-          <data count="187">
+          <data count="211">
           <DateTimeStamp>12/04/2025 19:15</DateTimeStamp>
 
       
           <Level>-0.58</Level>
+
+      
+          <cLevel>-0.61</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/05/2025 00:15</utcStamp>
@@ -2249,11 +3298,17 @@
       </data>
 
       
-          <data count="188">
+          <data count="212">
           <DateTimeStamp>12/04/2025 19:00</DateTimeStamp>
 
       
           <Level>-0.77</Level>
+
+      
+          <cLevel>-0.80</cLevel>
+
+      
+          <Temp>5.4</Temp>
 
       
           <utcStamp>12/05/2025 00:00</utcStamp>
@@ -2261,11 +3316,17 @@
       </data>
 
       
-          <data count="189">
+          <data count="213">
           <DateTimeStamp>12/04/2025 18:45</DateTimeStamp>
 
       
           <Level>-1.00</Level>
+
+      
+          <cLevel>-1.02</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/04/2025 23:45</utcStamp>
@@ -2273,11 +3334,17 @@
       </data>
 
       
-          <data count="190">
+          <data count="214">
           <DateTimeStamp>12/04/2025 18:30</DateTimeStamp>
 
       
           <Level>-1.18</Level>
+
+      
+          <cLevel>-1.20</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/04/2025 23:30</utcStamp>
@@ -2285,11 +3352,17 @@
       </data>
 
       
-          <data count="191">
+          <data count="215">
           <DateTimeStamp>12/04/2025 18:15</DateTimeStamp>
 
       
-          <Level>-1.37</Level>
+          <Level>-1.38</Level>
+
+      
+          <cLevel>-1.40</cLevel>
+
+      
+          <Temp>4.8</Temp>
 
       
           <utcStamp>12/04/2025 23:15</utcStamp>
@@ -2297,11 +3370,17 @@
       </data>
 
       
-          <data count="192">
+          <data count="216">
           <DateTimeStamp>12/04/2025 18:00</DateTimeStamp>
 
       
           <Level>-1.57</Level>
+
+      
+          <cLevel>-1.58</cLevel>
+
+      
+          <Temp>4.9</Temp>
 
       
           <utcStamp>12/04/2025 23:00</utcStamp>
@@ -2309,11 +3388,17 @@
       </data>
 
       
-          <data count="193">
+          <data count="217">
           <DateTimeStamp>12/04/2025 17:45</DateTimeStamp>
 
       
           <Level>-1.70</Level>
+
+      
+          <cLevel>-1.70</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 22:45</utcStamp>
@@ -2321,11 +3406,17 @@
       </data>
 
       
-          <data count="194">
+          <data count="218">
           <DateTimeStamp>12/04/2025 17:30</DateTimeStamp>
 
       
           <Level>-1.83</Level>
+
+      
+          <cLevel>-1.83</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 22:30</utcStamp>
@@ -2333,11 +3424,17 @@
       </data>
 
       
-          <data count="195">
+          <data count="219">
           <DateTimeStamp>12/04/2025 17:15</DateTimeStamp>
 
       
           <Level>-1.95</Level>
+
+      
+          <cLevel>-1.94</cLevel>
+
+      
+          <Temp>4.9</Temp>
 
       
           <utcStamp>12/04/2025 22:15</utcStamp>
@@ -2345,11 +3442,17 @@
       </data>
 
       
-          <data count="196">
+          <data count="220">
           <DateTimeStamp>12/04/2025 17:00</DateTimeStamp>
 
       
           <Level>-2.05</Level>
+
+      
+          <cLevel>-2.03</cLevel>
+
+      
+          <Temp>4.9</Temp>
 
       
           <utcStamp>12/04/2025 22:00</utcStamp>
@@ -2357,11 +3460,17 @@
       </data>
 
       
-          <data count="197">
+          <data count="221">
           <DateTimeStamp>12/04/2025 16:45</DateTimeStamp>
 
       
           <Level>-2.08</Level>
+
+      
+          <cLevel>-2.05</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 21:45</utcStamp>
@@ -2369,11 +3478,17 @@
       </data>
 
       
-          <data count="198">
+          <data count="222">
           <DateTimeStamp>12/04/2025 16:30</DateTimeStamp>
 
       
           <Level>-2.10</Level>
+
+      
+          <cLevel>-2.06</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 21:30</utcStamp>
@@ -2381,11 +3496,17 @@
       </data>
 
       
-          <data count="199">
+          <data count="223">
           <DateTimeStamp>12/04/2025 16:15</DateTimeStamp>
 
       
           <Level>-2.17</Level>
+
+      
+          <cLevel>-2.12</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 21:15</utcStamp>
@@ -2393,11 +3514,17 @@
       </data>
 
       
-          <data count="200">
+          <data count="224">
           <DateTimeStamp>12/04/2025 16:00</DateTimeStamp>
 
       
           <Level>-2.13</Level>
+
+      
+          <cLevel>-2.08</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/04/2025 21:00</utcStamp>
@@ -2405,11 +3532,17 @@
       </data>
 
       
-          <data count="201">
+          <data count="225">
           <DateTimeStamp>12/04/2025 15:45</DateTimeStamp>
 
       
           <Level>-2.15</Level>
+
+      
+          <cLevel>-2.10</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/04/2025 20:45</utcStamp>
@@ -2417,11 +3550,17 @@
       </data>
 
       
-          <data count="202">
+          <data count="226">
           <DateTimeStamp>12/04/2025 15:30</DateTimeStamp>
 
       
           <Level>-2.05</Level>
+
+      
+          <cLevel>-2.00</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/04/2025 20:30</utcStamp>
@@ -2429,11 +3568,17 @@
       </data>
 
       
-          <data count="203">
+          <data count="227">
           <DateTimeStamp>12/04/2025 15:15</DateTimeStamp>
 
       
           <Level>-1.95</Level>
+
+      
+          <cLevel>-1.90</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 20:15</utcStamp>
@@ -2441,11 +3586,17 @@
       </data>
 
       
-          <data count="204">
+          <data count="228">
           <DateTimeStamp>12/04/2025 15:00</DateTimeStamp>
 
       
           <Level>-1.82</Level>
+
+      
+          <cLevel>-1.76</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 20:00</utcStamp>
@@ -2453,11 +3604,17 @@
       </data>
 
       
-          <data count="205">
+          <data count="229">
           <DateTimeStamp>12/04/2025 14:45</DateTimeStamp>
 
       
           <Level>-1.70</Level>
+
+      
+          <cLevel>-1.64</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 19:45</utcStamp>
@@ -2465,11 +3622,17 @@
       </data>
 
       
-          <data count="206">
+          <data count="230">
           <DateTimeStamp>12/04/2025 14:30</DateTimeStamp>
 
       
           <Level>-1.54</Level>
+
+      
+          <cLevel>-1.48</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 19:30</utcStamp>
@@ -2477,11 +3640,17 @@
       </data>
 
       
-          <data count="207">
+          <data count="231">
           <DateTimeStamp>12/04/2025 14:15</DateTimeStamp>
 
       
-          <Level>-1.32</Level>
+          <Level>-1.33</Level>
+
+      
+          <cLevel>-1.27</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/04/2025 19:15</utcStamp>
@@ -2489,11 +3658,17 @@
       </data>
 
       
-          <data count="208">
+          <data count="232">
           <DateTimeStamp>12/04/2025 14:00</DateTimeStamp>
 
       
           <Level>-1.12</Level>
+
+      
+          <cLevel>-1.05</cLevel>
+
+      
+          <Temp>5.6</Temp>
 
       
           <utcStamp>12/04/2025 19:00</utcStamp>
@@ -2501,11 +3676,17 @@
       </data>
 
       
-          <data count="209">
+          <data count="233">
           <DateTimeStamp>12/04/2025 13:45</DateTimeStamp>
 
       
           <Level>-0.89</Level>
+
+      
+          <cLevel>-0.82</cLevel>
+
+      
+          <Temp>5.4</Temp>
 
       
           <utcStamp>12/04/2025 18:45</utcStamp>
@@ -2513,11 +3694,17 @@
       </data>
 
       
-          <data count="210">
+          <data count="234">
           <DateTimeStamp>12/04/2025 13:30</DateTimeStamp>
 
       
           <Level>-0.63</Level>
+
+      
+          <cLevel>-0.56</cLevel>
+
+      
+          <Temp>5.7</Temp>
 
       
           <utcStamp>12/04/2025 18:30</utcStamp>
@@ -2525,11 +3712,17 @@
       </data>
 
       
-          <data count="211">
+          <data count="235">
           <DateTimeStamp>12/04/2025 13:15</DateTimeStamp>
 
       
           <Level>-0.37</Level>
+
+      
+          <cLevel>-0.30</cLevel>
+
+      
+          <Temp>5.7</Temp>
 
       
           <utcStamp>12/04/2025 18:15</utcStamp>
@@ -2537,11 +3730,17 @@
       </data>
 
       
-          <data count="212">
+          <data count="236">
           <DateTimeStamp>12/04/2025 13:00</DateTimeStamp>
 
       
           <Level>-0.13</Level>
+
+      
+          <cLevel>-0.06</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/04/2025 18:00</utcStamp>
@@ -2549,11 +3748,17 @@
       </data>
 
       
-          <data count="213">
+          <data count="237">
           <DateTimeStamp>12/04/2025 12:45</DateTimeStamp>
 
       
           <Level>0.10</Level>
+
+      
+          <cLevel>0.17</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/04/2025 17:45</utcStamp>
@@ -2561,11 +3766,17 @@
       </data>
 
       
-          <data count="214">
+          <data count="238">
           <DateTimeStamp>12/04/2025 12:30</DateTimeStamp>
 
       
           <Level>0.33</Level>
+
+      
+          <cLevel>0.40</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/04/2025 17:30</utcStamp>
@@ -2573,11 +3784,17 @@
       </data>
 
       
-          <data count="215">
+          <data count="239">
           <DateTimeStamp>12/04/2025 12:15</DateTimeStamp>
 
       
           <Level>0.55</Level>
+
+      
+          <cLevel>0.61</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/04/2025 17:15</utcStamp>
@@ -2585,11 +3802,17 @@
       </data>
 
       
-          <data count="216">
+          <data count="240">
           <DateTimeStamp>12/04/2025 12:00</DateTimeStamp>
 
       
           <Level>0.77</Level>
+
+      
+          <cLevel>0.83</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/04/2025 17:00</utcStamp>
@@ -2597,11 +3820,17 @@
       </data>
 
       
-          <data count="217">
+          <data count="241">
           <DateTimeStamp>12/04/2025 11:45</DateTimeStamp>
 
       
           <Level>1.00</Level>
+
+      
+          <cLevel>1.06</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/04/2025 16:45</utcStamp>
@@ -2609,11 +3838,17 @@
       </data>
 
       
-          <data count="218">
+          <data count="242">
           <DateTimeStamp>12/04/2025 11:30</DateTimeStamp>
 
       
           <Level>1.18</Level>
+
+      
+          <cLevel>1.24</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/04/2025 16:30</utcStamp>
@@ -2621,11 +3856,17 @@
       </data>
 
       
-          <data count="219">
+          <data count="243">
           <DateTimeStamp>12/04/2025 11:15</DateTimeStamp>
 
       
           <Level>1.35</Level>
+
+      
+          <cLevel>1.41</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/04/2025 16:15</utcStamp>
@@ -2633,11 +3874,17 @@
       </data>
 
       
-          <data count="220">
+          <data count="244">
           <DateTimeStamp>12/04/2025 11:00</DateTimeStamp>
 
       
           <Level>1.47</Level>
+
+      
+          <cLevel>1.53</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/04/2025 16:00</utcStamp>
@@ -2645,11 +3892,17 @@
       </data>
 
       
-          <data count="221">
+          <data count="245">
           <DateTimeStamp>12/04/2025 10:45</DateTimeStamp>
 
       
           <Level>1.58</Level>
+
+      
+          <cLevel>1.63</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 15:45</utcStamp>
@@ -2657,11 +3910,17 @@
       </data>
 
       
-          <data count="222">
+          <data count="246">
           <DateTimeStamp>12/04/2025 10:30</DateTimeStamp>
 
       
           <Level>1.66</Level>
+
+      
+          <cLevel>1.71</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 15:30</utcStamp>
@@ -2669,11 +3928,17 @@
       </data>
 
       
-          <data count="223">
+          <data count="247">
           <DateTimeStamp>12/04/2025 10:15</DateTimeStamp>
 
       
           <Level>1.74</Level>
+
+      
+          <cLevel>1.79</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 15:15</utcStamp>
@@ -2681,11 +3946,17 @@
       </data>
 
       
-          <data count="224">
+          <data count="248">
           <DateTimeStamp>12/04/2025 10:00</DateTimeStamp>
 
       
           <Level>1.79</Level>
+
+      
+          <cLevel>1.84</cLevel>
+
+      
+          <Temp>7.1</Temp>
 
       
           <utcStamp>12/04/2025 15:00</utcStamp>
@@ -2693,11 +3964,17 @@
       </data>
 
       
-          <data count="225">
+          <data count="249">
           <DateTimeStamp>12/04/2025 09:45</DateTimeStamp>
 
       
           <Level>1.83</Level>
+
+      
+          <cLevel>1.88</cLevel>
+
+      
+          <Temp>7.1</Temp>
 
       
           <utcStamp>12/04/2025 14:45</utcStamp>
@@ -2705,11 +3982,17 @@
       </data>
 
       
-          <data count="226">
+          <data count="250">
           <DateTimeStamp>12/04/2025 09:30</DateTimeStamp>
 
       
           <Level>1.80</Level>
+
+      
+          <cLevel>1.85</cLevel>
+
+      
+          <Temp>7.1</Temp>
 
       
           <utcStamp>12/04/2025 14:30</utcStamp>
@@ -2717,11 +4000,17 @@
       </data>
 
       
-          <data count="227">
+          <data count="251">
           <DateTimeStamp>12/04/2025 09:15</DateTimeStamp>
 
       
           <Level>1.76</Level>
+
+      
+          <cLevel>1.81</cLevel>
+
+      
+          <Temp>7.1</Temp>
 
       
           <utcStamp>12/04/2025 14:15</utcStamp>
@@ -2729,11 +4018,17 @@
       </data>
 
       
-          <data count="228">
+          <data count="252">
           <DateTimeStamp>12/04/2025 09:00</DateTimeStamp>
 
       
           <Level>1.68</Level>
+
+      
+          <cLevel>1.73</cLevel>
+
+      
+          <Temp>7.1</Temp>
 
       
           <utcStamp>12/04/2025 14:00</utcStamp>
@@ -2741,11 +4036,17 @@
       </data>
 
       
-          <data count="229">
+          <data count="253">
           <DateTimeStamp>12/04/2025 08:45</DateTimeStamp>
 
       
           <Level>1.59</Level>
+
+      
+          <cLevel>1.64</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 13:45</utcStamp>
@@ -2753,11 +4054,17 @@
       </data>
 
       
-          <data count="230">
+          <data count="254">
           <DateTimeStamp>12/04/2025 08:30</DateTimeStamp>
 
       
           <Level>1.48</Level>
+
+      
+          <cLevel>1.53</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 13:30</utcStamp>
@@ -2765,11 +4072,17 @@
       </data>
 
       
-          <data count="231">
+          <data count="255">
           <DateTimeStamp>12/04/2025 08:15</DateTimeStamp>
 
       
           <Level>1.37</Level>
+
+      
+          <cLevel>1.41</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 13:15</utcStamp>
@@ -2777,11 +4090,17 @@
       </data>
 
       
-          <data count="232">
+          <data count="256">
           <DateTimeStamp>12/04/2025 08:00</DateTimeStamp>
 
       
           <Level>1.23</Level>
+
+      
+          <cLevel>1.27</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 13:00</utcStamp>
@@ -2789,11 +4108,17 @@
       </data>
 
       
-          <data count="233">
+          <data count="257">
           <DateTimeStamp>12/04/2025 07:45</DateTimeStamp>
 
       
           <Level>1.08</Level>
+
+      
+          <cLevel>1.12</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 12:45</utcStamp>
@@ -2801,11 +4126,17 @@
       </data>
 
       
-          <data count="234">
+          <data count="258">
           <DateTimeStamp>12/04/2025 07:30</DateTimeStamp>
 
       
           <Level>0.90</Level>
+
+      
+          <cLevel>0.94</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 12:30</utcStamp>
@@ -2813,11 +4144,17 @@
       </data>
 
       
-          <data count="235">
+          <data count="259">
           <DateTimeStamp>12/04/2025 07:15</DateTimeStamp>
 
       
           <Level>0.69</Level>
+
+      
+          <cLevel>0.73</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 12:15</utcStamp>
@@ -2825,11 +4162,17 @@
       </data>
 
       
-          <data count="236">
+          <data count="260">
           <DateTimeStamp>12/04/2025 07:00</DateTimeStamp>
 
       
           <Level>0.49</Level>
+
+      
+          <cLevel>0.52</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/04/2025 12:00</utcStamp>
@@ -2837,11 +4180,17 @@
       </data>
 
       
-          <data count="237">
+          <data count="261">
           <DateTimeStamp>12/04/2025 06:45</DateTimeStamp>
 
       
           <Level>0.27</Level>
+
+      
+          <cLevel>0.30</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/04/2025 11:45</utcStamp>
@@ -2849,11 +4198,17 @@
       </data>
 
       
-          <data count="238">
+          <data count="262">
           <DateTimeStamp>12/04/2025 06:30</DateTimeStamp>
 
       
           <Level>0.08</Level>
+
+      
+          <cLevel>0.11</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/04/2025 11:30</utcStamp>
@@ -2861,11 +4216,17 @@
       </data>
 
       
-          <data count="239">
+          <data count="263">
           <DateTimeStamp>12/04/2025 06:15</DateTimeStamp>
 
       
           <Level>-0.12</Level>
+
+      
+          <cLevel>-0.09</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/04/2025 11:15</utcStamp>
@@ -2873,11 +4234,17 @@
       </data>
 
       
-          <data count="240">
+          <data count="264">
           <DateTimeStamp>12/04/2025 06:00</DateTimeStamp>
 
       
           <Level>-0.36</Level>
+
+      
+          <cLevel>-0.33</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/04/2025 11:00</utcStamp>
@@ -2885,11 +4252,17 @@
       </data>
 
       
-          <data count="241">
+          <data count="265">
           <DateTimeStamp>12/04/2025 05:45</DateTimeStamp>
 
       
           <Level>-0.52</Level>
+
+      
+          <cLevel>-0.49</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/04/2025 10:45</utcStamp>
@@ -2897,11 +4270,17 @@
       </data>
 
       
-          <data count="242">
+          <data count="266">
           <DateTimeStamp>12/04/2025 05:30</DateTimeStamp>
 
       
           <Level>-0.69</Level>
+
+      
+          <cLevel>-0.66</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/04/2025 10:30</utcStamp>
@@ -2909,11 +4288,17 @@
       </data>
 
       
-          <data count="243">
+          <data count="267">
           <DateTimeStamp>12/04/2025 05:15</DateTimeStamp>
 
       
           <Level>-0.92</Level>
+
+      
+          <cLevel>-0.89</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/04/2025 10:15</utcStamp>
@@ -2921,11 +4306,17 @@
       </data>
 
       
-          <data count="244">
+          <data count="268">
           <DateTimeStamp>12/04/2025 05:00</DateTimeStamp>
 
       
           <Level>-1.10</Level>
+
+      
+          <cLevel>-1.07</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/04/2025 10:00</utcStamp>
@@ -2933,11 +4324,17 @@
       </data>
 
       
-          <data count="245">
+          <data count="269">
           <DateTimeStamp>12/04/2025 04:45</DateTimeStamp>
 
       
-          <Level>-1.20</Level>
+          <Level>-1.21</Level>
+
+      
+          <cLevel>-1.18</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/04/2025 09:45</utcStamp>
@@ -2945,11 +4342,17 @@
       </data>
 
       
-          <data count="246">
+          <data count="270">
           <DateTimeStamp>12/04/2025 04:30</DateTimeStamp>
 
       
           <Level>-1.32</Level>
+
+      
+          <cLevel>-1.29</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/04/2025 09:30</utcStamp>
@@ -2957,11 +4360,17 @@
       </data>
 
       
-          <data count="247">
+          <data count="271">
           <DateTimeStamp>12/04/2025 04:15</DateTimeStamp>
 
       
           <Level>-1.44</Level>
+
+      
+          <cLevel>-1.41</cLevel>
+
+      
+          <Temp>4.7</Temp>
 
       
           <utcStamp>12/04/2025 09:15</utcStamp>
@@ -2969,11 +4378,17 @@
       </data>
 
       
-          <data count="248">
+          <data count="272">
           <DateTimeStamp>12/04/2025 04:00</DateTimeStamp>
 
       
           <Level>-1.56</Level>
+
+      
+          <cLevel>-1.53</cLevel>
+
+      
+          <Temp>4.6</Temp>
 
       
           <utcStamp>12/04/2025 09:00</utcStamp>
@@ -2981,11 +4396,17 @@
       </data>
 
       
-          <data count="249">
+          <data count="273">
           <DateTimeStamp>12/04/2025 03:45</DateTimeStamp>
 
       
           <Level>-1.59</Level>
+
+      
+          <cLevel>-1.57</cLevel>
+
+      
+          <Temp>4.6</Temp>
 
       
           <utcStamp>12/04/2025 08:45</utcStamp>
@@ -2993,11 +4414,17 @@
       </data>
 
       
-          <data count="250">
+          <data count="274">
           <DateTimeStamp>12/04/2025 03:30</DateTimeStamp>
 
       
           <Level>-1.62</Level>
+
+      
+          <cLevel>-1.60</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/04/2025 08:30</utcStamp>
@@ -3005,11 +4432,17 @@
       </data>
 
       
-          <data count="251">
+          <data count="275">
           <DateTimeStamp>12/04/2025 03:15</DateTimeStamp>
 
       
           <Level>-1.59</Level>
+
+      
+          <cLevel>-1.57</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/04/2025 08:15</utcStamp>
@@ -3017,11 +4450,17 @@
       </data>
 
       
-          <data count="252">
+          <data count="276">
           <DateTimeStamp>12/04/2025 03:00</DateTimeStamp>
 
       
           <Level>-1.58</Level>
+
+      
+          <cLevel>-1.56</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/04/2025 08:00</utcStamp>
@@ -3029,11 +4468,17 @@
       </data>
 
       
-          <data count="253">
+          <data count="277">
           <DateTimeStamp>12/04/2025 02:45</DateTimeStamp>
 
       
           <Level>-1.55</Level>
+
+      
+          <cLevel>-1.53</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/04/2025 07:45</utcStamp>
@@ -3041,11 +4486,17 @@
       </data>
 
       
-          <data count="254">
+          <data count="278">
           <DateTimeStamp>12/04/2025 02:30</DateTimeStamp>
 
       
           <Level>-1.50</Level>
+
+      
+          <cLevel>-1.48</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/04/2025 07:30</utcStamp>
@@ -3053,11 +4504,17 @@
       </data>
 
       
-          <data count="255">
+          <data count="279">
           <DateTimeStamp>12/04/2025 02:15</DateTimeStamp>
 
       
           <Level>-1.40</Level>
+
+      
+          <cLevel>-1.39</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/04/2025 07:15</utcStamp>
@@ -3065,11 +4522,17 @@
       </data>
 
       
-          <data count="256">
+          <data count="280">
           <DateTimeStamp>12/04/2025 02:00</DateTimeStamp>
 
       
           <Level>-1.26</Level>
+
+      
+          <cLevel>-1.25</cLevel>
+
+      
+          <Temp>4.2</Temp>
 
       
           <utcStamp>12/04/2025 07:00</utcStamp>
@@ -3077,11 +4540,17 @@
       </data>
 
       
-          <data count="257">
+          <data count="281">
           <DateTimeStamp>12/04/2025 01:45</DateTimeStamp>
 
       
           <Level>-1.13</Level>
+
+      
+          <cLevel>-1.12</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/04/2025 06:45</utcStamp>
@@ -3089,11 +4558,17 @@
       </data>
 
       
-          <data count="258">
+          <data count="282">
           <DateTimeStamp>12/04/2025 01:30</DateTimeStamp>
 
       
           <Level>-0.96</Level>
+
+      
+          <cLevel>-0.95</cLevel>
+
+      
+          <Temp>4.7</Temp>
 
       
           <utcStamp>12/04/2025 06:30</utcStamp>
@@ -3101,11 +4576,17 @@
       </data>
 
       
-          <data count="259">
+          <data count="283">
           <DateTimeStamp>12/04/2025 01:15</DateTimeStamp>
 
       
           <Level>-0.79</Level>
+
+      
+          <cLevel>-0.78</cLevel>
+
+      
+          <Temp>5.1</Temp>
 
       
           <utcStamp>12/04/2025 06:15</utcStamp>
@@ -3113,11 +4594,17 @@
       </data>
 
       
-          <data count="260">
+          <data count="284">
           <DateTimeStamp>12/04/2025 01:00</DateTimeStamp>
 
       
           <Level>-0.60</Level>
+
+      
+          <cLevel>-0.59</cLevel>
+
+      
+          <Temp>5.3</Temp>
 
       
           <utcStamp>12/04/2025 06:00</utcStamp>
@@ -3125,11 +4612,17 @@
       </data>
 
       
-          <data count="261">
+          <data count="285">
           <DateTimeStamp>12/04/2025 00:45</DateTimeStamp>
 
       
           <Level>-0.41</Level>
+
+      
+          <cLevel>-0.40</cLevel>
+
+      
+          <Temp>5.7</Temp>
 
       
           <utcStamp>12/04/2025 05:45</utcStamp>
@@ -3137,11 +4630,17 @@
       </data>
 
       
-          <data count="262">
+          <data count="286">
           <DateTimeStamp>12/04/2025 00:30</DateTimeStamp>
 
       
           <Level>-0.20</Level>
+
+      
+          <cLevel>-0.20</cLevel>
+
+      
+          <Temp>5.9</Temp>
 
       
           <utcStamp>12/04/2025 05:30</utcStamp>
@@ -3149,11 +4648,17 @@
       </data>
 
       
-          <data count="263">
+          <data count="287">
           <DateTimeStamp>12/04/2025 00:15</DateTimeStamp>
 
       
           <Level>-0.02</Level>
+
+      
+          <cLevel>-0.02</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/04/2025 05:15</utcStamp>
@@ -3161,11 +4666,17 @@
       </data>
 
       
-          <data count="264">
+          <data count="288">
           <DateTimeStamp>12/04/2025 00:00</DateTimeStamp>
 
       
           <Level>0.15</Level>
+
+      
+          <cLevel>0.15</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/04/2025 05:00</utcStamp>
@@ -3173,11 +4684,17 @@
       </data>
 
       
-          <data count="265">
+          <data count="289">
           <DateTimeStamp>12/03/2025 23:45</DateTimeStamp>
 
       
           <Level>0.35</Level>
+
+      
+          <cLevel>0.35</cLevel>
+
+      
+          <Temp>6.4</Temp>
 
       
           <utcStamp>12/04/2025 04:45</utcStamp>
@@ -3185,11 +4702,17 @@
       </data>
 
       
-          <data count="266">
+          <data count="290">
           <DateTimeStamp>12/03/2025 23:30</DateTimeStamp>
 
       
           <Level>0.51</Level>
+
+      
+          <cLevel>0.51</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/04/2025 04:30</utcStamp>
@@ -3197,11 +4720,17 @@
       </data>
 
       
-          <data count="267">
+          <data count="291">
           <DateTimeStamp>12/03/2025 23:15</DateTimeStamp>
 
       
           <Level>0.65</Level>
+
+      
+          <cLevel>0.65</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/04/2025 04:15</utcStamp>
@@ -3209,11 +4738,17 @@
       </data>
 
       
-          <data count="268">
+          <data count="292">
           <DateTimeStamp>12/03/2025 23:00</DateTimeStamp>
 
       
           <Level>0.80</Level>
+
+      
+          <cLevel>0.80</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/04/2025 04:00</utcStamp>
@@ -3221,11 +4756,17 @@
       </data>
 
       
-          <data count="269">
+          <data count="293">
           <DateTimeStamp>12/03/2025 22:45</DateTimeStamp>
 
       
           <Level>0.92</Level>
+
+      
+          <cLevel>0.92</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/04/2025 03:45</utcStamp>
@@ -3233,11 +4774,17 @@
       </data>
 
       
-          <data count="270">
+          <data count="294">
           <DateTimeStamp>12/03/2025 22:30</DateTimeStamp>
 
       
           <Level>1.01</Level>
+
+      
+          <cLevel>1.01</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/04/2025 03:30</utcStamp>
@@ -3245,11 +4792,17 @@
       </data>
 
       
-          <data count="271">
+          <data count="295">
           <DateTimeStamp>12/03/2025 22:15</DateTimeStamp>
 
       
           <Level>1.08</Level>
+
+      
+          <cLevel>1.08</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/04/2025 03:15</utcStamp>
@@ -3257,11 +4810,17 @@
       </data>
 
       
-          <data count="272">
+          <data count="296">
           <DateTimeStamp>12/03/2025 22:00</DateTimeStamp>
 
       
           <Level>1.16</Level>
+
+      
+          <cLevel>1.16</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 03:00</utcStamp>
@@ -3269,11 +4828,17 @@
       </data>
 
       
-          <data count="273">
+          <data count="297">
           <DateTimeStamp>12/03/2025 21:45</DateTimeStamp>
 
       
           <Level>1.20</Level>
+
+      
+          <cLevel>1.19</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 02:45</utcStamp>
@@ -3281,11 +4846,17 @@
       </data>
 
       
-          <data count="274">
+          <data count="298">
           <DateTimeStamp>12/03/2025 21:30</DateTimeStamp>
 
       
           <Level>1.22</Level>
+
+      
+          <cLevel>1.21</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 02:30</utcStamp>
@@ -3293,11 +4864,17 @@
       </data>
 
       
-          <data count="275">
+          <data count="299">
           <DateTimeStamp>12/03/2025 21:15</DateTimeStamp>
 
       
           <Level>1.20</Level>
+
+      
+          <cLevel>1.19</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 02:15</utcStamp>
@@ -3305,11 +4882,17 @@
       </data>
 
       
-          <data count="276">
+          <data count="300">
           <DateTimeStamp>12/03/2025 21:00</DateTimeStamp>
 
       
           <Level>1.16</Level>
+
+      
+          <cLevel>1.15</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 02:00</utcStamp>
@@ -3317,11 +4900,17 @@
       </data>
 
       
-          <data count="277">
+          <data count="301">
           <DateTimeStamp>12/03/2025 20:45</DateTimeStamp>
 
       
           <Level>1.08</Level>
+
+      
+          <cLevel>1.07</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 01:45</utcStamp>
@@ -3329,11 +4918,17 @@
       </data>
 
       
-          <data count="278">
+          <data count="302">
           <DateTimeStamp>12/03/2025 20:30</DateTimeStamp>
 
       
           <Level>1.03</Level>
+
+      
+          <cLevel>1.02</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 01:30</utcStamp>
@@ -3341,11 +4936,17 @@
       </data>
 
       
-          <data count="279">
+          <data count="303">
           <DateTimeStamp>12/03/2025 20:15</DateTimeStamp>
 
       
           <Level>0.94</Level>
+
+      
+          <cLevel>0.93</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/04/2025 01:15</utcStamp>
@@ -3353,11 +4954,17 @@
       </data>
 
       
-          <data count="280">
+          <data count="304">
           <DateTimeStamp>12/03/2025 20:00</DateTimeStamp>
 
       
           <Level>0.83</Level>
+
+      
+          <cLevel>0.82</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 01:00</utcStamp>
@@ -3365,11 +4972,17 @@
       </data>
 
       
-          <data count="281">
+          <data count="305">
           <DateTimeStamp>12/03/2025 19:45</DateTimeStamp>
 
       
           <Level>0.68</Level>
+
+      
+          <cLevel>0.67</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 00:45</utcStamp>
@@ -3377,11 +4990,17 @@
       </data>
 
       
-          <data count="282">
+          <data count="306">
           <DateTimeStamp>12/03/2025 19:30</DateTimeStamp>
 
       
           <Level>0.54</Level>
+
+      
+          <cLevel>0.53</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 00:30</utcStamp>
@@ -3389,11 +5008,17 @@
       </data>
 
       
-          <data count="283">
+          <data count="307">
           <DateTimeStamp>12/03/2025 19:15</DateTimeStamp>
 
       
           <Level>0.37</Level>
+
+      
+          <cLevel>0.36</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 00:15</utcStamp>
@@ -3401,11 +5026,17 @@
       </data>
 
       
-          <data count="284">
+          <data count="308">
           <DateTimeStamp>12/03/2025 19:00</DateTimeStamp>
 
       
           <Level>0.18</Level>
+
+      
+          <cLevel>0.17</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/04/2025 00:00</utcStamp>
@@ -3413,11 +5044,17 @@
       </data>
 
       
-          <data count="285">
+          <data count="309">
           <DateTimeStamp>12/03/2025 18:45</DateTimeStamp>
 
       
           <Level>0.02</Level>
+
+      
+          <cLevel>0.01</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 23:45</utcStamp>
@@ -3425,11 +5062,17 @@
       </data>
 
       
-          <data count="286">
+          <data count="310">
           <DateTimeStamp>12/03/2025 18:30</DateTimeStamp>
 
       
           <Level>-0.16</Level>
+
+      
+          <cLevel>-0.17</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 23:30</utcStamp>
@@ -3437,11 +5080,17 @@
       </data>
 
       
-          <data count="287">
+          <data count="311">
           <DateTimeStamp>12/03/2025 18:15</DateTimeStamp>
 
       
           <Level>-0.33</Level>
+
+      
+          <cLevel>-0.34</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 23:15</utcStamp>
@@ -3449,11 +5098,17 @@
       </data>
 
       
-          <data count="288">
+          <data count="312">
           <DateTimeStamp>12/03/2025 18:00</DateTimeStamp>
 
       
           <Level>-0.52</Level>
+
+      
+          <cLevel>-0.53</cLevel>
+
+      
+          <Temp>6.1</Temp>
 
       
           <utcStamp>12/03/2025 23:00</utcStamp>
@@ -3461,11 +5116,17 @@
       </data>
 
       
-          <data count="289">
+          <data count="313">
           <DateTimeStamp>12/03/2025 17:45</DateTimeStamp>
 
       
           <Level>-0.68</Level>
+
+      
+          <cLevel>-0.69</cLevel>
+
+      
+          <Temp>5.7</Temp>
 
       
           <utcStamp>12/03/2025 22:45</utcStamp>
@@ -3473,11 +5134,17 @@
       </data>
 
       
-          <data count="290">
+          <data count="314">
           <DateTimeStamp>12/03/2025 17:30</DateTimeStamp>
 
       
           <Level>-0.82</Level>
+
+      
+          <cLevel>-0.83</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 22:30</utcStamp>
@@ -3485,11 +5152,17 @@
       </data>
 
       
-          <data count="291">
+          <data count="315">
           <DateTimeStamp>12/03/2025 17:15</DateTimeStamp>
 
       
           <Level>-1.02</Level>
+
+      
+          <cLevel>-1.03</cLevel>
+
+      
+          <Temp>4.0</Temp>
 
       
           <utcStamp>12/03/2025 22:15</utcStamp>
@@ -3497,11 +5170,17 @@
       </data>
 
       
-          <data count="292">
+          <data count="316">
           <DateTimeStamp>12/03/2025 17:00</DateTimeStamp>
 
       
           <Level>-1.14</Level>
+
+      
+          <cLevel>-1.15</cLevel>
+
+      
+          <Temp>4.0</Temp>
 
       
           <utcStamp>12/03/2025 22:00</utcStamp>
@@ -3509,11 +5188,17 @@
       </data>
 
       
-          <data count="293">
+          <data count="317">
           <DateTimeStamp>12/03/2025 16:45</DateTimeStamp>
 
       
           <Level>-1.28</Level>
+
+      
+          <cLevel>-1.28</cLevel>
+
+      
+          <Temp>3.8</Temp>
 
       
           <utcStamp>12/03/2025 21:45</utcStamp>
@@ -3521,11 +5206,17 @@
       </data>
 
       
-          <data count="294">
+          <data count="318">
           <DateTimeStamp>12/03/2025 16:30</DateTimeStamp>
 
       
           <Level>-1.40</Level>
+
+      
+          <cLevel>-1.40</cLevel>
+
+      
+          <Temp>4.2</Temp>
 
       
           <utcStamp>12/03/2025 21:30</utcStamp>
@@ -3533,11 +5224,17 @@
       </data>
 
       
-          <data count="295">
+          <data count="319">
           <DateTimeStamp>12/03/2025 16:15</DateTimeStamp>
 
       
           <Level>-1.49</Level>
+
+      
+          <cLevel>-1.49</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/03/2025 21:15</utcStamp>
@@ -3545,11 +5242,17 @@
       </data>
 
       
-          <data count="296">
+          <data count="320">
           <DateTimeStamp>12/03/2025 16:00</DateTimeStamp>
 
       
           <Level>-1.56</Level>
+
+      
+          <cLevel>-1.56</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/03/2025 21:00</utcStamp>
@@ -3557,11 +5260,17 @@
       </data>
 
       
-          <data count="297">
+          <data count="321">
           <DateTimeStamp>12/03/2025 15:45</DateTimeStamp>
 
       
           <Level>-1.63</Level>
+
+      
+          <cLevel>-1.63</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/03/2025 20:45</utcStamp>
@@ -3569,11 +5278,17 @@
       </data>
 
       
-          <data count="298">
+          <data count="322">
           <DateTimeStamp>12/03/2025 15:30</DateTimeStamp>
 
       
           <Level>-1.66</Level>
+
+      
+          <cLevel>-1.66</cLevel>
+
+      
+          <Temp>4.3</Temp>
 
       
           <utcStamp>12/03/2025 20:30</utcStamp>
@@ -3581,11 +5296,17 @@
       </data>
 
       
-          <data count="299">
+          <data count="323">
           <DateTimeStamp>12/03/2025 15:15</DateTimeStamp>
 
       
           <Level>-1.66</Level>
+
+      
+          <cLevel>-1.66</cLevel>
+
+      
+          <Temp>4.2</Temp>
 
       
           <utcStamp>12/03/2025 20:15</utcStamp>
@@ -3593,11 +5314,17 @@
       </data>
 
       
-          <data count="300">
+          <data count="324">
           <DateTimeStamp>12/03/2025 15:00</DateTimeStamp>
 
       
           <Level>-1.62</Level>
+
+      
+          <cLevel>-1.62</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 20:00</utcStamp>
@@ -3605,11 +5332,17 @@
       </data>
 
       
-          <data count="301">
+          <data count="325">
           <DateTimeStamp>12/03/2025 14:45</DateTimeStamp>
 
       
           <Level>-1.62</Level>
+
+      
+          <cLevel>-1.62</cLevel>
+
+      
+          <Temp>4.2</Temp>
 
       
           <utcStamp>12/03/2025 19:45</utcStamp>
@@ -3617,11 +5350,17 @@
       </data>
 
       
-          <data count="302">
+          <data count="326">
           <DateTimeStamp>12/03/2025 14:30</DateTimeStamp>
 
       
           <Level>-1.61</Level>
+
+      
+          <cLevel>-1.60</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 19:30</utcStamp>
@@ -3629,11 +5368,17 @@
       </data>
 
       
-          <data count="303">
+          <data count="327">
           <DateTimeStamp>12/03/2025 14:15</DateTimeStamp>
 
       
           <Level>-1.42</Level>
+
+      
+          <cLevel>-1.41</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 19:15</utcStamp>
@@ -3641,11 +5386,17 @@
       </data>
 
       
-          <data count="304">
+          <data count="328">
           <DateTimeStamp>12/03/2025 14:00</DateTimeStamp>
 
       
           <Level>-1.36</Level>
+
+      
+          <cLevel>-1.35</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 19:00</utcStamp>
@@ -3653,11 +5404,17 @@
       </data>
 
       
-          <data count="305">
+          <data count="329">
           <DateTimeStamp>12/03/2025 13:45</DateTimeStamp>
 
       
           <Level>-1.21</Level>
+
+      
+          <cLevel>-1.20</cLevel>
+
+      
+          <Temp>4.0</Temp>
 
       
           <utcStamp>12/03/2025 18:45</utcStamp>
@@ -3665,11 +5422,17 @@
       </data>
 
       
-          <data count="306">
+          <data count="330">
           <DateTimeStamp>12/03/2025 13:30</DateTimeStamp>
 
       
           <Level>-1.08</Level>
+
+      
+          <cLevel>-1.07</cLevel>
+
+      
+          <Temp>4.2</Temp>
 
       
           <utcStamp>12/03/2025 18:30</utcStamp>
@@ -3677,11 +5440,17 @@
       </data>
 
       
-          <data count="307">
+          <data count="331">
           <DateTimeStamp>12/03/2025 13:15</DateTimeStamp>
 
       
           <Level>-0.89</Level>
+
+      
+          <cLevel>-0.88</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/03/2025 18:15</utcStamp>
@@ -3689,11 +5458,17 @@
       </data>
 
       
-          <data count="308">
+          <data count="332">
           <DateTimeStamp>12/03/2025 13:00</DateTimeStamp>
 
       
           <Level>-0.70</Level>
+
+      
+          <cLevel>-0.69</cLevel>
+
+      
+          <Temp>4.6</Temp>
 
       
           <utcStamp>12/03/2025 18:00</utcStamp>
@@ -3701,11 +5476,17 @@
       </data>
 
       
-          <data count="309">
+          <data count="333">
           <DateTimeStamp>12/03/2025 12:45</DateTimeStamp>
 
       
           <Level>-0.52</Level>
+
+      
+          <cLevel>-0.51</cLevel>
+
+      
+          <Temp>4.5</Temp>
 
       
           <utcStamp>12/03/2025 17:45</utcStamp>
@@ -3713,11 +5494,17 @@
       </data>
 
       
-          <data count="310">
+          <data count="334">
           <DateTimeStamp>12/03/2025 12:30</DateTimeStamp>
 
       
           <Level>-0.29</Level>
+
+      
+          <cLevel>-0.27</cLevel>
+
+      
+          <Temp>4.8</Temp>
 
       
           <utcStamp>12/03/2025 17:30</utcStamp>
@@ -3725,11 +5512,17 @@
       </data>
 
       
-          <data count="311">
+          <data count="335">
           <DateTimeStamp>12/03/2025 12:15</DateTimeStamp>
 
       
           <Level>-0.08</Level>
+
+      
+          <cLevel>-0.06</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/03/2025 17:15</utcStamp>
@@ -3737,11 +5530,17 @@
       </data>
 
       
-          <data count="312">
+          <data count="336">
           <DateTimeStamp>12/03/2025 12:00</DateTimeStamp>
 
       
           <Level>0.13</Level>
+
+      
+          <cLevel>0.15</cLevel>
+
+      
+          <Temp>5.2</Temp>
 
       
           <utcStamp>12/03/2025 17:00</utcStamp>
@@ -3749,11 +5548,17 @@
       </data>
 
       
-          <data count="313">
+          <data count="337">
           <DateTimeStamp>12/03/2025 11:45</DateTimeStamp>
 
       
           <Level>0.33</Level>
+
+      
+          <cLevel>0.35</cLevel>
+
+      
+          <Temp>5.4</Temp>
 
       
           <utcStamp>12/03/2025 16:45</utcStamp>
@@ -3761,11 +5566,17 @@
       </data>
 
       
-          <data count="314">
+          <data count="338">
           <DateTimeStamp>12/03/2025 11:30</DateTimeStamp>
 
       
           <Level>0.54</Level>
+
+      
+          <cLevel>0.55</cLevel>
+
+      
+          <Temp>5.5</Temp>
 
       
           <utcStamp>12/03/2025 16:30</utcStamp>
@@ -3773,11 +5584,17 @@
       </data>
 
       
-          <data count="315">
+          <data count="339">
           <DateTimeStamp>12/03/2025 11:15</DateTimeStamp>
 
       
           <Level>0.73</Level>
+
+      
+          <cLevel>0.74</cLevel>
+
+      
+          <Temp>5.6</Temp>
 
       
           <utcStamp>12/03/2025 16:15</utcStamp>
@@ -3785,11 +5602,17 @@
       </data>
 
       
-          <data count="316">
+          <data count="340">
           <DateTimeStamp>12/03/2025 11:00</DateTimeStamp>
 
       
           <Level>0.92</Level>
+
+      
+          <cLevel>0.93</cLevel>
+
+      
+          <Temp>5.6</Temp>
 
       
           <utcStamp>12/03/2025 16:00</utcStamp>
@@ -3797,11 +5620,17 @@
       </data>
 
       
-          <data count="317">
+          <data count="341">
           <DateTimeStamp>12/03/2025 10:45</DateTimeStamp>
 
       
           <Level>1.09</Level>
+
+      
+          <cLevel>1.10</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/03/2025 15:45</utcStamp>
@@ -3809,11 +5638,17 @@
       </data>
 
       
-          <data count="318">
+          <data count="342">
           <DateTimeStamp>12/03/2025 10:30</DateTimeStamp>
 
       
           <Level>1.25</Level>
+
+      
+          <cLevel>1.26</cLevel>
+
+      
+          <Temp>6.3</Temp>
 
       
           <utcStamp>12/03/2025 15:30</utcStamp>
@@ -3821,11 +5656,17 @@
       </data>
 
       
-          <data count="319">
+          <data count="343">
           <DateTimeStamp>12/03/2025 10:15</DateTimeStamp>
 
       
           <Level>1.37</Level>
+
+      
+          <cLevel>1.39</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/03/2025 15:15</utcStamp>
@@ -3833,11 +5674,17 @@
       </data>
 
       
-          <data count="320">
+          <data count="344">
           <DateTimeStamp>12/03/2025 10:00</DateTimeStamp>
 
       
           <Level>1.49</Level>
+
+      
+          <cLevel>1.51</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 15:00</utcStamp>
@@ -3845,11 +5692,17 @@
       </data>
 
       
-          <data count="321">
+          <data count="345">
           <DateTimeStamp>12/03/2025 09:45</DateTimeStamp>
 
       
           <Level>1.57</Level>
+
+      
+          <cLevel>1.59</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/03/2025 14:45</utcStamp>
@@ -3857,11 +5710,17 @@
       </data>
 
       
-          <data count="322">
+          <data count="346">
           <DateTimeStamp>12/03/2025 09:30</DateTimeStamp>
 
       
           <Level>1.64</Level>
+
+      
+          <cLevel>1.66</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 14:30</utcStamp>
@@ -3869,11 +5728,17 @@
       </data>
 
       
-          <data count="323">
+          <data count="347">
           <DateTimeStamp>12/03/2025 09:15</DateTimeStamp>
 
       
           <Level>1.69</Level>
+
+      
+          <cLevel>1.72</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 14:15</utcStamp>
@@ -3881,11 +5746,17 @@
       </data>
 
       
-          <data count="324">
+          <data count="348">
           <DateTimeStamp>12/03/2025 09:00</DateTimeStamp>
 
       
           <Level>1.69</Level>
+
+      
+          <cLevel>1.72</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/03/2025 14:00</utcStamp>
@@ -3893,11 +5764,17 @@
       </data>
 
       
-          <data count="325">
+          <data count="349">
           <DateTimeStamp>12/03/2025 08:45</DateTimeStamp>
 
       
           <Level>1.68</Level>
+
+      
+          <cLevel>1.71</cLevel>
+
+      
+          <Temp>7.0</Temp>
 
       
           <utcStamp>12/03/2025 13:45</utcStamp>
@@ -3905,11 +5782,17 @@
       </data>
 
       
-          <data count="326">
+          <data count="350">
           <DateTimeStamp>12/03/2025 08:30</DateTimeStamp>
 
       
           <Level>1.64</Level>
+
+      
+          <cLevel>1.67</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 13:30</utcStamp>
@@ -3917,11 +5800,17 @@
       </data>
 
       
-          <data count="327">
+          <data count="351">
           <DateTimeStamp>12/03/2025 08:15</DateTimeStamp>
 
       
           <Level>1.59</Level>
+
+      
+          <cLevel>1.62</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 13:15</utcStamp>
@@ -3929,11 +5818,17 @@
       </data>
 
       
-          <data count="328">
+          <data count="352">
           <DateTimeStamp>12/03/2025 08:00</DateTimeStamp>
 
       
           <Level>1.53</Level>
+
+      
+          <cLevel>1.57</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 13:00</utcStamp>
@@ -3941,11 +5836,17 @@
       </data>
 
       
-          <data count="329">
+          <data count="353">
           <DateTimeStamp>12/03/2025 07:45</DateTimeStamp>
 
       
           <Level>1.43</Level>
+
+      
+          <cLevel>1.47</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 12:45</utcStamp>
@@ -3953,11 +5854,17 @@
       </data>
 
       
-          <data count="330">
+          <data count="354">
           <DateTimeStamp>12/03/2025 07:30</DateTimeStamp>
 
       
           <Level>1.33</Level>
+
+      
+          <cLevel>1.37</cLevel>
+
+      
+          <Temp>6.9</Temp>
 
       
           <utcStamp>12/03/2025 12:30</utcStamp>
@@ -3965,11 +5872,17 @@
       </data>
 
       
-          <data count="331">
+          <data count="355">
           <DateTimeStamp>12/03/2025 07:15</DateTimeStamp>
 
       
           <Level>1.20</Level>
+
+      
+          <cLevel>1.24</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/03/2025 12:15</utcStamp>
@@ -3977,11 +5890,17 @@
       </data>
 
       
-          <data count="332">
+          <data count="356">
           <DateTimeStamp>12/03/2025 07:00</DateTimeStamp>
 
       
           <Level>1.05</Level>
+
+      
+          <cLevel>1.10</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/03/2025 12:00</utcStamp>
@@ -3989,11 +5908,17 @@
       </data>
 
       
-          <data count="333">
+          <data count="357">
           <DateTimeStamp>12/03/2025 06:45</DateTimeStamp>
 
       
           <Level>0.89</Level>
+
+      
+          <cLevel>0.94</cLevel>
+
+      
+          <Temp>6.8</Temp>
 
       
           <utcStamp>12/03/2025 11:45</utcStamp>
@@ -4001,11 +5926,17 @@
       </data>
 
       
-          <data count="334">
+          <data count="358">
           <DateTimeStamp>12/03/2025 06:30</DateTimeStamp>
 
       
           <Level>0.72</Level>
+
+      
+          <cLevel>0.77</cLevel>
+
+      
+          <Temp>6.7</Temp>
 
       
           <utcStamp>12/03/2025 11:30</utcStamp>
@@ -4013,11 +5944,17 @@
       </data>
 
       
-          <data count="335">
+          <data count="359">
           <DateTimeStamp>12/03/2025 06:15</DateTimeStamp>
 
       
           <Level>0.53</Level>
+
+      
+          <cLevel>0.59</cLevel>
+
+      
+          <Temp>6.6</Temp>
 
       
           <utcStamp>12/03/2025 11:15</utcStamp>
@@ -4025,11 +5962,17 @@
       </data>
 
       
-          <data count="336">
+          <data count="360">
           <DateTimeStamp>12/03/2025 06:00</DateTimeStamp>
 
       
           <Level>0.31</Level>
+
+      
+          <cLevel>0.37</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/03/2025 11:00</utcStamp>
@@ -4037,11 +5980,17 @@
       </data>
 
       
-          <data count="337">
+          <data count="361">
           <DateTimeStamp>12/03/2025 05:45</DateTimeStamp>
 
       
           <Level>0.14</Level>
+
+      
+          <cLevel>0.21</cLevel>
+
+      
+          <Temp>6.5</Temp>
 
       
           <utcStamp>12/03/2025 10:45</utcStamp>
@@ -4049,11 +5998,17 @@
       </data>
 
       
-          <data count="338">
+          <data count="362">
           <DateTimeStamp>12/03/2025 05:30</DateTimeStamp>
 
       
           <Level>0.01</Level>
+
+      
+          <cLevel>0.08</cLevel>
+
+      
+          <Temp>6.2</Temp>
 
       
           <utcStamp>12/03/2025 10:30</utcStamp>
@@ -4061,11 +6016,17 @@
       </data>
 
       
-          <data count="339">
+          <data count="363">
           <DateTimeStamp>12/03/2025 05:15</DateTimeStamp>
 
       
           <Level>-0.21</Level>
+
+      
+          <cLevel>-0.14</cLevel>
+
+      
+          <Temp>6.0</Temp>
 
       
           <utcStamp>12/03/2025 10:15</utcStamp>
@@ -4073,11 +6034,17 @@
       </data>
 
       
-          <data count="340">
+          <data count="364">
           <DateTimeStamp>12/03/2025 05:00</DateTimeStamp>
 
       
           <Level>-0.40</Level>
+
+      
+          <cLevel>-0.32</cLevel>
+
+      
+          <Temp>4.4</Temp>
 
       
           <utcStamp>12/03/2025 10:00</utcStamp>
@@ -4085,11 +6052,17 @@
       </data>
 
       
-          <data count="341">
+          <data count="365">
           <DateTimeStamp>12/03/2025 04:45</DateTimeStamp>
 
       
           <Level>-0.56</Level>
+
+      
+          <cLevel>-0.48</cLevel>
+
+      
+          <Temp>4.6</Temp>
 
       
           <utcStamp>12/03/2025 09:45</utcStamp>
@@ -4097,11 +6070,17 @@
       </data>
 
       
-          <data count="342">
+          <data count="366">
           <DateTimeStamp>12/03/2025 04:30</DateTimeStamp>
 
       
           <Level>-0.72</Level>
+
+      
+          <cLevel>-0.64</cLevel>
+
+      
+          <Temp>3.3</Temp>
 
       
           <utcStamp>12/03/2025 09:30</utcStamp>
@@ -4109,11 +6088,17 @@
       </data>
 
       
-          <data count="343">
+          <data count="367">
           <DateTimeStamp>12/03/2025 04:15</DateTimeStamp>
 
       
           <Level>-0.88</Level>
+
+      
+          <cLevel>-0.79</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/03/2025 09:15</utcStamp>
@@ -4121,11 +6106,17 @@
       </data>
 
       
-          <data count="344">
+          <data count="368">
           <DateTimeStamp>12/03/2025 04:00</DateTimeStamp>
 
       
           <Level>-1.02</Level>
+
+      
+          <cLevel>-0.93</cLevel>
+
+      
+          <Temp>2.9</Temp>
 
       
           <utcStamp>12/03/2025 09:00</utcStamp>
@@ -4133,11 +6124,17 @@
       </data>
 
       
-          <data count="345">
+          <data count="369">
           <DateTimeStamp>12/03/2025 03:45</DateTimeStamp>
 
       
           <Level>-1.12</Level>
+
+      
+          <cLevel>-1.03</cLevel>
+
+      
+          <Temp>2.5</Temp>
 
       
           <utcStamp>12/03/2025 08:45</utcStamp>
@@ -4145,11 +6142,17 @@
       </data>
 
       
-          <data count="346">
+          <data count="370">
           <DateTimeStamp>12/03/2025 03:30</DateTimeStamp>
 
       
           <Level>-1.21</Level>
+
+      
+          <cLevel>-1.12</cLevel>
+
+      
+          <Temp>2.5</Temp>
 
       
           <utcStamp>12/03/2025 08:30</utcStamp>
@@ -4157,11 +6160,17 @@
       </data>
 
       
-          <data count="347">
+          <data count="371">
           <DateTimeStamp>12/03/2025 03:15</DateTimeStamp>
 
       
           <Level>-1.28</Level>
+
+      
+          <cLevel>-1.18</cLevel>
+
+      
+          <Temp>2.7</Temp>
 
       
           <utcStamp>12/03/2025 08:15</utcStamp>
@@ -4169,11 +6178,17 @@
       </data>
 
       
-          <data count="348">
+          <data count="372">
           <DateTimeStamp>12/03/2025 03:00</DateTimeStamp>
 
       
-          <Level>-1.37</Level>
+          <Level>-1.38</Level>
+
+      
+          <cLevel>-1.28</cLevel>
+
+      
+          <Temp>3.1</Temp>
 
       
           <utcStamp>12/03/2025 08:00</utcStamp>
@@ -4181,11 +6196,17 @@
       </data>
 
       
-          <data count="349">
+          <data count="373">
           <DateTimeStamp>12/03/2025 02:45</DateTimeStamp>
 
       
           <Level>-1.39</Level>
+
+      
+          <cLevel>-1.29</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/03/2025 07:45</utcStamp>
@@ -4193,11 +6214,17 @@
       </data>
 
       
-          <data count="350">
+          <data count="374">
           <DateTimeStamp>12/03/2025 02:30</DateTimeStamp>
 
       
           <Level>-1.39</Level>
+
+      
+          <cLevel>-1.29</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/03/2025 07:30</utcStamp>
@@ -4205,11 +6232,17 @@
       </data>
 
       
-          <data count="351">
+          <data count="375">
           <DateTimeStamp>12/03/2025 02:15</DateTimeStamp>
 
       
           <Level>-1.39</Level>
+
+      
+          <cLevel>-1.29</cLevel>
+
+      
+          <Temp>3.1</Temp>
 
       
           <utcStamp>12/03/2025 07:15</utcStamp>
@@ -4217,11 +6250,17 @@
       </data>
 
       
-          <data count="352">
+          <data count="376">
           <DateTimeStamp>12/03/2025 02:00</DateTimeStamp>
 
       
           <Level>-1.34</Level>
+
+      
+          <cLevel>-1.23</cLevel>
+
+      
+          <Temp>3.3</Temp>
 
       
           <utcStamp>12/03/2025 07:00</utcStamp>
@@ -4229,11 +6268,17 @@
       </data>
 
       
-          <data count="353">
+          <data count="377">
           <DateTimeStamp>12/03/2025 01:45</DateTimeStamp>
 
       
           <Level>-1.29</Level>
+
+      
+          <cLevel>-1.18</cLevel>
+
+      
+          <Temp>3.2</Temp>
 
       
           <utcStamp>12/03/2025 06:45</utcStamp>
@@ -4241,11 +6286,17 @@
       </data>
 
       
-          <data count="354">
+          <data count="378">
           <DateTimeStamp>12/03/2025 01:30</DateTimeStamp>
 
       
           <Level>-1.20</Level>
+
+      
+          <cLevel>-1.09</cLevel>
+
+      
+          <Temp>3.7</Temp>
 
       
           <utcStamp>12/03/2025 06:30</utcStamp>
@@ -4253,11 +6304,17 @@
       </data>
 
       
-          <data count="355">
+          <data count="379">
           <DateTimeStamp>12/03/2025 01:15</DateTimeStamp>
 
       
           <Level>-1.12</Level>
+
+      
+          <cLevel>-1.01</cLevel>
+
+      
+          <Temp>3.4</Temp>
 
       
           <utcStamp>12/03/2025 06:15</utcStamp>
@@ -4265,11 +6322,17 @@
       </data>
 
       
-          <data count="356">
+          <data count="380">
           <DateTimeStamp>12/03/2025 01:00</DateTimeStamp>
 
       
           <Level>-1.00</Level>
+
+      
+          <cLevel>-0.89</cLevel>
+
+      
+          <Temp>3.7</Temp>
 
       
           <utcStamp>12/03/2025 06:00</utcStamp>
@@ -4277,11 +6340,17 @@
       </data>
 
       
-          <data count="357">
+          <data count="381">
           <DateTimeStamp>12/03/2025 00:45</DateTimeStamp>
 
       
           <Level>-0.84</Level>
+
+      
+          <cLevel>-0.72</cLevel>
+
+      
+          <Temp>3.8</Temp>
 
       
           <utcStamp>12/03/2025 05:45</utcStamp>
@@ -4289,11 +6358,17 @@
       </data>
 
       
-          <data count="358">
+          <data count="382">
           <DateTimeStamp>12/03/2025 00:30</DateTimeStamp>
 
       
           <Level>-0.68</Level>
+
+      
+          <cLevel>-0.56</cLevel>
+
+      
+          <Temp>4.1</Temp>
 
       
           <utcStamp>12/03/2025 05:30</utcStamp>
@@ -4301,11 +6376,17 @@
       </data>
 
       
-          <data count="359">
+          <data count="383">
           <DateTimeStamp>12/03/2025 00:15</DateTimeStamp>
 
       
           <Level>-0.50</Level>
+
+      
+          <cLevel>-0.38</cLevel>
+
+      
+          <Temp>4.7</Temp>
 
       
           <utcStamp>12/03/2025 05:15</utcStamp>
@@ -4313,11 +6394,17 @@
       </data>
 
       
-          <data count="360">
+          <data count="384">
           <DateTimeStamp>12/03/2025 00:00</DateTimeStamp>
 
       
           <Level>-0.31</Level>
+
+      
+          <cLevel>-0.19</cLevel>
+
+      
+          <Temp>5.0</Temp>
 
       
           <utcStamp>12/03/2025 05:00</utcStamp>

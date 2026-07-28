@@ -1,31 +1,30 @@
 #! /usr/bin/env python3
 # To run, this must be set in the env:
 # DJANGO_SETTINGS_MODULE = project.settings.[dev|prod]
-# To run outside docker, cd to wnttapix.
-
-import sys
-
-# In the container, this is run from /wnttapi
-sys.path.append(".")
-
-# Django must be set up before importing models.
-from django import setup
-
-setup()
 
 import argparse
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
 
+# In the container, this is run from /wnttapi
+sys.path.append(".")
+
+from django import setup
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 
-import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
-from app.models import Water, Wind, get_station
+from app.datasource.tides import Tide, Tides
 from app.timeline import Timeline
+
+# Django must be set up before importing models or anything that imports them.
+setup()
+
+import app.datasource.cdmo as cdmo
+from app.models import Water, Wind, get_station
 
 logger = logging.getLogger(__name__)
 
@@ -89,44 +88,64 @@ def refresh(
         timeline = build_latest_timeline(last_dt_str, station)
 
     if type == "T":
-        cdmo_data = cdmo.get_water_data(station, timeline, useDb=False)
+        tides = cdmo.get_water_data(station, timeline, useDb=False)
+
+        if tides is not None and tides.length > 0:
+            if args.debug or args.verbose:
+                diff_water(tides, db_station_code)
+            if not args.debug:
+                upsert_water(tides, db_station_code)
+        else:
+            logger.info(f"No new {name} data to refresh yet")
+
     else:
         cdmo_data = cdmo.get_wind_data(station, timeline, useDb=False)
 
-    if cdmo_data is not None and len(cdmo_data) > 0:
-        if args.debug or args.verbose:
-            diff(cdmo_data, type, db_station_code)
-        if not args.debug:
-            upsert(cdmo_data, type, db_station_code)
-    else:
-        logger.info(f"No new {name} data to refresh yet")
+        if cdmo_data is not None and len(cdmo_data) > 0:
+            if args.debug or args.verbose:
+                diff_wind(cdmo_data, db_station_code)
+            if not args.debug:
+                upsert_wind(cdmo_data, db_station_code)
+        else:
+            logger.info(f"No new {name} data to refresh yet")
 
 
-def diff(cdmo_data: dict, type: str, db_station_code: str):
-    name = "water" if type == "T" else "wind"
+def diff_water(tides: Tides, db_station_code: str):
+    name = "water"
+    print(f"Diffing {tides.length} {name} records")
+    diff_cnt = 0
+    for dt, tide in tides.data.items():
+        qdt = dt.astimezone(tz.utc).isoformat()
+        try:
+            record = Water.objects.get(station=db_station_code, time=(qdt))
+            diff_cnt += diff_water_record(record, tide)
+        except ObjectDoesNotExist:
+            print(f"{dt} not in database")
+
+    print(f"Found {diff_cnt} diffs out of {tides.length}")
+
+
+def diff_wind(cdmo_data: dict, db_station_code: str):
+    name = "wind"
     print(f"Diffing {len(cdmo_data)} {name} records")
     diff_cnt = 0
     for dt, value in cdmo_data.items():
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
-            if type == "T":
-                record = Water.objects.get(station=db_station_code, time=(qdt))
-                diff_cnt += diff_water_record(record, value)
-            else:
-                record = Wind.objects.get(station=db_station_code, time=(qdt))
-                diff_cnt += diff_wind_record(record, value)
+            record = Wind.objects.get(station=db_station_code, time=(qdt))
+            diff_cnt += diff_wind_record(record, value)
         except ObjectDoesNotExist:
             print(f"{dt} not in database")
 
     print(f"Found {diff_cnt} diffs out of {len(cdmo_data)}")
 
 
-def diff_water_record(db_rec, new_rec):
-    # We only diff water level, as temp is not important in this app
-    if db_rec.level != new_rec.get(cdmo.Param.Tide.label):
-        delta = round(new_rec["level"] - db_rec.level, 1)
+def diff_water_record(db_rec, new_rec: Tide) -> int:
+
+    # We only diff Corrected water level, as temp is not important in this app
+    if not new_rec.nav_feet_equals(db_rec.clevel_nf):
         print(
-            f"{db_rec.time} old/new level: {db_rec.level}/{new_rec['level']}, delta: {delta}",
+            f"{db_rec.time} old/new clevel_nf: {db_rec.clevel_nf}/{new_rec.corrected_nav_feet}",
         )
         return 1
     return 0
@@ -148,29 +167,37 @@ def diff_wind_record(db_rec, new_rec):
     return 0
 
 
-def upsert(cdmo_data: dict, type: str, db_station_code: str):
-    name = "water" if type == "T" else "wind"
-    for dt, value in cdmo_data.items():
-        if type == "T":
-            Water.objects.update_or_create(
-                station=db_station_code,
-                time=dt.astimezone(tz.utc).isoformat(),
-                defaults={
-                    "level": value.get(cdmo.Param.Tide.label, None),
-                    "temp": value.get(cdmo.Param.Temperature.label, None),
-                },
-            )
+def upsert_water(tides: Tides, db_station_code: str):
+    create_cnt = update_cnt = 0
+    for dt, tide in tides.data.items():
+        _, created = Water.objects.update_or_create(
+            station=db_station_code,
+            time=dt.astimezone(tz.utc).isoformat(),
+            defaults={
+                "temp": tide.temp_f,
+                "level": tide.mllw_feet,
+                "clevel_nf": tide.corrected_nav_feet,
+            },
+        )
+        if created:
+            create_cnt += 1
         else:
-            Wind.objects.update_or_create(
-                station=db_station_code,
-                time=dt.astimezone(tz.utc).isoformat(),
-                defaults={
-                    "speed": value[cdmo.Param.WindSpeed.label],
-                    "gust": value[cdmo.Param.WindGust.label],
-                    "dir_deg": value[cdmo.Param.WindDir.label],
-                },
-            )
-    logger.info(f"Wrote {len(cdmo_data)} {name} records to db")
+            update_cnt += 1
+    logger.info(f"Created {create_cnt}, updated {update_cnt} water records in db")
+
+
+def upsert_wind(cdmo_data: dict, db_station_code: str):
+    for dt, value in cdmo_data.items():
+        Wind.objects.update_or_create(
+            station=db_station_code,
+            time=dt.astimezone(tz.utc).isoformat(),
+            defaults={
+                "speed": value[cdmo.Param.WindSpeed.label],
+                "gust": value[cdmo.Param.WindGust.label],
+                "dir_deg": value[cdmo.Param.WindDir.label],
+            },
+        )
+    logger.info(f"Wrote {len(cdmo_data)} wind records to db")
 
 
 def build_latest_timeline(last_dt_str, station) -> Timeline:
@@ -196,14 +223,14 @@ def build_parser():
         "-d",
         "--debug",
         action="store_true",
-        help="Debug mode, don't use with verbose",
+        help="Debug mode, diff only no upserts",
         required=False,
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
-        help="Verbose mode, don't use with debug",
+        help="Verbose mode, diff and upserts",
         required=False,
     )
     parser.add_argument(

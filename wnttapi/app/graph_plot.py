@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from app import util
 from app.datasource import cdmo
+from app.datasource.tides import Tides
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
 
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_observed_tide_plot(
-    timeline: GraphTimeline, water_dict: dict, hilo_event_dict: dict
+    timeline: GraphTimeline, obs_tides: Tides, hilo_event_dict: dict
 ) -> tuple[list, list]:
     """Build lists for observed tide and high or low tide labels that match the timeline length. If there's
     no observed tide data for the timeline, returns None for both lists.
@@ -36,15 +37,16 @@ def build_observed_tide_plot(
             return "(HIGH)" if hiOrLow.hilo == Hilo.HIGH else "(LOW)"
         return None
 
+    # TODO: Use corrected_mllw_feet instead
     def callback(dt: datetime):
         tide = None
         label = getObservedHiloLabel(dt)
         # If this is a Hilo graph, we don't show tides that are not a high or low observed tide.
         if isinstance(timeline, HiloTimeline):
             if label is not None:
-                return water_dict[dt][cdmo.Param.Tide.label], label
-        elif dt in water_dict:
-            tide = water_dict[dt][cdmo.Param.Tide.label]
+                return obs_tides.getTide(dt).corrected_mllw_feet, label
+        elif dt in obs_tides.data:
+            tide = obs_tides.getTide(dt).corrected_mllw_feet
         return tide, label
 
     tides, labels = timeline.build_plots(callback)

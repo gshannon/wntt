@@ -67,8 +67,8 @@ export default function Conditions({ data, error }) {
                 Next High Tide<sup>*</sup>
             </div>
             <div className='cond-data'>
-                {data.next_tide_str ?
-                    `${data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData} ${data.next_tide_str} ft `
+                {data.next_high_tide ?
+                    `${data.next_tide_dt ? `${format_tm(data.next_tide_dt)}` : noData} ${data.next_high_tide} ft `
                 :   noData}
             </div>
             <div className='cond-time'>{now}</div>
@@ -102,7 +102,7 @@ export default function Conditions({ data, error }) {
             {/* water temp */}
             <div className='cond-label'>Water Temp</div>
             <div className='cond-data'>{data.temp ? `${data.temp}º F` : noData}</div>
-            <div className='cond-time'>{data.temp_time ? format_dt(data.temp_time) : noData}</div>
+            <div className='cond-time'>{data.tide_time ? format_dt(data.tide_time) : noData}</div>
 
             {/* current moon phase */}
             <div className='cond-label'>Moon Phase</div>

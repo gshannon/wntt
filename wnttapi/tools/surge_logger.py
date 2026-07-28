@@ -20,6 +20,7 @@ import app.tzutil as tz
 import app.util as util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo
+from app.datasource.tides import Tides
 from app.models import Surge, SurgeBias
 from app.station import Station, get_station_with_noaa_id
 from app.timeline import Timeline
@@ -113,26 +114,26 @@ def main():
         timeline = Timeline(start_dt_stz, end_dt_stz)
 
         # 5-day bias
-        water_dict = cdmo.get_water_data(swmp_station, timeline, useDb=True)
-        logger.debug(f"got {len(water_dict)} tide obs for bias calculation")
-        calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 120)
+        tides = cdmo.get_water_data(swmp_station, timeline, useDb=True)
+        logger.debug(f"got {tides.length} tide obs for bias calculation")
+        calc_bias1 = calculate_bias(swmp_station, timeline, file_dict, tides, 120)
 
         # Since we now have 5 days of observations loaded, save them to the database as needed.
-        save_observations(swmp_station, water_dict)
+        save_observations(swmp_station, tides)
 
         # 6-hour bias
         start_dt_stz = end_dt_stz - timedelta(
             hours=12
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias2 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 6)
+        calc_bias2 = calculate_bias(swmp_station, timeline, file_dict, tides, 6)
 
         # 24-hour bias
         start_dt_stz = end_dt_stz - timedelta(
             hours=36
         )  # extra hours to allow for missing observations
         timeline = Timeline(start_dt_stz, end_dt_stz)
-        calc_bias3 = calculate_bias(swmp_station, timeline, file_dict, water_dict, 24)
+        calc_bias3 = calculate_bias(swmp_station, timeline, file_dict, tides, 24)
 
         logger.info(
             f"Calculated bias for {swmp_station.id} on {args.date} cycle {args.cycle}: bias1={calc_bias1} bias2={calc_bias2} bias3={calc_bias3}"
@@ -200,7 +201,7 @@ def calculate_bias(
     swmp_station: Station,
     timeline: Timeline,
     file_dict: dict,
-    water_dict: dict,
+    tides: Tides,
     minimum_deltas: int,
 ) -> float:
     """We want to look at a certain number of recent tide observations and calculate an average
@@ -223,8 +224,12 @@ def calculate_bias(
     # Walk through the file contents. This will be in order of insert, which in this case is in tide time order.
     for dt_utc, rec in file_dict.items():
         # Note we don't have to convert the db's UTC into station zone, Python is smart.
-        if timeline.contains(dt_utc) and dt_utc in water_dict and dt_utc in tide_preds:
-            delta = water_dict[dt_utc][cdmo.Param.Tide.label] - (
+        if (
+            timeline.contains(dt_utc)
+            and tides.contains(dt_utc)
+            and dt_utc in tide_preds
+        ):
+            delta = tides.getTide(dt_utc).corrected_mllw_feet - (
                 tide_preds[dt_utc] + rec["surge"]
             )
             deltas.append(round(delta, 2))
@@ -249,7 +254,7 @@ def calculate_bias(
 
 
 # Update the Surge table obs column with any observations we have loaded.
-def save_observations(swmp_station: Station, water_dict: dict):
+def save_observations(swmp_station: Station, tides: Tides):
 
     # read all Surge records for tide times in past 24 hours from db where OBS is null
     end_dt = datetime.now(tz=swmp_station.time_zone)
@@ -268,8 +273,8 @@ def save_observations(swmp_station: Station, water_dict: dict):
     count = 0
     for rec in qs:
         # Note we don't have to convert the db's UTC into station zone, Python is smart.
-        if rec.tide_time in water_dict:
-            rec.obs = water_dict[rec.tide_time][cdmo.Param.Tide.label]
+        if tides.contains(rec.tide_time):
+            rec.obs = tides.getTide(rec.tide_time).corrected_mllw_feet
             rec.save()
             count += 1
     logger.info(f"updated obs value for {count} surge records")

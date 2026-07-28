@@ -1,4 +1,5 @@
 from django.db import models
+
 from app import util
 
 
@@ -96,7 +97,8 @@ class Water(models.Model):
         max_length=25, null=False
     )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
     temp = models.FloatField(null=True)
-    level = models.FloatField(null=False)  # This is MLLW tide level, not NAVD88
+    level = models.FloatField(null=False)  # This is uncorrected MLLW feet -- DEPRECATED
+    clevel_nf = models.FloatField(null=True)  #  Corrected NAVD88 feet
 
     class Meta:
         db_table = "water"
