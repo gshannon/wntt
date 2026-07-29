@@ -171,23 +171,6 @@ class GraphTimeline(Timeline):
             now,
         )
 
-    def add_syzygy_time(self, dt: datetime):
-        """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
-        This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
-        in the timeline.
-
-        Args:
-            dt (datetime): time to add
-
-        Raises:
-            InternalError: if the time is out of bounds.
-        """
-        if not self.contains(dt):
-            raise util.InternalError(f"{dt} is outside of timeline boundaries")
-        if dt not in self.requested_times:
-            self.requested_times.append(dt)
-            self.requested_times.sort()
-
     def build_plots(self, callback):
         """Build one or more lists of data values corresponding to this timeline.
 
@@ -274,20 +257,6 @@ class HiloTimeline(GraphTimeline):
             )
         )
         self._hilo_timeline.sort()
-
-    def add_syzygy_time(self, dt: datetime):
-        """Add a datetime to the timeline, if it's in bounds, and sort the times so it's still in order.
-        This is useful when adding a time for a phase of moon display.  Does nothing if the time is already
-        in the timeline.
-
-        Args:
-            dt (datetime): time to add
-        """
-        if self._hilo_timeline is None:
-            raise util.InternalError("register_hilo_times must be called first")
-        if dt not in self._hilo_timeline:
-            self._hilo_timeline.append(dt)
-            self._hilo_timeline.sort()
 
     def build_plots(self, callback) -> list:
         """Same as parent class function, but uses the registered high/low times, plus start and end times."""

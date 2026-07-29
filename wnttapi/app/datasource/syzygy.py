@@ -68,7 +68,7 @@ def get_current_moon_phases(
     }
 
 
-def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> dict:
+def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> list:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
     sorted by datetime. They don't have to align with any specific times, they just need
     to be contained in its bounds.
@@ -77,21 +77,21 @@ def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) 
         timeline: we are looking for syzygy events within this timeline
 
     Returns:
-        { <datetime>: <code>] }
+        [{ 'code': <code>, 'real_dt': <datetime>] }, [...] ]
     """
 
-    data = {}
+    data = []
     code, dt = get_moon_phase(timeline, data_dir)
     if dt:
-        data[dt] = code
+        data.append({"code": code, "real_dt": dt})
 
     dt = get_perigee(timeline, data_dir)
     if dt:
-        data[dt] = PERIGEE
+        data.append({"code": PERIGEE, "real_dt": dt})
 
     dt = get_perihelion(timeline, data_dir)
     if dt:
-        data[dt] = PERIHELION
+        data.append({"code": PERIHELION, "real_dt": dt})
 
     return data
 

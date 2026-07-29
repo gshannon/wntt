@@ -50,11 +50,20 @@ class TestSyzygy(TestCase):
         timeline = GraphTimeline(start_date, end_date, zone)
 
         data = syzygy.get_syzygy_data(timeline, data_dir=csv_location)
-        expected = {
-            datetime(2026, 1, 3, 5, 3, tzinfo=zone): syzygy.FULL_MOON,
-            datetime(2026, 1, 1, 16, 45, tzinfo=zone): syzygy.PERIGEE,
-            datetime(2026, 1, 3, 12, 16, tzinfo=zone): syzygy.PERIHELION,
-        }
+        expected = [
+            {
+                "code": syzygy.FULL_MOON,
+                "real_dt": datetime(2026, 1, 3, 5, 3, tzinfo=zone),
+            },
+            {
+                "code": syzygy.PERIGEE,
+                "real_dt": datetime(2026, 1, 1, 16, 45, tzinfo=zone),
+            },
+            {
+                "code": syzygy.PERIHELION,
+                "real_dt": datetime(2026, 1, 3, 12, 16, tzinfo=zone),
+            },
+        ]
         self.assertEqual(data, expected)
 
     def test_perigee_over_year(self):

@@ -1,4 +1,5 @@
 import { getSyzygyUrl } from './Syzygy'
+import { minutesBetween } from './utils'
 
 // These constants drive optimal placement settings in the EChart.  Adjust as needed.
 const LegendWidthPix = 220 // width of our legend
@@ -9,8 +10,6 @@ const PrevFactor = 0.083 // 1/12 of screen width, size of the Prev/Next columns
 export const Dimension = Object.freeze({
     DateTime: 'dt',
     RecordTide: 'rec',
-    Syzygy: 'syzygy',
-    SyzygyUrl: 'syurl',
     CustomElevation: 'custom-elevation',
     HighestAnnualPredicted: 'high-annual',
     // These must match the data property name returned from the back end.
@@ -50,34 +49,55 @@ export const LegendId = Object.freeze({
     XPastStormSurgeCheckBias2: 18,
 })
 
-export const buildLocalDataSet = (
-    blob,
-    syzygyData,
-    station,
-    highestAnnualPrediction,
-    customElevationMllw,
-) => {
+export const buildSyzygyData = (syzygyData, blob, gridWidth) => {
+    const copy = [...syzygyData]
+    const startDate = new Date(blob[0][0])
+    const endDate = new Date(blob[blob.length - 1][0])
+    const timelineMinutes = minutesBetween(startDate, endDate)
+
+    // Calculate pixels to move symbol from its assigned time to its real location
+    const getOffset = (dt, realDt) => {
+        const actualOffet = (minutesBetween(startDate, new Date(dt)) / timelineMinutes) * gridWidth
+        const expectedOffset =
+            (minutesBetween(startDate, new Date(realDt)) / timelineMinutes) * gridWidth
+        return expectedOffset - actualOffet
+    }
+
+    // Each element in the blob array is a column of data, always starting with datetime.
+    // We'll assign the N syzygy events to the first N column[s] of data, and shift their positions
+    // with symbolOffset. This frees us from mapping forcing the timelines to contain these event times, a
+    // practice that causes problems with the connectNulls flags on series.
+    return blob.map((rec) => {
+        const dt = rec[0]
+        if (copy.length > 0) {
+            const event = copy.shift()
+            return {
+                value: [dt, 1],
+                symbol: getSyzygyUrl(event.code),
+                symbolSize: 25,
+                symbolOffset: [getOffset(dt, event.real_dt), 0],
+                code: event.code,
+                realDt: event.real_dt,
+            }
+        } else {
+            return { value: [dt, 0] }
+        }
+    })
+}
+
+export const buildLocalDataSet = (blob, station, highestAnnualPrediction, customElevationMllw) => {
     // Build a second dataset for data that's better built here than the backend.
     const localDims = [
         { name: Dimension.DateTime, type: 'time' },
         { name: Dimension.RecordTide, type: 'number' },
         { name: Dimension.HighestAnnualPredicted, type: 'number' },
         ...(customElevationMllw ? [Dimension.CustomElevation] : []),
-        ...(syzygyData ? [Dimension.Syzygy, Dimension.SyzygyUrl] : []),
     ]
     const localBlob = blob.map((rec) => {
         const dt = rec[0] // the 1st element of every column is the datetime string
         const col = [dt, station.recordTideMllw(), highestAnnualPrediction]
         if (customElevationMllw) {
             col.push(customElevationMllw)
-        }
-        if (syzygyData) {
-            if (dt in syzygyData) {
-                const code = syzygyData[dt]
-                col.push(...[1, getSyzygyUrl(code)])
-            } else {
-                col.push(...[null, null])
-            }
         }
         return col
     })
