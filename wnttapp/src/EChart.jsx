@@ -9,6 +9,7 @@ import {
     Dimension,
     LegendId,
     buildLocalDataSet,
+    buildSyzygyData,
     getResponsivePlacement,
     buildGridLayout,
 } from './ChartBuilder'
@@ -106,11 +107,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
         )
     }
 
+    const placement = getResponsivePlacement(!isNarrow) // determine key pixel locations
+
     // Build a dataset to use in addition to the supplied data, with the expected structure.  This is data
     // that it's more practical (or necessary in the case of customElevation) to build here in the frontend.
     const localDataset = buildLocalDataSet(
         data.blob,
-        data.syzygy,
         ctx.station,
         data.highest_annual_prediction,
         customElevationMllw,
@@ -132,7 +134,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             if (param.componentType === 'series') {
                 if (param.seriesName === 'syzygy') {
                     // Put the selected code (e.g. FM) in state to trigger the modal popup.
-                    setSyzygyHelpCode(data.syzygy[param.data[0]])
+                    setSyzygyHelpCode(param.data.code)
                 }
             } else if (param.componentType === 'legend') {
                 var legendId = 0
@@ -166,28 +168,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
             type: 'scatter',
             xAxisIndex: 0,
             yAxisIndex: 0,
-            datasetIndex: 1,
+            data: buildSyzygyData(data.syzygy, data.blob, placement.gridWidthPix),
             name: 'syzygy', // for this one, name is only needed for click handling
-            encode: { x: Dimension.DateTime, y: Dimension.Syzygy },
-            symbol: (values, p) => {
-                // values is the array containing all values for x in the dataset. Elements with
-                // the value 1 indicate a symbol, and the image url will be present also
-                if (values[p.encode.y[0]]) {
-                    const urlIndex = p.dimensionNames.indexOf(Dimension.SyzygyUrl)
-                    return values[urlIndex]
-                } else {
-                    return null
-                }
-            },
-            symbolSize: 25, // Controls the size of the moon/sun graphics, in pixels
             tooltip: {
                 trigger: 'item',
                 // For these events we pull the data from the syzygy object using the x datetime value.
                 formatter: (param) => {
-                    const dt = param.data[0] // timeline datetime
-                    const code = data.syzygy[dt]
-                    const dtStr = format(new Date(dt), 'ccc, MMM d, yyyy h:mm aaa')
-                    return `${SyzygyConfig[code].name}: ${dtStr}<br>Click for more.`
+                    const dtStr = format(new Date(param.data.realDt), 'ccc, MMM d, yyyy h:mm aaa')
+                    return `${SyzygyConfig[param.data.code].name}: ${dtStr}<br>Click for more.`
                 },
             },
         })
@@ -264,7 +252,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.HistTides },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
-            connectNulls: true, // avoid gaps for syzygy events, which rarely align with other data
+            connectNulls: false,
             symbolSize: tideMarkerSize,
             color: ObservedTideColor,
             label: {
@@ -286,7 +274,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.AstroTides },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
-            connectNulls: true,
+            connectNulls: false,
             symbolSize: tideMarkerSize,
             color: PredictedTideColor,
             label: {
@@ -317,7 +305,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.RecordedStormSurge },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
-            connectNulls: true,
+            connectNulls: false,
             color: RecordedStormSurgeColor,
         })
         legend.push({ name: RecordedStormSurgeTitle, legendId: LegendId.RecordedStormSurge })
@@ -333,7 +321,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormTide },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
-            connectNulls: true,
+            connectNulls: false,
             color: ProjectedStormTideColor,
             label: {
                 show: hiloMode,
@@ -355,7 +343,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.ProjectedStormSurge },
             smooth: true,
             symbol: hiloMode ? 'circle' : 'none',
-            connectNulls: true,
+            connectNulls: false,
             color: ProjectedStormSurgeColor,
         })
         legend.push({ name: ProjectedStormSurgeTitle, legendId: LegendId.ProjectedStormSurge })
@@ -454,7 +442,6 @@ export default function Chart({ error, loading, hiloMode, data }) {
         return buffer ? format(dt, 'ccc, MMM d, yyyy h:mm aaa') + buffer : ''
     }
 
-    const placement = getResponsivePlacement(!isNarrow) // determine key pixel locations
     // this helps the 2 or 3 grids to line up on the x axis
     const minDate = data.blob.length > 0 ? data.blob[0][0] : null // first datetime in the blob
     const stationDaily = getOrInitializeDaily()

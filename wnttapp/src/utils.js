@@ -176,6 +176,12 @@ export const daysBetween = (date1, date2) => {
     return Math.round(Math.abs((d2 - d1) / oneDay)) // round to account for DST change
 }
 
+export const minutesBetween = (date1, date2) => {
+    const diffInMs = Math.abs(date2.getTime() - date1.getTime())
+    // Convert milliseconds to minutes
+    return diffInMs / 60000
+}
+
 // Pass a Date or string. Returns same, within min/max settings.
 // TODO: This should be moved to Station class
 export const limitDate = (date, station) => {

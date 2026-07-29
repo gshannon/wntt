@@ -43,7 +43,7 @@ def get_graph_data(
         timeline = GraphTimeline(start_date, end_date, station.time_zone)
 
     # Get moon/sun tide data
-    syzygy_dict = syzygy.get_syzygy_data(timeline)
+    syzygy_list = syzygy.get_syzygy_data(timeline)
     # Phase 1: Retrieve all data from external sources. All these dicts are dense -- they
     # only have keys for actual data, not None, and are keyed by the datetime from the timeline.
 
@@ -78,12 +78,6 @@ def get_graph_data(
         station.noaa_station_id,
         max(obs_tides.data) if obs_tides.length > 0 else None,
     )
-
-    # Before we start building plots, add all syzygy events to the timeline
-    # so they can be shown at their precise times.
-    if len(syzygy_dict) > 0:
-        for dt in syzygy_dict:
-            timeline.add_syzygy_time(dt)
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
@@ -167,7 +161,7 @@ def get_graph_data(
         "blob": blob,
         # The rest is auxiliary data. Note we have to convert datetimes that are used as dict keys, or else the
         # json serialization will fail. Keys have to be scalars, not objects.
-        "syzygy": {dt.isoformat(): val for (dt, val) in syzygy_dict.items()},
+        "syzygy": syzygy_list,
         "subtitle": build_subtitle(start_date, end_date),
         "highest_annual_prediction": stn.get_astro_high_tide_mllw(
             station, start_date.year
