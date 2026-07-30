@@ -123,7 +123,8 @@ export default function Chart({ error, loading, hiloMode, data }) {
         `Record Tide ${formatDate(new Date(ctx.station.recordTideDate))}` +
         (isNarrow ? '' : ` (${ctx.station.recordTideMllw()}')`)
     const highestAnnualTitle =
-        'Highest Annual Predicted' + (isNarrow ? '' : ` (${data.highest_annual_prediction}')`)
+        `${new Date(data.blob[0][0]).getFullYear()} Highest Predicted` +
+        (isNarrow ? '' : ` (${data.highest_annual_prediction}')`)
     const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw}')`)
     const showingWind =
         data.dimensions.includes(Dimension.WindSpeeds) ||

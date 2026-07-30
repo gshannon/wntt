@@ -1,9 +1,10 @@
 import './css/GetDates.css'
+import 'react-datepicker/dist/react-datepicker.css'
 import { useContext } from 'react'
 import HousePic from './images/housepic2.png?inline'
 import Button from 'react-bootstrap/Button'
 import { Form, FormLabel, FormText } from 'react-bootstrap'
-import { DatePicker } from 'reactstrap-date-picker'
+import { DatePicker } from 'react-datepicker'
 import {
     addDays,
     daysBetween,
@@ -48,14 +49,14 @@ export default function GetDates({
         resetDateControls() // Let parent reset the date controls, and the appContext.
     }
 
-    const handleStartChange = (formatted) => {
+    const handleStartChange = (dt) => {
         // When they change start date, we automatically change end date also, to match the previously
         // selected number of days shown, if possible.
         // Datepicker won't call this if date is invalid or outside min/max, but it calls it if
         // they empty it out or click Today when date is already today, so we will ignore those.
-        if (formatted && formatted !== stringify(startCtl.start)) {
+        if (dt && dt !== startCtl.start) {
             const daysShown = daysBetween(startCtl.start, endCtl.end) + 1
-            const newStart = new Date(formatted)
+            const newStart = new Date(dt)
             const newEnd = limitDate(addDays(newStart, daysShown - 1), ctx.station)
             setStartCtl({ ...startCtl, start: newStart })
             setEndCtl({
@@ -67,12 +68,12 @@ export default function GetDates({
         }
     }
 
-    const handleEndChange = (formatted) => {
+    const handleEndChange = (dt) => {
         // When they change the end date, it has no effect on the start date. Since the date control
         // won't allow a date out of range, we can skip range checking here.
         // Note we must do nothing if the date did not change, as that would cause no re-rendering.
-        if (formatted && formatted !== stringify(endCtl.end)) {
-            const newEnd = new Date(formatted)
+        if (dt && dt !== endCtl.end) {
+            const newEnd = new Date(dt)
             setEndCtl({ ...endCtl, end: newEnd })
         }
     }
@@ -82,31 +83,36 @@ export default function GetDates({
             <div className='get-dates-range'>
                 <div>
                     <FormLabel>Start Date: </FormLabel>
-                    <DatePicker
-                        id='start-datepicker'
-                        showClearButton={false}
-                        showTodayButton={true}
-                        dateFormat='MM/DD/YYYY'
-                        value={stringify(startCtl.start)}
-                        minDate={stringify(startCtl.min)}
-                        maxDate={stringify(startCtl.max)}
-                        onChange={(_, f) => handleStartChange(f)}
-                    />
+                    <div>
+                        <DatePicker
+                            showIcon
+                            toggleCalendarOnIconClick
+                            id='start-datepicker'
+                            selected={startCtl.start}
+                            minDate={startCtl.min}
+                            maxDate={startCtl.max}
+                            onChange={handleStartChange}
+                        />
+                    </div>
                     <FormText muted>
                         Range: {rangeMin} - {rangeMax}
                     </FormText>
                 </div>
                 <div>
                     <FormLabel>End Date: </FormLabel>
-                    <DatePicker
-                        id='end-datepicker'
-                        showClearButton={false}
-                        dateFormat='MM/DD/YYYY'
-                        value={stringify(endCtl.end)}
-                        minDate={stringify(endCtl.min)}
-                        maxDate={stringify(endCtl.max)}
-                        onChange={(_, f) => handleEndChange(f)}
-                    />
+                    {/* We set the time to noon on min/max dates to compensate for DatePicker bug. */}
+                    <div>
+                        <DatePicker
+                            id='end-datepicker'
+                            showIcon
+                            toggleCalendarOnIconClick
+                            allowSameDay
+                            selected={endCtl.end}
+                            minDate={endCtl.min}
+                            maxDate={endCtl.max}
+                            onChange={handleEndChange}
+                        />
+                    </div>
                     <FormText muted>Maximum {getMaxNumDays()} day range</FormText>
                 </div>
             </div>
