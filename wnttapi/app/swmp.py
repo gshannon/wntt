@@ -77,7 +77,6 @@ def extract_data(
         data["wind_time"] = latest_wind_dt
 
     latest_tide_rec = None
-    # TODO: Use corrected_mllw_feet instead?
     items = sorted(obs_tides.data.items())
     if len(items) >= 1:
         (latest_tide_dt, latest_tide_rec) = items[-1]

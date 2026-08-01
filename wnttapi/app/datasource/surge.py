@@ -84,7 +84,6 @@ def get_recorded_storm_surge(astro_dict: dict, obs_tides: Tides) -> dict:
     """
     data = {}  # {dt: surge_value}
     for dt, tide in obs_tides.data.items():
-        # TODO: Use corrected_mllw_feet instead?
         if dt in astro_dict:
             data[dt] = round(tide.corrected_mllw_feet - astro_dict[dt], 2)
     return data

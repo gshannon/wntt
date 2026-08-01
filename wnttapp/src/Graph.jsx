@@ -27,21 +27,15 @@ export default function Graph() {
 
     // TODO: Not handling race condition where ctx has no station.  Cannot put
     // a short circuit here because of React errors.
-
-    /* 
-    Start & end dates are strings in format mm/dd/yyyy with 0-padding.  See utils.stringify.
-    Javascript new Date() returns a date/time in the local time zone, so users should get the 
-    right date whatever timezone they're in. 
-    */
-    const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
+    const [defaultStartDate, defaultEndDate] = getDefaultRange()
 
     /////////////////
     // start date, end date, hilo mode, screen size
     const stationDaily = storage.getDailyStorage(ctx.station?.id || null)
 
     // these strings drive what's in the screen start/end date text box controls.
-    const [startDateStr, setStartDateStr] = useState(stationDaily.start ?? defaultStartStr)
-    const [endDateStr, setEndDateStr] = useState(stationDaily.end ?? defaultEndStr)
+    const [startDate, setStartDate] = useState(new Date(stationDaily.start ?? defaultStartDate))
+    const [endDate, setEndDate] = useState(new Date(stationDaily.end ?? defaultEndDate))
     const [isHiloMode, setIsHiloMode] = useState(stationDaily.hiloMode ?? isSmallScreen())
     const [showMap, setShowMap] = useState(false)
     // The user can refresh the graph using the same date range. but it seems React has no native support
@@ -50,40 +44,45 @@ export default function Graph() {
 
     const [startCtl, setStartCtl] = useState({
         min: ctx.station.minGraphDate(),
-        start: new Date(startDateStr),
+        start: startDate,
         max: maxGraphDate(),
     })
 
     const [endCtl, setEndCtl] = useState({
-        min: new Date(startDateStr),
-        end: new Date(endDateStr),
-        max: addDays(new Date(startDateStr), getMaxNumDays() - 1),
+        min: startDate,
+        end: endDate,
+        max: addDays(startDate, getMaxNumDays() - 1),
     })
 
     const onDateChange = useEffectEvent((start, end, hiloMode) => {
         storage.setDailyStorage(ctx.station.id, {
             ...stationDaily,
-            start: start,
-            end: end,
+            start: stringify(start),
+            end: stringify(end),
             hiloMode: hiloMode,
             screenBase: getScreenBase(),
         })
     })
 
     useEffect(() => {
-        onDateChange(startDateStr, endDateStr, isHiloMode)
-    }, [startDateStr, endDateStr, isHiloMode])
+        onDateChange(startDate, endDate, isHiloMode)
+    }, [startDate, endDate, isHiloMode])
 
     const queryClient = useQueryClient()
-    const daysShown = differenceInDays(new Date(endDateStr), new Date(startDateStr)) + 1
+    const daysShown = differenceInDays(endDate, startDate) + 1
 
-    const setDateRangeStrings = (newStartDateStr, newEndDateStr, forceRefresh) => {
-        setStartDateStr(newStartDateStr)
+    const setDateRange = (newStartDate, newEndDate, forceRefresh) => {
+        setStartDate(newStartDate)
 
-        setEndDateStr(newEndDateStr)
+        setEndDate(newEndDate)
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
         if (forceRefresh) {
-            const key = buildCacheKey(ctx.station.id, newStartDateStr, newEndDateStr, isHiloMode)
+            const key = buildCacheKey(
+                ctx.station.id,
+                stringify(newStartDate),
+                stringify(newEndDate),
+                isHiloMode,
+            )
             queryClient.removeQueries({ queryKey: key, exact: true })
         }
         forceRerender() // If the dates have changed, this isn't necessary, but it's harmless.
@@ -105,10 +104,8 @@ export default function Graph() {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
             directionFactor > 0 ?
-                ctx.station.limitGraphDate(addDays(new Date(endDateStr), 1))
-            :   ctx.station.limitGraphDate(
-                    addDays(new Date(startDateStr), daysToShow * directionFactor),
-                )
+                ctx.station.limitGraphDate(addDays(endDate, 1))
+            :   ctx.station.limitGraphDate(addDays(startDate, daysToShow * directionFactor))
         const newEnd = ctx.station.limitGraphDate(addDays(newStart, daysToShow - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
@@ -116,23 +113,23 @@ export default function Graph() {
             end: newEnd,
             max: ctx.station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
         })
-        setDateRangeStrings(stringify(newStart), stringify(newEnd), false)
+        setDateRange(newStart, newEnd, false)
     }
 
     // Reset the date controls to use the default range, as if entering app for the first time with no storage values.
     const resetDateControls = () => {
-        const { defaultStartStr, defaultEndStr } = getDefaultDateStrings()
+        const [defaultStartDate, defaultEndDate] = getDefaultRange()
         setStartCtl({
             min: ctx.station.minGraphDate(),
-            start: new Date(defaultStartStr),
+            start: defaultStartDate,
             max: maxGraphDate(),
         })
         setEndCtl({
-            min: new Date(defaultStartStr),
-            end: new Date(defaultEndStr),
-            max: addDays(new Date(defaultStartStr), getMaxNumDays() - 1),
+            min: defaultStartDate,
+            end: defaultEndDate,
+            max: addDays(defaultStartDate, getMaxNumDays() - 1),
         })
-        setDateRangeStrings(defaultStartStr, defaultEndStr, false)
+        setDateRange(defaultStartDate, defaultEndDate, false)
         // Also reset the plot visibility states. Remove the legendOnly object, force a re-init.
         const daily = storage.getDailyStorage(ctx.station.id)
         delete daily.legendOnly
@@ -149,53 +146,11 @@ export default function Graph() {
         setJumpDates(1)
     }
 
-    // There is one scenario when we don't want to use the dates in React's state: when the user has
-    // left the browser tab open with the graph showing from 1 or more days prior. In this case, we
-    // want to ignore state and reset to the default date range. We detect this by checking dateStorage,
-    // which is only empty on the very first run, after local storage has been cleared, or when the
-    // current date does not match the local storage date. (See utils.getDailyLocalStorage.)
-    if (
-        stationDaily.start == undefined &&
-        (startDateStr, endDateStr) != (defaultStartStr, defaultEndStr)
-    ) {
-        resetDateControls()
-    }
-
-    // The user changing their screen width doesn't trigger a rerender, only a DOM redraw, which doesn't
-    // execute our code. So if we detect that here, we need to set some state that normally is set
-    // only on initial render, or when user does something to trigger it.
-    if (stationDaily.screenBase != getScreenBase()) {
-        if (isSmallScreen() && !isHiloMode) {
-            // This is normally forced only on initial render.
-            setIsHiloMode(true)
-        }
-        // We probably need to adjust the date range. We'll adjust the max, and also the selected
-        // end date if it is now too late.
-        const newMax = ctx.station.limitGraphDate(
-            addDays(new Date(startDateStr), getMaxNumDays() - 1),
-        )
-        const newEnd = new Date(Math.min(newMax, endCtl.end))
-        if (newEnd != endCtl.end) {
-            // If we're shortening the selected range, update state and trigger refetch.
-            setEndCtl({
-                min: new Date(startDateStr),
-                end: newEnd,
-                max: newMax,
-            })
-            setEndDateStr(stringify(newEnd))
-        }
-        // This avoids an endless loop on rerender.
-        storage.setDailyStorage(ctx.station.id, {
-            ...stationDaily,
-            screenBase: getScreenBase(),
-        })
-    }
-
     const {
         isPending: loading,
         data,
         error,
-    } = useGraphData(ctx.station, startDateStr, endDateStr, isHiloMode, ctx.special)
+    } = useGraphData(ctx.station, stringify(startDate), stringify(endDate), isHiloMode, ctx.special)
 
     const numDaysText = daysShown > 1 ? `${daysShown} days` : 'day'
 
@@ -206,7 +161,7 @@ export default function Graph() {
                 setStartCtl={setStartCtl}
                 endCtl={endCtl}
                 setEndCtl={setEndCtl}
-                setDateRangeStrings={setDateRangeStrings}
+                setDateRange={setDateRange}
                 isHiloMode={isHiloMode}
                 onMapRequest={onMapRequest}
                 onMapClose={onMapClose}
@@ -274,11 +229,8 @@ const JumpDates = (props) => {
     )
 }
 
-const getDefaultDateStrings = () => {
+const getDefaultRange = () => {
     const today = new Date()
     const defaultDays = window.innerWidth >= MediumBase ? 4 : 1
-    return {
-        defaultStartStr: stringify(today),
-        defaultEndStr: stringify(addDays(today, defaultDays - 1)),
-    }
+    return [today, addDays(today, defaultDays - 1)]
 }

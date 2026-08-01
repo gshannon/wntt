@@ -37,7 +37,6 @@ def build_observed_tide_plot(
             return "(HIGH)" if hiOrLow.hilo == Hilo.HIGH else "(LOW)"
         return None
 
-    # TODO: Use corrected_mllw_feet instead
     def callback(dt: datetime):
         tide = None
         label = getObservedHiloLabel(dt)
