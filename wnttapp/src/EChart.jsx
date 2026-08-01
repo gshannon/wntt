@@ -1,6 +1,6 @@
 import { useContext, useState, useRef } from 'react'
 import { AppContext } from './AppContext'
-import { degreesToDir, formatDate, isSmallScreen, toEchartDegrees } from './utils'
+import { degreesToDir, isSmallScreen, toEchartDegrees } from './utils'
 import * as storage from './storage'
 import ReactECharts from 'echarts-for-react'
 import { format } from 'date-fns'
@@ -120,7 +120,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
 
     // We only include the values in parens when in non-narrow screen. In narrow mode, title is shown in tooltip and values are redundant.
     const recordTideTitle =
-        `Record Tide ${formatDate(new Date(ctx.station.recordTideDate))}` +
+        `Record Tide ${format(new Date(ctx.station.recordTideDate), 'MMM d, yyyy')}` +
         (isNarrow ? '' : ` (${ctx.station.recordTideMllw()}')`)
     const highestAnnualTitle =
         `${new Date(data.blob[0][0]).getFullYear()} Highest Predicted` +

@@ -5,15 +5,8 @@ import HousePic from './images/housepic2.png?inline'
 import Button from 'react-bootstrap/Button'
 import { Form, FormLabel, FormText } from 'react-bootstrap'
 import { DatePicker } from 'react-datepicker'
-import {
-    addDays,
-    daysBetween,
-    isSmallScreen,
-    limitDate,
-    stringify,
-    getMaxNumDays,
-    maxGraphDate,
-} from './utils'
+import { addDays, differenceInDays } from 'date-fns'
+import { isSmallScreen, stringify, getMaxNumDays, maxGraphDate } from './utils'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
 
@@ -55,15 +48,15 @@ export default function GetDates({
         // Datepicker won't call this if date is invalid or outside min/max, but it calls it if
         // they empty it out or click Today when date is already today, so we will ignore those.
         if (dt && dt !== startCtl.start) {
-            const daysShown = daysBetween(startCtl.start, endCtl.end) + 1
+            const daysShown = differenceInDays(endCtl.end, startCtl.start) + 1
             const newStart = new Date(dt)
-            const newEnd = limitDate(addDays(newStart, daysShown - 1), ctx.station)
+            const newEnd = ctx.station.limitGraphDate(addDays(newStart, daysShown - 1))
             setStartCtl({ ...startCtl, start: newStart })
             setEndCtl({
                 min: newStart,
                 // Set the end date to honor the numDays from previous settings, limited by overall max.
                 end: newEnd,
-                max: limitDate(addDays(newStart, getMaxNumDays() - 1), ctx.station),
+                max: ctx.station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
             })
         }
     }

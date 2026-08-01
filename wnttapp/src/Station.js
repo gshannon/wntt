@@ -1,5 +1,6 @@
-import { defaultMinGraphDate, roundTo } from './utils'
+import { defaultMinGraphDate, maxGraphDate, roundTo } from './utils'
 import { DefaultMapZoom } from './mapUtils'
+import { min, max } from 'date-fns'
 
 export default class Station {
     static fromJson = (stationId, json) => {
@@ -108,5 +109,12 @@ export default class Station {
             return new Date(Math.max(new Date(this.minDate), defaultMinGraphDate()))
         }
         return defaultMinGraphDate()
+    }
+
+    // If the date is outside the min/max graph range for this station, return the closest limit.
+    // Otherwise return the same date.
+    limitGraphDate = (date) => {
+        const bounded_low = max([date, this.minGraphDate()])
+        return min([bounded_low, maxGraphDate()])
     }
 }

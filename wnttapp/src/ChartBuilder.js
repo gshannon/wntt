@@ -1,5 +1,5 @@
 import { getSyzygyUrl } from './Syzygy'
-import { minutesBetween } from './utils'
+import { differenceInMinutes } from 'date-fns'
 
 // These constants drive optimal placement settings in the EChart.  Adjust as needed.
 const LegendWidthPix = 220 // width of our legend
@@ -53,13 +53,15 @@ export const buildSyzygyData = (syzygyData, blob, gridWidth) => {
     const copy = [...syzygyData]
     const startDate = new Date(blob[0][0])
     const endDate = new Date(blob[blob.length - 1][0])
-    const timelineMinutes = minutesBetween(startDate, endDate)
+    const timelineMinutes = differenceInMinutes(endDate, startDate)
 
     // Calculate pixels to move symbol from its assigned time to its real location
     const getOffset = (dt, realDt) => {
-        const actualOffet = (minutesBetween(startDate, new Date(dt)) / timelineMinutes) * gridWidth
+        const actualOffet =
+            (Math.abs(differenceInMinutes(new Date(dt), startDate)) / timelineMinutes) * gridWidth
         const expectedOffset =
-            (minutesBetween(startDate, new Date(realDt)) / timelineMinutes) * gridWidth
+            (Math.abs(differenceInMinutes(new Date(realDt), startDate)) / timelineMinutes) *
+            gridWidth
         return expectedOffset - actualOffet
     }
 
