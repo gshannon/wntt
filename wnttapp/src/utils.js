@@ -1,3 +1,5 @@
+import { format } from 'date-fns'
+
 export const WELLS_STATION_ID = 'welinwq'
 export const EpqsUrl = 'https://epqs.nationalmap.gov/v1/json'
 export const GeocodeUrl = 'https://geocode.maps.co'
@@ -12,32 +14,6 @@ export const getSurgeStationUrl = (noaaStationId) => {
 }
 
 export const HttpNotAcceptableCode = 406 // version out of date
-
-// prettier-ignore
-export const Months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',  'Dec']
-
-// Format a Date object for display. Output: "Jan 3, 2026 04:08 PM"
-export const formatDatetime = (dt) => {
-    if (!dt) {
-        return null
-    }
-    const month = Months[dt.getMonth()]
-    const hours = dt.getHours() == 12 ? 12 : (dt.getHours() % 12).toString()
-    const minutes = dt.getMinutes().toString().padStart(2, '0')
-    const ampm = dt.getHours() >= 12 ? 'PM' : 'AM'
-    const formatted = `${month} ${dt.getDate()}, ${dt.getFullYear()} ${hours}:${minutes} ${ampm}`
-    return formatted
-}
-
-// Format a Date object for display. Output: "Jan 3, 2026"
-export const formatDate = (dt) => {
-    if (!dt) {
-        return null
-    }
-    const month = Months[dt.getMonth()]
-    const formatted = `${month} ${dt.getDate()}, ${dt.getFullYear()}`
-    return formatted
-}
 
 // CSS Pixel (Logical Pixel) width of Bootstrap's responsive width breakpoints.  Note this is different
 // from Device Pixels (Physical) Pixels, which are usually 2 or 3 times as bigger. See DPR (Device Pixel Ratio).
@@ -126,8 +102,7 @@ export const getScreenBase = () => {
 
 // We compute the min/max dates based on current year, rather than hardcoding them. We must
 // compute them every time they are requested, in case the year changes while the app is running.
-// Note that the graph API has the same limits, so these should be kept in sync.
-
+// The graph API has the same limits, so these should be kept in sync.
 export const defaultMinGraphDate = () => {
     return new Date(`1/1/${new Date().getFullYear() - 2}`)
 }
@@ -150,54 +125,12 @@ export const roundTo = (value, digits) => Number(value.toFixed(digits))
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.
 export const stringify = (date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${month}/${day}/${year}`
+    return format(date, 'MM/dd/yyyy')
 }
 
 // Build the cache key to use for a given date range.
 export function buildCacheKey(stationId, startDateStr, endDateStr, hiloMode) {
     return ['graph', stationId, `${startDateStr}:${endDateStr}`, hiloMode ? 'hilo' : 'all']
-}
-
-// Give a Date or a string.  Days may be negative. Returns Date.
-export const addDays = (date, days) => {
-    const copy = new Date(date)
-    copy.setDate(copy.getDate() + days)
-    return copy
-}
-
-// Pass dates as Dates or string in any order.
-export const daysBetween = (date1, date2) => {
-    const d1 = new Date(date1)
-    const d2 = new Date(date2)
-    const oneDay = 24 * 60 * 60 * 1000 // millis in a normal day
-    return Math.round(Math.abs((d2 - d1) / oneDay)) // round to account for DST change
-}
-
-export const minutesBetween = (date1, date2) => {
-    const diffInMs = Math.abs(date2.getTime() - date1.getTime())
-    // Convert milliseconds to minutes
-    return diffInMs / 60000
-}
-
-// Pass a Date or string. Returns same, within min/max settings.
-// TODO: This should be moved to Station class
-export const limitDate = (date, station) => {
-    const d1 = new Date(date)
-    const d2 = new Date(Math.max(d1, station.minGraphDate()))
-    return new Date(Math.min(d2, maxGraphDate()))
-}
-
-// Compute the default date range for the graph. Returns mm/dd/yyyy strings.
-export const getDefaultDateStrings = () => {
-    const today = new Date()
-    const defaultDays = window.innerWidth >= MediumBase ? 4 : 1
-    return {
-        defaultStartStr: stringify(today),
-        defaultEndStr: stringify(addDays(today, defaultDays - 1)),
-    }
 }
 
 // Calculate a reasonable tick interval for wind graphs so it's

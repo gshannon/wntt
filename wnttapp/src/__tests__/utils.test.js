@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { maxGraphDate, addDays, limitDate, stringify } from '../utils'
+import { maxGraphDate, stringify } from '../utils'
+import { addDays } from 'date-fns'
 import {
     setDailyLocalStorage,
     setLocalStorage,
@@ -8,22 +9,22 @@ import {
 } from '../localStorage'
 
 describe('utils', () => {
-    describe('limitDate', () => {
+    describe('limitGraphDate', () => {
         it('should return the same date if within min/max settings', () => {
             const date = addDays(minGraphDate(), 30)
-            const result = limitDate(date)
+            const result = limitGraphDate(date)
             expect(result).toEqual(date)
         })
 
         it('should return the min date if the input date is before the min date', () => {
             const date = addDays(minGraphDate(), -30)
-            const result = limitDate(date)
+            const result = limitGraphDate(date)
             expect(result).toEqual(minGraphDate())
         })
 
         it('should return the max date if the input date is after the max date', () => {
             const date = addDays(maxGraphDate(), 1)
-            const result = limitDate(date)
+            const result = limitGraphDate(date)
             expect(result).toEqual(maxGraphDate())
         })
     })

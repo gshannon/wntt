@@ -6,15 +6,13 @@ import GetDates from './GetDates'
 import Chart from './EChart'
 import Overlay from './Overlay'
 import useGraphData from './useGraphData'
+import { addDays, differenceInDays } from 'date-fns'
 import {
-    addDays,
     buildCacheKey,
-    getDefaultDateStrings,
+    MediumBase,
     getScreenBase,
     stringify,
-    daysBetween,
     isSmallScreen,
-    limitDate,
     getMaxNumDays,
     maxGraphDate,
 } from './utils'
@@ -77,7 +75,7 @@ export default function Graph() {
     }, [startDateStr, endDateStr, isHiloMode])
 
     const queryClient = useQueryClient()
-    const daysShown = daysBetween(startDateStr, endDateStr) + 1
+    const daysShown = differenceInDays(new Date(endDateStr), new Date(startDateStr)) + 1
 
     const setDateRangeStrings = (newStartDateStr, newEndDateStr, forceRefresh) => {
         setStartDateStr(newStartDateStr)
@@ -107,14 +105,16 @@ export default function Graph() {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
             directionFactor > 0 ?
-                limitDate(addDays(endDateStr, 1), ctx.station)
-            :   limitDate(addDays(startDateStr, daysToShow * directionFactor), ctx.station)
-        const newEnd = limitDate(addDays(newStart, daysToShow - 1), ctx.station)
+                ctx.station.limitGraphDate(addDays(new Date(endDateStr), 1))
+            :   ctx.station.limitGraphDate(
+                    addDays(new Date(startDateStr), daysToShow * directionFactor),
+                )
+        const newEnd = ctx.station.limitGraphDate(addDays(newStart, daysToShow - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
             min: newStart,
             end: newEnd,
-            max: limitDate(addDays(newStart, getMaxNumDays() - 1), ctx.station),
+            max: ctx.station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
         })
         setDateRangeStrings(stringify(newStart), stringify(newEnd), false)
     }
@@ -171,7 +171,9 @@ export default function Graph() {
         }
         // We probably need to adjust the date range. We'll adjust the max, and also the selected
         // end date if it is now too late.
-        const newMax = limitDate(addDays(startDateStr, getMaxNumDays() - 1), ctx.station)
+        const newMax = ctx.station.limitGraphDate(
+            addDays(new Date(startDateStr), getMaxNumDays() - 1),
+        )
         const newEnd = new Date(Math.min(newMax, endCtl.end))
         if (newEnd != endCtl.end) {
             // If we're shortening the selected range, update state and trigger refetch.
@@ -270,4 +272,13 @@ const JumpDates = (props) => {
                 }></Overlay>
         </Col>
     )
+}
+
+const getDefaultDateStrings = () => {
+    const today = new Date()
+    const defaultDays = window.innerWidth >= MediumBase ? 4 : 1
+    return {
+        defaultStartStr: stringify(today),
+        defaultEndStr: stringify(addDays(today, defaultDays - 1)),
+    }
 }

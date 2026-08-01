@@ -1,7 +1,8 @@
 import './css/Conditions.css'
 import { Spinner } from 'react-bootstrap'
 import { Link } from './Links'
-import { Months, degreesToDir, roundTo } from './utils'
+import { degreesToDir, roundTo } from './utils'
+import { format } from 'date-fns'
 import { SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
@@ -13,10 +14,7 @@ export default function Conditions({ data, error }) {
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here.
     const format_dt = (dts) => {
-        const dt = new Date(dts)
-        const re = /:\d\d /
-        const tm = dt.toLocaleTimeString('en-US').replace(re, ' ')
-        return `${Months[dt.getMonth()]} ${dt.getDate()} ${tm}`
+        return format(dts, 'MMM d h:mm a')
     }
 
     // Same as format_dt but only time portion
