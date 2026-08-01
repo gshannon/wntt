@@ -6,7 +6,7 @@ import Button from 'react-bootstrap/Button'
 import { Form, FormLabel, FormText } from 'react-bootstrap'
 import { DatePicker } from 'react-datepicker'
 import { addDays, differenceInDays } from 'date-fns'
-import { isSmallScreen, stringify, getMaxNumDays, maxGraphDate } from './utils'
+import { isSmallScreen, getMaxNumDays, maxGraphDate } from './utils'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
 
@@ -17,7 +17,7 @@ export default function GetDates({
     setStartCtl,
     endCtl,
     setEndCtl,
-    setDateRangeStrings,
+    setDateRange,
     isHiloMode,
     toggleHiloMode,
     resetDateControls,
@@ -35,7 +35,7 @@ export default function GetDates({
 
     const handleRefresh = () => {
         // This will force a re-render even if the dates are the same as before
-        setDateRangeStrings(stringify(startCtl.start), stringify(endCtl.end), true)
+        setDateRange(startCtl.start, endCtl.end, true)
     }
 
     const handleReset = () => {
