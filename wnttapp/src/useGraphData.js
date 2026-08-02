@@ -4,13 +4,13 @@ import * as Sentry from '@sentry/react'
 import { buildCacheKey, HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
 
-export default function useGraphData(station, startDateStr, endDatestr, hiloMode, special) {
+export default function useGraphData(station, startDateStr, endDateStr, hiloMode, special) {
     const mainStore = storage.getMainStorage()
     const permStore = storage.getPermanentStorage(station.id)
     // The main graph data api call.
     return useQuery({
         retry: false,
-        queryKey: buildCacheKey(station.id, startDateStr, endDatestr, hiloMode),
+        queryKey: buildCacheKey(station.id, startDateStr, endDateStr, hiloMode),
         queryFn: async ({ signal }) => {
             return await axios
                 .post(import.meta.env.VITE_API_GRAPH_URL, {
@@ -18,7 +18,7 @@ export default function useGraphData(station, startDateStr, endDatestr, hiloMode
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                     start: startDateStr,
-                    end: endDatestr,
+                    end: endDateStr,
                     hilo: hiloMode,
                     // These fields are for logging
                     uid: mainStore.uid ?? 'NONE',
@@ -38,7 +38,11 @@ export default function useGraphData(station, startDateStr, endDatestr, hiloMode
                             error.response?.status,
                             error.response?.data?.detail,
                         )
-                        Sentry.captureException(error)
+                        Sentry.captureException(error, {
+                            tags: { operation: import.meta.env.VITE_API_GRAPH_URL },
+                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            extra: { start: startDateStr, end: endDateStr },
+                        })
                     }
                     throw error
                 })

@@ -30,7 +30,10 @@ export default function useLatestData(station) {
                             error.response?.status,
                             error.response?.data?.detail,
                         )
-                        Sentry.captureException(error)
+                        Sentry.captureException(error, {
+                            tags: { operation: import.meta.env.VITE_API_LATEST_URL },
+                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                        })
                     }
                     throw error
                 })
