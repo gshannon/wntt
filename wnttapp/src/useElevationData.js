@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import { HttpNotAcceptableCode, EpqsUrl, roundTo } from './utils'
+import * as storage from './storage'
 
 export default function useElevationData(pendingMarkerLocation) {
+    const mainStore = storage.getMainStorage()
     // We want the key to be different so it doesn't use cached data from previous query.
     const subKey =
         pendingMarkerLocation ? `${pendingMarkerLocation.lat},${pendingMarkerLocation.lng}` : 'x'
@@ -33,8 +35,10 @@ export default function useElevationData(pendingMarkerLocation) {
                             error.response?.status,
                             error.response?.data?.detail,
                         )
-                        // This endpoint is not part of our backend, so we'll log exceptions here.
-                        Sentry.captureException(error)
+                        Sentry.captureException(error, {
+                            tags: { operation: error.request.responseURL },
+                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                        })
                     }
                     throw error
                 })

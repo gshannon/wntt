@@ -8,6 +8,7 @@ import App from './App'
 import.meta.env.VITE_SENTRY_ENABLE === '1' &&
     Sentry.init({
         dsn: import.meta.env.VITE_SENTRY_DSN,
+        attachStacktrace: false,
         environment: import.meta.env.MODE,
         release: import.meta.env.VITE_APP_VERSION,
         enableLogs: true,
