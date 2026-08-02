@@ -16,6 +16,8 @@ Options:
 -t [T|W] : (opt) data type: T=tide/temp, W=wind. Default: both
 -S <starttime> : (opt) start of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
 -E <endtime> : (opt) end of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
+-y <year> : (opt) year to pull, use with -w
+-w <week> : (opt) week of year to pull (1-52), use with -y
 EOF
 
 }
@@ -28,11 +30,13 @@ fail() {
 
 devmode=0
 station=welinwq
-while getopts ":vdht:s:S:E:" opt; do
+while getopts ":vdht:s:S:E:w:y:" opt; do
   case $opt in
     s ) station=$OPTARG;;
     S ) startstr="-S $OPTARG";;
     E ) endstr="-E $OPTARG";;
+    w ) weekstr="-w $OPTARG";;
+    y ) yearstr="-y $OPTARG";;
     t ) typestr="-t $OPTARG";;
     d ) debugstr='-d';;
     v ) verbosestr='-v';;
@@ -56,6 +60,7 @@ else
 fi
 
 # Run the python script in a new, temporary api container
-docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} ${verbosestr} ${typestr} ${startstr} ${endstr}
+docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station \
+${debugstr} ${verbosestr} ${typestr} ${startstr} ${endstr} ${weekstr} ${yearstr} ${weekstr} ${yearstr}
 
 exit 0

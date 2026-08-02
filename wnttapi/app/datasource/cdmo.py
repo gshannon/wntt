@@ -280,7 +280,7 @@ def get_float(element, fieldName: str, required: bool, utc: datetime):
         float_val = util.to_float(data_str)
 
     if float_val is None and required:
-        logger.warning("Invalid or missing %s for %s: '%s'", fieldName, utc, data_str)
+        logger.debug("Invalid or missing %s for %s: '%s'", fieldName, utc, data_str)
 
     return float_val
 
