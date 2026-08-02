@@ -125,7 +125,7 @@ export default function GetDates({
                         placement='top'
                         contents={
                             <Button variant='custom-primary' onClick={handleReset}>
-                                Reset
+                                Today
                             </Button>
                         }></Overlay>
                 </div>
