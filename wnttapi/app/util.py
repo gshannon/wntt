@@ -3,6 +3,7 @@ import functools
 import logging
 import pprint
 from datetime import datetime, timedelta
+
 import sentry_sdk
 
 from . import tzutil as tz
@@ -80,7 +81,7 @@ def to_float(value: str) -> float:
 def is_valid_float(value: any) -> bool:
     if value is None:
         return False
-    if isinstance(value, float) or isinstance(value, int):
+    if isinstance(value, (float, int)):
         return True
     if isinstance(value, str):
         try:

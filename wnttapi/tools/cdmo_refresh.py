@@ -23,7 +23,7 @@ from app.timeline import Timeline
 # Django must be set up before importing models or anything that imports them.
 setup()
 
-import app.datasource.cdmo as cdmo
+from app.datasource import cdmo
 from app.models import Water, Wind, get_station
 
 logger = logging.getLogger(__name__)
@@ -39,14 +39,31 @@ def main():
         print("Cannot have both verbose and debug")
         parser.print_help()
         return
+
+    if args.week is not None:
+        week = int(args.week)
+        if week < 1 or week > 52:
+            print(f"Invalid week {args.week}, must be 1-52")
+            parser.print_help()
+            return
+
     if nocontainer:
         station = stn.get_station(args.swmp_station_id, "../datamount/stations")
     else:
         station = stn.get_station(args.swmp_station_id)
     db_station_code = get_station(args.swmp_station_id)
 
-    if args.start is not None:
-        # We are pulling a specific time range, not just getting latest data.
+    timeline = get_timeline(station, args)
+
+    if args.type is None or args.type == "T":
+        refresh("T", station, db_station_code, timeline, args.debug, args.verbose)
+    if args.type is None or args.type == "W":
+        refresh("W", station, db_station_code, timeline, args.debug, args.verbose)
+
+
+def get_timeline(station, args) -> Timeline:
+    if args.start is not None and args.end is not None:
+        # We are pulling a specific time range.
         start_dt = datetime.strptime(args.start, "%Y-%m-%dT%H:%M").replace(
             tzinfo=station.time_zone
         )
@@ -55,13 +72,21 @@ def main():
         )
         print(f"Processing {start_dt} to {end_dt} ...", file=sys.stderr)
         timeline = Timeline(start_dt, end_dt)
+    elif args.year is not None and args.week is not None:
+        # We are pulling a specific week of a year. Note week number is 0-based in strptime, but we expect 1-based from user.
+        start_dt = datetime.strptime(
+            f"{args.year}-{int(args.week) - 1}-1", "%Y-%W-%w"
+        ).replace(tzinfo=station.time_zone)
+        end_dt = start_dt + timedelta(days=7) - timedelta(minutes=15)
+        print(
+            f"Processing week {args.week} of {args.year}: {start_dt} to {end_dt} ...",
+            file=sys.stderr,
+        )
+        timeline = Timeline(start_dt, end_dt)
     else:
-        timeline = None
+        timeline = None  # We'll just get the latest data
 
-    if args.type is None or args.type == "T":
-        refresh("T", station, db_station_code, timeline, args)
-    if args.type is None or args.type == "W":
-        refresh("W", station, db_station_code, timeline, args)
+    return timeline
 
 
 def refresh(
@@ -69,12 +94,10 @@ def refresh(
     station: stn.Station,
     db_station_code: str,
     timeline: Timeline,
-    args,
+    debug: bool,
+    verbose: bool,
 ):
     name = "water" if type == "T" else "wind"
-    logger.info(
-        f"Refreshing CDMO {name} data for station {station.id} / {db_station_code}..."
-    )
 
     if timeline is None:
         # Get the latest data, up to 7 days.
@@ -87,30 +110,37 @@ def refresh(
         logger.debug(f"Last saved {name} data was for {last_dt_str}")
         timeline = build_latest_timeline(last_dt_str, station)
 
+    logger.info(
+        f"Refreshing CDMO {name} data for {station.id} "
+        + f"{timeline.start_dt.strftime('%Y-%m-%d %H:%M')} - {timeline.end_dt.strftime('%Y-%m-%d %H:%M:00')}"
+    )
+
     if type == "T":
         tides = cdmo.get_water_data(station, timeline, useDb=False)
 
+        diffs = None
         if tides is not None and tides.length > 0:
-            if args.debug or args.verbose:
-                diff_water(tides, db_station_code)
-            if not args.debug:
+            if debug or verbose:
+                diffs = diff_water(tides, db_station_code)
+            if not debug and (diffs is None or diffs > 0):
                 upsert_water(tides, db_station_code)
         else:
-            logger.info(f"No new {name} data to refresh yet")
+            logger.info(f"No matching {name} records found")
 
     else:
         cdmo_data = cdmo.get_wind_data(station, timeline, useDb=False)
+        diffs = None
 
         if cdmo_data is not None and len(cdmo_data) > 0:
-            if args.debug or args.verbose:
-                diff_wind(cdmo_data, db_station_code)
-            if not args.debug:
+            if debug or verbose:
+                diffs = diff_wind(cdmo_data, db_station_code)
+            if not debug and (diffs is None or diffs > 0):
                 upsert_wind(cdmo_data, db_station_code)
         else:
-            logger.info(f"No new {name} data to refresh yet")
+            logger.info(f"No matching {name} records found")
 
 
-def diff_water(tides: Tides, db_station_code: str):
+def diff_water(tides: Tides, db_station_code: str) -> int:
     name = "water"
     print(f"Diffing {tides.length} {name} records")
     diff_cnt = 0
@@ -120,12 +150,14 @@ def diff_water(tides: Tides, db_station_code: str):
             record = Water.objects.get(station=db_station_code, time=(qdt))
             diff_cnt += diff_water_record(record, tide)
         except ObjectDoesNotExist:
+            diff_cnt += 1
             print(f"{dt} not in database")
 
     print(f"Found {diff_cnt} diffs out of {tides.length}")
+    return diff_cnt
 
 
-def diff_wind(cdmo_data: dict, db_station_code: str):
+def diff_wind(cdmo_data: dict, db_station_code: str) -> int:
     name = "wind"
     print(f"Diffing {len(cdmo_data)} {name} records")
     diff_cnt = 0
@@ -135,9 +167,11 @@ def diff_wind(cdmo_data: dict, db_station_code: str):
             record = Wind.objects.get(station=db_station_code, time=(qdt))
             diff_cnt += diff_wind_record(record, value)
         except ObjectDoesNotExist:
+            diff_cnt += 1
             print(f"{dt} not in database")
 
     print(f"Found {diff_cnt} diffs out of {len(cdmo_data)}")
+    return diff_cnt
 
 
 def diff_water_record(db_rec, new_rec: Tide) -> int:
@@ -251,6 +285,18 @@ def build_parser():
         "--end",
         required=False,
         help="end datetime in US/Eastern as YYYY-mm-ddTHH:MM",
+    )
+    parser.add_argument(
+        "-y",
+        "--year",
+        required=False,
+        help="Year to pull, use with --week",
+    )
+    parser.add_argument(
+        "-w",
+        "--week",
+        required=False,
+        help="Week to pull (1-52), use with --year",
     )
     return parser
 
