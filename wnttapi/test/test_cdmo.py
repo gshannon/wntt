@@ -8,10 +8,10 @@ from django import setup
 setup()
 
 import app.datasource.astrotide as astro
-import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
-import app.util as util
+from app import util
+from app.datasource import cdmo
 from app.hilo import ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, Timeline
 
@@ -101,18 +101,6 @@ class TestCdmo(TestCase):
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         with self.assertRaisesRegex(Exception, "Invalid ip"):
             cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
-
-    def test_handle_windspeed(self):
-        self.assertTrue(cdmo.handle_windspeed(None, None) is None)
-        self.assertTrue(cdmo.handle_windspeed("nONe", None) is None)
-        self.assertTrue(cdmo.handle_windspeed("", None) is None)
-        self.assertTrue(cdmo.handle_windspeed("7..3", None) is None)
-        self.assertTrue(cdmo.handle_windspeed("\n\t", None) is None)
-        self.assertTrue(cdmo.handle_windspeed("-0.5", None) is None)
-        self.assertTrue(cdmo.handle_windspeed("121.0", None) is None)
-        self.assertEqual(
-            cdmo.handle_windspeed("13.3", None), util.meters_per_second_to_mph(13.3)
-        )
 
     def test_cdmo_dates_graph_standard(self):
         """In standard time, no changes are needed for any time zone."""

@@ -65,15 +65,15 @@ class Surge(models.Model):
 
     class Meta:
         db_table = "surge"
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=["noaa_id", "tide_time"], name="uniq_station_time"
-            )
-        ]
+            ),
+        )
 
 
 # One record for each downloaded surge file for which we need to calculate bias ourselves, currently just Wells.
-# Calculaged and written by the cron job, consumed by the surge API to apply the bias to the file values.
+# Calculaged and written by the cron job, consumed by the surge API to apply the bias to the surge API to apply the bias to the file values.
 class SurgeBias(models.Model):
     noaa_id = models.CharField(max_length=7, null=False)
     filedate = models.DateField(auto_now=False, auto_now_add=False)
@@ -84,11 +84,11 @@ class SurgeBias(models.Model):
 
     class Meta:
         db_table = "surgebias"
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=["noaa_id", "filedate", "cycle"], name="surgebias_uk1"
-            )
-        ]
+            ),
+        )
 
 
 class Water(models.Model):
@@ -102,9 +102,9 @@ class Water(models.Model):
 
     class Meta:
         db_table = "water"
-        constraints = [
-            models.UniqueConstraint(fields=["station", "time"], name="water_uk1")
-        ]
+        constraints = (
+            models.UniqueConstraint(fields=["station", "time"], name="water_uk1"),
+        )
 
 
 class Wind(models.Model):
@@ -118,9 +118,9 @@ class Wind(models.Model):
 
     class Meta:
         db_table = "wind"
-        constraints = [
-            models.UniqueConstraint(fields=["station", "time"], name="wind_uk1")
-        ]
+        constraints = (
+            models.UniqueConstraint(fields=["station", "time"], name="wind_uk1"),
+        )
 
 
 class AstroTide15(models.Model):
@@ -132,9 +132,9 @@ class AstroTide15(models.Model):
 
     class Meta:
         db_table = "astrotide15"
-        constraints = [
-            models.UniqueConstraint(fields=["noaa_id", "time"], name="astrotide15_uk1")
-        ]
+        constraints = (
+            models.UniqueConstraint(fields=["noaa_id", "time"], name="astrotide15_uk1"),
+        )
 
 
 class AstroTideHilo(models.Model):
@@ -154,8 +154,8 @@ class AstroTideHilo(models.Model):
 
     class Meta:
         db_table = "astrotidehilo"
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=["noaa_id", "time"], name="astrotideHilo_uk1"
-            )
-        ]
+            ),
+        )

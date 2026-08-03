@@ -4,10 +4,10 @@ from unittest import TestCase
 
 from django import setup
 
-import app.datasource.cdmo as cdmo
 import app.station as stn
 import app.tzutil as tz
-import app.util as util
+from app import util
+from app.datasource import cdmo
 from app.timeline import GraphTimeline
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
@@ -29,35 +29,27 @@ class TestCdmo(TestCase):
         with open(f"{test_data_path}/data/cdmo-20251228-wind.xml", "r") as file:
             xml = file.read()
 
-        wind_data = cdmo.parse_cdmo_wind_xml(timeline, wells, xml, cdmo.WIND_PARAMS)
+        winds = cdmo.parse_cdmo_wind_xml(timeline, xml)
 
         # Every data point should be present except for the missing gust at 00:15 on 12/28.
         # This should result in no wind data at all for that time.
 
         # 96 data points: (24 hours * 4 per hour) + (1 for 00:00 on 12/29) - (1 for 00:15 on 12/28)
-        self.assertEqual(len(wind_data), 96)
-        self.assertNotIn(datetime(2025, 12, 27, 23, 45, tzinfo=tzone), wind_data)
-        self.assertNotIn(datetime(2025, 12, 28, 0, 15, tzinfo=tzone), wind_data)
-        self.assertNotIn(datetime(2025, 12, 29, 0, 15, tzinfo=tzone), wind_data)
+        self.assertEqual(winds.length, 96)
+        self.assertNotIn(datetime(2025, 12, 27, 23, 45, tzinfo=tzone), winds.data)
+        self.assertNotIn(datetime(2025, 12, 28, 0, 15, tzinfo=tzone), winds.data)
+        self.assertNotIn(datetime(2025, 12, 29, 0, 15, tzinfo=tzone), winds.data)
 
-        dt = min(wind_data)
+        dt = min(winds.data)
         self.assertEqual(dt, datetime(2025, 12, 28, 0, 0, tzinfo=tzone))
-        entry = wind_data[dt]
-        self.assertEqual(
-            entry[cdmo.Param.WindSpeed.label], util.meters_per_second_to_mph(1.7)
-        )
-        self.assertEqual(
-            entry[cdmo.Param.WindGust.label], util.meters_per_second_to_mph(2.8)
-        )
-        self.assertEqual(entry[cdmo.Param.WindDir.label], 319)
+        entry = winds.getWind(dt)
+        self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.7))
+        self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.8))
+        self.assertEqual(entry.direction_deg, 319)
 
-        dt = max(wind_data)
+        dt = max(winds.data)
         self.assertEqual(dt, datetime(2025, 12, 29, 0, 0, tzinfo=tzone))
-        entry = wind_data[dt]
-        self.assertEqual(
-            entry[cdmo.Param.WindSpeed.label], util.meters_per_second_to_mph(1.0)
-        )
-        self.assertEqual(
-            entry[cdmo.Param.WindGust.label], util.meters_per_second_to_mph(2.1)
-        )
-        self.assertEqual(entry[cdmo.Param.WindDir.label], 240)
+        entry = winds.getWind(dt)
+        self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.0))
+        self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.1))
+        self.assertEqual(entry.direction_deg, 240)

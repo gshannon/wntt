@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import app.datasource.windforecast as wind
 import app.tzutil as tz
-import app.util as util
+from app import util
 from app.timeline import GraphTimeline
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
