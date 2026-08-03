@@ -6,7 +6,7 @@ import csv
 import logging
 import os
 import sys
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 
 # In the container, this is run from /wnttapi
 sys.path.append(".")
@@ -17,7 +17,7 @@ from django import setup
 setup()
 
 import app.tzutil as tz
-import app.util as util
+from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo
 from app.datasource.tides import Tides
@@ -25,7 +25,8 @@ from app.models import Surge, SurgeBias
 from app.station import Station, get_station_with_noaa_id
 from app.timeline import Timeline
 
-logger = logging.getLogger(__name__)
+# Can't use the normal __main__ logger because this is run as a script, not a module.
+logger = logging.getLogger("tools.surge_logger")
 _no_value = "9999.000"
 
 BiaslessStations = ["8419317"]  # Wells surge data has no bias (anomaly)
@@ -81,9 +82,9 @@ def main():
 
     # Calculate time window we're interested in. This is the next 6 hours after the file publication, which we
     # calculate based on the cycle number.
-    cycle_time_utc = datetime.combine(
-        datetime.strptime(args.date, "%Y%m%d"), time(int(args.cycle))
-    ).replace(tzinfo=tz.utc)
+    cycle_time_utc = datetime.strptime(args.date, "%Y%m%d").replace(
+        tzinfo=tz.utc, hour=int(args.cycle)
+    )
     # Define a 6-hour block representing the "near future", i.e. the 6 hours which will no longer
     # be in the future in subsequent cycles.  This is the last -- and hopefully the most
     # accurate -- prediction we will make for each of these 6 hours.

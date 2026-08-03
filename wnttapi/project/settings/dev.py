@@ -46,6 +46,11 @@ LOGGING = {
         "level": "INFO",
     },
     "loggers": {
+        "tools": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "django": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
@@ -54,11 +59,6 @@ LOGGING = {
         "app.datasource.cdmo": {
             "handlers": ["console"],
             "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        },
-        "tools.cdmo_refresh": {
-            "handlers": ["console"],
-            "level": "INFO",
             "propagate": False,
         },
     },

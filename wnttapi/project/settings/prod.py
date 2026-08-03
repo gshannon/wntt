@@ -47,6 +47,11 @@ LOGGING = {
         "level": "INFO",
     },
     "loggers": {
+        "tools": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "django": {
             "handlers": ["file"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
@@ -55,11 +60,6 @@ LOGGING = {
         "app.datasource.cdmo": {
             "handlers": ["file"],
             "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        },
-        "tools.cdmo_refresh": {
-            "handlers": ["console"],
-            "level": "INFO",
             "propagate": False,
         },
         "app.surge_logger": {
