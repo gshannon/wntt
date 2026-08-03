@@ -56,9 +56,9 @@ LOGGING = {
             "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
-        "app.datasource.cdmo_refresh": {
+        "tools.cdmo_refresh": {
             "handlers": ["console"],
-            "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
+            "level": "INFO",
             "propagate": False,
         },
     },

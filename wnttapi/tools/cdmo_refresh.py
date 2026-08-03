@@ -26,7 +26,8 @@ setup()
 from app.datasource import cdmo
 from app.models import Water, Wind, get_station
 
-logger = logging.getLogger(__name__)
+# Can't use the normal __main__ logger because this is run as a script, not a module.
+logger = logging.getLogger("tools.cdmo_refresh")
 
 
 def main():
