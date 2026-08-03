@@ -6,15 +6,20 @@ import csv
 import logging
 import os
 import sys
+
+sys.path.append(".")
 from datetime import datetime, timedelta
 
 # In the container, this is run from /wnttapi
-sys.path.append(".")
-
 # Django must be set up before importing models.
 from django import setup
 
+from tools.logging_config import force_console_logging
+
 setup()
+# Immediately reconfigure logging to console.  Now loggers in the following imports will log to console.
+force_console_logging()
+
 
 import app.tzutil as tz
 from app import util

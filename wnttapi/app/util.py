@@ -69,15 +69,6 @@ def round_to_quarter(dt: datetime) -> datetime:
         return floor + m15
 
 
-def to_float(value: str) -> float:
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except Exception:
-        return None
-
-
 def is_valid_float(value: any) -> bool:
     if value is None:
         return False

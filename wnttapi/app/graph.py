@@ -49,7 +49,7 @@ def get_graph_data(
 
     # Start with the observed tide data and wind data, which may be useful in gathering other data.
     obs_tides = cdmo.get_water_data(station, timeline)
-    wind_dict = cdmo.get_wind_data(station, timeline)
+    obs_winds = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
     astro_preds15_dict = astro.get_15m_astro_tides(
@@ -88,7 +88,7 @@ def get_graph_data(
     )
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot = gp.build_wind_plots(
-        timeline, wind_dict, hilo_event_dict
+        timeline, obs_winds, hilo_event_dict
     )
 
     astro_tides_plot, astro_label_plot = gp.build_astro_plot(
@@ -146,15 +146,13 @@ def get_graph_data(
     }
 
     # Dimensions are the names of each column, in order.
-    dimensions = ["dt"] + [k for k in plots.keys() if plots[k] is not None]
+    dimensions = ["dt"] + [k for k in plots if plots[k] is not None]
 
     # Each blob entry represents a "column" of data, with the first value being the datetime and
     # the rest being all the data for that time, in the same order as the dimensions.
     blob = []
     for ndx, dt in enumerate(final_timeline):
-        blob.append(
-            [dt] + [plots[k][ndx] for k in plots.keys() if plots[k] is not None]
-        )
+        blob.append([dt] + [plots[k][ndx] for k in plots if plots[k] is not None])
 
     return {
         "dimensions": dimensions,
@@ -199,9 +197,9 @@ def validate_dates(start: date, end: date):
         or end < earliest_date
     ):
         raise util.InternalError(
-            "%s - %s is not between %s - %s" % (start, end, earliest_date, latest_date)
+            f"{start} - {end} is not between {earliest_date} - {latest_date}"
         )
     if end < start:
         raise util.InternalError(
-            "end_date %s cannot be earlier than start_date %s" % (end, start)
+            f"end_date {end} cannot be earlier than start_date {start}"
         )

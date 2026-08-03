@@ -2,8 +2,8 @@ import logging
 from datetime import datetime, timedelta
 
 from app import util
-from app.datasource import cdmo
 from app.datasource.tides import Tides
+from app.datasource.winds import Winds
 from app.hilo import Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
 
@@ -55,15 +55,14 @@ def build_observed_tide_plot(
 
 
 def build_wind_plots(
-    timeline: GraphTimeline, wind_dict: dict, hilo_event_dict: dict
+    timeline: GraphTimeline, winds: Winds, hilo_event_dict: dict
 ) -> tuple[list, list, list]:
     """Build lists for wind data which correspond to the timeline.  Returns None for all lists if there
     is no wind data.
 
     Args:
         timeline (GraphTimeline): timeline
-        wind_dict (dict): {dt: {'speed': x, 'gust': x, 'dir_deg': x}}. We rely on the fact that all 3 values
-            are present for any given dt.
+        winds (Winds): wind data
         hilo_event_dict (dict): {dt: HighOrLow} all observed or predicted High/Low events for entire timeline
             used to restrict returned data to only those times if we have a HiloTimeline.
 
@@ -72,7 +71,7 @@ def build_wind_plots(
         - Wind gust plot
         - Corresponding wind direction (0 - 360) to drive marker angle
     """
-    if len(wind_dict) == 0:
+    if winds.length == 0:
         # There are no wind predictions, return None for all lists.
         return None, None, None
 
@@ -86,13 +85,13 @@ def build_wind_plots(
             minutes = [0]  # only show 1 point per hour
 
     def callback(dt: datetime):
-        if not isinstance(timeline, HiloTimeline) or dt in hilo_event_dict:
-            if dt.minute in minutes and dt in wind_dict:
-                return (
-                    wind_dict[dt].get(cdmo.Param.WindSpeed.label),
-                    wind_dict[dt].get(cdmo.Param.WindGust.label),
-                    wind_dict[dt].get(cdmo.Param.WindDir.label),
-                )
+        if (
+            (not isinstance(timeline, HiloTimeline) or dt in hilo_event_dict)
+            and dt.minute in minutes
+            and winds.contains(dt)
+        ):
+            rec = winds.getWind(dt)
+            return (rec.speed_mph, rec.gust_mph, rec.direction_deg)
         return None, None, None
 
     wind_speed_plot, wind_gust_plot, wind_dir_plot = timeline.build_plots(callback)

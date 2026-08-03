@@ -15,16 +15,21 @@ from django import setup
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 
-import app.station as stn
-import app.tzutil as tz
-from app.datasource.tides import Tide, Tides
-from app.timeline import Timeline
+from tools.logging_config import force_console_logging
 
 # Django must be set up before importing models or anything that imports them.
 setup()
+# Immediately reconfigure logging to console.  Now loggers in the following imports will log to console.
+force_console_logging()
 
+import app.station as stn
+import app.tzutil as tz
 from app.datasource import cdmo
-from app.models import Water, Wind, get_station
+from app.datasource.tides import Tide, Tides
+from app.datasource.winds import Wind, Winds
+from app.models import Water, get_station
+from app.models import Wind as WindDb
+from app.timeline import Timeline
 
 # Can't use the normal __main__ logger because this is run as a script, not a module.
 logger = logging.getLogger("tools.cdmo_refresh")
@@ -43,8 +48,8 @@ def main():
 
     if args.week is not None:
         week = int(args.week)
-        if week < 1 or week > 52:
-            print(f"Invalid week {args.week}, must be 1-52")
+        if week < 0 or week > 53:
+            print(f"Invalid week {args.week}, must be 0-53")
             parser.print_help()
             return
 
@@ -76,7 +81,7 @@ def get_timeline(station, args) -> Timeline:
     elif args.year is not None and args.week is not None:
         # We are pulling a specific week of a year. Note week number is 0-based in strptime, but we expect 1-based from user.
         start_dt = datetime.strptime(
-            f"{args.year}-{int(args.week) - 1}-1", "%Y-%W-%w"
+            f"{args.year} {int(args.week)} 1", "%Y %W %w"
         ).replace(tzinfo=station.time_zone)
         end_dt = start_dt + timedelta(days=7) - timedelta(minutes=15)
         print(
@@ -107,7 +112,9 @@ def refresh(
                 "time__max"
             ]
         else:
-            last_dt_str = Wind.objects.aggregate(Max("time", default=None))["time__max"]
+            last_dt_str = WindDb.objects.aggregate(Max("time", default=None))[
+                "time__max"
+            ]
         logger.debug(f"Last saved {name} data was for {last_dt_str}")
         timeline = build_latest_timeline(last_dt_str, station)
 
@@ -129,73 +136,71 @@ def refresh(
             logger.info(f"No matching {name} records found")
 
     else:
-        cdmo_data = cdmo.get_wind_data(station, timeline, useDb=False)
+        winds = cdmo.get_wind_data(station, timeline, useDb=False)
         diffs = None
 
-        if cdmo_data is not None and len(cdmo_data) > 0:
+        if winds is not None and winds.length > 0:
             if debug or verbose:
-                diffs = diff_wind(cdmo_data, db_station_code)
+                diffs = diff_wind(winds, db_station_code)
             if not debug and (diffs is None or diffs > 0):
-                upsert_wind(cdmo_data, db_station_code)
+                upsert_wind(winds, db_station_code)
         else:
             logger.info(f"No matching {name} records found")
 
 
 def diff_water(tides: Tides, db_station_code: str) -> int:
-    name = "water"
-    print(f"Diffing {tides.length} {name} records")
+    print(f"Diffing {tides.length} water records")
     diff_cnt = 0
-    for dt, tide in tides.data.items():
+    for dt, cdmo_rec in tides.data.items():
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
-            record = Water.objects.get(station=db_station_code, time=(qdt))
-            diff_cnt += diff_water_record(record, tide)
+            db_rec = Water.objects.get(station=db_station_code, time=(qdt))
+            diff_cnt += diff_water_record(db_rec, cdmo_rec)
         except ObjectDoesNotExist:
             diff_cnt += 1
             print(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {tides.length}")
+    print(f"Found {diff_cnt} diffs out of {tides.length} water cdmo records")
     return diff_cnt
 
 
-def diff_wind(cdmo_data: dict, db_station_code: str) -> int:
-    name = "wind"
-    print(f"Diffing {len(cdmo_data)} {name} records")
+def diff_wind(winds: Winds, db_station_code: str) -> int:
+    print(f"Diffing {winds.length} wind records")
     diff_cnt = 0
-    for dt, value in cdmo_data.items():
+    for dt, cdmo_rec in winds.data.items():
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
-            record = Wind.objects.get(station=db_station_code, time=(qdt))
-            diff_cnt += diff_wind_record(record, value)
+            db_rec = WindDb.objects.get(station=db_station_code, time=(qdt))
+            diff_cnt += diff_wind_record(db_rec, cdmo_rec)
         except ObjectDoesNotExist:
             diff_cnt += 1
             print(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {len(cdmo_data)}")
+    print(f"Found {diff_cnt} diffs out of {winds.length} wind cdmo records")
     return diff_cnt
 
 
-def diff_water_record(db_rec, new_rec: Tide) -> int:
+def diff_water_record(db_rec: WindDb, cdmo_rec: Wind) -> int:
 
     # We only diff Corrected water level, as temp is not important in this app
-    if not new_rec.nav_feet_equals(db_rec.clevel_nf):
+    if not cdmo_rec.nav_feet_equals(db_rec.clevel_nf):
         print(
-            f"{db_rec.time} old/new clevel_nf: {db_rec.clevel_nf}/{new_rec.corrected_nav_feet}",
+            f"{db_rec.time} old/new clevel_nf: {db_rec.clevel_nf}/{cdmo_rec.corrected_nav_feet}",
         )
         return 1
     return 0
 
 
-def diff_wind_record(db_rec, new_rec):
+def diff_wind_record(db_rec: Water, cdmo_rec: Tide):
     if (
-        db_rec.gust != new_rec.get(cdmo.Param.WindGust.label)
-        or db_rec.speed != new_rec.get(cdmo.Param.WindSpeed.label)
-        or db_rec.dir_deg != new_rec.get(cdmo.Param.WindDir.label)
+        db_rec.gust != cdmo_rec.gust_mph
+        or db_rec.speed != cdmo_rec.speed_mph
+        or db_rec.dir_deg != cdmo_rec.direction_deg
     ):
         print(
             (
-                f"{db_rec.time} old/new speed: {db_rec.speed}/{new_rec['speed']}, "
-                + f"gust: {db_rec.gust}/{new_rec['gust']} dir_deg: {db_rec.dir_deg}/{new_rec['dir_deg']}"
+                f"{db_rec.time} old/new speed: {db_rec.speed}/{cdmo_rec.speed_mph}, "
+                + f"gust: {db_rec.gust}/{cdmo_rec.gust_mph} dir_deg: {db_rec.dir_deg}/{cdmo_rec.direction_deg}"
             ),
         )
         return 1
@@ -221,18 +226,23 @@ def upsert_water(tides: Tides, db_station_code: str):
     logger.info(f"Created {create_cnt}, updated {update_cnt} water records in db")
 
 
-def upsert_wind(cdmo_data: dict, db_station_code: str):
-    for dt, value in cdmo_data.items():
-        Wind.objects.update_or_create(
+def upsert_wind(winds: Winds, db_station_code: str):
+    create_cnt = update_cnt = 0
+    for dt, wind_rec in winds.data.items():
+        _, created = WindDb.objects.update_or_create(
             station=db_station_code,
             time=dt.astimezone(tz.utc).isoformat(),
             defaults={
-                "speed": value[cdmo.Param.WindSpeed.label],
-                "gust": value[cdmo.Param.WindGust.label],
-                "dir_deg": value[cdmo.Param.WindDir.label],
+                "speed": wind_rec.speed_mph,
+                "gust": wind_rec.gust_mph,
+                "dir_deg": wind_rec.direction_deg,
             },
         )
-    logger.info(f"Wrote {len(cdmo_data)} wind records to db")
+        if created:
+            create_cnt += 1
+        else:
+            update_cnt += 1
+    logger.info(f"Created {create_cnt}, updated {update_cnt} wind records in db")
 
 
 def build_latest_timeline(last_dt_str, station) -> Timeline:

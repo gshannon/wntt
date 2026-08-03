@@ -1,10 +1,10 @@
 from datetime import date, datetime
 from unittest import TestCase
 
-import app.datasource.cdmo as cdmo
 import app.graph_plot as gp
 import app.tzutil as tz
-import app.util as util
+from app import util
+from app.datasource.winds import Winds
 from app.hilo import Hilo, ObservedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
@@ -171,23 +171,10 @@ class TestHiloTimeline(TestCase):
         non_hilo_time_1 = datetime(2025, 2, 1, 0, 15, tzinfo=zone)
         non_hilo_time_2 = datetime(2025, 2, 1, 9, 30, tzinfo=zone)
 
-        wind_dict = {
-            non_hilo_time_1: {
-                cdmo.Param.WindSpeed.label: 8.1,
-                cdmo.Param.WindGust.label: 22,
-                cdmo.Param.WindDir.label: 0,
-            },
-            non_hilo_time_2: {
-                cdmo.Param.WindSpeed.label: 16,
-                cdmo.Param.WindGust.label: 35.2,
-                cdmo.Param.WindDir.label: 60,
-            },
-            past_hilo_time_1: {
-                cdmo.Param.WindSpeed.label: 12,
-                cdmo.Param.WindGust.label: 15.5,
-                cdmo.Param.WindDir.label: 325,
-            },
-        }
+        winds = Winds()
+        winds.add(non_hilo_time_1, 8.1, 22, 0)
+        winds.add(non_hilo_time_2, 16, 35.2, 60)
+        winds.add(past_hilo_time_1, 12, 15.5, 325)
 
         timeline = HiloTimeline(start_date, end_date, zone)
         hilo_dict = {
@@ -201,10 +188,11 @@ class TestHiloTimeline(TestCase):
         )
 
         wind_speed_plot, wind_gust_plot, wind_dir_plot = gp.build_wind_plots(
-            timeline, wind_dict, hilo_dict
+            timeline, winds, hilo_dict
         )
         self.assertEqual(wind_speed_plot, [None, 12, None, None, None, None])
         self.assertEqual(wind_gust_plot, [None, 15.5, None, None, None, None])
+        self.assertEqual(wind_dir_plot, [None, 325, None, None, None, None])
 
     def test_hilo_plot_with_boundary_data(self):
         zone = tz.hawaii
