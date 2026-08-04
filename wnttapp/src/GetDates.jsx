@@ -71,6 +71,8 @@ export default function GetDates({
         }
     }
 
+    const popperPlacement = isSmallScreen() ? 'bottom-start' : 'bottom'
+
     return (
         <div id='get-dates'>
             <div className='get-dates-range'>
@@ -81,6 +83,7 @@ export default function GetDates({
                             showIcon
                             toggleCalendarOnIconClick
                             id='start-datepicker'
+                            popperPlacement={popperPlacement}
                             selected={startCtl.start}
                             minDate={startCtl.min}
                             maxDate={startCtl.max}
@@ -100,6 +103,7 @@ export default function GetDates({
                             showIcon
                             toggleCalendarOnIconClick
                             allowSameDay
+                            popperPlacement={popperPlacement}
                             selected={endCtl.end}
                             minDate={endCtl.min}
                             maxDate={endCtl.max}
@@ -140,7 +144,6 @@ export default function GetDates({
                                     label='Highs/Lows'
                                     checked={isHiloMode}
                                     onChange={handleHiloToggle}
-                                    disabled={isSmallScreen()}
                                 />
                             </Form>
                         }></Overlay>

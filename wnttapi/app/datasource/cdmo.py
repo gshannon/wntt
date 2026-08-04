@@ -330,7 +330,7 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tide
 
     if none_or_bad > 0:
         logger.warning(
-            f"parse_cdmo_tide_xml: {none_or_bad} of {records - ignored} expected records had missing or invalid data"
+            f"{none_or_bad} of {records - ignored} expected tide records had missing or invalid data"
         )
     return tides
 
@@ -400,7 +400,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> Winds:
 
     if none_or_bad > 0:
         logger.warning(
-            f"{none_or_bad} of {records - ignored} expected records had missing or invalid data"
+            f"{none_or_bad} of {records - ignored} expected wind records had missing or invalid data"
         )
     return winds
 
