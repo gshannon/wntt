@@ -41,10 +41,17 @@
     text-align: center;
 }
 
-@media (max-width: 767px) {
-    #get-dates {
-        font-size: 0.9rem;
+@media (max-width: 575px) {
+    #get-dates input {
+        /* padding-right: 0; */
+        width: 120px;
     }
+}
+@media (max-width: 767px) {
+    .get-dates-ctl .hilo-box {
+        display: none;
+    }
+
     .get-dates-range {
         margin: 0 5px;
         flex-direction: column;

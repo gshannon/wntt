@@ -20,3 +20,5 @@ def force_console_logging(level=logging.INFO):
         lg = logging.getLogger(name)
         lg.handlers = []
         lg.propagate = True
+        # Optional:
+        # lg.setLevel(logging.NOTSET)  # defer to root's level
