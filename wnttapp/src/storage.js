@@ -15,6 +15,15 @@ const storageKey = (key) => {
     return `${StorageVersion}.${key}`
 }
 
+export const initStorage = () => {
+    const main = getMainStorage()
+    setMainStorage({
+        ...main,
+        session: crypto.randomUUID().substring(0, 6),
+        started: new Date(),
+    })
+}
+
 // Store a non-station-specific object in local storage.
 export const setMainStorage = (value) => {
     try {
