@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './App'
+import * as storage from './storage'
 
 import.meta.env.VITE_SENTRY_ENABLE === '1' &&
     Sentry.init({
@@ -14,6 +15,8 @@ import.meta.env.VITE_SENTRY_ENABLE === '1' &&
         enableLogs: true,
         debug: false,
     })
+
+storage.initStorage()
 
 const queryClient = new QueryClient({
     defaultOptions: {
