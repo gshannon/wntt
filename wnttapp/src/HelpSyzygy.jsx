@@ -94,7 +94,9 @@ export default function HelpSyzygy({ gotoPage, returnPage }) {
                         <SimpleLink href='https://science.nasa.gov/moon/tides/' />
                     </ListGroup.Item>
                     <ListGroup.Item>
-                        <SimpleLink href='https://oceanservice.noaa.gov/education/tutorial_tides/tides06_variations.html' />
+                        <div className='wrap-url'>
+                            <SimpleLink href='https://oceanservice.noaa.gov/education/tutorial_tides/tides06_variations.html' />
+                        </div>
                     </ListGroup.Item>
                 </ListGroup>
             </Row>

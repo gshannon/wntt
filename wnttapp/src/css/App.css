@@ -99,6 +99,11 @@ a {
     white-space: nowrap;
 }
 
+.wrap-url {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+
 /* For <a> you want disabled */
 .disable-pointer {
     pointer-events: none;
