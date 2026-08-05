@@ -16,6 +16,7 @@ export default function useLatestData(station) {
                     signal,
                     uid: mainStore.uid,
                     session: mainStore.session,
+                    started: mainStore.started,
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                 })
@@ -32,7 +33,11 @@ export default function useLatestData(station) {
                         )
                         Sentry.captureException(error, {
                             tags: { operation: import.meta.env.VITE_API_LATEST_URL },
-                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            user: {
+                                uid: mainStore.uid,
+                                session: mainStore.session,
+                                started: mainStore.started,
+                            },
                         })
                     }
                     throw error

@@ -20,6 +20,7 @@ export default function useAddressLookup(search, doLookup) {
                     signal,
                     uid: mainStore.uid,
                     session: mainStore.session,
+                    started: mainStore.started,
                     version: import.meta.env.VITE_APP_VERSION,
                     search: encoded,
                 })
@@ -38,7 +39,11 @@ export default function useAddressLookup(search, doLookup) {
                         )
                         Sentry.captureException(error, {
                             tags: { operation: import.meta.env.VITE_API_ADDRESS_URL },
-                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            user: {
+                                uid: mainStore.uid,
+                                session: mainStore.session,
+                                started: mainStore.started,
+                            },
                             extra: { search: encoded },
                         })
                     }

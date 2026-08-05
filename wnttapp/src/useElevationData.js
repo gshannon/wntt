@@ -37,7 +37,11 @@ export default function useElevationData(pendingMarkerLocation) {
                         )
                         Sentry.captureException(error, {
                             tags: { operation: error.request.responseURL },
-                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            user: {
+                                uid: mainStore.uid,
+                                session: mainStore.session,
+                                started: mainStore.started,
+                            },
                         })
                     }
                     throw error

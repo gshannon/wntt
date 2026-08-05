@@ -21,7 +21,8 @@ export default function useStations() {
                     version: import.meta.env.VITE_APP_VERSION,
                     // For logging...
                     uid: mainStore.uid ?? 'NONE',
-                    session: mainStore.session ?? null,
+                    session: mainStore.session,
+                    started: mainStore.started,
                     screenWidth: window.innerWidth,
                 })
                 .then((res) => {
@@ -43,7 +44,11 @@ export default function useStations() {
                         )
                         Sentry.captureException(error, {
                             tags: { operation: import.meta.env.VITE_API_STATIONS_URL },
-                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            user: {
+                                uid: mainStore.uid,
+                                session: mainStore.session,
+                                started: mainStore.started,
+                            },
                         })
                     }
                     throw error
