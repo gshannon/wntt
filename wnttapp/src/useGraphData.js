@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
-import { buildCacheKey, HttpNotAcceptableCode } from './utils'
+import { buildCacheKey, stringify, HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
 
-export default function useGraphData(station, startDateStr, endDateStr, hiloMode, special) {
+export default function useGraphData(station, startDate, endDate, hiloMode, special) {
     const mainStore = storage.getMainStorage()
     const permStore = storage.getPermanentStorage(station.id)
+    const startDateStr = stringify(startDate)
+    const endDateStr = stringify(endDate)
     // The main graph data api call.
     return useQuery({
         retry: false,
@@ -22,7 +24,8 @@ export default function useGraphData(station, startDateStr, endDateStr, hiloMode
                     hilo: hiloMode,
                     // These fields are for logging
                     uid: mainStore.uid ?? 'NONE',
-                    session: mainStore.session ?? null,
+                    session: mainStore.session,
+                    started: mainStore.started,
                     screenWidth: window.innerWidth,
                     customNav: permStore.customElevationNav ?? null,
                     special: special,
@@ -40,7 +43,11 @@ export default function useGraphData(station, startDateStr, endDateStr, hiloMode
                         )
                         Sentry.captureException(error, {
                             tags: { operation: import.meta.env.VITE_API_GRAPH_URL },
-                            user: { uid: mainStore.uid, version: import.meta.env.VITE_APP_VERSION },
+                            user: {
+                                uid: mainStore.uid,
+                                session: mainStore.session,
+                                started: mainStore.started,
+                            },
                             extra: { start: startDateStr, end: endDateStr },
                         })
                     }

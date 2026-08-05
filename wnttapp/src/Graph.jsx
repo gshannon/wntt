@@ -150,7 +150,7 @@ export default function Graph() {
         isPending: loading,
         data,
         error,
-    } = useGraphData(ctx.station, stringify(startDate), stringify(endDate), isHiloMode, ctx.special)
+    } = useGraphData(ctx.station, startDate, endDate, isHiloMode, ctx.special)
 
     const numDaysText = daysShown > 1 ? `${daysShown} days` : 'day'
 
