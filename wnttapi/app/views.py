@@ -1,15 +1,14 @@
+import functools
 import logging
 import os
-
-import functools
 from datetime import datetime
 
 import sentry_sdk
-from app.datasource import address
-from rest_framework.exceptions import APIException, NotAcceptable
-
 from requests.exceptions import RequestException
+from rest_framework.exceptions import APIException, NotAcceptable
 from rest_framework.views import APIView, Response
+
+from app.datasource import address
 
 from . import graph as gr
 from . import station as stn
@@ -18,7 +17,7 @@ from . import tzutil as tz
 from .models import Request, User, get_station
 
 logger = logging.getLogger(__name__)
-version = os.getenv("APP_VERSION", "set-me")
+api_version = os.getenv("APP_VERSION", "set-me")
 
 
 def endpoint_logger(func):
@@ -30,30 +29,24 @@ def endpoint_logger(func):
             return func(*args, **kwargs)
         except NotAcceptable:
             # This is not a real error, it means caller's version is out of date.
-            logger.info(
-                f"NotAcceptable in {func.__module__}.{func.__name__}", stack_info=False
-            )
+            logger.info(f"NotAcceptable in {func.__qualname__}", stack_info=False)
             raise NotAcceptable from None
         except APIException as e:
             # General expected errors from SOAP calls or bad data from an API.
-            logger.error(
-                f"{type(e)} in {func.__module__}.{func.__name__}: {e}", stack_info=False
-            )
+            logger.error(f"{type(e)} in {func.__qualname__}: {e}", stack_info=False)
             sentry_sdk.capture_exception(e)
             raise APIException() from None
         except RequestException as e:
             # These come from calls to requests.get(), which can fail.
             logger.error(
-                f"{type(e)} in {func.__module__}.{func.__name__}: {e}",
+                f"{type(e)} in {func.__qualname__}: {e}",
                 stack_info=False,
             )
             sentry_sdk.capture_exception(e)
             raise APIException() from None
         except Exception as e:
             # These are unexpected, so stack trace is ok
-            logger.exception(
-                f"{type(e)} in {func.__module__}.{func.__name__}: {type(e)}"
-            )
+            logger.exception("Unexpected error in %s", func.__qualname__)
             sentry_sdk.capture_exception(e)
             raise APIException() from None
 
@@ -218,13 +211,5 @@ def get_required(data, param):
 # which app should interpret as version out of date.
 def verify_version(data):
     caller_version = get_required(data, "version")
-    browser_id = data.get("bid", "unknown")
-    if caller_version != version:
-        msg = "Caller %s version %s does not match %s" % (
-            browser_id,
-            caller_version,
-            version,
-        )
-
-        logger.warning(msg)
-        raise NotAcceptable(msg)
+    if caller_version != api_version:
+        raise NotAcceptable()

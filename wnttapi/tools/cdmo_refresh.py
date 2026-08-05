@@ -79,7 +79,6 @@ def get_timeline(station, args) -> Timeline:
         print(f"Processing {start_dt} to {end_dt} ...", file=sys.stderr)
         timeline = Timeline(start_dt, end_dt)
     elif args.year is not None and args.week is not None:
-        # We are pulling a specific week of a year. Note week number is 0-based in strptime, but we expect 1-based from user.
         start_dt = datetime.strptime(
             f"{args.year} {int(args.week)} 1", "%Y %W %w"
         ).replace(tzinfo=station.time_zone)
