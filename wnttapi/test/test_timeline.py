@@ -4,7 +4,7 @@ from unittest import TestCase
 import app.graph_plot as gp
 import app.tzutil as tz
 from app import util
-from app.datasource.winds import Winds
+from app.datasource.winds import Wind
 from app.hilo import Hilo, ObservedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline, Timeline
 
@@ -171,10 +171,10 @@ class TestHiloTimeline(TestCase):
         non_hilo_time_1 = datetime(2025, 2, 1, 0, 15, tzinfo=zone)
         non_hilo_time_2 = datetime(2025, 2, 1, 9, 30, tzinfo=zone)
 
-        winds = Winds()
-        winds.add(non_hilo_time_1, 8.1, 22, 0)
-        winds.add(non_hilo_time_2, 16, 35.2, 60)
-        winds.add(past_hilo_time_1, 12, 15.5, 325)
+        winds = {}
+        winds[non_hilo_time_1] = Wind(8.1, 22, 0)
+        winds[non_hilo_time_2] = Wind(16, 35.2, 60)
+        winds[past_hilo_time_1] = Wind(12, 15.5, 325)
 
         timeline = HiloTimeline(start_date, end_date, zone)
         hilo_dict = {
