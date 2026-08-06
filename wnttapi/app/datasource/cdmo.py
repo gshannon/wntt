@@ -8,14 +8,15 @@ from rest_framework.exceptions import APIException
 
 from app import tzutil as tz
 from app import util
-from app.datasource.winds import Winds
+from app.datasource.winds import Wind
 from app.hilo import Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
 
-from ..models import Water, Wind, get_station
+from ..models import Water, get_station
+from ..models import Wind as WindDb
 from .soap import SoapClient
-from .tides import Tides
+from .tides import Tide
 
 
 class Param(Enum):
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 _max_wind_speed = 120  # max sane wind speed in mph
 
 
-def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> Tides:
+def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -48,9 +49,9 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
     useDb: use database instead of calling API; can be overridden with FORCE_API_CDMO env setting
 
     Returns:
-    {dt: {"level": <value>, "temp": <value>}}
+    dict of {dt: Tide}
     """
-    tides = Tides(mllw_offset=station.mllw_conversion)
+    tides = {}
 
     if timeline.is_all_future():
         return tides
@@ -80,26 +81,25 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         for rec in queryset:
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
-            tides.add_feet(
-                dt=dt_in_local,
-                temp_f=rec.temp,
-                mllw_feet=rec.level,
+            tides[dt_in_local] = Tide(
+                temp_f=rec.temp_f,
                 corrected_nav_feet=rec.clevel_nf,
+                mllw_offset=station.mllw_conversion,
             )
 
     else:
         logger.debug(
             f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        tides = get_cdmo_tide(timeline, station, WATER_PARAMS)
-        tides.sort()  # It's handy to have keys in chrono order, not reverse order
-
-        logger.debug(f"Total raw water data points: {tides.length}")
+        reverse_tides = get_cdmo_tide(timeline, station, WATER_PARAMS)
+        # Before returning, sort by datetime, since cdmo returns most recent data first.
+        tides = dict(sorted(reverse_tides.items()))
+        logger.debug(f"Total water data points: {len(tides)}")
 
     return tides
 
 
-def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> Winds:
+def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -109,10 +109,10 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> W
     useDb: use database instead of calling API; can be overridden with FORCE_API_CDMO env setting
 
     Returns:
-    - Winds object, which may contain no data.
+    - dict of {datetime: WindData}, which may contain no data.
     """
 
-    winds = Winds()
+    winds = {}
 
     # If timeline is all in the future, don't bother.
     if timeline.is_all_future():
@@ -131,7 +131,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> W
         start_param = start_dt.astimezone(tz.utc).isoformat()
         end_param = end_dt.astimezone(tz.utc).isoformat()
 
-        queryset = Wind.objects.filter(
+        queryset = WindDb.objects.filter(
             station=get_station(station.id), time__range=(start_param, end_param)
         ).order_by("time")
         logger.debug(
@@ -141,8 +141,7 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> W
             in_utc = datetime.fromisoformat(rec.time)
             dt_in_local = in_utc.astimezone(timeline.time_zone)
 
-            winds.add(
-                dt=dt_in_local,
+            winds[dt_in_local] = Wind(
                 speed_mph=rec.speed,
                 gust_mph=rec.gust,
                 direction_deg=rec.dir_deg,
@@ -152,13 +151,15 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> W
         logger.debug(
             f"station.id={station.id} pulling {WIND_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        winds = get_cdmo_wind(timeline, station)
-        logger.debug(f"Total raw wind data points: {winds.length}")
+        reverse_winds = get_cdmo_wind(timeline, station)
+        # Before returning, sort by datetime, since cdmo returns most recent data first.
+        winds = dict(sorted(reverse_winds.items()))
+        logger.debug(f"Total wind data points: {len(winds)}")
 
     return winds
 
 
-def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> Tides:
+def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -172,7 +173,7 @@ def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> Tides:
     - params: list of requested CDMO parameters
 
     Returns:
-    - Tides object, which may contain no data.
+    - dict of {dt: Tide}
 
     """
     if station is None:
@@ -187,7 +188,7 @@ def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> Tides:
     return parse_cdmo_tides_xml(timeline, station, xml)
 
 
-def get_cdmo_wind(timeline: Timeline, station: Station) -> Winds:
+def get_cdmo_wind(timeline: Timeline, station: Station) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -200,7 +201,7 @@ def get_cdmo_wind(timeline: Timeline, station: Station) -> Winds:
     - station: the swmp station object
 
     Returns:
-    - Winds object, which may contain no data.
+    - dict of {datetime: Wind}, which may be empty.
 
     """
     if station is None:
@@ -255,7 +256,7 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> str:
         raise APIException()
 
 
-def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tides:
+def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict:
     """
     Parse the data returned from CDMO for the requested timeline.
 
@@ -265,10 +266,10 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tide
     - xml: tide data xml from cdmo
 
     Returns:
-    - Tides object, which may contain no data.
+    - dict of {dt: Tide}
 
     """
-    tides = Tides(mllw_offset=station.mllw_conversion)
+    tides = {}
 
     if xml is None or len(xml) == 0:
         return tides
@@ -321,11 +322,10 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tide
             none_or_bad += 1
             continue
 
-        tides.add_meters(
-            dt=dt_in_local,
-            temp_c=temp_c,
-            nav_meters=level_nav_meters,
-            corrected_nav_meters=corrected_level_nav_meters,
+        tides[dt_in_local] = Tide(
+            temp_f=util.centigrade_to_fahrenheit(temp_c),
+            corrected_nav_feet=util.meters_to_feet(corrected_level_nav_meters),
+            mllw_offset=station.mllw_conversion,
         )
 
     if none_or_bad > 0:
@@ -335,7 +335,7 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> Tide
     return tides
 
 
-def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> Winds:
+def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
     """
     Parse the wind data returned from CDMO for the requested timeline.
 
@@ -344,10 +344,10 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> Winds:
     - xml: wind data xml from cdmo
 
     Returns:
-    - Winds object, which may contain no data.
+    - dict of {datetime: Wind}, which may be empty.
 
     """
-    winds = Winds()
+    winds = {}
 
     if xml is None or len(xml) == 0:
         return winds
@@ -391,8 +391,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> Winds:
             none_or_bad += 1
             continue
 
-        winds.add(
-            dt=dt_in_local,
+        winds[dt_in_local] = Wind(
             speed_mph=wind_speed_mph,
             gust_mph=wind_gust_mph,
             direction_deg=wind_direction_deg,
@@ -402,6 +401,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> Winds:
         logger.warning(
             f"{none_or_bad} of {records - ignored} expected wind records had missing or invalid data"
         )
+
     return winds
 
 
@@ -457,9 +457,7 @@ def compute_cdmo_request_dates(
     return requested_start_date, requested_end_date
 
 
-def find_all_hilos(
-    timeline: GraphTimeline, tides: Tides, astro_pred_dict: dict
-) -> dict:
+def find_all_hilos(timeline: GraphTimeline, tides: dict, astro_pred_dict: dict) -> dict:
     """
     Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
     timeline in the future, it will just use the provided PredictedHighOrLow as is. For the part of the
@@ -473,7 +471,7 @@ def find_all_hilos(
 
     Args:
     - timeline: key-ordered Timeline of datetimes for the graph. May be any combination of past/future.
-    - obs_dict: dense dict of observed tide readings {datetime: {"level": val, "temp": val"}}
+    - obs_dict: dense dict of observed tide readings {datetime: Tide}
     - astro_pred_dict: dense dict of predicted high and low tides covering the entire timeline.
         {timeline_dt: PredictedHighOrLow}
 
@@ -504,7 +502,7 @@ def find_all_hilos(
         candidate_times = list(
             filter(lambda t: search_start <= t <= search_end, past_padded_timeline)
         )
-        observed = {t: tides.getTide(t) for t in candidate_times}
+        observed = {t: tides.get(t, None) for t in candidate_times}
         # remove the times which have no tide data
         observed = {k: v for k, v in observed.items() if v is not None}
         if len(observed) > 0:

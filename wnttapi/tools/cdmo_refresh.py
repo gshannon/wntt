@@ -25,8 +25,8 @@ force_console_logging()
 import app.station as stn
 import app.tzutil as tz
 from app.datasource import cdmo
-from app.datasource.tides import Tide, Tides
-from app.datasource.winds import Wind, Winds
+from app.datasource.tides import Tide
+from app.datasource.winds import Wind
 from app.models import Water, get_station
 from app.models import Wind as WindDb
 from app.timeline import Timeline
@@ -126,7 +126,7 @@ def refresh(
         tides = cdmo.get_water_data(station, timeline, useDb=False)
 
         diffs = None
-        if tides is not None and tides.length > 0:
+        if tides is not None and len(tides) > 0:
             if debug or verbose:
                 diffs = diff_water(tides, db_station_code)
             if not debug and (diffs is None or diffs > 0):
@@ -138,7 +138,7 @@ def refresh(
         winds = cdmo.get_wind_data(station, timeline, useDb=False)
         diffs = None
 
-        if winds is not None and winds.length > 0:
+        if winds is not None and len(winds) > 0:
             if debug or verbose:
                 diffs = diff_wind(winds, db_station_code)
             if not debug and (diffs is None or diffs > 0):
@@ -147,10 +147,10 @@ def refresh(
             logger.info(f"No matching {name} records found")
 
 
-def diff_water(tides: Tides, db_station_code: str) -> int:
-    print(f"Diffing {tides.length} water records")
+def diff_water(tides: dict, db_station_code: str) -> int:
+    print(f"Diffing {len(tides)} water records")
     diff_cnt = 0
-    for dt, cdmo_rec in tides.data.items():
+    for dt, cdmo_rec in tides.items():
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
             db_rec = Water.objects.get(station=db_station_code, time=(qdt))
@@ -159,14 +159,14 @@ def diff_water(tides: Tides, db_station_code: str) -> int:
             diff_cnt += 1
             print(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {tides.length} water cdmo records")
+    print(f"Found {diff_cnt} diffs out of {len(tides)} water cdmo records")
     return diff_cnt
 
 
-def diff_wind(winds: Winds, db_station_code: str) -> int:
-    print(f"Diffing {winds.length} wind records")
+def diff_wind(winds: dict, db_station_code: str) -> int:
+    print(f"Diffing {len(winds)} wind records")
     diff_cnt = 0
-    for dt, cdmo_rec in winds.data.items():
+    for dt, cdmo_rec in winds.items():
         qdt = dt.astimezone(tz.utc).isoformat()
         try:
             db_rec = WindDb.objects.get(station=db_station_code, time=(qdt))
@@ -175,7 +175,7 @@ def diff_wind(winds: Winds, db_station_code: str) -> int:
             diff_cnt += 1
             print(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {winds.length} wind cdmo records")
+    print(f"Found {diff_cnt} diffs out of {len(winds)} wind cdmo records")
     return diff_cnt
 
 
@@ -206,15 +206,14 @@ def diff_wind_record(db_rec: Water, cdmo_rec: Tide):
     return 0
 
 
-def upsert_water(tides: Tides, db_station_code: str):
+def upsert_water(tides: dict, db_station_code: str):
     create_cnt = update_cnt = 0
-    for dt, tide in tides.data.items():
+    for dt, tide in tides.items():
         _, created = Water.objects.update_or_create(
             station=db_station_code,
             time=dt.astimezone(tz.utc).isoformat(),
             defaults={
-                "temp": tide.temp_f,
-                "level": tide.mllw_feet,
+                "temp_f": tide.temp_f,
                 "clevel_nf": tide.corrected_nav_feet,
             },
         )
@@ -225,9 +224,9 @@ def upsert_water(tides: Tides, db_station_code: str):
     logger.info(f"Created {create_cnt}, updated {update_cnt} water records in db")
 
 
-def upsert_wind(winds: Winds, db_station_code: str):
+def upsert_wind(winds: dict, db_station_code: str):
     create_cnt = update_cnt = 0
-    for dt, wind_rec in winds.data.items():
+    for dt, wind_rec in winds.items():
         _, created = WindDb.objects.update_or_create(
             station=db_station_code,
             time=dt.astimezone(tz.utc).isoformat(),

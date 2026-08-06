@@ -76,7 +76,7 @@ def get_graph_data(
     future_surge_dict = sg.get_future_surge_data(
         timeline,
         station.noaa_station_id,
-        max(obs_tides.data) if obs_tides.length > 0 else None,
+        max(obs_tides) if len(obs_tides) > 0 else None,
     )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required

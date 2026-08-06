@@ -83,7 +83,7 @@ class TestCdmo(TestCase):
         self.assertEqual(len(hilos), len(pred_hilo_dict))
         # We're missing 12/5 00:30 - 07:15
         missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.tzone)
-        self.assertIsNone(obs_tides.getTide(missing_obs))
+        self.assertIsNone(obs_tides.get(missing_obs, None))
         self.assertIsInstance(hilos[missing_obs], PredictedHighOrLow)
 
         for dt, event in hilos.items():
@@ -92,7 +92,7 @@ class TestCdmo(TestCase):
 
         for dt, val in hilos.items():
             if isinstance(val, ObservedHighOrLow):
-                self.assertIn(dt, obs_tides.data)
+                self.assertIn(dt, obs_tides)
             else:
                 self.assertEqual(val.value, pred_hilo_dict[dt].value)
 

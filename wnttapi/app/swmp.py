@@ -4,8 +4,6 @@ from zoneinfo import ZoneInfo
 
 from app import util
 from app.datasource import astrotide, cdmo, surge, syzygy
-from app.datasource.tides import Tides
-from app.datasource.winds import Winds
 from app.hilo import Hilo
 from app.station import Station
 from app.timeline import Timeline
@@ -59,8 +57,8 @@ def get_latest_conditions(station: Station) -> dict:
 
 
 def extract_data(
-    winds: Winds,
-    obs_tides: Tides,
+    winds: dict,
+    obs_tides: dict,
     astro_dict: dict,
     surge_dict: dict,
     moon_dict: dict,
@@ -74,8 +72,8 @@ def extract_data(
         "next_phase_dt": moon_dict.get("nextdt", None),
     }
 
-    if winds.length > 0:
-        latest_wind_dt, wind_rec = max(winds.data.items(), key=lambda x: x[0])
+    if len(winds) > 0:
+        latest_wind_dt, wind_rec = max(winds.items(), key=lambda x: x[0])
         data["wind_speed"] = wind_rec.speed_mph
         data["wind_gust"] = wind_rec.gust_mph
         data["wind_dir_deg"] = wind_rec.direction_deg
@@ -83,7 +81,8 @@ def extract_data(
 
     # get the latest water level and temperature readings.
     latest_tide_rec = None
-    items = sorted(obs_tides.data.items())
+    # convert to list of tuples
+    items = sorted(obs_tides.items())
     if len(items) >= 1:
         (latest_tide_dt, latest_tide_rec) = items[-1]
         data["tide"] = latest_tide_rec.corrected_mllw_feet

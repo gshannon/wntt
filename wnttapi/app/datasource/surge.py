@@ -10,7 +10,6 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
 from app import tzutil as tz
-from app.datasource.tides import Tides
 from app.timeline import Timeline
 
 from ..models import Surge, SurgeBias
@@ -71,19 +70,19 @@ def get_future_surge_data(
     return future_surge_dict
 
 
-def get_recorded_storm_surge(astro_dict: dict, obs_tides: Tides) -> dict:
+def get_recorded_storm_surge(astro_dict: dict, obs_tides: dict) -> dict:
     """Calculate the past storm surge, which is the difference between the observed tide and the
     predicted tide.
 
     Args:
         astro_dict (dict): predicted tide values, in MLLW feet, keyed by datetime
-        tides (Tides): observed tide
+        tides (dict): observed tides, keyed by datetime
 
     Returns:
         dict: A dictionary of past storm surge values, keyed by datetime
     """
     data = {}  # {dt: surge_value}
-    for dt, tide in obs_tides.data.items():
+    for dt, tide in obs_tides.items():
         if dt in astro_dict:
             data[dt] = round(tide.corrected_mllw_feet - astro_dict[dt], 2)
     return data
