@@ -170,7 +170,6 @@ def build_past_surge_plot(
 def build_future_surge_plots(
     timeline: GraphTimeline,
     future_surges_dict: dict,
-    future_surge_calc_bias: float,
     reg_preds_dict: dict,
     astro_hilo_dict: dict,
 ) -> tuple[list, list]:
@@ -184,9 +183,6 @@ def build_future_surge_plots(
     Args:
         timeline: list of datetimes
         future_surges_dict: hourly surge predictions, in feet {dt: surge_value}
-        future_surge_calc_bias: calculated bias to be applied the surge values, or None.
-            This will only be set for reserves like Wells, where there is no BIAS data in the files.
-            Bias values provided in the file are already applied to the surge values.
         reg_preds_dict: 15-minute astronomical tide predictions for the timeline {dt: value}
 
     Returns: tuple[list, list].  Both lists have None in the same indexes -- no partial data.
@@ -204,7 +200,7 @@ def build_future_surge_plots(
         while surge is None and dt >= min_dt:
             surge = future_surges_dict.get(dt, None)
             dt -= timedelta(minutes=15)
-        return None if surge is None else surge + (future_surge_calc_bias or 0)
+        return surge
 
     def get_surge_and_hilo_prediction(dt):
         surge_val = find_nearby_surge(dt)

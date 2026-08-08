@@ -106,8 +106,6 @@ def get_graph_data(
     future_surge_plot, future_storm_tide_plot = gp.build_future_surge_plots(
         timeline,
         future_surge_dict.get("surges", None),
-        # TODO: future_surge_dict.get("bias1" or "bias2"),
-        None,
         astro_preds15_dict,
         astro_all_hilo_dict,
     )
