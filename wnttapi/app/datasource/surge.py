@@ -7,12 +7,9 @@ from datetime import datetime, timedelta
 
 import sentry_sdk
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 
 from app import tzutil as tz
 from app.timeline import Timeline
-
-from ..models import Surge, SurgeBias
 
 # /surgedata is a mount defined in docker-compose.yml
 _default_surge_file_dir = "/data/surge/data"
@@ -46,9 +43,6 @@ def get_future_surge_data(
         "cycle": cycle int,
         "file_creation_dt": file download datetime,
         "surges": { <dt>: <surge> }
-        "bias1": calc_bias1,
-        "bias2": calc_bias2,
-        "bias3": calc_bias3,
     }
     """
     future_surge_dict = {}
@@ -103,10 +97,7 @@ def get_or_load_projected_surge_file(
     cannot possibly be displayed in the application, and it would serve no purpose to cache it.
 
     If the latest data for the station is already in cache, we return that. Otherwise, we look for the latest
-    file for that station in the surge file directory, parse it and cache the data. We also look in the database
-    for a calculated bias value for that station, filedate and cycle, and if found, we return that as well so
-    users of this data can add it to the surge values if they want.  We don't do that here in order to enable
-    A/B testing of using this calculated bias or not.
+    file for that station in the surge file directory, parse it and cache the data.
 
     Args:
         noaa_station_id: the NOAA station id, so we know which file to read
@@ -118,9 +109,6 @@ def get_or_load_projected_surge_file(
         "cycle": cycle int,
         "file_creation_dt": file download datetime,
         "surges": { <dt>: <surge> }
-        "bias1": calc_bias1,
-        "bias2": calc_bias2,
-        "bias3": calc_bias3,
     """
     logger.debug(f"looking in surge cache for station {noaa_station_id}...")
 
@@ -163,9 +151,6 @@ def get_or_load_projected_surge_file(
             )
 
     # We have a file, and we need to read it and cache it.
-    (calc_bias1, calc_bias2, calc_bias3) = get_calculate_biases(
-        noaa_station_id, filedate, cycle
-    )
 
     surges_dict = parse_surge_file(timeline, filepath)
     if len(surges_dict) == 0:
@@ -179,9 +164,6 @@ def get_or_load_projected_surge_file(
         "cycle": cycle,
         "file_creation_dt": file_creation_dt,
         "surges": surges_dict,
-        "bias1": calc_bias1,
-        "bias2": calc_bias2,
-        "bias3": calc_bias3,
     }
     # We'll use a TTL of 48 hours to handle cases where download fails a few times.
     cache.set(noaa_station_id, payload, timeout=60 * 60 * 48)
@@ -230,40 +212,6 @@ def get_latest_file_info(noaa_station_id: str, dir_path: str = _default_surge_fi
         f"surge file for station {noaa_station_id}: {filepath}, filedate {filedate}, cycle {cycle}"
     )
     return filepath, filedate, cycle, file_creation_dt
-
-
-def get_calculate_biases(noaa_station_id: str, filedate: str, cycle: int):
-    """Retrieve calculated biases for a station that doesn't have bias (corrections), like Wells.
-    This is experimental, and is not used in the application.  It is intended for A/B testing
-    of the calculated bias logic.
-
-    Args:
-        noaa_station_id (str): NOAA station id
-        filedate (str): surge file date in YYYYMMDD format
-        cycle (int): surge file cycle
-
-    Returns:
-        tuple: A tuple containing the three calculated biases (calc_bias1, calc_bias2, calc_bias3)
-    """
-    (calc_bias1, calc_bias2, calc_bias3) = (None, None, None)
-    try:
-        rec = SurgeBias.objects.get(
-            noaa_id=noaa_station_id, filedate=filedate, cycle=cycle
-        )
-        (calc_bias1, calc_bias2, calc_bias3) = (rec.bias, rec.bias2, rec.bias3)
-        logger.debug(
-            f"got bias id {rec.id}: {rec.bias} from db for {noaa_station_id} {filedate} cycle {cycle}"
-        )
-    except ObjectDoesNotExist:
-        logger.debug(
-            f"Bias record not found in db for {noaa_station_id} {filedate} cycle {cycle}."
-        )
-    except Exception as exc:
-        # Log but do not raise
-        logger.exception("Could not read history surge records from db")
-        sentry_sdk.capture_exception(exc)
-
-    return calc_bias1, calc_bias2, calc_bias3
 
 
 def parse_surge_file(timeline: Timeline, filepath: str) -> dict:
@@ -321,49 +269,3 @@ def parse_surge_file(timeline: Timeline, filepath: str) -> dict:
         sentry_sdk.capture_message(msg)
 
     return surges_dict
-
-
-def get_best_historic_surge(
-    timeline: Timeline, noaa_station_id: str, bias_number: int
-) -> dict:
-    """Get the last known surge predictions for the past times in the timeline.
-
-    Args:
-        timeline (Timeline): a Timeline containing some past times.
-        noaa_station_id (str): NOAA station id
-        bias_number: 1 or 2, or 3, meaning which stored bias value to add to the surge values instead
-            of the default bias.  None for neither.  This is for A/B testing of calculated bias logic.
-            None for neither.  This is for A/B testing of calculated bias logic.
-
-    Returns:
-        dict: biased surge values, keyed by datetime, for all past times in the timeline.
-    """
-    data = {}
-    if timeline.is_all_future():
-        return data
-
-    qs = Surge.objects.filter(
-        noaa_id=noaa_station_id, tide_time__range=(timeline.start_dt, timeline.now)
-    ).order_by("tide_time")
-
-    for rec in qs:
-        in_tz = rec.tide_time.astimezone(timeline.time_zone)
-        if (
-            (bias_number == 1 and rec.calc_bias is None)
-            or (bias_number == 2 and rec.calc_bias2 is None)
-            or (bias_number == 3 and rec.calc_bias3 is None)
-        ):
-            # skip it, not worth showing on the graph.
-            continue
-        surge = rec.surge
-        if bias_number == 1:
-            surge += rec.calc_bias
-        elif bias_number == 2:
-            surge += rec.calc_bias2
-        elif bias_number == 3:
-            surge += rec.calc_bias3
-        else:
-            surge += rec.bias or 0
-        data[in_tz] = surge
-
-    return data

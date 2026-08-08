@@ -5,7 +5,8 @@ info() {
 }
 
 usage() {
-  echo "usage: $(basename $0) [-d] (dev mode)"
+  echo "Download current surge data file. "
+  echo "usage: $(basename $0)"
 }
 
 fail() {
@@ -14,18 +15,13 @@ fail() {
   exit 1
 }
 
-devmode=0
-while getopts ":dh" opt; do
+while getopts ":h" opt; do
   case $opt in
-    d ) devmode=1;;
     h ) usage; exit 0;;
     * ) fail;;
   esac
 done
 shift $(($OPTIND - 1))
-
-# Sanity check so we don't run prod in dev
-[ $(uname) == 'Darwin' ] && [ $devmode -eq 0 ] && fail "I don't think this is production"
 
 cwd=$(pwd)
 rootdir=$HOME/datamount/surge
@@ -41,7 +37,8 @@ mkdir -p $workdir $archive $datadir
 # List of NOAA station ids to pull.  For example of UI for this data:
 # See https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=8419317&datum=MLLW&show=0-0-1-1-0
 # Edit this whenever a reserve is added/subtracted.
-stations=("8419317" "8658163")
+# e.g. stations=("8419317" "8658163")
+stations=("8419317")
 
 : '
 Top level directories are named etss.<date>, e.g. etss.20251029, and the most recent few days files
@@ -112,21 +109,10 @@ for ((i=0; i<${#stations[@]}; i++)); do
     rm -f $datadir/${stations[$i]}*.csv  # remove prior files for this station
     saved_filename=${stations[$i]}-${filedate}-${cycle}.csv
     cp $datafile $datadir/$saved_filename
+    cp $datafile $archive/$saved_filename
 
     info "extracted ${stations[$i]}.csv and saved as $saved_filename"
-    # Run the surge_logger util in a temporary api container
-    if [ "$devmode" -eq 1 ]; then
-      export DJANGO_SETTINGS_MODULE=project.settings.dev
-      compose_path=$WNTT/local/docker-compose-local.yml
-    else
-      export DJANGO_SETTINGS_MODULE=project.settings.prod
-      compose_path=$HOME/docker-compose.yml
-    fi
-    docker compose -f $compose_path run --rm api tools/surge_logger.py \
-      -d $filedate -c $cycle -n ${stations[$i]} && info "logged ${stations[$i]}.csv"
   fi
 done
-
-[ "$devmode" -eq 0 ] && echo "$filedate $cycle" >> $rootdir/log
 
 exit 0

@@ -49,48 +49,6 @@ class Request(models.Model):
         db_table = "request"
 
 
-class Surge(models.Model):
-    noaa_id = models.CharField(max_length=7, null=False)
-    cycle = models.SmallIntegerField(null=True)
-    tide_time = models.DateTimeField(auto_now=False, auto_now_add=False)
-    tide = models.FloatField(null=False)
-    surge = models.FloatField(null=False)
-    surge_1day = models.FloatField(null=True)
-    surge_2day = models.FloatField(null=True)
-    bias = models.FloatField(null=True)
-    calc_bias = models.FloatField(null=True)
-    calc_bias2 = models.FloatField(null=True)
-    calc_bias3 = models.FloatField(null=True)
-    obs = models.FloatField(null=True)
-
-    class Meta:
-        db_table = "surge"
-        constraints = (
-            models.UniqueConstraint(
-                fields=["noaa_id", "tide_time"], name="uniq_station_time"
-            ),
-        )
-
-
-# One record for each downloaded surge file for which we need to calculate bias ourselves, currently just Wells.
-# Calculaged and written by the cron job, consumed by the surge API to apply the bias to the surge API to apply the bias to the file values.
-class SurgeBias(models.Model):
-    noaa_id = models.CharField(max_length=7, null=False)
-    filedate = models.DateField(auto_now=False, auto_now_add=False)
-    cycle = models.SmallIntegerField(null=False)
-    bias = models.FloatField(null=False)
-    bias2 = models.FloatField(null=True)
-    bias3 = models.FloatField(null=True)
-
-    class Meta:
-        db_table = "surgebias"
-        constraints = (
-            models.UniqueConstraint(
-                fields=["noaa_id", "filedate", "cycle"], name="surgebias_uk1"
-            ),
-        )
-
-
 class Water(models.Model):
     station = models.CharField(max_length=2, choices=Station.choices, null=False)
     time = models.CharField(
