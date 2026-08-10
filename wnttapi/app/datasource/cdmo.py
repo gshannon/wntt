@@ -39,7 +39,9 @@ logger = logging.getLogger(__name__)
 _max_wind_speed = 120  # max sane wind speed in mph
 
 
-def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> dict:
+def get_water_data(
+    station: Station, timeline: Timeline, useDb: bool = True, savePath=None
+) -> dict:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -91,7 +93,9 @@ def get_water_data(station: Station, timeline: Timeline, useDb: bool = True) -> 
         logger.debug(
             f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        reverse_tides = get_cdmo_tide(timeline, station, WATER_PARAMS)
+        reverse_tides = get_cdmo_tide(
+            timeline, station, WATER_PARAMS, savePath=savePath
+        )
         # Before returning, sort by datetime, since cdmo returns most recent data first.
         tides = dict(sorted(reverse_tides.items()))
         logger.debug(f"Total water data points: {len(tides)}")
@@ -159,7 +163,9 @@ def get_wind_data(station: Station, timeline: Timeline, useDb: bool = True) -> d
     return winds
 
 
-def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> dict:
+def get_cdmo_tide(
+    timeline: Timeline, station: Station, params: list, savePath=None
+) -> dict:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -185,6 +191,11 @@ def get_cdmo_tide(timeline: Timeline, station: Station, params: list) -> dict:
         raise util.InternalError("datetimes must be on 15-minute intervals")
 
     xml = get_cdmo_xml(timeline, station, params)
+    if savePath is not None:
+        try:
+            util.dump_xml(xml, savePath)
+        except Exception as e:
+            logger.error(f"while writing {savePath} got {e}")
     return parse_cdmo_tides_xml(timeline, station, xml)
 
 

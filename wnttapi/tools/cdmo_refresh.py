@@ -34,9 +34,13 @@ from app.timeline import Timeline
 # Can't use the normal __main__ logger because this is run as a script, not a module.
 logger = logging.getLogger("tools.cdmo_refresh")
 
+args = None
+nocontainer = False
+
 
 def main():
 
+    global args, nocontainer
     nocontainer = os.environ.get("IN_CONTAINER", "-") != "1"
 
     parser = build_parser()
@@ -59,15 +63,15 @@ def main():
         station = stn.get_station(args.swmp_station_id)
     db_station_code = get_station(args.swmp_station_id)
 
-    timeline = get_timeline(station, args)
+    timeline = get_timeline(station)
 
     if args.type is None or args.type == "T":
-        refresh("T", station, db_station_code, timeline, args.debug, args.verbose)
+        refresh("T", station, db_station_code, timeline)
     if args.type is None or args.type == "W":
-        refresh("W", station, db_station_code, timeline, args.debug, args.verbose)
+        refresh("W", station, db_station_code, timeline)
 
 
-def get_timeline(station, args) -> Timeline:
+def get_timeline(station) -> Timeline:
     if args.start is not None and args.end is not None:
         # We are pulling a specific time range.
         start_dt = datetime.strptime(args.start, "%Y-%m-%dT%H:%M").replace(
@@ -94,13 +98,23 @@ def get_timeline(station, args) -> Timeline:
     return timeline
 
 
+def getDumpPath(type):
+    filePath = None
+    if args.xmlsave:
+        fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
+        if nocontainer:
+            filePath = f"../datamount/cdmo/{fname}-{type}.xml"
+        else:
+            filePath = f"/data/cdmo/{fname}-{type}.xml"
+        print(f"Will save {filePath}")
+    return filePath
+
+
 def refresh(
     type: str,
     station: stn.Station,
     db_station_code: str,
     timeline: Timeline,
-    debug: bool,
-    verbose: bool,
 ):
     name = "water" if type == "T" else "wind"
 
@@ -123,13 +137,15 @@ def refresh(
     )
 
     if type == "T":
-        tides = cdmo.get_water_data(station, timeline, useDb=False)
+        tides = cdmo.get_water_data(
+            station, timeline, useDb=False, savePath=getDumpPath("T")
+        )
 
         diffs = None
         if tides is not None and len(tides) > 0:
-            if debug or verbose:
+            if args.debug or args.verbose:
                 diffs = diff_water(tides, db_station_code)
-            if not debug and (diffs is None or diffs > 0):
+            if not args.debug and (diffs is None or diffs > 0):
                 upsert_water(tides, db_station_code)
         else:
             logger.info(f"No matching {name} records found")
@@ -139,9 +155,9 @@ def refresh(
         diffs = None
 
         if winds is not None and len(winds) > 0:
-            if debug or verbose:
+            if args.debug or args.verbose:
                 diffs = diff_wind(winds, db_station_code)
-            if not debug and (diffs is None or diffs > 0):
+            if not args.debug and (diffs is None or diffs > 0):
                 upsert_wind(winds, db_station_code)
         else:
             logger.info(f"No matching {name} records found")
@@ -306,6 +322,13 @@ def build_parser():
         "--week",
         required=False,
         help="Week to pull (1-52), use with --year",
+    )
+    parser.add_argument(
+        "-x",
+        "--xmlsave",
+        required=False,
+        action="store_true",
+        help="Save all xml files",
     )
     return parser
 
