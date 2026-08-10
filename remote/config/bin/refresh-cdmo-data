@@ -18,6 +18,7 @@ Options:
 -E <endtime> : (opt) end of timeline for upsert. YYYY-mm-ddTHH:MM in station tzone
 -y <year> : (opt) year to pull, use with -w
 -w <week> : (opt) week of year to pull (1-52), use with -y
+-x : save xml file to YYYYMMDD-HHMMSS-{type}.xml in cdmo directory
 EOF
 
 }
@@ -30,7 +31,7 @@ fail() {
 
 devmode=0
 station=welinwq
-while getopts ":vdht:s:S:E:w:y:" opt; do
+while getopts ":vdht:s:S:E:w:y:x" opt; do
   case $opt in
     s ) station=$OPTARG;;
     S ) startstr="-S $OPTARG";;
@@ -40,6 +41,7 @@ while getopts ":vdht:s:S:E:w:y:" opt; do
     t ) typestr="-t $OPTARG";;
     d ) debugstr='-d';;
     v ) verbosestr='-v';;
+    x ) savexmlstr='-x';;
     h ) usage; exit 0;;
     * ) fail;;
   esac
@@ -60,7 +62,7 @@ else
 fi
 
 # Run the python script in a new, temporary api container
-docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station \
-${debugstr} ${verbosestr} ${typestr} ${startstr} ${endstr} ${weekstr} ${yearstr} ${weekstr} ${yearstr}
+docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} \
+${savexmlstr} ${verbosestr} ${typestr} ${startstr} ${endstr} ${weekstr} ${yearstr} ${weekstr} ${yearstr}
 
 exit 0
