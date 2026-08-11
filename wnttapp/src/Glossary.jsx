@@ -64,7 +64,7 @@ export default function Glossary() {
                     . However, in this application, we use MLLW for land as well, so tides and
                     nearby land elevations may be meaningfully compared.
                 </Entry>
-                <Entry title='Custom Location'>
+                <Entry title='Custom Elevation'>
                     The elevation relative to MLLW of your selected location on the Map. This is an
                     elevation you are interested in showing on the graph for purposes of comparison
                     to tide data. If you enter an address to look up, it is sent to{' '}

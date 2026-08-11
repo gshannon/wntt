@@ -308,7 +308,7 @@ const instructions = (ctx, pendingElevationNav) => {
     const cleartext = () => {
         return (
             <>
-                Click <b>Clear</b> to stop showing a custom location on the graph.
+                Click <b>Clear</b> to stop showing a custom elevation on the graph.
             </>
         )
     }
