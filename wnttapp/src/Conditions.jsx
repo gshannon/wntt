@@ -119,7 +119,7 @@ export default function Conditions({ data, error }) {
             </div>
             <div className='horizontal-line'></div>
             <div className='footnotes'>
-                <sup>*</sup>Next Tide Level does not include Storm Surge.
+                <sup>*</sup>Next High Tide does not include Storm Surge.
             </div>
             <div className='footnotes'>
                 Source of this data:&nbsp; &nbsp;
