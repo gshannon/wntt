@@ -50,13 +50,6 @@ def main():
         parser.print_help()
         return
 
-    if args.week is not None:
-        week = int(args.week)
-        if week < 0 or week > 53:
-            print(f"Invalid week {args.week}, must be 0-53")
-            parser.print_help()
-            return
-
     if nocontainer:
         station = stn.get_station(args.swmp_station_id, "../datamount/stations")
     else:
@@ -137,7 +130,7 @@ def refresh(
 
     if type == "T":
         tides = cdmo.get_water_data(
-            station, timeline, useDb=False, savePath=getDumpPath("T")
+            station, timeline, useDb=False, savePath=getDumpPath(type)
         )
 
         diffs = None
@@ -150,7 +143,9 @@ def refresh(
             logger.info(f"No matching {name} records found")
 
     else:
-        winds = cdmo.get_wind_data(station, timeline, useDb=False)
+        winds = cdmo.get_wind_data(
+            station, timeline, useDb=False, savePath=getDumpPath(type)
+        )
         diffs = None
 
         if winds is not None and len(winds) > 0:
