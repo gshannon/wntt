@@ -24,6 +24,7 @@ force_console_logging()
 
 import app.station as stn
 import app.tzutil as tz
+from app import util
 from app.datasource import cdmo
 from app.datasource.tides import Tide
 from app.datasource.winds import Wind
@@ -36,6 +37,8 @@ logger = logging.getLogger("tools.cdmo_refresh")
 
 args = None
 nocontainer = False
+tide_diff_found = False
+wind_diff_found = False
 
 
 def main():
@@ -140,7 +143,7 @@ def refresh(
             if not args.debug and (diffs is None or diffs > 0):
                 upsert_water(tides, db_station_code)
         else:
-            logger.info(f"No matching {name} records found")
+            logger.info("No matching water records found")
 
     else:
         winds = cdmo.get_wind_data(
@@ -154,7 +157,7 @@ def refresh(
             if not args.debug and (diffs is None or diffs > 0):
                 upsert_wind(winds, db_station_code)
         else:
-            logger.info(f"No matching {name} records found")
+            logger.info("No matching wind records found")
 
 
 def diff_water(tides: dict, db_station_code: str) -> int:
@@ -189,29 +192,43 @@ def diff_wind(winds: dict, db_station_code: str) -> int:
     return diff_cnt
 
 
-def diff_water_record(db_rec: WindDb, cdmo_rec: Wind) -> int:
+def diff_water_record(db: Water, cdmo: Tide) -> int:
+
+    global tide_diff_found
 
     # We only diff Corrected water level, as temp is not important in this app
-    if not cdmo_rec.nav_feet_equals(db_rec.clevel_nf):
-        print(
-            f"{db_rec.time} old/new clevel_nf: {db_rec.clevel_nf}/{cdmo_rec.corrected_nav_feet}",
+    if not cdmo.nav_feet_equals(db.clevel_nf):
+        if not tide_diff_found:
+            print("DIFFS: (old nav-meters, nav-feet, mllw-feet) ==> new")
+            tide_diff_found = True
+        old = (
+            util.feet_to_meters(db.clevel_nf),
+            db.clevel_nf,
+            cdmo.navd88_to_mllw(db.clevel_nf),
         )
+        new = (
+            util.feet_to_meters(cdmo.corrected_nav_feet),
+            cdmo.corrected_nav_feet,
+            cdmo.corrected_mllw_feet,
+        )
+        print(f"{db.time}: {old} ==> {new}")
         return 1
     return 0
 
 
-def diff_wind_record(db_rec: Water, cdmo_rec: Tide):
+def diff_wind_record(db: WindDb, cdmo: Wind):
+    global wind_diff_found
     if (
-        db_rec.gust != cdmo_rec.gust_mph
-        or db_rec.speed != cdmo_rec.speed_mph
-        or db_rec.dir_deg != cdmo_rec.direction_deg
+        db.gust != cdmo.gust_mph
+        or db.speed != cdmo.speed_mph
+        or db.dir_deg != cdmo.direction_deg
     ):
-        print(
-            (
-                f"{db_rec.time} old/new speed: {db_rec.speed}/{cdmo_rec.speed_mph}, "
-                + f"gust: {db_rec.gust}/{cdmo_rec.gust_mph} dir_deg: {db_rec.dir_deg}/{cdmo_rec.direction_deg}"
-            ),
-        )
+        if not wind_diff_found:
+            print("DIFFS: (old speed mph, gust mph, dir) ==> new")
+            wind_diff_found = True
+        old = (db.speed, db.gust, db.dir_deg)
+        new = (cdmo.speed_mph, cdmo.gust_mph, db.dir_deg)
+        print(f"{db.time}: {old} ==> {new}")
         return 1
     return 0
 

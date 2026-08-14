@@ -21,3 +21,11 @@ class Wind:
         for fld in fields(self):
             if getattr(self, fld.name) is None:
                 raise ValueError(f"Field '{fld.name}' cannot be None")
+
+    @property
+    def todict(self):
+        return {
+            "speed_mph": self.speed_mph,
+            "gust_mph": self.gust_mph,
+            "direction_deg": self.direction_deg,
+        }

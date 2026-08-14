@@ -332,7 +332,7 @@ const instructions = (ctx, pendingElevationNav) => {
                         The selected location is at <b>{elevMllw} ft</b> MLLW.{' '}
                     </p>
                     Click the <b>Graph</b> button to add this to the graph as &quot;Custom
-                    Location&quot;. {ctx.customElevationNav && cleartext()}
+                    Elevation&quot;. {ctx.customElevationNav && cleartext()}
                 </>
             )
         }
