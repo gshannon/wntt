@@ -338,13 +338,13 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict
             continue
 
         tides[dt_in_local] = Tide(
-            temp_f=util.centigrade_to_fahrenheit(temp_c),
+            temp_f=util.celsius_to_fahrenheit(temp_c),
             corrected_nav_feet=util.meters_to_feet(corrected_level_nav_meters),
             mllw_offset=station.mllw_conversion,
         )
 
     if none_or_bad > 0:
-        logger.warning(
+        logger.debug(
             f"{none_or_bad} of {records - ignored} expected tide records had missing or invalid data"
         )
     return tides
@@ -413,7 +413,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
         )
 
     if none_or_bad > 0:
-        logger.warning(
+        logger.debug(
             f"{none_or_bad} of {records - ignored} expected wind records had missing or invalid data"
         )
 

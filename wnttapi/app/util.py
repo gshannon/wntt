@@ -87,18 +87,30 @@ def meters_to_feet(meters):
     return round(meters * 3.28084, 2)
 
 
+def feet_to_meters(feet):
+    return round(feet / 3.28084, 2)
+
+
 def kilometers_to_miles(k: float) -> float:
     return round(k * 0.6213712, 1)
 
 
-def meters_per_second_to_mph(in_value: float) -> float:
-    """Convert meters/sec to miles/hour"""
-    miles_per_sec = in_value * 0.000621371
+def meters_per_second_to_mph(mps: float) -> float:
+    miles_per_sec = mps * 0.000621371
     return round(miles_per_sec * 3600, 1)
 
 
-def centigrade_to_fahrenheit(in_value: float) -> float:
-    return round(in_value * 9 / 5 + 32, 1)
+def mph_to_meters_per_second(mph: float) -> float:
+    meters_per_sec = mph / 3600
+    return round(meters_per_sec / 0.000621371, 1)
+
+
+def celsius_to_fahrenheit(celsius: float) -> float:
+    return round(celsius * 9 / 5 + 32, 1)
+
+
+def fahrenheit_to_celsius(fahrenheit: float) -> float:
+    return round((fahrenheit - 32) * 5 / 9, 1)
 
 
 def read_file(filepath):
