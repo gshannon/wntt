@@ -9,7 +9,8 @@
         "build": "vite build",
         "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview",
-        "test": "vitest "
+        "test": "vitest ",
+        "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
         "@sentry/react": "^10.46.0",
@@ -30,12 +31,17 @@
     },
     "devDependencies": {
         "@tanstack/react-query-devtools": "^5.90.2",
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.4",
         "@vitejs/plugin-react-swc": "^4.2.0",
+        "@vitest/coverage-v8": "^4.1.10",
         "baseline-browser-mapping": "^2.9.11",
         "eslint": "^9.38.0",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.0",
         "eslint-plugin-react-refresh": "^0.4.24",
+        "jsdom": "^29.1.1",
         "vite": "^7.1.12",
         "vite-plugin-eslint2": "^5.0.4",
         "vite-plugin-inspect": "^11.3.3",

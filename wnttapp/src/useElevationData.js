@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
-import { HttpNotAcceptableCode, EpqsUrl, roundTo } from './utils'
+import { EpqsUrl, roundTo } from './utils'
 import * as storage from './storage'
+import { handleQueryError } from './queryError'
 
 export default function useElevationData(pendingMarkerLocation) {
     const mainStore = storage.getMainStorage()
@@ -25,27 +25,12 @@ export default function useElevationData(pendingMarkerLocation) {
                 .then((res) => {
                     return roundTo(parseFloat(res.data.value), 2)
                 })
-                .catch((error) => {
-                    if (
-                        error.name !== 'CanceledError' &&
-                        error.response?.status !== HttpNotAcceptableCode
-                    ) {
-                        console.error(
-                            error.message,
-                            error.response?.status,
-                            error.response?.data?.detail,
-                        )
-                        Sentry.captureException(error, {
-                            tags: { operation: error.request.responseURL },
-                            user: {
-                                uid: mainStore.uid,
-                                session: mainStore.session,
-                                started: mainStore.started,
-                            },
-                        })
-                    }
-                    throw error
-                })
+                .catch((error) =>
+                    handleQueryError(error, {
+                        operation: error.request?.responseURL,
+                        mainStore,
+                    }),
+                )
         },
         staleTime: 0,
         cacheTime: 0,

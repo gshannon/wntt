@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
-import { HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
+import { handleQueryError } from './queryError'
 
 export default function useAddressLookup(search, doLookup) {
     const mainStore = storage.getMainStorage()
@@ -27,28 +26,13 @@ export default function useAddressLookup(search, doLookup) {
                 .then((res) => {
                     return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }
                 })
-                .catch((error) => {
-                    if (
-                        error.name !== 'CanceledError' &&
-                        error.response?.status !== HttpNotAcceptableCode
-                    ) {
-                        console.error(
-                            error.message,
-                            error.response?.status,
-                            error.response?.data?.detail,
-                        )
-                        Sentry.captureException(error, {
-                            tags: { operation: import.meta.env.VITE_API_ADDRESS_URL },
-                            user: {
-                                uid: mainStore.uid,
-                                session: mainStore.session,
-                                started: mainStore.started,
-                            },
-                            extra: { search: encoded },
-                        })
-                    }
-                    throw error
-                })
+                .catch((error) =>
+                    handleQueryError(error, {
+                        operation: import.meta.env.VITE_API_ADDRESS_URL,
+                        mainStore,
+                        extra: { search: encoded },
+                    }),
+                )
         },
         staleTime: 0,
         cacheTime: 0,
