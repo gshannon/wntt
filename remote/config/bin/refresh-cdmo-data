@@ -56,13 +56,15 @@ params are provided, upsert the data defined by that timeline.
 if [ $(uname) == 'Darwin' ]; then
   export DJANGO_SETTINGS_MODULE=project.settings.dev
   compose_path=$WNTT/local/docker-compose-local.yml
+  userstr=
 else
   export DJANGO_SETTINGS_MODULE=project.settings.prod
   compose_path=$HOME/docker-compose.yml
+  userstr='-u 1001:1001'
 fi
 
 # Run the python script in a new, temporary api container
-docker compose -f $compose_path run --rm api tools/cdmo_refresh.py -s $station ${debugstr} \
+docker compose -f $compose_path run ${userstr} --rm api tools/cdmo_refresh.py -s $station ${debugstr} \
 ${savexmlstr} ${verbosestr} ${typestr} ${startstr} ${endstr} ${weekstr} ${yearstr} ${weekstr} ${yearstr}
 
 exit 0
