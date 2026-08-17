@@ -28,3 +28,4 @@ __init__.py
 dist
 .DS_Store
 FileVaultMaster.*
+personal/
