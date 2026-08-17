@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
-import { HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
+import { handleQueryError } from './queryError'
 
 export default function useLatestData(station) {
     const mainStore = storage.getMainStorage()
@@ -21,27 +20,12 @@ export default function useLatestData(station) {
                     station_id: station.id,
                 })
                 .then((res) => res.data)
-                .catch((error) => {
-                    if (
-                        error.name !== 'CanceledError' &&
-                        error.response?.status !== HttpNotAcceptableCode
-                    ) {
-                        console.error(
-                            error.message,
-                            error.response?.status,
-                            error.response?.data?.detail,
-                        )
-                        Sentry.captureException(error, {
-                            tags: { operation: import.meta.env.VITE_API_LATEST_URL },
-                            user: {
-                                uid: mainStore.uid,
-                                session: mainStore.session,
-                                started: mainStore.started,
-                            },
-                        })
-                    }
-                    throw error
-                })
+                .catch((error) =>
+                    handleQueryError(error, {
+                        operation: import.meta.env.VITE_API_LATEST_URL,
+                        mainStore,
+                    }),
+                )
         },
         staleTime: 300_000, // 5 minutes.
         gcTime: 300_000, // gcTime should be >= staleTime in case they move off the page and return

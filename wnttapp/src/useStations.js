@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
 import Station from './Station'
-import { HttpNotAcceptableCode } from './utils'
 import * as storage from './storage'
+import { handleQueryError } from './queryError'
 
 // Fetch station selection data from the server, and keep it cached for the app lifetime.
 export default function useStations() {
@@ -32,27 +31,12 @@ export default function useStations() {
                     ])
                     return Object.fromEntries(asArray)
                 })
-                .catch((error) => {
-                    if (
-                        error.name !== 'CanceledError' &&
-                        error.response?.status !== HttpNotAcceptableCode
-                    ) {
-                        console.error(
-                            error.message,
-                            error.response?.status,
-                            error.response?.data?.detail,
-                        )
-                        Sentry.captureException(error, {
-                            tags: { operation: import.meta.env.VITE_API_STATIONS_URL },
-                            user: {
-                                uid: mainStore.uid,
-                                session: mainStore.session,
-                                started: mainStore.started,
-                            },
-                        })
-                    }
-                    throw error
-                })
+                .catch((error) =>
+                    handleQueryError(error, {
+                        operation: import.meta.env.VITE_API_STATIONS_URL,
+                        mainStore,
+                    }),
+                )
         },
         staleTime: Infinity,
         gcTime: Infinity,

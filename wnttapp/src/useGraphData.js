@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import * as Sentry from '@sentry/react'
-import { buildCacheKey, stringify, HttpNotAcceptableCode } from './utils'
+import { buildCacheKey, stringify } from './utils'
 import * as storage from './storage'
+import { handleQueryError } from './queryError'
 
 export default function useGraphData(station, startDate, endDate, hiloMode, special) {
     const mainStore = storage.getMainStorage()
@@ -31,28 +31,13 @@ export default function useGraphData(station, startDate, endDate, hiloMode, spec
                     special: special,
                 })
                 .then((res) => res.data)
-                .catch((error) => {
-                    if (
-                        error.name !== 'CanceledError' &&
-                        error.response?.status !== HttpNotAcceptableCode
-                    ) {
-                        console.error(
-                            error.message,
-                            error.response?.status,
-                            error.response?.data?.detail,
-                        )
-                        Sentry.captureException(error, {
-                            tags: { operation: import.meta.env.VITE_API_GRAPH_URL },
-                            user: {
-                                uid: mainStore.uid,
-                                session: mainStore.session,
-                                started: mainStore.started,
-                            },
-                            extra: { start: startDateStr, end: endDateStr },
-                        })
-                    }
-                    throw error
-                })
+                .catch((error) =>
+                    handleQueryError(error, {
+                        operation: import.meta.env.VITE_API_GRAPH_URL,
+                        mainStore,
+                        extra: { start: startDateStr, end: endDateStr },
+                    }),
+                )
         },
         staleTime: 10_000,
         gcTime: 10_000,
