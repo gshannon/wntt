@@ -26,10 +26,11 @@ class Param(Enum):
     WindSpeed = "Wspd"
     WindGust = "MaxWspd"
     WindDir = "Wdir"
+    BarometricPressure = "BP"
 
 
 WATER_PARAMS = [Param.LevelNav, Param.CorrectedLevelNav, Param.Temperature]
-WIND_PARAMS = [Param.WindSpeed, Param.WindGust, Param.WindDir]
+WIND_PARAMS = [Param.WindSpeed, Param.WindGust, Param.WindDir, Param.BarometricPressure]
 
 """
 Access CDMO web services to retrieve observed tide, wind, and temperature data. 

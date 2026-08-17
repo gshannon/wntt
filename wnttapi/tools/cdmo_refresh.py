@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from datetime import date, datetime, time, timedelta
+from pathlib import Path
 
 # In the container, this is run from /wnttapi
 sys.path.append(".")
@@ -44,6 +45,7 @@ wind_diff_found = False
 def main():
 
     global args, nocontainer
+    # This var should be set to 1 in dockerfile, else it should be unset, for running from vscode or command line.
     nocontainer = os.environ.get("IN_CONTAINER", "-") != "1"
 
     parser = build_parser()
@@ -97,11 +99,16 @@ def getDumpPath(type):
     filePath = None
     if args.xmlsave:
         fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
+        dirname = date.today().strftime("%Y%m%d")  # noqa
+
         if nocontainer:
-            filePath = f"../datamount/cdmo/{fname}-{type}.xml"
+            dirpath = f"../data/cdmo/{dirname}"
         else:
-            filePath = f"/data/cdmo/{fname}-{type}.xml"
+            dirpath = f"/data/cdmo/{dirname}"
+        filePath = f"{dirpath}/{fname}-{type}.xml"
         print(f"Will save {filePath}")
+        # make sure subdirectory exists
+        Path(dirpath).mkdir(parents=False, exist_ok=True)
     return filePath
 
 
