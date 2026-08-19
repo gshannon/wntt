@@ -641,7 +641,7 @@ def handle_float(element, fieldName: str, required: bool, local_dt: datetime):
         if float_val is None and required:
             raise ValueError()
         return float_val
-    except:
+    except Exception:  # noqa
         logger.debug(
             "Invalid or missing %s for %s: '%s'", fieldName, local_dt, data_str
         )
@@ -660,7 +660,7 @@ def handle_windspeed(element, fieldName: str, local_dt: datetime):
         if mph < 0 or mph > _max_wind_speed:
             raise ValueError()
         return mph
-    except:
+    except Exception:  # noqa
         logger.debug("invalid or missing %s: '%s' at %s", fieldName, wspd_str, local_dt)
         return None
 
@@ -676,6 +676,6 @@ def handle_wind_degrees(element, fieldName: str, local_dt: datetime):
         if degrees < 0 or degrees > 360:
             raise ValueError()
         return degrees
-    except:
+    except Exception:  # noqa
         logger.debug("invalid or missing %s: '%s' at %s", fieldName, deg_str, local_dt)
         return None
