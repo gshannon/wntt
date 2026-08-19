@@ -69,20 +69,6 @@ def round_to_quarter(dt: datetime) -> datetime:
         return floor + m15
 
 
-def is_valid_float(value: any) -> bool:
-    if value is None:
-        return False
-    if isinstance(value, (float, int)):
-        return True
-    if isinstance(value, str):
-        try:
-            float(value) + 0.0
-            return True
-        except Exception:
-            return False
-    return False
-
-
 def meters_to_feet(meters):
     return round(meters * 3.28084, 2)
 

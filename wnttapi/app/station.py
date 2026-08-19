@@ -49,21 +49,11 @@ class Station:
         self.weather_station_latitude = weather_location_latitude
         self.weather_station_longitude = weather_location_longitude
 
-    def navd88_feet_to_mllw_feet(self, in_value: float) -> float:
-        if not util.is_valid_float(in_value):
+    def navd88_feet_to_mllw_feet(self, nav_feet: float) -> float:
+        try:
+            return round(nav_feet + self.mllw_conversion, 2)
+        except Exception:  # noqa
             return None
-        return round(in_value + self.mllw_conversion, 2)
-
-    def mllw_feet_to_navd88_feet(self, in_value: float) -> float:
-        if not util.is_valid_float(in_value):
-            return None
-        return round(in_value - self.mllw_conversion, 2)
-
-    def navd88_meters_to_mllw_feet(self, meters: float) -> float:
-        if not util.is_valid_float(meters):
-            return None
-        feet = util.meters_to_feet(meters)
-        return round(self.navd88_feet_to_mllw_feet(feet), 2)
 
 
 def get_station_selection_data(data_dir=_default_file_dir) -> list:
@@ -90,7 +80,7 @@ def get_supported_years() -> list:
     Get the years the API supports, in order. By default this means the last 2 years, the current year,
     plus the next 2 years.
     """
-    year = date.today().year
+    year = date.today().year  # noqa
     return [y for y in range(year - 2, year + 3)]
 
 
