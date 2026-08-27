@@ -78,16 +78,13 @@ def get_timeline(station) -> Timeline:
         end_dt = datetime.strptime(args.end, "%Y-%m-%dT%H:%M").replace(
             tzinfo=station.time_zone
         )
-        print(f"Processing {start_dt} to {end_dt} ...", file=sys.stderr)
+        logger.info(f"Processing {start_dt} to {end_dt} ...", file=sys.stderr)
         timeline = Timeline(start_dt, end_dt)
     elif args.year is not None and args.week is not None:
         start_date = date.fromisocalendar(int(args.year), int(args.week), 1)
         start_dt = datetime.combine(start_date, time(0), tzinfo=station.time_zone)
         end_dt = start_dt + timedelta(days=7) - timedelta(minutes=15)
-        print(
-            f"Processing week {args.week} of {args.year}: {start_dt} to {end_dt} ...",
-            file=sys.stderr,
-        )
+        print(f"Processing week {args.week} of {args.year}: {start_dt} to {end_dt} ...")
         timeline = Timeline(start_dt, end_dt)
     else:
         timeline = None  # We'll just get the latest data
@@ -96,19 +93,16 @@ def get_timeline(station) -> Timeline:
 
 
 def getDumpPath(type):
-    filePath = None
-    if args.xmlsave:
-        fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
-        dirname = date.today().strftime("%Y%m%d")  # noqa
+    fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
+    dirname = date.today().strftime("%Y%m%d")  # noqa
 
-        if nocontainer:
-            dirpath = f"../data/cdmo/{dirname}"
-        else:
-            dirpath = f"/data/cdmo/{dirname}"
-        filePath = f"{dirpath}/{fname}-{type}.xml"
-        print(f"Will save {filePath}")
-        # make sure subdirectory exists
-        Path(dirpath).mkdir(parents=False, exist_ok=True)
+    if nocontainer:
+        dirpath = f"../data/cdmo/{dirname}"
+    else:
+        dirpath = f"/data/cdmo/{dirname}"
+    filePath = f"{dirpath}/{fname}-{type}.xml"
+    # make sure subdirectory exists
+    Path(dirpath).mkdir(parents=False, exist_ok=True)
     return filePath
 
 
@@ -140,7 +134,10 @@ def refresh(
 
     if type == "T":
         tides = cdmo.get_water_data(
-            station, timeline, useDb=False, savePath=getDumpPath(type)
+            station,
+            timeline,
+            useDb=False,
+            savePath=getDumpPath(type) if args.xmlsave else None,
         )
 
         diffs = None
@@ -154,7 +151,10 @@ def refresh(
 
     else:
         winds = cdmo.get_wind_data(
-            station, timeline, useDb=False, savePath=getDumpPath(type)
+            station,
+            timeline,
+            useDb=False,
+            savePath=getDumpPath(type) if args.xmlsave else None,
         )
         diffs = None
 
@@ -168,7 +168,7 @@ def refresh(
 
 
 def diff_water(tides: dict, db_station_code: str) -> int:
-    print(f"Diffing {len(tides)} water records")
+    logger.info(f"Diffing {len(tides)} water records")
     diff_cnt = 0
     for dt, cdmo_rec in tides.items():
         qdt = dt.astimezone(tz.utc).isoformat()
@@ -177,14 +177,14 @@ def diff_water(tides: dict, db_station_code: str) -> int:
             diff_cnt += diff_water_record(db_rec, cdmo_rec)
         except ObjectDoesNotExist:
             diff_cnt += 1
-            print(f"{dt} not in database")
+            logger.info(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {len(tides)} water cdmo records")
+    logger.info(f"Found {diff_cnt} diffs out of {len(tides)} water cdmo records")
     return diff_cnt
 
 
 def diff_wind(winds: dict, db_station_code: str) -> int:
-    print(f"Diffing {len(winds)} wind records")
+    logger.info(f"Diffing {len(winds)} wind records")
     diff_cnt = 0
     for dt, cdmo_rec in winds.items():
         qdt = dt.astimezone(tz.utc).isoformat()
@@ -193,9 +193,9 @@ def diff_wind(winds: dict, db_station_code: str) -> int:
             diff_cnt += diff_wind_record(db_rec, cdmo_rec)
         except ObjectDoesNotExist:
             diff_cnt += 1
-            print(f"{dt} not in database")
+            logger.info(f"{dt} not in database")
 
-    print(f"Found {diff_cnt} diffs out of {len(winds)} wind cdmo records")
+    logger.info(f"Found {diff_cnt} diffs out of {len(winds)} wind cdmo records")
     return diff_cnt
 
 
@@ -354,5 +354,5 @@ def build_parser():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        print(str(e))
+    except Exception as e:  # noqa
+        logger.error(str(e))
