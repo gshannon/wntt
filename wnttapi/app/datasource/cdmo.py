@@ -193,8 +193,9 @@ def get_cdmo_tide(timeline: Timeline, station: Station, savePath=None) -> dict:
     xml = get_cdmo_xml(timeline, station, WATER_PARAMS)
     if savePath is not None:
         try:
+            logger.info(f"Saving {savePath}")
             util.dump_xml(xml, savePath)
-        except Exception as e:
+        except Exception as e:  # noqa
             logger.error(f"while writing {savePath} got {e}")
     return parse_cdmo_tides_xml(timeline, station, xml)
 
