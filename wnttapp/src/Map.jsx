@@ -21,6 +21,42 @@ import AddressForm from './AddressForm'
 const WaterStationEmoji = '\u{1F53B}'
 const WeatherStationEmoji = '\u{1F536}'
 
+// A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
+// so when this child component is mounted it can reset the view settings to current values.
+const ChangeView = ({ center, zoom }) => {
+    useMap().setView(center, zoom)
+    return null
+}
+
+const MapClickHandler = ({ setMarkerLatLng, setZoom, setMapCenter }) => {
+    useMapEvents({
+        click: (e) => {
+            setMarkerLatLng(e.latlng)
+        },
+        zoomend: (e) => {
+            setZoom(e.target.getZoom())
+        },
+        dragend: (e) => {
+            setMapCenter(e.target.getCenter())
+        },
+    })
+    return null
+}
+
+const ErrorSection = ({ error }) => {
+    if (error) {
+        return (
+            <Row>
+                <Col className='d-flex justify-content-center text-warning bg-dark'>
+                    <ErrorBlock error={error} />
+                </Col>
+            </Row>
+        )
+    } else {
+        return <></>
+    }
+}
+
 export default function Map({ onMapClose }) {
     const ctx = useContext(AppContext)
 
@@ -97,21 +133,6 @@ export default function Map({ onMapClose }) {
         [],
     )
 
-    const MapClickHandler = () => {
-        useMapEvents({
-            click: (e) => {
-                setMarkerLatLng(e.latlng)
-            },
-            zoomend: (e) => {
-                setZoom(e.target.getZoom())
-            },
-            dragend: (e) => {
-                setMapCenter(e.target.getCenter())
-            },
-        })
-        return null
-    }
-
     const handleRecenterToMarker = () => {
         setMapCenter(pendingMarkerLocation || ctx.customLocation)
     }
@@ -159,26 +180,6 @@ export default function Map({ onMapClose }) {
                 </LeafletTooltip>
             </Marker>
         )
-    }
-
-    // A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
-    // so when this child component is mounted it can reset the view settings to current values.
-    const ChangeView = () => {
-        useMap().setView(mapCenter, zoom)
-    }
-
-    const ErrorSection = () => {
-        if (queryError) {
-            return (
-                <Row>
-                    <Col className='d-flex justify-content-center text-warning bg-dark'>
-                        <ErrorBlock error={queryError} />
-                    </Col>
-                </Row>
-            )
-        } else {
-            return <></>
-        }
     }
 
     return (
@@ -253,7 +254,7 @@ export default function Map({ onMapClose }) {
                         </div>
                     </div>
 
-                    <ErrorSection />
+                    <ErrorSection error={queryError} />
                     <Row className='justify-content-center mt-0 mx-1 mx-sm-2'>
                         <MapContainer
                             center={mapCenter}
@@ -261,7 +262,11 @@ export default function Map({ onMapClose }) {
                             zoom={zoom}>
                             <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                             <ChangeView center={mapCenter} zoom={zoom} />
-                            <MapClickHandler />
+                            <MapClickHandler
+                                setMarkerLatLng={setMarkerLatLng}
+                                setZoom={setZoom}
+                                setMapCenter={setMapCenter}
+                            />
                             {stationMarker(
                                 'wq',
                                 ctx.station.swmpLocation,
