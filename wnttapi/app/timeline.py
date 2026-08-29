@@ -32,7 +32,9 @@ class Timeline:
     _padding_points = 8  # How many 15-min intervals to go beyond the start/end times.
 
     # The "now" param is for testing only!
-    def __init__(self, start_dt: datetime, end_dt: datetime, now: datetime = None):
+    def __init__(
+        self, start_dt: datetime, end_dt: datetime, now: datetime | None = None
+    ):
         if start_dt.tzinfo is None or end_dt.tzinfo is None:
             raise util.InternalError("datetimes cannot be naive")
         self.requested_times = []

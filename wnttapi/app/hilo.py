@@ -2,6 +2,7 @@ import logging
 from abc import ABC
 from datetime import datetime
 from enum import Enum
+
 from app import util
 
 logger = logging.getLogger(__name__)
@@ -12,8 +13,8 @@ A utility class for representing High and Low Tide events.
 
 
 class Hilo(Enum):
-    LOW = 1
-    HIGH = 2
+    LOW = "L"
+    HIGH = "H"
 
 
 class HighOrLow(ABC):

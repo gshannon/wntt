@@ -31,6 +31,10 @@ On the hosting server there is a directory that is mounted by the API Docker con
     - perihelion.csv : UTC datetimes of earth-sun perihelion for the supported date range
     - phases.csv : UTC datetimes and phase code (NM, FQ, FM, LQ) for moon phases in supported date range
 
+### About MLLW and NAVD88
+
+All elevations displayed in the app are relative to the MLLW (Mean Lower Low Water) datum. However, the MLLW reference point is not static -- it changes with each National Tidal Datum Epoch (NTDE). On the other hand, the NAVD88 datum is permanent and will not change when the NTDE changes. Therefore we use NAVD88 in the data store and in code logic, only converting to MLLW for display purposes. This way, when the next NTDE comes into effect, the stored data will still be valid, and only needs to have the new MLLW offset applied. For the NTDE currently in effect (1983-2001), MLLW = NAVD88 + 5.14 feet, as the MLLW reference is 5.14 feet deeper than the NAVD88 reference point. That offset will likely decrease for the next NTDE due to sea level rise, and using this approach will avoid invalidating recorded elevation and tide levels, since the app will simply use the new MLLW offset for each station, configured in the station configuration files.
+
 ### When a New Station is added
 
 There are no code changes required when a station is added. It is only configuration.
@@ -47,6 +51,16 @@ The files under syzygy/ need data that covers the times supported by the app, cu
 - For moon phases: https://aa.usno.navy.mil/calculated/moon/phases?date=2027-01-01&nump=50&format=p&submit=Get+Data
 - For lunar perigee: https://www.fourmilab.ch/earthview/pacalc.html
 - For perihelion: https://www.farmersalmanac.com/aphelion-and-perihelion
+
+## Site Maintenance
+
+There are several events which require action.
+
+1. At end of year, check annual_highs_navd88.json and make sure that the new year which will soon be available for display is covered. As of now, we are covered through 2033.
+1. At end of year, check the astrotide15 and astrotidehilo tables in the database and make sure the new year is covered. As of now we are good through 2033.
+1. When a new NTDE (National Tidal Datum Epoch) is released, update all navd88ToMllwConversion values for all stations in stations.json.
+1. If a new record high tide occurs at any station, update recordTideNavd88 and recordTideDate in stations.json.
+1. Optional: Old data may be purged from the sqlite database -- astrotide15, astrotidehilo, water & wind.
 
 ## Configuration
 

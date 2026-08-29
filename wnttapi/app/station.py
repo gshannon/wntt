@@ -91,10 +91,10 @@ def get_station(station_id: str, data_dir=_default_file_dir) -> Station:
     return Station.from_dict(station_id, obj)
 
 
-def get_station_with_noaa_id(noaa_station_id: str, nocontainer: bool) -> Station:
-    stations = (
-        get_all_stations("../datamount/stations") if nocontainer else get_all_stations()
-    )
+def get_station_with_noaa_id(
+    noaa_station_id: str, data_dir=_default_file_dir
+) -> Station:
+    stations = get_all_stations(data_dir)
     for id, data in stations.items():
         if data["noaaStationId"] == noaa_station_id:
             return Station.from_dict(id, data)
