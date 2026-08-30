@@ -70,10 +70,12 @@ export default function Chart({
     data: GraphData
 }) {
     const ctx = useContext(AppContext)
+    // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
+    const station = ctx.station!
     const customElevationNav = ctx.customElevationNav
     const showElevation =
-        customElevationNav && customElevationNav <= ctx.station.maxCustomElevationNavd88()
-    const customElevationMllw = showElevation ? ctx.station.navd88ToMllw(customElevationNav) : null
+        customElevationNav && customElevationNav <= station.maxCustomElevationNavd88()
+    const customElevationMllw = showElevation ? station.navd88ToMllw(customElevationNav) : null
     // If display isn't wide enough, we won't show the legend or the mode bar, and disallow zoom/pan.
     const isNarrow = isSmallScreen()
     const tideMarkerSize = 10
@@ -86,16 +88,16 @@ export default function Chart({
 
     // Recall or initialize the set of traces that should not be visible in the graph.
     const getOrInitializeDaily = () => {
-        const daily = storage.getDailyStorage(ctx.station.id)
+        const daily = storage.getDailyStorage(station.id)
         if (daily.legendOnly) {
             return daily
         }
         // Not there yet, so initialize it.
-        storage.setDailyStorage(ctx.station.id, {
+        storage.setDailyStorage(station.id, {
             ...daily,
             legendOnly: [],
         })
-        return storage.getDailyStorage(ctx.station.id)
+        return storage.getDailyStorage(station.id)
     }
 
     if (error) {
@@ -124,17 +126,17 @@ export default function Chart({
     // that it's more practical (or necessary in the case of customElevation) to build here in the frontend.
     const localDataset = buildLocalDataSet(
         data.blob,
-        ctx.station,
+        station,
         data.highest_annual_prediction,
         customElevationMllw,
     )
 
     // We only include the values in parens when in non-narrow screen. In narrow mode, title is shown in tooltip and values are redundant.
     const recordTideTitle =
-        `Record Tide ${format(new Date(ctx.station.recordTideDate), 'MMM d, yyyy')}` +
-        (isNarrow ? '' : ` (${ctx.station.recordTideMllw()}')`)
+        `Record Tide ${format(new Date(station.recordTideDate), 'MMM d, yyyy')}` +
+        (isNarrow ? '' : ` (${station.recordTideMllw()}')`)
     const highestAnnualTitle =
-        `${new Date(data.blob[0][0]).getFullYear()} Highest Predicted` +
+        `${new Date(data.blob[0][0] as string).getFullYear()} Highest Predicted` +
         (isNarrow ? '' : ` (${data.highest_annual_prediction}')`)
     const customElevationTitle = 'Custom Elevation ' + (isNarrow ? '' : `(${customElevationMllw}')`)
     const showingWind =
@@ -165,7 +167,7 @@ export default function Chart({
                             (v: number) => v !== legendId,
                         )
                     }
-                    storage.setDailyStorage(ctx.station.id, stationDaily)
+                    storage.setDailyStorage(station.id, stationDaily)
                 }
             }
         },
@@ -209,12 +211,12 @@ export default function Chart({
         symbol: 'none',
         color: RecordTideColor,
         tooltip: { show: isNarrow },
-        sortValue: ctx.station.recordTideMllw(),
+        sortValue: station.recordTideMllw(),
     })
     legend.push({
         name: recordTideTitle,
         legendId: LegendId.RecordTide,
-        sortValue: ctx.station.recordTideMllw(),
+        sortValue: station.recordTideMllw() ?? 0,
     })
 
     series.push({
@@ -258,7 +260,7 @@ export default function Chart({
     // series order drives tooltip display order and legend order drives legend display order,
     // so sort the unpredictable ones now, high-to-low. The rest are in a logical permanent order.
     series.sort((a, b) => b.sortValue - a.sortValue)
-    legend.sort((a, b) => b.sortValue - a.sortValue)
+    legend.sort((a, b) => (b.sortValue ?? 0) - (a.sortValue ?? 0))
 
     if (data.dimensions.includes(Dimension.HistTides)) {
         series.push({
@@ -469,7 +471,7 @@ export default function Chart({
         grid: buildGridLayout(showingWind, placement, GridBgColor),
         title: [
             {
-                text: `Tides at ${ctx.station.waterStationName}`,
+                text: `Tides at ${station.waterStationName}`,
                 subtext: data.subtitle,
                 subtextStyle: { fontWeight: 'bolder', lineHeight: 6 },
             },
@@ -507,7 +509,9 @@ export default function Chart({
             data: !isNarrow ? legend : [],
             // Gray out legend items (which hides the series) if user has turned them off.
             selected: legend.reduce<Record<string, boolean>>((acc, item) => {
-                acc[item.name] = !stationDaily.legendOnly.includes(item.legendId)
+                if (item.name != null) {
+                    acc[item.name] = !stationDaily.legendOnly.includes(item.legendId)
+                }
                 return acc
             }, {}),
             triggerEvent: true,
@@ -648,7 +652,7 @@ export default function Chart({
                 }}
             />
             <p style={{ fontSize: '.9em', fontWeight: 700, textAlign: 'center' }}>
-                Times are shown in station local time ({ctx.station.timeZone}).
+                Times are shown in station local time ({station.timeZone}).
                 <br />
                 Tide and wind observation data may be missing due to equipment maintenance,
                 equipment failure or power failure.

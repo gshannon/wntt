@@ -15,7 +15,7 @@ interface TutorialProps {
 }
 
 export default function Tutorial(props: TutorialProps) {
-    const carouselRef = useRef(null)
+    const carouselRef = useRef<{ prev: () => void; next: () => void }>(null)
 
     const onPrevClick = () => {
         carouselRef.current?.prev()

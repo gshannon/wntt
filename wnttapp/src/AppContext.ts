@@ -11,8 +11,8 @@ export interface AppContextValue {
     station: Station | null
     onStationSelected: (stationId: string) => void
     gotoPage: GotoPage
-    customElevationNav: number | undefined
-    onCustomElevationSet: (navd88Value: number, location: LatLng | null) => void
+    customElevationNav: number | null | undefined
+    onCustomElevationSet: (navd88Value: number | null, location: LatLng | null) => void
     customLocation: LatLng | null | undefined
     fatalError: Error | null
     special: boolean

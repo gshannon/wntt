@@ -67,5 +67,5 @@ export interface GraphData {
     blob: Blob
     syzygy?: SyzygyEvent[] | null
     subtitle?: string
-    highest_annual_prediction?: number
+    highest_annual_prediction: number
 }

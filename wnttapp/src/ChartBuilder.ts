@@ -81,7 +81,7 @@ export const buildSyzygyData = (syzygyData: SyzygyEvent[], blob: Blob, gridWidth
     return blob.map((rec) => {
         const dt = rec[0] as string
         if (copy.length > 0) {
-            const event = copy.shift()
+            const event = copy.shift()!
             return {
                 value: [dt, 1],
                 symbol: getSyzygyUrl(event.code),

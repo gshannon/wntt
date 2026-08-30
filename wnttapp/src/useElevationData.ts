@@ -19,7 +19,7 @@ export default function useElevationData(pendingMarkerLocation: LatLng | null) {
                 // We'll allow 30 seconds to handle connection-related timeouts.
                 // If it times out, we'll get code of "ECONNABORTED", message "timeout of xxx exceeded"
                 .get(
-                    `${EpqsUrl}?x=${pendingMarkerLocation.lng}&y=${pendingMarkerLocation.lat}` +
+                    `${EpqsUrl}?x=${pendingMarkerLocation!.lng}&y=${pendingMarkerLocation!.lat}` +
                         `&units=Feet&wkid=4326&includeDate=False`,
                     { timeout: 30000, signal },
                 )

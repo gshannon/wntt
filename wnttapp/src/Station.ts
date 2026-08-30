@@ -147,12 +147,12 @@ export default class Station {
         return roundTo(mllw - this.navd88ToMllwConversion, 2)
     }
 
-    maxCustomElevationMllw = () => {
-        return roundTo(this.recordTideMllw() + 10, 0)
+    maxCustomElevationMllw = (): number => {
+        return roundTo((this.recordTideMllw() ?? 0) + 10, 0)
     }
 
-    maxCustomElevationNavd88 = () => {
-        return this.mllwToNavd88(this.maxCustomElevationMllw())
+    maxCustomElevationNavd88 = (): number => {
+        return this.mllwToNavd88(this.maxCustomElevationMllw()) ?? 0
     }
 
     minGraphDate = () => {

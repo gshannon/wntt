@@ -42,14 +42,14 @@ export default function Help() {
             {showGraphTut && (
                 <Tutorial
                     onClose={onModalClose}
-                    data={getGraphData(ctx.station)}
+                    data={getGraphData(ctx.station!)}
                     title='Graph Tutorial'
                 />
             )}
             {showMapTut && (
                 <Tutorial
                     onClose={onModalClose}
-                    data={getMapData(ctx.station)}
+                    data={getMapData(ctx.station!)}
                     title='Map Tutorial'
                 />
             )}

@@ -37,7 +37,9 @@ export default function GetDates({
     onMapRequest,
 }: GetDatesProps) {
     const ctx = useContext(AppContext)
-    const minDate = ctx.station.minGraphDate()
+    // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
+    const station = ctx.station!
+    const minDate = station.minGraphDate()
     const maxDate = maxGraphDate()
     const rangeMin = `${minDate.getFullYear()}`
     const rangeMax = `${maxDate.getFullYear()}`
@@ -63,13 +65,13 @@ export default function GetDates({
         if (dt && dt !== startCtl.start) {
             const daysShown = differenceInDays(endCtl.end, startCtl.start) + 1
             const newStart = new Date(dt)
-            const newEnd = ctx.station.limitGraphDate(addDays(newStart, daysShown - 1))
+            const newEnd = station.limitGraphDate(addDays(newStart, daysShown - 1))
             setStartCtl({ ...startCtl, start: newStart })
             setEndCtl({
                 min: newStart,
                 // Set the end date to honor the numDays from previous settings, limited by overall max.
                 end: newEnd,
-                max: ctx.station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
+                max: station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
             })
         }
     }
