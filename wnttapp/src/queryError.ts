@@ -5,7 +5,16 @@ import { HttpNotAcceptableCode } from './utils'
 // unmounted / query key changed) and HTTP 406 (app version mismatch, handled separately by
 // ErrorBlock's upgrade prompt) are expected, not real errors, so they're excluded from logging.
 // All errors are rethrown so react-query surfaces them via the query's `error` state.
-export const handleQueryError = (error, { operation, mainStore, extra } = {}) => {
+interface QueryErrorContext {
+    operation?: string
+    mainStore?: { uid?: string; session?: string; started?: unknown }
+    extra?: Record<string, unknown>
+}
+
+export const handleQueryError = (
+    error,
+    { operation, mainStore, extra }: QueryErrorContext = {},
+) => {
     if (error.name !== 'CanceledError' && error.response?.status !== HttpNotAcceptableCode) {
         console.error(error.message, error.response?.status, error.response?.data?.detail)
         Sentry.captureException(error, {

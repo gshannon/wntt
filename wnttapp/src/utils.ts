@@ -58,7 +58,10 @@ export const isSmallScreen = () => window.matchMedia(`(max-width: ${MediumBase -
 
 // Are we on a touch screen?
 export const isTouchScreen =
-    'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    // legacy IE/old-Edge property, not in lib.dom types
+    (navigator as { msMaxTouchPoints?: number }).msMaxTouchPoints > 0
 
 // Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would

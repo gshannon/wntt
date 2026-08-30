@@ -19,7 +19,11 @@ export const useCache = (page) => {
         const cache = queryClient.getQueryCache()
         const graphQueries = cache
             .findAll()
-            .filter((q) => q.queryKey[0] === 'graph' && q.state?.data?.timeline !== undefined)
+            .filter(
+                (q) =>
+                    q.queryKey[0] === 'graph' &&
+                    (q.state?.data as { timeline?: unknown } | undefined)?.timeline !== undefined,
+            )
 
         const cnt = graphQueries.length
 
