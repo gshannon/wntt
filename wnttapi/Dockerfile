@@ -15,7 +15,7 @@ ENV PYTHONUNBUFFERED=1
 # release/build version
 ARG VERSION=?
 ENV APP_VERSION=$VERSION
-# development, staging or production
+# development or production
 ARG ENVIRONMENT=?
 ENV ENVIRONMENT=$ENVIRONMENT
 ENV IN_CONTAINER=1
