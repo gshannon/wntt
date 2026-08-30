@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
     },
 })
 
-const container = document.getElementById('root')
+const container = document.getElementById('root')!
 const root = createRoot(container, {
     // Callback called when an error is thrown and not caught by an ErrorBoundary.
     onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {

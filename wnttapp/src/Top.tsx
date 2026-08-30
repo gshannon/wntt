@@ -142,7 +142,9 @@ export default function Top({ page, gotoPage }: { page: number; gotoPage: GotoPa
                     :   ' '}
                 </Row>
             :   <Row className='divider my-0 mx-0' />}
-            {showConditions && <ConditionsPopup station={ctx.station} onClose={onModalClose} />}
+            {showConditions && ctx.station && (
+                <ConditionsPopup station={ctx.station} onClose={onModalClose} />
+            )}
         </div>
     )
 }

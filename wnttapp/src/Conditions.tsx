@@ -11,6 +11,8 @@ import type { LatestConditions } from './types'
 
 export default function Conditions({ data, error }: { data: LatestConditions | null; error: unknown }) {
     const ctx = useContext(AppContext)
+    // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
+    const station = ctx.station!
     const noData = '--'
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here.
@@ -44,7 +46,7 @@ export default function Conditions({ data, error }: { data: LatestConditions | n
 
     const now = format_dt(new Date())
     const inches = data.next_tide_surge ? data.next_tide_surge * 12 : null
-    const wind_dir_str = degreesToDir(data.wind_dir_deg)
+    const wind_dir_str = degreesToDir(data.wind_dir_deg ?? 0)
 
     return (
         <div className='cond-container'>
@@ -78,10 +80,10 @@ export default function Conditions({ data, error }: { data: LatestConditions | n
             </div>
             <div className='cond-data'>
                 {data.next_tide_surge ?
-                    `${data.next_tide_surge} ft (${roundTo(inches, 1)} in)`
+                    `${data.next_tide_surge} ft (${roundTo(inches ?? 0, 1)} in)`
                 :   noData}
             </div>
-            <div className='cond-time'>{format_dt(data.surge_time)}</div>
+            <div className='cond-time'>{data.surge_time ? format_dt(data.surge_time) : noData}</div>
 
             {/* wind speed */}
 
@@ -125,12 +127,12 @@ export default function Conditions({ data, error }: { data: LatestConditions | n
             <div className='footnotes'>
                 Source of this data:&nbsp; &nbsp;
                 <Link
-                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.id}`}
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${station.id}`}
                     text='Water'
                 />
                 &nbsp; &nbsp;
                 <Link
-                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${ctx.station.weatherStationId}`}
+                    href={`https://cdmo.baruch.sc.edu/pwa/index.html?stationCode=${station.weatherStationId}`}
                     text='Weather'
                 />
             </div>

@@ -70,17 +70,19 @@ const ErrorSection = ({ error }: { error: unknown }) => {
 
 export default function Map({ onMapClose }: { onMapClose: () => void }) {
     const ctx = useContext(AppContext)
+    // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
+    const station = ctx.station!
 
-    const storedOptions = storage.getPermanentStorage(ctx.station.id)
-    const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
+    const storedOptions = storage.getPermanentStorage(station.id)
+    const stationOptions = station.stationOptionsWithDefaults(storedOptions)
 
     // Pending values are used when user clicks on the map or finds by address, before they add it to the graph.
     const [pendingMarkerLocation, setPendingMarkerLocation] = useState<LatLng | null>(null)
     const [pendingElevationNav, setPendingElevationNav] = useState<number | null>(null)
     const [mapType, setMapType] = useState(stationOptions.mapType)
     const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
-    const [mapCenter, setMapCenter] = useState(stationOptions.mapCenter)
-    const [zoom, setZoom] = useState(stationOptions.zoom)
+    const [mapCenter, setMapCenter] = useState<LatLng | undefined>(stationOptions.mapCenter)
+    const [zoom, setZoom] = useState<number | undefined>(stationOptions.zoom)
 
     const markerRef = useRef<L.Marker>(null)
     const closeRef = useRef<HTMLButtonElement>(null)
@@ -94,7 +96,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
 
     if (!isLoading && !!elevation && elevation !== pendingElevationNav) {
         setPendingElevationNav(elevation)
-        setMapCenter(pendingMarkerLocation) // recenter on looked up location
+        setMapCenter(pendingMarkerLocation ?? undefined) // recenter on looked up location
         // TODO: Consider zooming in also, but only after address lookup, not after map click/drag.
     }
 
@@ -145,19 +147,19 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
     )
 
     const handleRecenterToMarker = () => {
-        setMapCenter(pendingMarkerLocation || ctx.customLocation)
+        setMapCenter((pendingMarkerLocation || ctx.customLocation) ?? undefined)
     }
 
     const handleRecenterToDefault = () => {
-        setMapCenter(ctx.station.swmpLocation)
+        setMapCenter(station.swmpLocation)
     }
 
     // Keep the local storage of permanent station options in sync.
     // We own all the values except the 2 custom* fields, so we leave them alone.
     const onValueChange = useEffectEvent(() => {
-        const storedOptions = storage.getPermanentStorage(ctx.station.id)
-        const curOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
-        storage.setPermanentStorage(ctx.station.id, {
+        const storedOptions = storage.getPermanentStorage(station.id)
+        const curOptions = station.stationOptionsWithDefaults(storedOptions)
+        storage.setPermanentStorage(station.id, {
             ...curOptions,
             mapCenter,
             mapType,
@@ -177,7 +179,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
         }
     }, [])
 
-    const toolTipCfg = mu.buildTooltipLocations(ctx.station)
+    const toolTipCfg = mu.buildTooltipLocations(station)
 
     const stationMarker = (key: string, loc: LatLng, symbol: string, title: string) => {
         return (
@@ -214,7 +216,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                         <div className='map-address mx-2 my-1'>
                             <AddressForm
                                 setPendingMarkerLocation={setPendingMarkerLocation}
-                                station={ctx.station}
+                                station={station}
                             />
                         </div>
                         <div className='map-buttons py-1'>
@@ -223,7 +225,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                                 onClick={() => addtoGraph()}
                                 disabled={
                                     !pendingElevationNav ||
-                                    pendingElevationNav > ctx.station.maxCustomElevationNavd88()
+                                    pendingElevationNav > station.maxCustomElevationNavd88()
                                 }>
                                 Graph
                             </Button>
@@ -268,11 +270,14 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                     <ErrorSection error={queryError} />
                     <Row className='justify-content-center mt-0 mx-1 mx-sm-2'>
                         <MapContainer
-                            center={mapCenter}
+                            center={mapCenter ?? station.swmpLocation}
                             boundsOptions={{ maxZoom: mu.MaxZoom }}
-                            zoom={zoom}>
+                            zoom={zoom ?? mu.DefaultMapZoom}>
                             <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
-                            <ChangeView center={mapCenter} zoom={zoom} />
+                            <ChangeView
+                                center={mapCenter ?? station.swmpLocation}
+                                zoom={zoom ?? mu.DefaultMapZoom}
+                            />
                             <MapClickHandler
                                 setMarkerLatLng={setMarkerLatLng}
                                 setZoom={setZoom}
@@ -280,20 +285,20 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                             />
                             {stationMarker(
                                 'wq',
-                                ctx.station.swmpLocation,
+                                station.swmpLocation,
                                 WaterStationEmoji,
                                 'Tide Gauge',
                             )}
                             {stationMarker(
                                 'met',
-                                ctx.station.weatherLocation,
+                                station.weatherLocation,
                                 WeatherStationEmoji,
                                 'Weather Station',
                             )}
                             {(pendingMarkerLocation || ctx.customLocation) && (
                                 <Marker
                                     draggable={true}
-                                    position={pendingMarkerLocation || ctx.customLocation}
+                                    position={(pendingMarkerLocation || ctx.customLocation)!}
                                     icon={RedPinIcon}
                                     eventHandlers={markerEventHandlers}
                                     ref={markerRef}>
@@ -305,8 +310,9 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                                         Custom Location:{' '}
                                         {isLoading ?
                                             '-'
-                                        :   ctx.station.navd88ToMllw(
-                                                pendingElevationNav || ctx.customElevationNav,
+                                        :   station.navd88ToMllw(
+                                                (pendingElevationNav || ctx.customElevationNav) ??
+                                                    null,
                                             ) + ' ft'
                                         }
                                     </LeafletTooltip>
@@ -321,6 +327,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
 }
 
 const instructions = (ctx: AppContextValue, pendingElevationNav: number | null) => {
+    const station = ctx.station!
     const cleartext = () => {
         return (
             <>
@@ -329,14 +336,14 @@ const instructions = (ctx: AppContextValue, pendingElevationNav: number | null) 
         )
     }
     if (pendingElevationNav) {
-        const elevMllw = ctx.station.navd88ToMllw(pendingElevationNav)
-        if (pendingElevationNav > ctx.station.maxCustomElevationNavd88()) {
+        const elevMllw = station.navd88ToMllw(pendingElevationNav)
+        if (pendingElevationNav > station.maxCustomElevationNavd88()) {
             return (
                 <>
                     <p>
                         The selected location is at <b>{elevMllw} ft</b> MLLW, which is above the
                         maximum elevation to be included on the graph (
-                        {ctx.station.maxCustomElevationMllw()} ft).
+                        {station.maxCustomElevationMllw()} ft).
                     </p>
                     {ctx.customElevationNav && cleartext()}
                 </>
@@ -357,7 +364,7 @@ const instructions = (ctx: AppContextValue, pendingElevationNav: number | null) 
             <>
                 <p>
                     Your chosen elevation is{' '}
-                    <b>{ctx.station.navd88ToMllw(ctx.customElevationNav)} ft</b> MLLW. You may
+                    <b>{station.navd88ToMllw(ctx.customElevationNav)} ft</b> MLLW. You may
                     change it by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
                     <b>looking up an address</b>.
                 </p>{' '}

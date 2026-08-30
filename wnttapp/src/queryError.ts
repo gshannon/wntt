@@ -13,11 +13,15 @@ interface QueryErrorContext {
 }
 
 export const handleQueryError = (
-    error: AxiosError<{ detail?: string }>,
+    error: AxiosError,
     { operation, mainStore, extra }: QueryErrorContext = {},
 ) => {
     if (error.name !== 'CanceledError' && error.response?.status !== HttpNotAcceptableCode) {
-        console.error(error.message, error.response?.status, error.response?.data?.detail)
+        console.error(
+            error.message,
+            error.response?.status,
+            (error.response?.data as { detail?: string } | undefined)?.detail,
+        )
         Sentry.captureException(error, {
             tags: { operation },
             user: {

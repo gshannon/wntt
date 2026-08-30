@@ -25,6 +25,8 @@ import type Station from './Station'
 
 export default function Graph() {
     const ctx = useContext(AppContext)
+    // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
+    const station = ctx.station!
 
     // TODO: Not handling race condition where ctx has no station.  Cannot put
     // a short circuit here because of React errors.
@@ -32,7 +34,7 @@ export default function Graph() {
 
     /////////////////
     // start date, end date, hilo mode, screen size
-    const stationDaily = storage.getDailyStorage(ctx.station?.id || null)
+    const stationDaily = storage.getDailyStorage(station?.id || null)
 
     // these strings drive what's in the screen start/end date text box controls.
     const [startDate, setStartDate] = useState(new Date(stationDaily.start ?? defaultStartDate))
@@ -44,7 +46,7 @@ export default function Graph() {
     const [, forceRerender] = useReducer((x) => x + 1, 0)
 
     const [startCtl, setStartCtl] = useState({
-        min: ctx.station.minGraphDate(),
+        min: station.minGraphDate(),
         start: startDate,
         max: maxGraphDate(),
     })
@@ -56,7 +58,7 @@ export default function Graph() {
     })
 
     const onDateChange = useEffectEvent((start: Date, end: Date, hiloMode: boolean) => {
-        storage.setDailyStorage(ctx.station.id, {
+        storage.setDailyStorage(station.id, {
             ...stationDaily,
             start: stringify(start),
             end: stringify(end),
@@ -79,7 +81,7 @@ export default function Graph() {
         // If this query's already in cache, remove it first, else it won't refetch even if stale.
         if (forceRefresh) {
             const key = buildCacheKey(
-                ctx.station.id,
+                station.id,
                 stringify(newStartDate),
                 stringify(newEndDate),
                 isHiloMode,
@@ -105,14 +107,14 @@ export default function Graph() {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
             directionFactor > 0 ?
-                ctx.station.limitGraphDate(addDays(endDate, 1))
-            :   ctx.station.limitGraphDate(addDays(startDate, daysToShow * directionFactor))
-        const newEnd = ctx.station.limitGraphDate(addDays(newStart, daysToShow - 1))
+                station.limitGraphDate(addDays(endDate, 1))
+            :   station.limitGraphDate(addDays(startDate, daysToShow * directionFactor))
+        const newEnd = station.limitGraphDate(addDays(newStart, daysToShow - 1))
         setStartCtl({ ...startCtl, start: newStart })
         setEndCtl({
             min: newStart,
             end: newEnd,
-            max: ctx.station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
+            max: station.limitGraphDate(addDays(newStart, getMaxNumDays() - 1)),
         })
         setDateRange(newStart, newEnd, false)
     }
@@ -121,7 +123,7 @@ export default function Graph() {
     const resetDateControls = () => {
         const [defaultStartDate, defaultEndDate] = getDefaultRange()
         setStartCtl({
-            min: ctx.station.minGraphDate(),
+            min: station.minGraphDate(),
             start: defaultStartDate,
             max: maxGraphDate(),
         })
@@ -132,9 +134,9 @@ export default function Graph() {
         })
         setDateRange(defaultStartDate, defaultEndDate, false)
         // Also reset the plot visibility states. Remove the legendOnly object, force a re-init.
-        const daily = storage.getDailyStorage(ctx.station.id)
+        const daily = storage.getDailyStorage(station.id)
         delete daily.legendOnly
-        storage.setDailyStorage(ctx.station.id, daily)
+        storage.setDailyStorage(station.id, daily)
     }
 
     const handlePreviousClick = (e: MouseEvent) => {
@@ -151,7 +153,7 @@ export default function Graph() {
         isPending: loading,
         data,
         error,
-    } = useGraphData(ctx.station, startDate, endDate, isHiloMode, ctx.special)
+    } = useGraphData(station, startDate, endDate, isHiloMode, ctx.special)
 
     const numDaysText = daysShown > 1 ? `${daysShown} days` : 'day'
 
@@ -181,7 +183,7 @@ export default function Graph() {
                     dir='back'
                     start={startCtl.start}
                     end={endCtl.end}
-                    station={ctx.station}
+                    station={station}
                     errorOrLoading={error || loading}
                 />
                 <Col className='col-10 px-0'>
@@ -194,11 +196,11 @@ export default function Graph() {
                     dir='forward'
                     start={startCtl.start}
                     end={endCtl.end}
-                    station={ctx.station}
+                    station={station}
                     errorOrLoading={error || loading}
                 />
             </Row>
-            {showMap && <Map key={ctx.station?.id} onMapClose={onMapClose} />}
+            {showMap && <Map key={station?.id} onMapClose={onMapClose} />}
         </>
     )
 }

@@ -9,6 +9,7 @@ import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page, WELLS_STATION_ID } from './utils'
 import type { LatLng } from './types'
+import type Station from './Station'
 // import Station from './Station'
 import useStations from './useStations'
 import { stringify } from './utils'
@@ -27,9 +28,9 @@ export default function App() {
     // In multi-reserve mode, there is no default station.
     const stationId = mainStore.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
 
-    const [station, setStation] = useState(null)
-    const [customElevationNav, setCustomElevationNav] = useState(undefined)
-    const [customLocation, setCustomLocation] = useState(undefined)
+    const [station, setStation] = useState<Station | null>(null)
+    const [customElevationNav, setCustomElevationNav] = useState<number | null | undefined>(undefined)
+    const [customLocation, setCustomLocation] = useState<LatLng | null | undefined>(undefined)
     if (!mainStore.uid) {
         const userId = mainStore.uid ?? crypto.randomUUID().substring(0, 13) // unique enough for our purpose
         storage.setMainStorage({ ...mainStore, uid: userId, since: stringify(new Date()) })
@@ -62,7 +63,7 @@ export default function App() {
     }
 
     // handler for user setting custom elevation
-    const onCustomElevationSet = (navd88Value: number, location: LatLng | null) => {
+    const onCustomElevationSet = (navd88Value: number | null, location: LatLng | null) => {
         if (navd88Value !== undefined && station != null) {
             setCustomElevationNav(navd88Value)
             setCustomLocation(location)

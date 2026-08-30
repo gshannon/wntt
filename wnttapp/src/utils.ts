@@ -61,7 +61,7 @@ export const isTouchScreen =
     'ontouchstart' in window ||
     navigator.maxTouchPoints > 0 ||
     // legacy IE/old-Edge property, not in lib.dom types
-    (navigator as { msMaxTouchPoints?: number }).msMaxTouchPoints > 0
+    ((navigator as { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0
 
 // Returns the maximnum number of days to allow on the graph. We limit this based on viewport width, so that
 // there are at least as many pixels in the graph as data points (96 per day). If not, some data points would
@@ -149,7 +149,7 @@ export const calcWindspeedTickInterval = (
 ) => {
     let interval = 10
     if (gusts !== null || forecasts !== null) {
-        const range = gusts ? Math.max(...gusts) : Math.max(...forecasts)
+        const range = gusts ? Math.max(...gusts) : Math.max(...(forecasts ?? []))
         if (range < 20) {
             interval = 3
         } else if (range < 30) {

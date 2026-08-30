@@ -17,13 +17,14 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
 
-        /* Migrating to full strict in phases. Phase A: noImplicitAny.
-           Still off: strictNullChecks, strictFunctionTypes, strictPropertyInitialization,
+        /* Migrating to full strict in phases. Phases A+B done.
+           Still off: strictFunctionTypes, strictPropertyInitialization,
            strictBindCallApply, useUnknownInCatchVariables. */
         "strict": false,
         "noImplicitAny": true,
         "noImplicitThis": true,
         "alwaysStrict": true,
+        "strictNullChecks": true,
         "noUnusedLocals": false,
         "noUnusedParameters": false
     },
