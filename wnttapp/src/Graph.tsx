@@ -1,5 +1,5 @@
 import './css/Graph.css'
-import { useContext, useEffect, useEffectEvent, useReducer, useState } from 'react'
+import { type MouseEvent, useContext, useEffect, useEffectEvent, useReducer, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { AppContext } from './AppContext'
 import GetDates from './GetDates'
@@ -21,6 +21,7 @@ import prevButton from './images/util/previous.png?inline'
 import nextButton from './images/util/next.png?inline'
 import { useQueryClient } from '@tanstack/react-query'
 import Map from './Map'
+import type Station from './Station'
 
 export default function Graph() {
     const ctx = useContext(AppContext)
@@ -54,7 +55,7 @@ export default function Graph() {
         max: addDays(startDate, getMaxNumDays() - 1),
     })
 
-    const onDateChange = useEffectEvent((start, end, hiloMode) => {
+    const onDateChange = useEffectEvent((start: Date, end: Date, hiloMode: boolean) => {
         storage.setDailyStorage(ctx.station.id, {
             ...stationDaily,
             start: stringify(start),
@@ -71,7 +72,7 @@ export default function Graph() {
     const queryClient = useQueryClient()
     const daysShown = differenceInDays(endDate, startDate) + 1
 
-    const setDateRange = (newStartDate, newEndDate, forceRefresh) => {
+    const setDateRange = (newStartDate: Date, newEndDate: Date, forceRefresh: boolean) => {
         setStartDate(newStartDate)
 
         setEndDate(newEndDate)
@@ -100,7 +101,7 @@ export default function Graph() {
         setShowMap(true)
     }
 
-    const setJumpDates = (directionFactor) => {
+    const setJumpDates = (directionFactor: number) => {
         const daysToShow = Math.min(daysShown, getMaxNumDays())
         const newStart =
             directionFactor > 0 ?
@@ -136,12 +137,12 @@ export default function Graph() {
         storage.setDailyStorage(ctx.station.id, daily)
     }
 
-    const handlePreviousClick = (e) => {
+    const handlePreviousClick = (e: MouseEvent) => {
         e.preventDefault()
         setJumpDates(-1)
     }
 
-    const handleNextClick = (e) => {
+    const handleNextClick = (e: MouseEvent) => {
         e.preventDefault()
         setJumpDates(1)
     }
@@ -202,7 +203,18 @@ export default function Graph() {
     )
 }
 
-const JumpDates = (props) => {
+interface JumpDatesProps {
+    errorOrLoading: boolean | Error | null
+    dir: 'back' | 'forward'
+    start: Date
+    end: Date
+    station: Station
+    hoverText: string
+    action: (e: MouseEvent) => void
+    image: string
+}
+
+const JumpDates = (props: JumpDatesProps) => {
     if (props.errorOrLoading) {
         return <Col className='col-1' />
     }

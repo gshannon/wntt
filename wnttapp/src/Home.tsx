@@ -6,6 +6,7 @@ import { AppContext } from './AppContext'
 import { Link } from './Links'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
+import type Station from './Station'
 import { Page, WELLS_STATION_ID } from './utils'
 
 const WELLS_BG_CLASS = 'wells-bg'
@@ -94,7 +95,7 @@ export default function Home() {
     )
 }
 
-const ConditionsSection = ({ station }) => {
+const ConditionsSection = ({ station }: { station: Station }) => {
     const { data, error } = useLatestData(station)
 
     return (

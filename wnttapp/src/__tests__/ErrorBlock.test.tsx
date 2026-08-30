@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { type Mock, describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import axios, { type AxiosResponse } from 'axios'
 import * as Sentry from '@sentry/react'
@@ -22,7 +22,7 @@ const make500Error = () => {
 }
 
 describe('ErrorBlock', () => {
-    let reloadSpy
+    let reloadSpy: Mock
 
     beforeEach(() => {
         vi.useFakeTimers()

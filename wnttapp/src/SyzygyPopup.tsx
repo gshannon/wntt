@@ -6,8 +6,9 @@ import { useContext } from 'react'
 import { Page } from './utils'
 import { SyzygyCode, SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
+import type { GotoPage } from './types'
 
-export default function SyzygyPopup({ code, onClose }) {
+export default function SyzygyPopup({ code, onClose }: { code: string; onClose: () => void }) {
     const ctx = useContext(AppContext)
     return (
         <Modal id='syzygy-modal' show={true} onHide={onClose}>
@@ -28,7 +29,7 @@ export default function SyzygyPopup({ code, onClose }) {
     )
 }
 
-const Help = ({ gotoPage }) => {
+const Help = ({ gotoPage }: { gotoPage: GotoPage }) => {
     return (
         <p>
             <a className='my-1 pointer' onClick={() => gotoPage(Page.HelpSyzygy, Page.Graph)}>
@@ -38,8 +39,8 @@ const Help = ({ gotoPage }) => {
     )
 }
 
-const Content = ({ code, gotoPage }) => {
-    if ([SyzygyCode.NewMoon, SyzygyCode.FullMoon].includes(code)) {
+const Content = ({ code, gotoPage }: { code: string; gotoPage: GotoPage }) => {
+    if (([SyzygyCode.NewMoon, SyzygyCode.FullMoon] as string[]).includes(code)) {
         return (
             <>
                 <p>
@@ -52,7 +53,7 @@ const Content = ({ code, gotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if ([SyzygyCode.FirstQuarter, SyzygyCode.LastQuarter].includes(code)) {
+    } else if (([SyzygyCode.FirstQuarter, SyzygyCode.LastQuarter] as string[]).includes(code)) {
         return (
             <>
                 <p>

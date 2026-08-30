@@ -6,8 +6,15 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import arrowLeft from './images/util/arrow-left.png'
 import arrowRight from './images/util/arrow-right.png'
+import type { TutorialSlide } from './types'
 
-export default function Tutorial(props) {
+interface TutorialProps {
+    onClose: () => void
+    title: string
+    data: TutorialSlide[]
+}
+
+export default function Tutorial(props: TutorialProps) {
     const carouselRef = useRef(null)
 
     const onPrevClick = () => {

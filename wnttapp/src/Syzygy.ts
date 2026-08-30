@@ -16,7 +16,7 @@ export const SyzygyCode = Object.freeze({
     Perihelion: 'PH',
 })
 
-export const SyzygyConfig = {
+export const SyzygyConfig: Record<string, { name: string }> = {
     [SyzygyCode.NewMoon]: { name: 'New Moon' },
     [SyzygyCode.FirstQuarter]: { name: 'First Quarter' },
     [SyzygyCode.FullMoon]: { name: 'Full Moon' },
@@ -25,7 +25,7 @@ export const SyzygyConfig = {
     [SyzygyCode.Perihelion]: { name: 'Perihelion' },
 }
 
-export const getSyzygyUrl = (code) => {
+export const getSyzygyUrl = (code: string): string | null => {
     const prefix = 'image://'
     switch (code) {
         case SyzygyCode.NewMoon:

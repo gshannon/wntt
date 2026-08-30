@@ -1,5 +1,5 @@
 // Wraps an html anchor link that opens in a new window/tab, where display text is the URL.
-export function SimpleLink({ href }) {
+export function SimpleLink({ href }: { href: string }) {
     return (
         <a target='_blank' rel='noopener noreferrer' href={href}>
             {href}
@@ -8,7 +8,7 @@ export function SimpleLink({ href }) {
 }
 
 // Wraps an html anchor link that opens in a new window/tab, where display text is different from the URL.
-export function Link({ href, text }) {
+export function Link({ href, text }: { href: string; text: string }) {
     return (
         <a target='_blank' rel='noopener noreferrer' href={href}>
             {text}

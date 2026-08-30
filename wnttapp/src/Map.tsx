@@ -1,5 +1,6 @@
 import './css/Map.css'
 import { useEffect, useEffectEvent, useMemo, useRef, useContext, useState } from 'react'
+import type L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Tooltip as LeafletTooltip } from 'react-leaflet'
@@ -17,18 +18,28 @@ import * as storage from './storage'
 import useElevationData from './useElevationData'
 import ErrorBlock from './ErrorBlock'
 import AddressForm from './AddressForm'
+import type { AppContextValue } from './AppContext'
+import type { LatLng } from './types'
 
 const WaterStationEmoji = '\u{1F53B}'
 const WeatherStationEmoji = '\u{1F536}'
 
 // A way to recenter and apply zoom when those things change. The MapContainer is not recreated on rerender
 // so when this child component is mounted it can reset the view settings to current values.
-const ChangeView = ({ center, zoom }) => {
+const ChangeView = ({ center, zoom }: { center: LatLng; zoom: number }): null => {
     useMap().setView(center, zoom)
     return null
 }
 
-const MapClickHandler = ({ setMarkerLatLng, setZoom, setMapCenter }) => {
+const MapClickHandler = ({
+    setMarkerLatLng,
+    setZoom,
+    setMapCenter,
+}: {
+    setMarkerLatLng: (latlng: L.LatLng) => void
+    setZoom: (zoom: number) => void
+    setMapCenter: (center: L.LatLng) => void
+}): null => {
     useMapEvents({
         click: (e) => {
             setMarkerLatLng(e.latlng)
@@ -43,7 +54,7 @@ const MapClickHandler = ({ setMarkerLatLng, setZoom, setMapCenter }) => {
     return null
 }
 
-const ErrorSection = ({ error }) => {
+const ErrorSection = ({ error }: { error: unknown }) => {
     if (error) {
         return (
             <Row>
@@ -57,22 +68,22 @@ const ErrorSection = ({ error }) => {
     }
 }
 
-export default function Map({ onMapClose }) {
+export default function Map({ onMapClose }: { onMapClose: () => void }) {
     const ctx = useContext(AppContext)
 
     const storedOptions = storage.getPermanentStorage(ctx.station.id)
     const stationOptions = ctx.station.stationOptionsWithDefaults(storedOptions)
 
     // Pending values are used when user clicks on the map or finds by address, before they add it to the graph.
-    const [pendingMarkerLocation, setPendingMarkerLocation] = useState(null)
-    const [pendingElevationNav, setPendingElevationNav] = useState(null)
+    const [pendingMarkerLocation, setPendingMarkerLocation] = useState<LatLng | null>(null)
+    const [pendingElevationNav, setPendingElevationNav] = useState<number | null>(null)
     const [mapType, setMapType] = useState(stationOptions.mapType)
     const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
     const [mapCenter, setMapCenter] = useState(stationOptions.mapCenter)
     const [zoom, setZoom] = useState(stationOptions.zoom)
 
-    const markerRef = useRef(null)
-    const closeRef = useRef(null)
+    const markerRef = useRef<L.Marker>(null)
+    const closeRef = useRef<HTMLButtonElement>(null)
 
     // If they've selected a new location or done address lookup, get the elevation.
     const {
@@ -114,7 +125,7 @@ export default function Map({ onMapClose }) {
     }
 
     // Set the map marker location lat/long, but limit to 7 digits of precision, which is good to ~1cm.
-    const setMarkerLatLng = (latlngStrs) => {
+    const setMarkerLatLng = (latlngStrs: L.LatLng | null) => {
         if (latlngStrs) {
             const { lat, lng } = latlngStrs
             setPendingMarkerLocation({ lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) })
@@ -168,7 +179,7 @@ export default function Map({ onMapClose }) {
 
     const toolTipCfg = mu.buildTooltipLocations(ctx.station)
 
-    const stationMarker = (key, loc, symbol, title) => {
+    const stationMarker = (key: string, loc: LatLng, symbol: string, title: string) => {
         return (
             <Marker draggable={false} position={loc} icon={mu.stationIcon(symbol)}>
                 <LeafletTooltip
@@ -309,7 +320,7 @@ export default function Map({ onMapClose }) {
     )
 }
 
-const instructions = (ctx, pendingElevationNav) => {
+const instructions = (ctx: AppContextValue, pendingElevationNav: number | null) => {
     const cleartext = () => {
         return (
             <>

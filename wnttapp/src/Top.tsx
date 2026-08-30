@@ -14,8 +14,9 @@ import ConditionsPopup from './ConditionsPopup'
 import Overlay from './Overlay'
 import ReserveSelect from './ReserveSelect'
 import { AppContext } from './AppContext'
+import type { GotoPage } from './types'
 
-export default function Top({ page, gotoPage }) {
+export default function Top({ page, gotoPage }: { page: number; gotoPage: GotoPage }) {
     const ctx = useContext(AppContext)
 
     const [showConditions, setShowConditions] = useState(false)
@@ -41,7 +42,7 @@ export default function Top({ page, gotoPage }) {
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavLink>
-                <NavDropdown title='Help' active={[Page.Glossary, Page.HelpSyzygy].includes(page)}>
+                <NavDropdown title='Help' active={([Page.Glossary, Page.HelpSyzygy] as number[]).includes(page)}>
                     <HelpItems page={page} gotoPage={gotoPage} />
                 </NavDropdown>
             </Nav>
@@ -146,7 +147,7 @@ export default function Top({ page, gotoPage }) {
     )
 }
 
-const HelpItems = ({ page, gotoPage }) => {
+const HelpItems = ({ page, gotoPage }: { page: number; gotoPage: GotoPage }) => {
     return (
         <>
             <NavDropdown.Item

@@ -2,8 +2,9 @@ import './css/Conditions.css'
 import Modal from 'react-bootstrap/Modal'
 import Conditions from './Conditions'
 import useLatestData from './useLatestData'
+import type Station from './Station'
 
-export default function ConditionsPopup({ station, onClose }) {
+export default function ConditionsPopup({ station, onClose }: { station: Station; onClose: () => void }) {
     const { data, error } = useLatestData(station)
 
     return (

@@ -7,18 +7,19 @@ import { SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import { useContext } from 'react'
 import ErrorBlock from './ErrorBlock'
+import type { LatestConditions } from './types'
 
-export default function Conditions({ data, error }) {
+export default function Conditions({ data, error }: { data: LatestConditions | null; error: unknown }) {
     const ctx = useContext(AppContext)
     const noData = '--'
 
     // Convert iso date string into 'Aug 5 10:05 PM' format. Don't need year here.
-    const format_dt = (dts) => {
+    const format_dt = (dts: string | number | Date) => {
         return format(dts, 'MMM d h:mm a')
     }
 
     // Same as format_dt but only time portion
-    const format_tm = (dts) => {
+    const format_tm = (dts: string) => {
         const dt = new Date(dts)
         const re = /:\d\d /
         const tm = dt.toLocaleTimeString('en-US').replace(re, ' ')

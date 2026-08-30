@@ -2,8 +2,9 @@ import { Col, Row, Stack } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 import { Link, SimpleLink } from './Links'
 import { SurgeUrl, TidesCurrentsUrl, TidesCurrentsDatumsUrl } from './utils'
+import type { ReactNode } from 'react'
 
-const Entry = (props) => {
+const Entry = (props: { title: string; children: ReactNode }) => {
     return (
         <Row>
             <Col sm={2} className='border-end border-2'>

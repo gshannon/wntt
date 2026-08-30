@@ -1,5 +1,5 @@
 import './css/AddressForm.css'
-import { useState, useEffect } from 'react'
+import { type Dispatch, type FormEvent, type SetStateAction, useState, useEffect } from 'react'
 import { Form } from 'react-bootstrap'
 import { Col, Row, Alert } from 'react-bootstrap'
 import Spinner from 'react-bootstrap/Spinner'
@@ -7,12 +7,20 @@ import Button from 'react-bootstrap/Button'
 import useAddressLookup from './useAddressLookup'
 import ErrorBlock from './ErrorBlock'
 import * as mu from './mapUtils'
+import type Station from './Station'
+import type { LatLng } from './types'
 
-export default function AddressForm({ setPendingMarkerLocation, station }) {
+export default function AddressForm({
+    setPendingMarkerLocation,
+    station,
+}: {
+    setPendingMarkerLocation: Dispatch<SetStateAction<LatLng | null>>
+    station: Station
+}) {
     const [addressValue, setAddressValue] = useState('') // persist between renders
-    const [errorMessage, setErrorMessage] = useState(null)
+    const [errorMessage, setErrorMessage] = useState<string | Error | null>(null)
     const [doLookup, setDoLookup] = useState(false)
-    const [searchLocation, setSearchLocation] = useState(null)
+    const [searchLocation, setSearchLocation] = useState<LatLng | null>(null)
 
     const { isLoading, data: location, error } = useAddressLookup(addressValue, doLookup)
 
@@ -41,9 +49,10 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
         setErrorMessage(null)
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        setAddressValue(e.currentTarget.addressLookup.value)
+        const input = e.currentTarget.elements.namedItem('addressLookup') as HTMLInputElement
+        setAddressValue(input.value)
         setDoLookup(true)
     }
 
@@ -97,7 +106,13 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
     )
 }
 
-function MyAlert({ errorMessage, closeError }) {
+function MyAlert({
+    errorMessage,
+    closeError,
+}: {
+    errorMessage: string | Error | null
+    closeError: () => void
+}) {
     return (
         <Alert show={errorMessage != null} className='py-1 my-1' variant='secondary'>
             <ErrorBlock error={errorMessage} />

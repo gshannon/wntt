@@ -14,7 +14,7 @@ import * as Sentry from '@sentry/react'
 // when the a change was made on either end that effects the other, or just to force users
 // to update to get new functionality.
 
-export default function ErrorBlock({ error }) {
+export default function ErrorBlock({ error }: { error: unknown }) {
     const isUpgrade =
         axios.isAxiosError(error) && (error.response?.status ?? null) === HttpNotAcceptableCode
     const upgradeSeconds = 10

@@ -8,8 +8,10 @@ import img06 from '../images/mtut06.jpg'
 import img07 from '../images/mtut07.jpg'
 import img08 from '../images/mtut08.jpg'
 import { isTouchScreen } from '../utils'
+import type Station from '../Station'
+import type { TutorialSlide } from '../types'
 
-export const getData = (station) => {
+export const getData = (station: Station): TutorialSlide[] => {
     const clickOrTap = isTouchScreen ? 'tap' : 'click'
     const clickOrTapCap = isTouchScreen ? 'Tap' : 'Click'
     return [

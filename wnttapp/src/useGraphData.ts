@@ -3,8 +3,15 @@ import axios from 'axios'
 import { buildCacheKey, stringify } from './utils'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
+import type Station from './Station'
 
-export default function useGraphData(station, startDate, endDate, hiloMode, special) {
+export default function useGraphData(
+    station: Station,
+    startDate: Date,
+    endDate: Date,
+    hiloMode: boolean,
+    special: boolean,
+) {
     const mainStore = storage.getMainStorage()
     const permStore = storage.getPermanentStorage(station.id)
     const startDateStr = stringify(startDate)

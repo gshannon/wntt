@@ -11,7 +11,7 @@ import { stringify } from './utils'
 
 const StorageVersion = '003'
 
-const storageKey = (key) => {
+const storageKey = (key: string) => {
     return `${StorageVersion}.${key}`
 }
 
@@ -25,7 +25,7 @@ export const initStorage = () => {
 }
 
 // Store a non-station-specific object in local storage.
-export const setMainStorage = (value) => {
+export const setMainStorage = (value: unknown) => {
     try {
         localStorage.setItem(storageKey('main'), JSON.stringify(value))
     } catch (error) {
@@ -48,7 +48,7 @@ export const getMainStorage = () => {
 }
 
 // Store a station-specific permanent object in local storage.
-export const setPermanentStorage = (stationId, value) => {
+export const setPermanentStorage = (stationId: string, value: unknown) => {
     const key = storageKey(stationId)
     try {
         const raw = localStorage.getItem(key)
@@ -62,7 +62,7 @@ export const setPermanentStorage = (stationId, value) => {
 
 // Retrieve the station-specific permanent object from local storage, which is the "perm" property of the stored object.
 // Returns an empty object if the key does not exist.
-export const getPermanentStorage = (stationId) => {
+export const getPermanentStorage = (stationId: string | null | undefined) => {
     if (!stationId) {
         return {}
     }
@@ -79,7 +79,7 @@ export const getPermanentStorage = (stationId) => {
 }
 
 // Store a station-specific daily object in local storage.
-export const setDailyStorage = (stationId, value, date = new Date()) => {
+export const setDailyStorage = (stationId: string, value: object, date = new Date()) => {
     const key = storageKey(stationId)
     try {
         const raw = localStorage.getItem(key)
@@ -94,7 +94,7 @@ export const setDailyStorage = (stationId, value, date = new Date()) => {
 
 // Retrieve the station-specific daily object from local storage.  Returns an empty object if the
 // key does not exist. Deletes the stored data and returns {} if it is expired.
-export const getDailyStorage = (stationId) => {
+export const getDailyStorage = (stationId: string | null | undefined) => {
     if (!stationId) {
         return {}
     }

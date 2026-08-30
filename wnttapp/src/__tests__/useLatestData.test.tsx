@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios, { type AxiosError } from 'axios'
 import * as Sentry from '@sentry/react'
 import useLatestData from '../useLatestData'
+import type Station from '../Station'
+import type { ReactNode } from 'react'
 import * as storage from '../storage'
 import { HttpNotAcceptableCode } from '../utils'
 
@@ -15,11 +17,11 @@ vi.mock('@sentry/react', () => ({
 const mockPost = vi.mocked(axios.post)
 
 const mainStore = { uid: 'uid-1', session: 'sess-1', started: '2024-01-01' }
-const station = { id: 'welinwq' }
+const station = { id: 'welinwq' } as Station
 
 const makeAxiosError = (overrides = {}) => Object.assign(new Error('boom'), overrides)
 
-const wrapper = ({ children }) => {
+const wrapper = ({ children }: { children: ReactNode }) => {
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false, gcTime: 0 } },
     })
