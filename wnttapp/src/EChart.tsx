@@ -625,7 +625,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 onEvents={onEvents}
                 style={{ height: '65vh' }}
                 notMerge={true}
-                initopts={{
+                opts={{
                     renderer: 'canvas', // or 'svg'
                     locale: 'EN',
                 }}

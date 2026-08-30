@@ -100,7 +100,7 @@ export default function HelpSyzygy({ gotoPage, returnPage }) {
                     </ListGroup.Item>
                 </ListGroup>
             </Row>
-            <GoBack />
+            <GoBack gotoPage={gotoPage} returnPage={returnPage} />
         </Container>
     )
 }

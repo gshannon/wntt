@@ -7,7 +7,7 @@ export default function ConditionsPopup({ station, onClose }) {
     const { data, error } = useLatestData(station)
 
     return (
-        <Modal id='conditions-modal' show={true} size='md' onHide={onClose}>
+        <Modal id='conditions-modal' show={true} onHide={onClose}>
             <Modal.Header className='py-2 cond-header text-white' closeButton closeVariant='white'>
                 Latest Conditions - {station.waterStationName}
             </Modal.Header>

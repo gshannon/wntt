@@ -10,7 +10,7 @@ import { AppContext } from './AppContext'
 export default function SyzygyPopup({ code, onClose }) {
     const ctx = useContext(AppContext)
     return (
-        <Modal id='syzygy-modal' show={true} size='md' onHide={onClose}>
+        <Modal id='syzygy-modal' show={true} onHide={onClose}>
             <Modal.Header
                 className='py-2 syzygy-header text-white'
                 closeButton
