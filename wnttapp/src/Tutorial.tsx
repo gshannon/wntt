@@ -11,10 +11,10 @@ export default function Tutorial(props) {
     const carouselRef = useRef(null)
 
     const onPrevClick = () => {
-        carouselRef && carouselRef.current.prev()
+        carouselRef.current?.prev()
     }
     const onNextClick = () => {
-        carouselRef && carouselRef.current.next()
+        carouselRef.current?.next()
     }
 
     return (

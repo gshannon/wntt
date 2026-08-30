@@ -138,7 +138,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                     setSyzygyHelpCode(param.data.code)
                 }
             } else if (param.componentType === 'legend') {
-                var legendId = 0
+                let legendId = 0
                 for (const leg of legend) {
                     if (leg.name === param.value) {
                         legendId = leg.legendId
@@ -413,7 +413,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         // at the series level, then I can't find a way to format the datetime.
         // First, some ugliness to pull the datetime for this point in the chart. Could use any param.
         const dt = new Date(params[0].data[0]) // technically s/b params[0].data[params[0].encode.x[0]]
-        var buffer = ''
+        let buffer = ''
         for (const p of params) {
             // p.data is an array where [0] is the y value (dt) and others are the values under the cursor on the yaxis, in series order.
             // p.encode is an object with keys for x and y. Here we only care about y[0], which is the index of the dimension
