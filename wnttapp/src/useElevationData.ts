@@ -33,7 +33,6 @@ export default function useElevationData(pendingMarkerLocation) {
                 )
         },
         staleTime: 0,
-        cacheTime: 0,
         gcTime: 0,
     })
 }

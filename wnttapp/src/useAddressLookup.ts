@@ -35,7 +35,6 @@ export default function useAddressLookup(search, doLookup) {
                 )
         },
         staleTime: 0,
-        cacheTime: 0,
         gcTime: 0,
     })
 }
