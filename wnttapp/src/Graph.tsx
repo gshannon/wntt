@@ -164,7 +164,6 @@ export default function Graph() {
                 setDateRange={setDateRange}
                 isHiloMode={isHiloMode}
                 onMapRequest={onMapRequest}
-                onMapClose={onMapClose}
                 toggleHiloMode={toggleHiloMode}
                 resetDateControls={resetDateControls}
             />

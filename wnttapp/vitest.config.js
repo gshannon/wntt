@@ -21,8 +21,8 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html'],
-            include: ['src/**/*.{js,jsx}'],
-            exclude: ['src/__tests__/**', 'src/main.jsx'],
+            include: ['src/**/*.{js,jsx,ts,tsx}'],
+            exclude: ['src/__tests__/**', 'src/main.tsx', 'src/**/*.d.ts'],
         },
     },
     // Set env variables for testing here, e.g.

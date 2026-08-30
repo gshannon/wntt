@@ -84,7 +84,6 @@ export default function AddressForm({ setPendingMarkerLocation, station }) {
                                 <Spinner animation='grow' variant='light' />
                             :   <Button
                                     variant='custom-primary'
-                                    size='md'
                                     type='submit'
                                     disabled={isLoading}>
                                     Search

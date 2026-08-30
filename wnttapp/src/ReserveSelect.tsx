@@ -1,6 +1,7 @@
 import Dropdown from 'react-bootstrap/Dropdown'
+import type { AppContextValue } from './AppContext'
 
-export default function ReserveSelect({ ctx }) {
+export default function ReserveSelect({ ctx }: { ctx: AppContextValue }) {
     return (
         <Dropdown id='reserve-dropdown'>
             <Dropdown.Toggle>
@@ -16,7 +17,7 @@ export default function ReserveSelect({ ctx }) {
 }
 
 // In case we don't have station data loaded yet, just display an empty select list.
-const Content = ({ ctx }) => {
+const Content = ({ ctx }: { ctx: AppContextValue }) => {
     if (!ctx.stationsData) {
         return <></>
     } else {
