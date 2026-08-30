@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
-import axios from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 import * as Sentry from '@sentry/react'
 import ErrorBlock from '../ErrorBlock'
 import { HttpNotAcceptableCode } from '../utils'
@@ -11,13 +11,13 @@ vi.mock('@sentry/react', () => ({
 
 const make406Error = () => {
     const error = new axios.AxiosError('Not Acceptable')
-    error.response = { status: HttpNotAcceptableCode }
+    error.response = { status: HttpNotAcceptableCode } as AxiosResponse
     return error
 }
 
 const make500Error = () => {
     const error = new axios.AxiosError('Server Error')
-    error.response = { status: 500 }
+    error.response = { status: 500 } as AxiosResponse
     return error
 }
 

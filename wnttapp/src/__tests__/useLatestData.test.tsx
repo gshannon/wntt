@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 import * as Sentry from '@sentry/react'
 import useLatestData from '../useLatestData'
 import * as storage from '../storage'
@@ -11,6 +11,8 @@ vi.mock('axios')
 vi.mock('@sentry/react', () => ({
     captureException: vi.fn(),
 }))
+
+const mockPost = vi.mocked(axios.post)
 
 const mainStore = { uid: 'uid-1', session: 'sess-1', started: '2024-01-01' }
 const station = { id: 'welinwq' }
@@ -32,7 +34,7 @@ beforeEach(() => {
 
 describe('useLatestData', () => {
     it('sends the expected request shape and returns data on success', async () => {
-        axios.post.mockResolvedValue({ data: { temp: 72 } })
+        mockPost.mockResolvedValue({ data: { temp: 72 } })
         const { result } = renderHook(() => useLatestData(station), { wrapper })
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -51,20 +53,20 @@ describe('useLatestData', () => {
     })
 
     it('surfaces a 406 version-mismatch error without logging it', async () => {
-        axios.post.mockRejectedValue(
+        mockPost.mockRejectedValue(
             makeAxiosError({ response: { status: HttpNotAcceptableCode } }),
         )
         const { result } = renderHook(() => useLatestData(station), { wrapper })
 
         await waitFor(() => expect(result.current.isError).toBe(true))
 
-        expect(result.current.error.response.status).toBe(HttpNotAcceptableCode)
+        expect((result.current.error as AxiosError).response?.status).toBe(HttpNotAcceptableCode)
         expect(console.error).not.toHaveBeenCalled()
         expect(Sentry.captureException).not.toHaveBeenCalled()
     })
 
     it('surfaces and logs a generic 500 error', async () => {
-        axios.post.mockRejectedValue(makeAxiosError({ response: { status: 500 } }))
+        mockPost.mockRejectedValue(makeAxiosError({ response: { status: 500 } }))
         const { result } = renderHook(() => useLatestData(station), { wrapper })
 
         await waitFor(() => expect(result.current.isError).toBe(true))
@@ -74,7 +76,7 @@ describe('useLatestData', () => {
     })
 
     it('surfaces and logs a network error with no response', async () => {
-        axios.post.mockRejectedValue(makeAxiosError({ code: 'ERR_NETWORK' }))
+        mockPost.mockRejectedValue(makeAxiosError({ code: 'ERR_NETWORK' }))
         const { result } = renderHook(() => useLatestData(station), { wrapper })
 
         await waitFor(() => expect(result.current.isError).toBe(true))
@@ -84,7 +86,7 @@ describe('useLatestData', () => {
     })
 
     it('surfaces a cancellation without logging or retrying', async () => {
-        axios.post.mockRejectedValue(makeAxiosError({ name: 'CanceledError' }))
+        mockPost.mockRejectedValue(makeAxiosError({ name: 'CanceledError' }))
         const { result } = renderHook(() => useLatestData(station), { wrapper })
 
         await waitFor(() => expect(result.current.isError).toBe(true))
