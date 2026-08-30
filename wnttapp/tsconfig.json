@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+
+        /* Incremental migration: allow .js and .jsx alongside .ts/.tsx, don't type-check .js yet. */
+        "allowJs": true,
+        "checkJs": false,
+
+        /* Vite/Babel does the transpiling; tsc is type-check only. */
+        "noEmit": true,
+        "isolatedModules": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+
+        /* Start lenient; tighten to "strict": true once everything compiles. */
+        "strict": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false
+    },
+    "include": ["src"]
+}

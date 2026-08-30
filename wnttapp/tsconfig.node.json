@@ -1,0 +1,21 @@
+{
+    /* Build-tooling / config files that run in Node, not the browser bundle.
+       Kept separate from the app config (different lib/globals). Not wired as a
+       project reference yet — used by editors and available for a future
+       `tsc -p tsconfig.node.json` check. */
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2023"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "types": ["node"],
+        "allowJs": true,
+        "checkJs": false,
+        "noEmit": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "strict": false
+    },
+    "include": ["vite.config.js", "vitest.config.js", "eslint.config.js"]
+}
