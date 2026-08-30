@@ -29,7 +29,7 @@ export const setMainStorage = (value: unknown) => {
     try {
         localStorage.setItem(storageKey('main'), JSON.stringify(value))
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
     }
 }
@@ -41,7 +41,7 @@ export const getMainStorage = () => {
         const data = localStorage.getItem(storageKey('main'))
         return data ? JSON.parse(data) : {}
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
         return {}
     }
@@ -55,7 +55,7 @@ export const setPermanentStorage = (stationId: string, value: unknown) => {
         const data = raw ? JSON.parse(raw) : { daily: {} }
         localStorage.setItem(storageKey(stationId), JSON.stringify({ ...data, perm: value }))
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
     }
 }
@@ -72,7 +72,7 @@ export const getPermanentStorage = (stationId: string | null | undefined) => {
         const data = raw ? JSON.parse(raw) : {}
         return data.perm ?? {}
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
         return {}
     }
@@ -87,7 +87,7 @@ export const setDailyStorage = (stationId: string, value: object, date = new Dat
         const newDaily = { day: stringify(date), ...value }
         localStorage.setItem(storageKey(stationId), JSON.stringify({ ...data, daily: newDaily }))
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
     }
 }
@@ -113,7 +113,7 @@ export const getDailyStorage = (stationId: string | null | undefined) => {
         }
         return {}
     } catch (error) {
-        console.error(error.message)
+        console.error(error instanceof Error ? error.message : String(error))
         Sentry.captureException(error)
         return {}
     }

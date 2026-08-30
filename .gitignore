@@ -9,6 +9,7 @@ CLAUDE.md
 .version-dev
 .python-version
 .env
+.eslintcache
 .astro
 .vscode/
 datamount/

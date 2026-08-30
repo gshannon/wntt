@@ -6,9 +6,7 @@
         "moduleResolution": "bundler",
         "jsx": "react-jsx",
 
-        /* Incremental migration: allow .js and .jsx alongside .ts/.tsx, don't type-check .js yet. */
-        "allowJs": true,
-        "checkJs": false,
+        "allowJs": false,
 
         /* Vite/Babel does the transpiling; tsc is type-check only. */
         "noEmit": true,
@@ -17,14 +15,8 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
 
-        /* Migrating to full strict in phases. Phases A+B done.
-           Still off: strictFunctionTypes, strictPropertyInitialization,
-           strictBindCallApply, useUnknownInCatchVariables. */
-        "strict": false,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "alwaysStrict": true,
-        "strictNullChecks": true,
+        "strict": true,
+        /* off for now: redundant with @typescript-eslint/no-unused-vars */
         "noUnusedLocals": false,
         "noUnusedParameters": false
     },
