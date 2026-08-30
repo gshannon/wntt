@@ -1,9 +1,7 @@
 import { defaultMinGraphDate, maxGraphDate, roundTo } from './utils'
 import { DefaultMapZoom } from './mapUtils'
 import { min, max } from 'date-fns'
-
-type LatLng = { lat: number; lng: number }
-type MapBounds = [[number, number], [number, number]]
+import type { LatLng, MapBounds } from './types'
 
 export default class Station {
     id: string
