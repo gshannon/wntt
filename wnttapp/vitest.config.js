@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 import Inspect from 'vite-plugin-inspect'
 import eslint from 'vite-plugin-eslint2'
 
