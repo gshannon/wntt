@@ -2,7 +2,29 @@ import { defaultMinGraphDate, maxGraphDate, roundTo } from './utils'
 import { DefaultMapZoom } from './mapUtils'
 import { min, max } from 'date-fns'
 
+type LatLng = { lat: number; lng: number }
+type MapBounds = [[number, number], [number, number]]
+
 export default class Station {
+    id: string
+    reserveName: string
+    timeZone: string
+    reserveUrl: string
+    waterStationName: string
+    weatherStationId: string
+    weatherStationName: string
+    noaaStationId: string
+    noaaStationName: string
+    navd88ToMllwConversion: number
+    meanHighWaterMllw: number
+    mapBounds: MapBounds
+    swmpLocation: LatLng
+    weatherLocation: LatLng
+    noaaStationLocation: LatLng
+    recordTideNavd88: number
+    recordTideDate: string // string YYYY-MM-DD
+    minDate: string | null
+
     static fromJson = (stationId, json) => {
         return new Station({
             id: stationId,
@@ -106,7 +128,9 @@ export default class Station {
     minGraphDate = () => {
         // If the station has a specific min date, use it unless it's older than the default.
         if (this.minDate) {
-            return new Date(Math.max(new Date(this.minDate), defaultMinGraphDate()))
+            return new Date(
+                Math.max(new Date(this.minDate).getTime(), defaultMinGraphDate().getTime()),
+            )
         }
         return defaultMinGraphDate()
     }
