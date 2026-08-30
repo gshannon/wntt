@@ -4,6 +4,10 @@ services:
     app:
         container_name: app-c
         image: wnttapp:arm
+        # Images are built locally (mytools/buildapp); never try to pull from a registry.
+        # Works around Docker Desktop's containerd image store intermittently failing to
+        # resolve locally-built tags, which makes compose fall back to a (doomed) pull.
+        pull_policy: never
         ports:
             # Must be identical for dev, else importing local images fails - vite bug?
             - 3001:3001
@@ -16,6 +20,7 @@ services:
     api:
         container_name: api-c
         image: wnttapi:arm
+        pull_policy: never
         environment:
             DJANGO_SETTINGS_MODULE: project.settings.dev
             SECRET_KEY: ${DJANGO_KEY}

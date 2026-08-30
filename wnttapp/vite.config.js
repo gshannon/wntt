@@ -13,4 +13,14 @@ export default defineConfig({
         host: true,
         origin: 'http://0.0.0.0:3001',
     },
+    preview: {
+        port: 4173,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8000', // host port -> api-c:8001
+                changeOrigin: true,
+                rewrite: (p) => p.replace(/^\/api/, ''), // /api/stations/ -> /stations/
+            },
+        },
+    },
 })

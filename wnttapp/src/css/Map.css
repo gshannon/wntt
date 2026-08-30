@@ -93,16 +93,16 @@
 }
 
 /* This is used internally by leaflet, needed to define map placement */
-.leaflet-container {
+#map-modal .leaflet-container {
     height: 60vh;
     width: 100%;
     padding: 0;
 }
 
 /* Without this, the markers transparent images get white backgrounds and a border */
-.leaflet-div-icon {
-    background: transparent !important;
-    border: none !important;
+#map-modal .leaflet-div-icon {
+    background: transparent;
+    border: none;
 }
 
 .my-icon {
