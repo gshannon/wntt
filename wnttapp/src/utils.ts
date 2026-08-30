@@ -9,7 +9,7 @@ export const TidesCurrentsStationUrl = 'https://tidesandcurrents.noaa.gov/statio
 export const TidesCurrentsDatumsUrl = 'https://tidesandcurrents.noaa.gov/datum_options.html'
 export const SurgeUrl =
     'https://slosh.nws.noaa.gov/etsurge2.0/index.php?glat=All&display=0&type=stormtide&base=USGSTopo'
-export const getSurgeStationUrl = (noaaStationId) => {
+export const getSurgeStationUrl = (noaaStationId: string) => {
     return `https://slosh.nws.noaa.gov/etsurge2.0/index.php?stid=${noaaStationId}&datum=MLLW&show=0-0-1-1-0`
 }
 
@@ -124,21 +124,29 @@ export const Page = Object.freeze({
 })
 
 // Round a floating point value string to n digits of precision
-export const roundTo = (value, digits) => Number(value.toFixed(digits))
+export const roundTo = (value: number, digits: number) => Number(value.toFixed(digits))
 
 // Provide a consistent string version of a date as MM/DD/YYYY for convenience.
-export const stringify = (date) => {
+export const stringify = (date: Date) => {
     return format(date, 'MM/dd/yyyy')
 }
 
 // Build the cache key to use for a given date range.
-export function buildCacheKey(stationId, startDateStr, endDateStr, hiloMode) {
+export function buildCacheKey(
+    stationId: string,
+    startDateStr: string,
+    endDateStr: string,
+    hiloMode: boolean,
+) {
     return ['graph', stationId, `${startDateStr}:${endDateStr}`, hiloMode ? 'hilo' : 'all']
 }
 
 // Calculate a reasonable tick interval for wind graphs so it's
 // just the right amount of clutter.
-export const calcWindspeedTickInterval = (gusts, forecasts) => {
+export const calcWindspeedTickInterval = (
+    gusts: number[] | null,
+    forecasts: number[] | null,
+) => {
     let interval = 10
     if (gusts !== null || forecasts !== null) {
         const range = gusts ? Math.max(...gusts) : Math.max(...forecasts)
@@ -151,7 +159,7 @@ export const calcWindspeedTickInterval = (gusts, forecasts) => {
     return interval
 }
 
-export const degreesToDir = (degrees) => {
+export const degreesToDir = (degrees: number) => {
     let direction
 
     if (degrees <= 11) direction = 'N'
@@ -175,4 +183,4 @@ export const degreesToDir = (degrees) => {
 }
 
 // echarts uses 0 ... -180 for 0 ... 180, and 1 ... 179 for 359 ... 181
-export const toEchartDegrees = (deg) => (deg <= 180 ? -deg : 360 - deg)
+export const toEchartDegrees = (deg: number) => (deg <= 180 ? -deg : 360 - deg)

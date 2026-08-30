@@ -47,7 +47,9 @@ export default tseslint.config(
     },
     {
         // Test files: allow the throwaway typing shortcuts that mocking needs.
-        files: ['src/__tests__/**'],
+        // EChart.tsx: echarts' own formatter/event callback params are typed `any`
+        // upstream; mirroring that is clearer than hand-rolling partial interfaces.
+        files: ['src/__tests__/**', 'src/EChart.tsx'],
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
         },

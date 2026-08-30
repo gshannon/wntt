@@ -3,8 +3,9 @@ import axios from 'axios'
 import { EpqsUrl, roundTo } from './utils'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
+import type { LatLng } from './types'
 
-export default function useElevationData(pendingMarkerLocation) {
+export default function useElevationData(pendingMarkerLocation: LatLng | null) {
     const mainStore = storage.getMainStorage()
     // We want the key to be different so it doesn't use cached data from previous query.
     const subKey =

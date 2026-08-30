@@ -1,10 +1,12 @@
 import L from 'leaflet'
+import type Station from './Station'
+import type { LatLng, MapBounds } from './types'
 
 export const DefaultMapZoom = 13
 export const MinZoom = 8
 export const MaxZoom = 18
 
-export const stationIcon = (emoji) => {
+export const stationIcon = (emoji: string) => {
     return L.divIcon({
         className: 'my-icon',
         html: emoji,
@@ -22,8 +24,8 @@ export const satelliteMap = {
 }
 
 // Intelligently place the station marker tooltips to reduce the chance of overlap.
-export const buildTooltipLocations = (station) => {
-    const offsets = {
+export const buildTooltipLocations = (station: Station) => {
+    const offsets: { top: [number, number]; bottom: [number, number] } = {
         top: [9, -10],
         bottom: [9, 30],
     }
@@ -34,14 +36,14 @@ export const buildTooltipLocations = (station) => {
     ]
     // We sort them by latitude, high to low (would be low to high in southern hemisphere)
     locs.sort((a, b) => b.val.lat - a.val.lat)
-    const data = {}
+    const data: Record<string, { dir: 'top' | 'bottom'; offset: [number, number] }> = {}
     // Highest latitude gets tooltip on top.
     data[locs[0].key] = { dir: 'top', offset: offsets.top }
     data[locs[1].key] = { dir: 'bottom', offset: offsets.bottom }
     return data
 }
 
-export const isInBounds = (mapBounds, loc) => {
+export const isInBounds = (mapBounds: MapBounds, loc: LatLng) => {
     const minLat = Math.min(mapBounds[0][0], mapBounds[1][0])
     const minLng = Math.min(mapBounds[0][1], mapBounds[1][1])
     const maxLat = Math.max(mapBounds[0][0], mapBounds[1][0])

@@ -1,3 +1,4 @@
+import type { GraphData } from './types'
 import { useContext, useState, useRef } from 'react'
 import { AppContext } from './AppContext'
 import { degreesToDir, isSmallScreen, toEchartDegrees } from './utils'
@@ -57,7 +58,17 @@ const xAxisFormat = '{hh}:{mm} {A}\n{MMM} {d}'
  *   highest_annual_prediction : highest predicted astro tide for the year in mllw
  */
 
-export default function Chart({ error, loading, hiloMode, data }) {
+export default function Chart({
+    error,
+    loading,
+    hiloMode,
+    data,
+}: {
+    error: unknown
+    loading: boolean
+    hiloMode: boolean
+    data: GraphData
+}) {
     const ctx = useContext(AppContext)
     const customElevationNav = ctx.customElevationNav
     const showElevation =
@@ -131,7 +142,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         data.dimensions.includes(Dimension.ForecastWindSpeeds)
 
     const onEvents = {
-        click: (param) => {
+        click: (param: any) => {
             if (param.componentType === 'series') {
                 if (param.seriesName === 'syzygy') {
                     // Put the selected code (e.g. FM) in state to trigger the modal popup.
@@ -151,7 +162,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                         stationDaily.legendOnly.push(legendId)
                     } else {
                         stationDaily.legendOnly = stationDaily.legendOnly.filter(
-                            (v) => v !== legendId,
+                            (v: number) => v !== legendId,
                         )
                     }
                     storage.setDailyStorage(ctx.station.id, stationDaily)
@@ -161,8 +172,14 @@ export default function Chart({ error, loading, hiloMode, data }) {
     }
 
     // Build the series and legend arrays.
-    const series = []
-    const legend = []
+    interface LegendItem {
+        name?: string
+        legendId: number
+        icon?: string
+        sortValue?: number
+    }
+    const series: any[] = []
+    const legend: LegendItem[] = []
 
     if (data.syzygy) {
         series.push({
@@ -174,7 +191,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             tooltip: {
                 trigger: 'item',
                 // For these events we pull the data from the syzygy object using the x datetime value.
-                formatter: (param) => {
+                formatter: (param: any) => {
                     const dtStr = format(new Date(param.data.realDt), 'ccc, MMM d, yyyy h:mm aaa')
                     return `${SyzygyConfig[param.data.code].name}: ${dtStr}<br>Click for more.`
                 },
@@ -259,7 +276,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             label: {
                 show: hiloMode,
                 position: [-5, -15],
-                formatter: (p) => `${p.data[p.encode.y[0]]}'`,
+                formatter: (p: any) => `${p.data[p.encode.y[0]]}'`,
                 color: ObservedTideColor,
             },
         })
@@ -282,7 +299,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 show: hiloMode,
                 position: [-5, -15],
                 color: PredictedTideColor,
-                formatter: (p) => {
+                formatter: (p: any) => {
                     // Only show label if no obs tide or projected tide labels are shown.
                     const otherLabels = [Dimension.HistTides, Dimension.ProjectedStormTide].some(
                         (dim) => {
@@ -328,7 +345,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
                 show: hiloMode,
                 position: [-5, -15],
                 color: ProjectedStormTideColor,
-                formatter: (p) => `${p.data[p.encode.y[0]]}'`,
+                formatter: (p: any) => `${p.data[p.encode.y[0]]}'`,
             },
         })
         legend.push({ name: ProjectedStormTideTitle, legendId: LegendId.ProjectedStormTide })
@@ -359,7 +376,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.WindGusts },
             symbol: `image://${BlueArrow}`,
             color: WindGustColor,
-            symbolRotate: (_, params) =>
+            symbolRotate: (_: unknown, params: any) =>
                 toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.WindDir)]),
         })
         legend.push({
@@ -378,7 +395,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             encode: { x: Dimension.DateTime, y: Dimension.WindSpeeds },
             symbol: 'image://' + GreenArrow,
             color: WindSpeedColor,
-            symbolRotate: (_, params) =>
+            symbolRotate: (_: unknown, params: any) =>
                 toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.WindDir)]),
         })
         legend.push({
@@ -396,7 +413,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             name: ForecastWindSpeedTitle,
             encode: { x: Dimension.DateTime, y: Dimension.ForecastWindSpeeds },
             symbol: 'image://' + BlackArrow,
-            symbolRotate: (_, params) =>
+            symbolRotate: (_: unknown, params: any) =>
                 toEchartDegrees(params.data[data.dimensions.indexOf(Dimension.ForecastWindDir)]),
             color: ForecastWindSpeedColor,
         })
@@ -407,7 +424,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
         })
     }
 
-    const formatTooltip = (params) => {
+    const formatTooltip = (params: any) => {
         // There's a param for each tooltip-enabled series that contains data associated with the Y axis under the cursor.
         // I hate building every possible tooltip with one function, but if I define the tooltips
         // at the series level, then I can't find a way to format the datetime.
@@ -471,7 +488,7 @@ export default function Chart({ error, loading, hiloMode, data }) {
             trigger: 'axis',
             formatter: formatTooltip,
             order: 'seriesAsc',
-            position: function (pt, _, domElement) {
+            position: function (pt: [number, number], _: unknown, domElement: HTMLElement) {
                 // Prevent tooltip from partial obstruction. Keep to right of cursor as long as possible.
                 // We want upper left to be 20 pix right and below mouse.
                 const avail = document.body.clientWidth
@@ -489,12 +506,12 @@ export default function Chart({ error, loading, hiloMode, data }) {
             borderWidth: 2,
             data: !isNarrow ? legend : [],
             // Gray out legend items (which hides the series) if user has turned them off.
-            selected: legend.reduce((acc, item) => {
+            selected: legend.reduce<Record<string, boolean>>((acc, item) => {
                 acc[item.name] = !stationDaily.legendOnly.includes(item.legendId)
                 return acc
             }, {}),
             triggerEvent: true,
-            formatter: (name) => {
+            formatter: (name: string) => {
                 if (name.startsWith('Wind ')) {
                     return `${name} (points downwind)`
                 }

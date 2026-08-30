@@ -9,7 +9,7 @@ const minSaneMax = 1
 const maxSaneMax = 8
 const defaultMax = 3
 
-export const useCache = (page) => {
+export const useCache = (page: number) => {
     const queryClient = useQueryClient()
     let maxQueries = import.meta.env.VITE_MAX_GRAPH_QUERIES_IN_CACHE ?? defaultMax
     maxQueries = Math.max(maxQueries, minSaneMax)

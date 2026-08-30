@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
+import type Station from './Station'
 
-export default function useLatestData(station) {
+export default function useLatestData(station: Station) {
     const mainStore = storage.getMainStorage()
 
     return useQuery({

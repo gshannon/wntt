@@ -15,8 +15,10 @@ import zoomMode from '../images/zoom-mode.jpg'
 import panning from '../images/panning.jpg'
 import elevation from '../images/elevation.jpg'
 import { isSmallScreen, isTouchScreen } from '../utils'
+import type Station from '../Station'
+import type { TutorialSlide } from '../types'
 
-export const getData = (station) => {
+export const getData = (station: Station): TutorialSlide[] => {
     const clickOrTap = isTouchScreen ? 'tap' : 'click'
     const clickOrTapCap = isTouchScreen ? 'Tap' : 'Click'
     return [

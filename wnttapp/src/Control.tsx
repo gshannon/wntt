@@ -7,8 +7,17 @@ import { Page } from './utils'
 import Glossary from './Glossary'
 import { AppContext } from './AppContext'
 import ErrorBlock from './ErrorBlock'
+import type { GotoPage } from './types'
 
-export default function Control({ page, returnPage, gotoPage }) {
+export default function Control({
+    page,
+    returnPage,
+    gotoPage,
+}: {
+    page: number
+    returnPage: number | null
+    gotoPage: GotoPage
+}) {
     const ctx = useContext(AppContext)
 
     if (ctx.fatalError) {
@@ -19,7 +28,7 @@ export default function Control({ page, returnPage, gotoPage }) {
         )
     }
 
-    const pageClass = {
+    const pageClass: Record<number, string> = {
         [Page.Home]: 'home-page',
         [Page.Graph]: 'graph-page',
         [Page.About]: 'about-page',

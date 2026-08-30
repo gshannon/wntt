@@ -1,5 +1,7 @@
 import { getSyzygyUrl } from './Syzygy'
 import { differenceInMinutes } from 'date-fns'
+import type Station from './Station'
+import type { Blob, SyzygyEvent } from './types'
 
 // These constants drive optimal placement settings in the EChart.  Adjust as needed.
 const LegendWidthPix = 220 // width of our legend
@@ -49,14 +51,21 @@ export const LegendId = Object.freeze({
     XPastStormSurgeCheckBias2: 18,
 })
 
-export const buildSyzygyData = (syzygyData, blob, gridWidth) => {
+export interface ResponsivePlacement {
+    gridLeftPix: number
+    gridWidthPix: number
+    legendLeftPix: number
+    leftColWidthPix: number
+}
+
+export const buildSyzygyData = (syzygyData: SyzygyEvent[], blob: Blob, gridWidth: number) => {
     const copy = [...syzygyData]
-    const startDate = new Date(blob[0][0])
-    const endDate = new Date(blob[blob.length - 1][0])
+    const startDate = new Date(blob[0][0] as string)
+    const endDate = new Date(blob[blob.length - 1][0] as string)
     const timelineMinutes = differenceInMinutes(endDate, startDate)
 
     // Calculate pixels to move symbol from its assigned time to its real location
-    const getOffset = (dt, realDt) => {
+    const getOffset = (dt: string, realDt: string) => {
         const actualOffet =
             (Math.abs(differenceInMinutes(new Date(dt), startDate)) / timelineMinutes) * gridWidth
         const expectedOffset =
@@ -70,7 +79,7 @@ export const buildSyzygyData = (syzygyData, blob, gridWidth) => {
     // with symbolOffset. This frees us from mapping forcing the timelines to contain these event times, a
     // practice that causes problems with the connectNulls flags on series.
     return blob.map((rec) => {
-        const dt = rec[0]
+        const dt = rec[0] as string
         if (copy.length > 0) {
             const event = copy.shift()
             return {
@@ -87,7 +96,12 @@ export const buildSyzygyData = (syzygyData, blob, gridWidth) => {
     })
 }
 
-export const buildLocalDataSet = (blob, station, highestAnnualPrediction, customElevationMllw) => {
+export const buildLocalDataSet = (
+    blob: Blob,
+    station: Station,
+    highestAnnualPrediction: number,
+    customElevationMllw: number | null,
+) => {
     // Build a second dataset for data that's better built here than the backend.
     const localDims = [
         { name: Dimension.DateTime, type: 'time' },
@@ -109,7 +123,7 @@ export const buildLocalDataSet = (blob, station, highestAnnualPrediction, custom
 
 // Based on current screen width, determine best placement of the grid and legend and grid width so it looks
 // great on any screen size.  showingLegend should be false on small screens.
-export const getResponsivePlacement = (showingLegend) => {
+export const getResponsivePlacement = (showingLegend: boolean): ResponsivePlacement => {
     const screenPix = document.body.clientWidth // window.innerWidth counts scrollbar space as usable
     const legendMarginPix = screenPix >= 1000 ? 20 : 10 // We can afford a wider margin on big screens
     const centerColWidthPix = Math.ceil(screenPix * ChartDisplayFactor)
@@ -125,7 +139,11 @@ export const getResponsivePlacement = (showingLegend) => {
     return { gridLeftPix, gridWidthPix, legendLeftPix, leftColWidthPix }
 }
 
-export const buildGridLayout = (showingWind, placement, bgColor) => {
+export const buildGridLayout = (
+    showingWind: boolean,
+    placement: ResponsivePlacement,
+    bgColor: string,
+) => {
     const syzygyTop = '17%'
     const syzygyHeight = '3%'
     const tideGridTop = '20%'

@@ -1,6 +1,15 @@
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { isTouchScreen } from './utils'
+import type { ReactNode } from 'react'
+
+interface OverlayProps {
+    text: ReactNode
+    placement?: 'top' | 'bottom' | 'left' | 'right'
+    contents: ReactNode
+    enable?: boolean
+    id?: string
+}
 
 /**
  * Wrapper for OverlayTrigger with Tooltip overlay so we can build these the same way everywhere,
@@ -11,7 +20,7 @@ import { isTouchScreen } from './utils'
  * - contents: content to display in the overlay
  */
 
-export default function Overlay(props) {
+export default function Overlay(props: OverlayProps) {
     const { text, placement, contents, enable = true } = props
 
     if (isTouchScreen || !enable) {

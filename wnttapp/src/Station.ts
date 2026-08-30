@@ -3,6 +3,38 @@ import { DefaultMapZoom } from './mapUtils'
 import { min, max } from 'date-fns'
 import type { LatLng, MapBounds } from './types'
 
+// Shape of a single station's config as delivered by the API's /stations/ endpoint.
+export interface StationJson {
+    reserveName: string
+    timeZone: string
+    reserveUrl: string
+    waterStationName: string
+    weatherStationId: string
+    weatherStationName: string
+    noaaStationId: string
+    noaaStationName: string
+    navd88ToMllwConversion: number
+    meanHighWaterMllw: number
+    mapBounds: MapBounds
+    swmpLocation: LatLng
+    weatherLocation: LatLng
+    noaaStationLocation: LatLng
+    recordTideNavd88: number
+    recordTideDate: string // YYYY-MM-DD
+    minDateOverride?: string | null // YYYY-MM-DD to override default
+}
+
+type StationCtorArgs = StationJson & { id: string }
+
+// Per-station UI preferences persisted in localStorage (see storage.ts).
+export interface StationOptions {
+    customElevationNav?: number | null
+    customLocation?: LatLng | null
+    mapCenter?: LatLng
+    mapType?: string
+    zoom?: number
+}
+
 export default class Station {
     id: string
     reserveName: string
@@ -23,7 +55,7 @@ export default class Station {
     recordTideDate: string // string YYYY-MM-DD
     minDate: string | null
 
-    static fromJson = (stationId, json) => {
+    static fromJson = (stationId: string, json: StationJson) => {
         return new Station({
             id: stationId,
             reserveName: json.reserveName,
@@ -65,7 +97,7 @@ export default class Station {
         recordTideNavd88,
         recordTideDate, // string YYYY-MM-DD
         minDateOverride = null, // string YYYY-MM-DD to override default
-    }) {
+    }: StationCtorArgs) {
         this.id = id
         this.reserveName = reserveName
         this.timeZone = timeZone
@@ -86,7 +118,7 @@ export default class Station {
         this.minDate = minDateOverride
     }
 
-    stationOptionsWithDefaults = (options) => {
+    stationOptionsWithDefaults = (options: StationOptions): StationOptions => {
         // Apply station-specific fields to storage defaults.  There will be no properties if it's a first time user
         // or storage was cleared. Make sure all properties at least exist with defaults.
         options.customElevationNav ||= null
@@ -101,14 +133,14 @@ export default class Station {
         return this.navd88ToMllw(this.recordTideNavd88)
     }
 
-    navd88ToMllw = (navd88) => {
+    navd88ToMllw = (navd88: number | null) => {
         if (navd88 == null) {
             return null
         }
         return roundTo(navd88 + this.navd88ToMllwConversion, 2)
     }
 
-    mllwToNavd88 = (mllw) => {
+    mllwToNavd88 = (mllw: number | null) => {
         if (mllw == null) {
             return null
         }
@@ -135,7 +167,7 @@ export default class Station {
 
     // If the date is outside the min/max graph range for this station, return the closest limit.
     // Otherwise return the same date.
-    limitGraphDate = (date) => {
+    limitGraphDate = (date: Date) => {
         const bounded_low = max([date, this.minGraphDate()])
         return min([bounded_low, maxGraphDate()])
     }

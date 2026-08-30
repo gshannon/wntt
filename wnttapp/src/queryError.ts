@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react'
+import type { AxiosError } from 'axios'
 import { HttpNotAcceptableCode } from './utils'
 
 // Shared handling for axios errors raised inside react-query queryFn's. Cancellations (component
@@ -12,7 +13,7 @@ interface QueryErrorContext {
 }
 
 export const handleQueryError = (
-    error,
+    error: AxiosError<{ detail?: string }>,
     { operation, mainStore, extra }: QueryErrorContext = {},
 ) => {
     if (error.name !== 'CanceledError' && error.response?.status !== HttpNotAcceptableCode) {

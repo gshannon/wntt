@@ -3,7 +3,9 @@ import { render, screen } from '@testing-library/react'
 import Conditions from '../Conditions'
 
 vi.mock('../ErrorBlock', () => ({
-    default: ({ error }) => <div data-testid='error-block'>{String(error)}</div>,
+    default: ({ error }: { error: unknown }) => (
+        <div data-testid='error-block'>{String(error)}</div>
+    ),
 }))
 
 describe('Conditions', () => {

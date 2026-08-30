@@ -1,8 +1,11 @@
 import { ListGroup, Row } from 'react-bootstrap'
 import Container from 'react-bootstrap/Container'
 import { SimpleLink, Link } from './Links'
+import type { GotoPage } from './types'
 
-const GoBack = ({ gotoPage, returnPage }) => {
+type GoBackProps = { gotoPage: GotoPage; returnPage: number | null }
+
+const GoBack = ({ gotoPage, returnPage }: GoBackProps) => {
     return returnPage ?
             <Row className='justify-content-start my-3'>
                 <a
@@ -16,7 +19,7 @@ const GoBack = ({ gotoPage, returnPage }) => {
         :   ''
 }
 
-export default function HelpSyzygy({ gotoPage, returnPage }) {
+export default function HelpSyzygy({ gotoPage, returnPage }: GoBackProps) {
     return (
         <Container>
             <GoBack gotoPage={gotoPage} returnPage={returnPage} />

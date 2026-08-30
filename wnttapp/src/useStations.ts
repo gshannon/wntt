@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import Station from './Station'
+import Station, { type StationJson } from './Station'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
 
@@ -15,7 +15,7 @@ export default function useStations() {
         refetchInterval: false,
         queryFn: async ({ signal }) => {
             return await axios
-                .post(import.meta.env.VITE_API_STATIONS_URL, {
+                .post<Record<string, StationJson>>(import.meta.env.VITE_API_STATIONS_URL, {
                     signal,
                     version: import.meta.env.VITE_APP_VERSION,
                     // For logging...

@@ -3,7 +3,7 @@ import axios from 'axios'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
 
-export default function useAddressLookup(search, doLookup) {
+export default function useAddressLookup(search: string, doLookup: boolean) {
     const mainStore = storage.getMainStorage()
     const address = search + ' USA'
     const encoded = address.replace(/\s+/gi, '+')

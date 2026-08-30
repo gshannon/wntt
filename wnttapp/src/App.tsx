@@ -8,6 +8,7 @@ import Control from './Control'
 import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page, WELLS_STATION_ID } from './utils'
+import type { LatLng } from './types'
 // import Station from './Station'
 import useStations from './useStations'
 import { stringify } from './utils'
@@ -17,8 +18,8 @@ export default function App() {
     // Set up state.
     const isSpecial = (import.meta.env.VITE_SPECIAL ?? '0') === '1'
     const [special, setSpecial] = useState(isSpecial) // temporary dev hack
-    const [curPage, setCurPage] = useState(Page.Home)
-    const [returnPage, setReturnPage] = useState(null)
+    const [curPage, setCurPage] = useState<number>(Page.Home)
+    const [returnPage, setReturnPage] = useState<number | null>(null)
 
     // Initial station will be the one stored, or null by default.
     const mainStore = storage.getMainStorage()
@@ -46,13 +47,13 @@ export default function App() {
     }
 
     // All navigation is done with this.
-    const gotoPage = (page, returnPage) => {
+    const gotoPage = (page: number, returnPage?: number | null) => {
         setCurPage(page)
         setReturnPage(returnPage || null)
     }
 
     // handler for user selecting a station
-    const onStationSelected = (sid) => {
+    const onStationSelected = (sid: string) => {
         setStation(stationsData[sid])
         storage.setMainStorage({ ...mainStore, stationId: sid })
         const storedOptions = storage.getPermanentStorage(sid)
@@ -61,7 +62,7 @@ export default function App() {
     }
 
     // handler for user setting custom elevation
-    const onCustomElevationSet = (navd88Value, location) => {
+    const onCustomElevationSet = (navd88Value: number, location: LatLng | null) => {
         if (navd88Value !== undefined && station != null) {
             setCustomElevationNav(navd88Value)
             setCustomLocation(location)

@@ -1,6 +1,6 @@
 import './css/GetDates.css'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useContext } from 'react'
+import { type Dispatch, type SetStateAction, useContext } from 'react'
 import HousePic from './images/housepic2.png?inline'
 import Button from 'react-bootstrap/Button'
 import { Form, FormLabel, FormText } from 'react-bootstrap'
@@ -9,6 +9,19 @@ import { addDays, differenceInDays } from 'date-fns'
 import { isSmallScreen, getMaxNumDays, maxGraphDate } from './utils'
 import Overlay from './Overlay'
 import { AppContext } from './AppContext'
+import type { StartDateCtl, EndDateCtl } from './types'
+
+interface GetDatesProps {
+    startCtl: StartDateCtl
+    setStartCtl: Dispatch<SetStateAction<StartDateCtl>>
+    endCtl: EndDateCtl
+    setEndCtl: Dispatch<SetStateAction<EndDateCtl>>
+    setDateRange: (start: Date, end: Date, forceRefresh: boolean) => void
+    isHiloMode: boolean
+    toggleHiloMode: () => void
+    resetDateControls: () => void
+    onMapRequest: () => void
+}
 
 // Allow users to set start/end date range for the graph.
 
@@ -22,7 +35,7 @@ export default function GetDates({
     toggleHiloMode,
     resetDateControls,
     onMapRequest,
-}) {
+}: GetDatesProps) {
     const ctx = useContext(AppContext)
     const minDate = ctx.station.minGraphDate()
     const maxDate = maxGraphDate()
@@ -42,7 +55,7 @@ export default function GetDates({
         resetDateControls() // Let parent reset the date controls, and the appContext.
     }
 
-    const handleStartChange = (dt) => {
+    const handleStartChange = (dt: Date | null) => {
         // When they change start date, we automatically change end date also, to match the previously
         // selected number of days shown, if possible.
         // Datepicker won't call this if date is invalid or outside min/max, but it calls it if
@@ -61,7 +74,7 @@ export default function GetDates({
         }
     }
 
-    const handleEndChange = (dt) => {
+    const handleEndChange = (dt: Date | null) => {
         // When they change the end date, it has no effect on the start date. Since the date control
         // won't allow a date out of range, we can skip range checking here.
         // Note we must do nothing if the date did not change, as that would cause no re-rendering.

@@ -17,7 +17,7 @@ export function RecenterIcon2() {
     return <Icon path={path} />
 }
 
-function Icon({ size = '20', color = 'currentColor', path }) {
+function Icon({ size = '20', color = 'currentColor', path }: { size?: string; color?: string; path: string }) {
     return (
         <svg
             xmlns='http://www.w3.org/2000/svg'
