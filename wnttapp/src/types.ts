@@ -1,5 +1,6 @@
 // Shared domain types used across modules.
 import type { ReactNode } from 'react'
+import { SyzygyCode } from './Syzygy'
 
 export type LatLng = { lat: number; lng: number }
 
@@ -40,9 +41,9 @@ export interface LatestConditions {
     wind_gust: number | null
     wind_dir_deg: number | null
     wind_time: string | null
-    phase: string | null
+    phase: SyzygyCode | null
     phase_dt: string | null
-    next_phase: string | null
+    next_phase: SyzygyCode | null
     next_phase_dt: string | null
 }
 
@@ -57,7 +58,7 @@ export type Blob = BlobRow[]
 
 // A moon/sun event as delivered in the graph payload's syzygy data.
 export interface SyzygyEvent {
-    code: string
+    code: SyzygyCode
     real_dt: string
 }
 

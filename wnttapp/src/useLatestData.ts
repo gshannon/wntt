@@ -3,6 +3,8 @@ import axios from 'axios'
 import * as storage from './storage'
 import { handleQueryError } from './queryError'
 import type Station from './Station'
+import { LatestConditions } from './types'
+import { isSyzygyCode } from './Syzygy'
 
 export default function useLatestData(station: Station) {
     const mainStore = storage.getMainStorage()
@@ -20,7 +22,14 @@ export default function useLatestData(station: Station) {
                     version: import.meta.env.VITE_APP_VERSION,
                     station_id: station.id,
                 })
-                .then((res) => res.data)
+                .then((res): LatestConditions => {
+                    const d = res.data
+                    return {
+                        ...d,
+                        phase: isSyzygyCode(d.phase) ? d.phase : null,
+                        next_phase: isSyzygyCode(d.next_phase) ? d.next_phase : null,
+                    }
+                })
                 .catch((error) =>
                     handleQueryError(error, {
                         operation: import.meta.env.VITE_API_LATEST_URL,

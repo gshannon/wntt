@@ -1,4 +1,4 @@
-import { getSyzygyUrl } from './Syzygy'
+import { SyzygyConfig } from './Syzygy'
 import { differenceInMinutes } from 'date-fns'
 import type Station from './Station'
 import type { Blob, SyzygyEvent } from './types'
@@ -58,16 +58,21 @@ export interface ResponsivePlacement {
     leftColWidthPix: number
 }
 
+// Build array of objects to match the length of the blob. Each object must contain the "value" array
+// expected by ECharts which will contain the timeline datetime string and a 1 meaning there is a syzygy
+// event here, or 0 for no event. If it's a 1, then the object will contain other properties used
+// by the app to handle the syzygy event.
 export const buildSyzygyData = (syzygyData: SyzygyEvent[], blob: Blob, gridWidth: number) => {
-    const copy = [...syzygyData]
+    const events = [...syzygyData]
     const startDate = new Date(blob[0][0] as string)
     const endDate = new Date(blob[blob.length - 1][0] as string)
     const timelineMinutes = differenceInMinutes(endDate, startDate)
 
     // Calculate pixels to move symbol from its assigned time to its real location
-    const getOffset = (dt: string, realDt: string) => {
+    const getOffset = (timeline_dt: string, realDt: string) => {
         const actualOffet =
-            (Math.abs(differenceInMinutes(new Date(dt), startDate)) / timelineMinutes) * gridWidth
+            (Math.abs(differenceInMinutes(new Date(timeline_dt), startDate)) / timelineMinutes) *
+            gridWidth
         const expectedOffset =
             (Math.abs(differenceInMinutes(new Date(realDt), startDate)) / timelineMinutes) *
             gridWidth
@@ -76,23 +81,23 @@ export const buildSyzygyData = (syzygyData: SyzygyEvent[], blob: Blob, gridWidth
 
     // Each element in the blob array is a column of data, always starting with datetime.
     // We'll assign the N syzygy events to the first N column[s] of data, and shift their positions
-    // with symbolOffset. This frees us from mapping forcing the timelines to contain these event times, a
+    // with symbolOffset. This frees us from forcing the timelines to contain these event times, a
     // practice that causes problems with the connectNulls flags on series.
-    return blob.map((rec) => {
-        const dt = rec[0] as string
-        if (copy.length > 0) {
-            const event = copy.shift()!
+
+    return blob.map((col) => {
+        const dt = col[0] as string
+        if (events.length > 0) {
+            const event = events.shift()!
             return {
                 value: [dt, 1],
-                symbol: getSyzygyUrl(event.code),
+                symbol: SyzygyConfig[event.code].url,
                 symbolSize: 25,
                 symbolOffset: [getOffset(dt, event.real_dt), 0],
                 code: event.code,
                 realDt: event.real_dt,
             }
-        } else {
-            return { value: [dt, 0] }
         }
+        return { value: [dt, 0] }
     })
 }
 

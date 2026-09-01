@@ -101,7 +101,7 @@ const ConditionsSection = ({ station }: { station: Station }) => {
     return (
         <div className='conditions'>
             <div className='title'>Latest Conditions -- {station.reserveName}</div>
-            <Conditions data={data} error={error} />
+            <Conditions data={data ?? null} error={error} />
         </div>
     )
 }
