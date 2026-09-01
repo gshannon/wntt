@@ -7,40 +7,32 @@ import PerigeeImg from './images/util/perigee.png?inline'
 import PerihelionImg from './images/util/perihelion.png?inline'
 
 // These values must be kept in sync with the API
-export const SyzygyCode = Object.freeze({
+
+export const SyzygyCodes = {
     NewMoon: 'NM',
     FirstQuarter: 'FQ',
     FullMoon: 'FM',
     LastQuarter: 'LQ',
     Perigee: 'PG',
     Perihelion: 'PH',
-})
+} as const
 
-export const SyzygyConfig: Record<string, { name: string }> = {
-    [SyzygyCode.NewMoon]: { name: 'New Moon' },
-    [SyzygyCode.FirstQuarter]: { name: 'First Quarter' },
-    [SyzygyCode.FullMoon]: { name: 'Full Moon' },
-    [SyzygyCode.LastQuarter]: { name: 'Last Quarter' },
-    [SyzygyCode.Perigee]: { name: 'Perigee' },
-    [SyzygyCode.Perihelion]: { name: 'Perihelion' },
-}
+// Use the standard idiom for "the union of values of a const object" — the modern stand-in for a string enum.
+export type SyzygyCode = (typeof SyzygyCodes)[keyof typeof SyzygyCodes]
 
-export const getSyzygyUrl = (code: string): string | null => {
-    const prefix = 'image://'
-    switch (code) {
-        case SyzygyCode.NewMoon:
-            return prefix + NewMoonImg
-        case SyzygyCode.FirstQuarter:
-            return prefix + FirstQuarterImg
-        case SyzygyCode.FullMoon:
-            return prefix + FullMoonImg
-        case SyzygyCode.LastQuarter:
-            return prefix + LastQuarterImg
-        case SyzygyCode.Perigee:
-            return prefix + PerigeeImg
-        case SyzygyCode.Perihelion:
-            return prefix + PerihelionImg
-        default:
-            return null
-    }
+const syzygyCodeValues = new Set<string>(Object.values(SyzygyCodes))
+
+// Guard function
+export const isSyzygyCode = (x: unknown): x is SyzygyCode =>
+    typeof x === 'string' && syzygyCodeValues.has(x)
+
+const prefix = 'image://'
+
+export const SyzygyConfig: Record<SyzygyCode, { name: string; url: string }> = {
+    [SyzygyCodes.NewMoon]: { name: 'New Moon', url: prefix + NewMoonImg },
+    [SyzygyCodes.FirstQuarter]: { name: 'First Quarter', url: prefix + FirstQuarterImg },
+    [SyzygyCodes.FullMoon]: { name: 'Full Moon', url: prefix + FullMoonImg },
+    [SyzygyCodes.LastQuarter]: { name: 'Last Quarter', url: prefix + LastQuarterImg },
+    [SyzygyCodes.Perigee]: { name: 'Perigee', url: prefix + PerigeeImg },
+    [SyzygyCodes.Perihelion]: { name: 'Perihelion', url: prefix + PerihelionImg },
 }

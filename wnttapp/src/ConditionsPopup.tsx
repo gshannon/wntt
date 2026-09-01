@@ -4,7 +4,13 @@ import Conditions from './Conditions'
 import useLatestData from './useLatestData'
 import type Station from './Station'
 
-export default function ConditionsPopup({ station, onClose }: { station: Station; onClose: () => void }) {
+export default function ConditionsPopup({
+    station,
+    onClose,
+}: {
+    station: Station
+    onClose: () => void
+}) {
     const { data, error } = useLatestData(station)
 
     return (
@@ -13,7 +19,7 @@ export default function ConditionsPopup({ station, onClose }: { station: Station
                 Latest Conditions - {station.waterStationName}
             </Modal.Header>
             <Modal.Body className='px-0 py-0 px-sm-4 py-sm-4'>
-                <Conditions data={data} error={error} />
+                <Conditions data={data ?? null} error={error} />
             </Modal.Body>
         </Modal>
     )

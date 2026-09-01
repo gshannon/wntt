@@ -4,11 +4,11 @@ import Container from 'react-bootstrap/Container'
 import Modal from 'react-bootstrap/Modal'
 import { useContext } from 'react'
 import { Page } from './utils'
-import { SyzygyCode, SyzygyConfig } from './Syzygy'
+import { SyzygyCode, SyzygyCodes, SyzygyConfig } from './Syzygy'
 import { AppContext } from './AppContext'
 import type { GotoPage } from './types'
 
-export default function SyzygyPopup({ code, onClose }: { code: string; onClose: () => void }) {
+export default function SyzygyPopup({ code, onClose }: { code: SyzygyCode; onClose: () => void }) {
     const ctx = useContext(AppContext)
     return (
         <Modal id='syzygy-modal' show={true} onHide={onClose}>
@@ -39,8 +39,8 @@ const Help = ({ gotoPage }: { gotoPage: GotoPage }) => {
     )
 }
 
-const Content = ({ code, gotoPage }: { code: string; gotoPage: GotoPage }) => {
-    if (([SyzygyCode.NewMoon, SyzygyCode.FullMoon] as string[]).includes(code)) {
+const Content = ({ code, gotoPage }: { code: SyzygyCode; gotoPage: GotoPage }) => {
+    if (([SyzygyCodes.NewMoon, SyzygyCodes.FullMoon] as string[]).includes(code)) {
         return (
             <>
                 <p>
@@ -53,7 +53,7 @@ const Content = ({ code, gotoPage }: { code: string; gotoPage: GotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (([SyzygyCode.FirstQuarter, SyzygyCode.LastQuarter] as string[]).includes(code)) {
+    } else if (([SyzygyCodes.FirstQuarter, SyzygyCodes.LastQuarter] as string[]).includes(code)) {
         return (
             <>
                 <p>
@@ -65,7 +65,7 @@ const Content = ({ code, gotoPage }: { code: string; gotoPage: GotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === SyzygyCode.Perigee) {
+    } else if (code === SyzygyCodes.Perigee) {
         return (
             <>
                 <p>
@@ -78,7 +78,7 @@ const Content = ({ code, gotoPage }: { code: string; gotoPage: GotoPage }) => {
                 <Help gotoPage={gotoPage} />
             </>
         )
-    } else if (code === SyzygyCode.Perihelion) {
+    } else if (code === SyzygyCodes.Perihelion) {
         return (
             <>
                 <p>

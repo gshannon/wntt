@@ -15,7 +15,7 @@ import {
     buildGridLayout,
 } from './ChartBuilder'
 import SyzygyPopup from './SyzygyPopup'
-import { SyzygyConfig } from './Syzygy'
+import { isSyzygyCode, SyzygyCode, SyzygyConfig } from './Syzygy'
 import ErrorBlock from './ErrorBlock'
 import BlueArrow from './images/util/arrow-blue.png?inline'
 import GreenArrow from './images/util/arrow-green.png?inline'
@@ -79,7 +79,7 @@ export default function Chart({
     // If display isn't wide enough, we won't show the legend or the mode bar, and disallow zoom/pan.
     const isNarrow = isSmallScreen()
     const tideMarkerSize = 10
-    const [syzygyHelpCode, setSyzygyHelpCode] = useState(null)
+    const [syzygyHelpCode, setSyzygyHelpCode] = useState<SyzygyCode | null>(null)
     const chartRef = useRef(null)
 
     const onModalClose = () => {
@@ -147,8 +147,11 @@ export default function Chart({
         click: (param: any) => {
             if (param.componentType === 'series') {
                 if (param.seriesName === 'syzygy') {
-                    // Put the selected code (e.g. FM) in state to trigger the modal popup.
-                    setSyzygyHelpCode(param.data.code)
+                    const code: unknown = param.data?.code
+                    if (isSyzygyCode(code)) {
+                        // Put the selected code (e.g. FM) in state to trigger the modal popup.
+                        setSyzygyHelpCode(code)
+                    }
                 }
             } else if (param.componentType === 'legend') {
                 let legendId = 0
@@ -195,7 +198,9 @@ export default function Chart({
                 // For these events we pull the data from the syzygy object using the x datetime value.
                 formatter: (param: any) => {
                     const dtStr = format(new Date(param.data.realDt), 'ccc, MMM d, yyyy h:mm aaa')
-                    return `${SyzygyConfig[param.data.code].name}: ${dtStr}<br>Click for more.`
+                    const code: unknown = param.data.code // hoist so guard works with x.y.z form
+                    const name = isSyzygyCode(code) ? SyzygyConfig[code].name : '??'
+                    return `${name}: ${dtStr}<br>Click for more.`
                 },
             },
         })

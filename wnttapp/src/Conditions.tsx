@@ -9,7 +9,13 @@ import { useContext } from 'react'
 import ErrorBlock from './ErrorBlock'
 import type { LatestConditions } from './types'
 
-export default function Conditions({ data, error }: { data: LatestConditions | null; error: unknown }) {
+export default function Conditions({
+    data,
+    error,
+}: {
+    data: LatestConditions | null
+    error: unknown
+}) {
     const ctx = useContext(AppContext)
     // Graph/Map/EChart/GetDates/Conditions only mount once a station is set (see Control.tsx / Home guards).
     const station = ctx.station!
