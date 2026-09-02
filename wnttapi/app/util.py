@@ -56,6 +56,10 @@ def get_timeline_boundaries(timeline, asof=None, dbg=False) -> tuple[int, int]:
     for ii, dt in list(enumerate(timeline)):
         if dt >= cutoff:
             return 0, ii
+    # Unreachable
+    raise InternalError(
+        "get_timeline_boundaries: no timeline point >= cutoff despite bounds check"
+    )
 
 
 def round_to_quarter(dt: datetime) -> datetime:

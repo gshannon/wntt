@@ -1,0 +1,43 @@
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+mypy_path = "."
+explicit_package_bases = true
+namespace_packages = true
+files = ["app", "project"]
+exclude = '(^|/)migrations/|/__pycache__/'
+ignore_missing_imports = true
+implicit_optional = true
+check_untyped_defs = false
+disallow_untyped_defs = false
+warn_return_any = false
+show_error_codes = true
+
+[tool.django-stubs]
+django_settings_module = "project.settings.dev"
+
+# Phase 1 baseline: these modules have pre-existing type errors. They are still
+# parsed (so imports resolve for the checked modules) but their own errors are
+# suppressed. Peel one module off per PR in phase 2 and fix its errors.
+[[tool.mypy.overrides]]
+module = [
+    "app.datasource.apiutil",
+    "app.datasource.astrotide",
+    "app.datasource.cdmo",
+    "app.datasource.syzygy",
+    "app.datasource.windforecast",
+    "app.graph",
+    "app.station",
+    "app.swmp",
+    "app.timeline",
+    "app.views",
+]
+ignore_errors = true
+
+[tool.pyright]
+include = ["app", "project", "tools"]
+exclude = ["**/migrations", "**/__pycache__", ".venv"]
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.14"
