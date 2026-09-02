@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def build_observed_tide_plot(
     timeline: GraphTimeline, obs_tides: dict, hilo_event_dict: dict
-) -> tuple[list, list]:
+) -> tuple[list[float | None] | None, list[str | None] | None]:
     """Build lists for observed tide and high or low tide labels that match the timeline length. If there's
     no observed tide data for the timeline, returns None for both lists.
 
@@ -54,7 +54,9 @@ def build_observed_tide_plot(
 
 def build_wind_plots(
     timeline: GraphTimeline, winds: dict, hilo_event_dict: dict
-) -> tuple[list, list, list]:
+) -> tuple[
+    list[float | None] | None, list[float | None] | None, list[int | None] | None
+]:
     """Build lists for wind data which correspond to the timeline.  Returns None for all lists if there
     is no wind data.
 
@@ -104,7 +106,7 @@ def build_astro_plot(
     timeline: GraphTimeline,
     reg_preds_dict: dict,
     hilo_event_dict: dict,
-) -> tuple[list, list]:
+) -> tuple[list[float | None] | None, list[str | None] | None]:
     """
     Builds lists for the astronomical tide data. We essentially merge the regular 15-min predictions and the
     hilo-only data, preferring the hilo value if present, which is more accurate.
@@ -172,7 +174,7 @@ def build_future_surge_plots(
     future_surges_dict: dict,
     reg_preds_dict: dict,
     astro_hilo_dict: dict,
-) -> tuple[list, list]:
+) -> tuple[list[float | None] | None, list[float | None] | None]:
     """
     Build lists for predicted storm surge and predicted storm tide that correspond to the
     timeline, with None for missing data. For each timeline datetime, we'll use the astronomical
@@ -237,7 +239,7 @@ def build_future_surge_plots(
 
 def build_wind_forecast_plots(
     timeline: GraphTimeline, forecast_dict: dict, hilo_event_dict: dict
-) -> tuple[list, list]:
+) -> tuple[list[float | None] | None, list[int | None] | None]:
     """
     Build lists for forecast wind speed and direction (0-360) which correspond to the timeline.
 
