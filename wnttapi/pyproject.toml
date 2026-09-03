@@ -21,16 +21,7 @@ django_settings_module = "project.settings.dev"
 # suppressed. Peel one module off per PR in phase 2 and fix its errors.
 [[tool.mypy.overrides]]
 module = [
-    "app.datasource.apiutil",
-    "app.datasource.astrotide",
-    "app.datasource.cdmo",
-    "app.datasource.syzygy",
-    "app.datasource.windforecast",
-    "app.graph",
-    "app.station",
-    "app.swmp",
-    "app.timeline",
-    "app.views",
+    # "app.datasource.windforecast",
 ]
 ignore_errors = true
 

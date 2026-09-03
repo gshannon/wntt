@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def get_future_surge_data(
     timeline: Timeline,
     noaa_station_id: str,
-    last_recorded_dt: datetime,
+    last_recorded_dt: datetime | None,
     surge_file_dir=_default_surge_file_dir,
 ) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes. These are

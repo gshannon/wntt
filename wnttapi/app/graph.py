@@ -37,6 +37,7 @@ def get_graph_data(
 
     validate_dates(start_date, end_date)
 
+    timeline: GraphTimeline
     if hilo_mode:
         timeline = HiloTimeline(start_date, end_date, station.time_zone)
     else:
@@ -67,7 +68,7 @@ def get_graph_data(
     # Determine all highs and lows, whether observed or predicted.
     hilo_event_dict = cdmo.find_all_hilos(timeline, obs_tides, astro_all_hilo_dict)
 
-    if hilo_mode:
+    if isinstance(timeline, HiloTimeline):
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 

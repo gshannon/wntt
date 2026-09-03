@@ -98,7 +98,7 @@ def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) 
 
 def get_moon_phase(
     timeline: GraphTimeline, data_dir: str = _default_file_dir
-) -> tuple[str, datetime]:
+) -> tuple[str | None, datetime | None]:
     """Find the moon phase that is within the timeline, if any.
 
     Args:
@@ -119,7 +119,9 @@ def get_moon_phase(
     return None, None
 
 
-def get_perigee(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> datetime:
+def get_perigee(
+    timeline: GraphTimeline, data_dir: str = _default_file_dir
+) -> datetime | None:
     """Get the datetime of the Perigee that occurs in this timeline, if any."""
     data = get_or_load_datetime_data("perigee", data_dir)
     for utc in data:
@@ -132,7 +134,7 @@ def get_perigee(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> d
 
 def get_perihelion(
     timeline: GraphTimeline, data_dir: str = _default_file_dir
-) -> datetime:
+) -> datetime | None:
     """Get the datetime of the Perihelion that occurs in this timeline, if any."""
     data = get_or_load_datetime_data("perihelion", data_dir)
     for utc in data:

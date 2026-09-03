@@ -80,7 +80,6 @@ def extract_data(
         data["wind_time"] = latest_wind_dt
 
     # get the latest water level and temperature readings.
-    latest_tide_rec = None
     # convert to list of tuples
     items = sorted(obs_tides.items())
     if len(items) >= 1:
@@ -117,7 +116,7 @@ def extract_data(
     return data
 
 
-def find_nearest_surge_value(surge_dict, next_tide_dt) -> float:
+def find_nearest_surge_value(surge_dict, next_tide_dt) -> float | None:
     # Get the nearest storm surge value associated with the tide time, past or future,
     # within one hour. Returns estimated surge value, or None if no value is found.
     if next_tide_dt is None or "surges" not in surge_dict:

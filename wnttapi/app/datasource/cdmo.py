@@ -55,7 +55,7 @@ def get_water_data(
     Returns:
     dict of {dt: Tide}
     """
-    tides = {}
+    tides: dict[datetime, Tide] = {}
 
     if timeline.is_all_future():
         return tides
@@ -116,10 +116,10 @@ def get_wind_data(
     savePath: optional pathname to save the xml
 
     Returns:
-    - dict of {datetime: WindData}, which may contain no data.
+    - dict of {datetime: Wind}, which may contain no data.
     """
 
-    winds = {}
+    winds: dict[datetime, Wind] = {}
 
     # If timeline is all in the future, don't bother.
     if timeline.is_all_future():
@@ -265,7 +265,7 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> str:
         )
         return xml
 
-    except Exception as e:
+    except Exception as e:  # noqa
         logger.error(
             f"{type(e)} getting {param_str} data {req_start_date} to {req_end_date} from CDMO: {e}",
             stack_info=False,
@@ -286,7 +286,7 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict
     - dict of {dt: Tide}
 
     """
-    tides = {}
+    tides: dict[datetime, Tide] = {}
 
     if xml is None or len(xml) == 0:
         return tides
@@ -302,16 +302,16 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
+        date_str = reading.findtext("./utcStamp")
         try:
-            date_str = reading.find("./utcStamp").text
             dt_in_local = (
-                datetime.strptime(date_str, "%m/%d/%Y %H:%M")
+                datetime.strptime(date_str or "", "%m/%d/%Y %H:%M")
                 .replace(tzinfo=tz.utc)
                 .astimezone(timeline.time_zone)
             )
         except ValueError:
             none_or_bad += 1
-            logger.error("Skipping bad datetime '%s'", date_str)
+            logger.error(f"Skipping due to bad or missing utcStamp: [{date_str}]")
             continue
 
         # Since we query more data than we need, only save the data that is in the requested timeline.
@@ -364,7 +364,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
     - dict of {datetime: Wind}, which may be empty.
 
     """
-    winds = {}
+    winds: dict[datetime, Wind] = {}
 
     if xml is None or len(xml) == 0:
         return winds
@@ -377,16 +377,16 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
     for reading in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
+        date_str = reading.findtext("./utcStamp")
         try:
-            date_str = reading.find("./utcStamp").text
             dt_in_local = (
-                datetime.strptime(date_str, "%m/%d/%Y %H:%M")
+                datetime.strptime(date_str or "", "%m/%d/%Y %H:%M")
                 .replace(tzinfo=tz.utc)
                 .astimezone(timeline.time_zone)
             )
         except ValueError:
             none_or_bad += 1
-            logger.error("Skipping bad datetime '%s'", date_str)
+            logger.error(f"Skipping due to bad or missing utcStamp: [{date_str}]")
             continue
 
         # Since we query more data than we need, only save the data that is in the requested timeline.
@@ -474,7 +474,9 @@ def compute_cdmo_request_dates(
     return requested_start_date, requested_end_date
 
 
-def find_all_hilos(timeline: GraphTimeline, tides: dict, astro_pred_dict: dict) -> dict:
+def find_all_hilos(
+    timeline: GraphTimeline, tides: dict[datetime, Tide], astro_pred_dict: dict
+) -> dict:
     """
     Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
     timeline in the future, it will just use the provided PredictedHighOrLow as is. For the part of the
@@ -516,12 +518,13 @@ def find_all_hilos(timeline: GraphTimeline, tides: dict, astro_pred_dict: dict) 
         # Find the time with the highest or lowest observed value within 1 hour of the predicted time.
         search_start = dt - timedelta(minutes=60)
         search_end = dt + timedelta(minutes=60)
-        candidate_times = list(
+        candidate_times: list[datetime] = list(
             filter(lambda t: search_start <= t <= search_end, past_padded_timeline)
         )
-        observed = {t: tides.get(t, None) for t in candidate_times}
-        # remove the times which have no tide data
-        observed = {k: v for k, v in observed.items() if v is not None}
+        # keep only candidate times that have observed tide data
+        observed = {
+            t: tide for t in candidate_times if (tide := tides.get(t)) is not None
+        }
         if len(observed) > 0:
             if pred.hilo == Hilo.HIGH:
                 observed_hilo_dt = max(
@@ -634,35 +637,32 @@ def clean_tide_data(in_dict: dict, station: Station) -> dict:
     return cleaned
 
 
-def handle_float(element, fieldName: str, required: bool, local_dt: datetime):
+def handle_float(
+    element: ElTree.Element[str], fieldName: str, required: bool, local_dt: datetime
+):
+    data_str = element.findtext(f"./{fieldName}")
     try:
-        data_str = None
-        data_str = element.find(f"./{fieldName}").text
-        float_val = float(data_str)
-        if float_val is None and required:
-            raise ValueError()
-        return float_val
-    except Exception:  # noqa
+        if data_str is None and not required:
+            return None
+        return float(data_str or "")
+    except ValueError:
         logger.debug(
             "Invalid or missing %s for %s: '%s'", fieldName, local_dt, data_str
         )
         return None
 
 
-def handle_windspeed(element, fieldName: str, local_dt: datetime):
+def handle_windspeed(element: ElTree.Element[str], fieldName: str, local_dt: datetime):
     """Convert wind speed string in meters per sec to miles per hour. Returns None if missing or bad data."""
+    wspd_str = element.findtext(f"./{fieldName}")
     try:
-        wspd_str = "?"
-        wspd_str = element.find(f"./{fieldName}").text
-        if wspd_str is None or len(wspd_str.strip()) == 0:
-            raise ValueError()
-        meters_per_sec = float(wspd_str)
+        meters_per_sec = float(wspd_str or "")
         mph = util.meters_per_second_to_mph(meters_per_sec)
         if mph < 0 or mph > _max_wind_speed:
             raise ValueError()
         return mph
-    except Exception:  # noqa
-        logger.debug("invalid or missing %s: '%s' at %s", fieldName, wspd_str, local_dt)
+    except ValueError:
+        logger.error(f"missing or invalid {fieldName}: [{wspd_str}] at {local_dt}")
         return None
 
 

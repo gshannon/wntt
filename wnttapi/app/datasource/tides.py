@@ -14,7 +14,7 @@ class Tide:
         mllw_offset (float): NAVD88 to MLLW offset for the water station, used for datum conversion.
     """
 
-    temp_f: float
+    temp_f: float | None
     corrected_nav_feet: float
     mllw_offset: float
 
