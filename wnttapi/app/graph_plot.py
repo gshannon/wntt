@@ -208,11 +208,8 @@ def build_future_surge_plots(
         surge_val = find_nearby_surge(dt)
         if surge_val is None:
             return None, None
-        hilo_pred = (
-            astro_hilo_dict.get(dt).value
-            if dt in astro_hilo_dict
-            else reg_preds_dict.get(dt, None)
-        )
+        pred = astro_hilo_dict.get(dt)
+        hilo_pred = pred.value if pred is not None else reg_preds_dict.get(dt, None)
         if surge_val is not None and hilo_pred is None:
             msg = f"Missing future prediction for {dt}"
             logger.error(msg)
