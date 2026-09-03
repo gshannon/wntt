@@ -1,12 +1,13 @@
 import functools
 import logging
 import os
-from datetime import datetime
+from datetime import date
 
 import sentry_sdk
 from requests.exceptions import RequestException
 from rest_framework.exceptions import APIException, NotAcceptable
-from rest_framework.views import APIView, Response
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from app.datasource import address
 
@@ -55,15 +56,15 @@ def endpoint_logger(func):
 
 class StationsView(APIView):
     @endpoint_logger
-    def post(self, request, format=None):
+    def post(self, request):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
 
-        user_id = log_user(request.data.get("uid"))
+        user = log_user(request.data.get("uid", None))
         log_request(
             Request.Type.STATION,
-            user_id,
+            user,
             request.data.get("version"),
             request.data.get("screenWidth"),
         )
@@ -92,18 +93,14 @@ class CreateGraphView(APIView):
         params = clean_params(request.data)
         logger.info("%s: %s", self.__class__.__name__, params)
         verify_version(request.data)
-        start_date = datetime.strptime(
-            get_required(request.data, "start"), "%m/%d/%Y"
-        ).date()
-        end_date = datetime.strptime(
-            get_required(request.data, "end"), "%m/%d/%Y"
-        ).date()
+        start_date = date.strptime(get_required(request.data, "start"), "%m/%d/%Y")
+        end_date = date.strptime(get_required(request.data, "end"), "%m/%d/%Y")
         hilo_mode = get_required(request.data, "hilo")
         station_id = get_required(request.data, "station_id")
         station = stn.get_station(station_id)
         is_special = request.data.get("special", False)
 
-        user_id = log_user(request.data.get("uid"))
+        user_id = log_user(request.data.get("uid", None))
         log_request(
             Request.Type.GRAPH,
             user_id,
@@ -134,18 +131,18 @@ class AddressView(APIView):
         return Response(data=latlng)
 
 
-def log_user(uid: str) -> int:
+def log_user(uid: str | None) -> User | None:
     if uid is None:
         logger.error("No uid in parameters!")
         return None
     try:
-        id, created = User.objects.get_or_create(
+        user, created = User.objects.get_or_create(
             uuid=uid,
             # Use UTC since sqlite converts all times to UTC anyway.
             defaults={"uuid": uid, "created_at": tz.now(tz.utc)},
         )
         logger.debug(f"user created? {created} id: {id}")
-        return id
+        return user
     except Exception as exc:
         # Log but do not raise
         logger.exception(str(exc))
@@ -155,19 +152,19 @@ def log_user(uid: str) -> int:
 
 def log_request(
     request_type: Request.Type,
-    user_id: int,
+    user: User | None,
     version: str,
     screenWidth: int,
     **kwargs,
 ):
-    if user_id is None:
+    if user is None:
         return
     try:
         # Use UTC since sqlite converts all times to UTC anyway.
         now = tz.now(tz.utc)
         if request_type == Request.Type.STATION:
             Request.objects.create(
-                user=user_id,
+                user=user,
                 when=now,
                 type=request_type,
                 version=version,
@@ -180,7 +177,7 @@ def log_request(
             db_station = get_station(kwargs["station_id"])
 
             Request.objects.create(
-                user=user_id,
+                user=user,
                 when=now,
                 type=request_type,
                 station=db_station,
@@ -192,7 +189,7 @@ def log_request(
                 screenWidth=screenWidth,
             )
 
-    except Exception as exc:
+    except Exception as exc:  # noqa
         # Log but do not raise
         logger.error(str(exc), stack_info=False)
         sentry_sdk.capture_exception(exc)

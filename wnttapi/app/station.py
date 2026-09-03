@@ -50,10 +50,7 @@ class Station:
         self.weather_station_longitude = weather_location_longitude
 
     def navd88_feet_to_mllw_feet(self, nav_feet: float) -> float:
-        try:
-            return round(nav_feet + self.mllw_conversion, 2)
-        except Exception:  # noqa
-            return None
+        return round(nav_feet + self.mllw_conversion, 2)
 
 
 def get_station_selection_data(data_dir=_default_file_dir) -> list:
@@ -133,7 +130,7 @@ def get_all_stations(data_dir=_default_file_dir) -> dict:
 
 def get_astro_high_tide_mllw(
     station: Station, year: int, data_dir=_default_file_dir
-) -> float:
+) -> float | None:
     data = get_or_load_annual_highs(data_dir)
     year_str = str(year)
 

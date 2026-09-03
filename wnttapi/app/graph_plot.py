@@ -171,7 +171,7 @@ def build_past_surge_plot(
 
 def build_future_surge_plots(
     timeline: GraphTimeline,
-    future_surges_dict: dict,
+    future_surges_dict: dict | None,
     reg_preds_dict: dict,
     astro_hilo_dict: dict,
 ) -> tuple[list[float | None] | None, list[float | None] | None]:

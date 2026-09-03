@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from collections.abc import Callable
 from datetime import datetime
 
 import requests
@@ -43,7 +44,7 @@ base_params = {
 def get_15m_astro_tides(
     noaa_station_id: str,
     timeline: Timeline,
-    navd88_func: callable,
+    navd88_func: Callable[[float], float],
     useDb: bool = False,
 ) -> dict:
     """
@@ -96,7 +97,7 @@ def get_15m_astro_tides(
 def get_hilo_astro_tides(
     noaa_station_id: str,
     timeline: Timeline,
-    navd88_func: callable,
+    navd88_func: Callable[[float], float],
     useDb: bool = False,
 ) -> dict:
     """
@@ -151,14 +152,16 @@ def get_hilo_astro_tides(
 
 
 def pred15_json_to_dict(
-    pred_json: list, timeline: Timeline, navd88_func: callable
+    pred_json: list,
+    timeline: Timeline,
+    navd88_func: Callable[[float], float],
 ) -> dict:
     """
     Given a list of NAVD88 feet predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" },
     return a sparse dict of {dt: value} for all times that exist in the timeline.  Converts values to
     MLLW per the callback param. Assumes datetimes are in the timezone of the timeline.
     """
-    reg_preds_dict = {}  # {dt: value}
+    reg_preds_dict: dict[datetime, float] = {}  # {dt: value}
     if len(pred_json) == 0:
         return reg_preds_dict
     for pred in pred_json:
@@ -171,7 +174,9 @@ def pred15_json_to_dict(
 
 
 def hilo_json_to_dict(
-    hilo_json: list, timeline: Timeline, navd88_func: callable
+    hilo_json: list,
+    timeline: Timeline,
+    navd88_func: Callable[[float], float],
 ) -> dict:
     """
     Convert json returned from the api call into a dict of high or low data values.
@@ -187,7 +192,7 @@ def hilo_json_to_dict(
     Raises:
         APIException: Invalid data from API
     """
-    future_hilo_dict = {}
+    future_hilo_dict: dict[datetime, PredictedHighOrLow] = {}  # {dt: value}
     if len(hilo_json) == 0:
         return future_hilo_dict
     for pred in hilo_json:

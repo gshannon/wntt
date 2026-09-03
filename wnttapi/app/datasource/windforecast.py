@@ -77,7 +77,7 @@ def get_forecast_window(timeline: GraphTimeline) -> list:
 def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
     granularity = "hourly" if not hilo_mode else "minutely_15"
 
-    params = {
+    params: dict[str, str | int | float] = {
         "latitude": station.weather_station_latitude,
         "longitude": station.weather_station_longitude,
         "timezone": station.time_zone.key,
@@ -97,7 +97,7 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
 
 def pred_json_to_dict(pred_json: dict, timeline: GraphTimeline, overlap: list):
     if overlap[0].tzinfo != timeline.time_zone:
-        raise util.InternalError
+        raise util.InternalError("incompatible timezones")
     result = {}
     try:
         for t, s, d in zip(

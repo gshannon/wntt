@@ -37,7 +37,7 @@ class Timeline:
     ):
         if start_dt.tzinfo is None or end_dt.tzinfo is None:
             raise util.InternalError("datetimes cannot be naive")
-        self.requested_times = []
+        self.requested_times: list[datetime] = []
         self.start_dt = start_dt
         self.end_dt = end_dt
         self.start_date = start_dt.date()
@@ -66,8 +66,8 @@ class Timeline:
         # past (before "self.now"), we need to look a bit beyond the requested timeline in case
         # there is a high or low near or on the first or last displayed time. Here we define
         # the timeline extensions used for that purpose.
-        self._start_padding = []
-        self._end_padding = []
+        self._start_padding: list[datetime] = []
+        self._end_padding: list[datetime] = []
         # Pad the start if any part of the timeline is in the past.
         if self.start_dt < self.now:
             utc_cur = self.start_dt.astimezone(tz.utc)
@@ -104,7 +104,7 @@ class Timeline:
 
     def contains(self, dt: datetime) -> bool:
         """Returns whether the given datetime is within the boundries of the requested timeline."""
-        return dt and self.start_dt <= dt <= self.end_dt
+        return dt is not None and self.start_dt <= dt <= self.end_dt
 
     def get_requested(self) -> list:
         return self.requested_times
@@ -148,7 +148,7 @@ class GraphTimeline(Timeline):
         start_date: date,
         end_date: date,
         time_zone: ZoneInfo,
-        now: datetime = None,
+        now: datetime | None = None,
     ):
         """Constructor.
 
@@ -222,7 +222,7 @@ class HiloTimeline(GraphTimeline):
         start_date: date,
         end_date: date,
         time_zone: ZoneInfo,
-        now: datetime = None,
+        now: datetime | None = None,
     ):
         """Constructor.
 
@@ -232,7 +232,7 @@ class HiloTimeline(GraphTimeline):
             time_zone (ZoneInfo): time zone data will be displayed in.
             now (datetime): For testing only. Default is current time.
         """
-        self._hilo_timeline = None
+        self._hilo_timeline: list[datetime] | None = None
         super().__init__(start_date, end_date, time_zone, now)
 
     def register_hilo_times(self, hilo_dts: list):
@@ -260,7 +260,7 @@ class HiloTimeline(GraphTimeline):
         )
         self._hilo_timeline.sort()
 
-    def build_plots(self, callback) -> list:
+    def build_plots(self, callback):
         """Same as parent class function, but uses the registered high/low times, plus start and end times."""
         if self._hilo_timeline is None:
             raise util.InternalError("register_hilo_times must be called first")
