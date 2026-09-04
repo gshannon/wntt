@@ -34,6 +34,7 @@ services:
             FORCE_API_CDMO: ${FORCE_API_CDMO-0}
             FORCE_API_ASTRO: ${FORCE_API_ASTRO-0}
             API_ALLOWED_HOST: api-c
+            APP_BANNER: ${APP_BANNER-}
         container_name: api-c
         # No port publishing, container will listen on 8001, but it's only accessible by nginx in the app container
         restart: unless-stopped

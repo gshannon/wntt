@@ -67,7 +67,12 @@ class StationsView(APIView):
             request.data.get("version"),
             request.data.get("screenWidth"),
         )
-        return Response(data=stn.get_all_stations())
+        return Response(
+            data={
+                "stations": stn.get_all_stations(),
+                "banner": os.getenv("APP_BANNER", "").strip(),
+            }
+        )
 
 
 class LatestInfoView(APIView):

@@ -10,6 +10,7 @@ export interface AppContextValue {
     stationsData: Record<string, Station> | undefined
     station: Station | null
     onStationSelected: (stationId: string) => void
+    banner: string | undefined
     gotoPage: GotoPage
     customElevationNav: number | null | undefined
     onCustomElevationSet: (navd88Value: number | null, location: LatLng | null) => void
