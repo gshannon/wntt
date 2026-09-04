@@ -32,6 +32,7 @@ services:
             FORCE_API_ASTRO: ${FORCE_API_ASTRO-0}
             # Supports debugging:
             DEBUGPY_ENABLE: 0
+            APP_BANNER: ${APP_BANNER-}
         ports:
             - 8000:8001
             # Supports debugging:

@@ -29,7 +29,9 @@ export default function App() {
     const stationId = mainStore.stationId ?? (isSpecial ? null : WELLS_STATION_ID)
 
     const [station, setStation] = useState<Station | null>(null)
-    const [customElevationNav, setCustomElevationNav] = useState<number | null | undefined>(undefined)
+    const [customElevationNav, setCustomElevationNav] = useState<number | null | undefined>(
+        undefined,
+    )
     const [customLocation, setCustomLocation] = useState<LatLng | null | undefined>(undefined)
     if (!mainStore.uid) {
         const userId = mainStore.uid ?? crypto.randomUUID().substring(0, 13) // unique enough for our purpose
@@ -40,7 +42,9 @@ export default function App() {
 
     // Note this will usually be loading and return null data on the very 1st pass.
     // When fetch is done, it will trigger rerender on this component, and we'll get it that time.
-    const { data: stationsData, error: fatalError } = useStations()
+    const { data, error: fatalError } = useStations()
+    const stationsData = data?.stations
+    const banner = data?.banner
 
     // temporary dev hack
     const toggleSpecial = () => {
@@ -94,6 +98,7 @@ export default function App() {
                 stationsData,
                 station,
                 onStationSelected,
+                banner,
                 gotoPage,
                 customElevationNav,
                 onCustomElevationSet,

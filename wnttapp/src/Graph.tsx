@@ -187,6 +187,7 @@ export default function Graph() {
                     errorOrLoading={error || loading}
                 />
                 <Col className='col-10 px-0'>
+                    {ctx.banner && <MessageBox message={ctx.banner} />}
                     <Chart loading={loading} error={error} hiloMode={isHiloMode} data={data} />
                 </Col>
                 <JumpDates
@@ -202,6 +203,16 @@ export default function Graph() {
             </Row>
             {showMap && <Map key={station?.id} onMapClose={onMapClose} />}
         </>
+    )
+}
+
+const MessageBox = ({ message }: { message: string }) => {
+    return (
+        <Row>
+            <Col className='d-flex justify-content-center text-warning bg-dark py-1 mx-4 my-2'>
+                {message}
+            </Col>
+        </Row>
     )
 }
 

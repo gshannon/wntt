@@ -15,21 +15,24 @@ export default function useStations() {
         refetchInterval: false,
         queryFn: async ({ signal }) => {
             return await axios
-                .post<Record<string, StationJson>>(import.meta.env.VITE_API_STATIONS_URL, {
-                    signal,
-                    version: import.meta.env.VITE_APP_VERSION,
-                    // For logging...
-                    uid: mainStore.uid ?? 'NONE',
-                    session: mainStore.session,
-                    started: mainStore.started,
-                    screenWidth: window.innerWidth,
-                })
+                .post<{ stations: Record<string, StationJson>; banner: string }>(
+                    import.meta.env.VITE_API_STATIONS_URL,
+                    {
+                        signal,
+                        version: import.meta.env.VITE_APP_VERSION,
+                        // For logging...
+                        uid: mainStore.uid ?? 'NONE',
+                        session: mainStore.session,
+                        started: mainStore.started,
+                        screenWidth: window.innerWidth,
+                    },
+                )
                 .then((res) => {
-                    const asArray = Object.entries(res.data).map(([id, stn]) => [
+                    const asArray = Object.entries(res.data.stations).map(([id, stn]) => [
                         id,
                         Station.fromJson(id, stn),
                     ])
-                    return Object.fromEntries(asArray)
+                    return { stations: Object.fromEntries(asArray), banner: res.data.banner }
                 })
                 .catch((error) =>
                     handleQueryError(error, {
