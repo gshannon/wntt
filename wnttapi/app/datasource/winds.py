@@ -17,13 +17,13 @@ class Wind:
     gust_mph: float
     direction_deg: int
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for fld in fields(self):
             if getattr(self, fld.name) is None:
                 raise ValueError(f"Field '{fld.name}' cannot be None")
 
     @property
-    def todict(self):
+    def todict(self) -> dict[str, float | int]:
         return {
             "speed_mph": self.speed_mph,
             "gust_mph": self.gust_mph,

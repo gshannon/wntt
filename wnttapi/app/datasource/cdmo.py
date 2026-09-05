@@ -9,7 +9,7 @@ from rest_framework.exceptions import APIException
 from app import tzutil as tz
 from app import util
 from app.datasource.winds import Wind
-from app.hilo import Hilo, ObservedHighOrLow
+from app.hilo import HighOrLow, Hilo, ObservedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
 
@@ -41,8 +41,11 @@ _max_wind_speed = 120  # max sane wind speed in mph
 
 
 def get_water_data(
-    station: Station, timeline: Timeline, useDb: bool = True, savePath=None
-) -> dict:
+    station: Station,
+    timeline: Timeline,
+    useDb: bool = True,
+    savePath: str | None = None,
+) -> dict[datetime, Tide]:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -104,8 +107,11 @@ def get_water_data(
 
 
 def get_wind_data(
-    station: Station, timeline: Timeline, useDb: bool = True, savePath=None
-) -> dict:
+    station: Station,
+    timeline: Timeline,
+    useDb: bool = True,
+    savePath: str | None = None,
+) -> dict[datetime, Wind]:
     """
     For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
 
@@ -166,7 +172,9 @@ def get_wind_data(
     return winds
 
 
-def get_cdmo_tide(timeline: Timeline, station: Station, savePath=None) -> dict:
+def get_cdmo_tide(
+    timeline: Timeline, station: Station, savePath: str | None = None
+) -> dict[datetime, Tide]:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -190,7 +198,7 @@ def get_cdmo_tide(timeline: Timeline, station: Station, savePath=None) -> dict:
         # CDMO data is always on 15-minute intervals.
         raise util.InternalError("datetimes must be on 15-minute intervals")
 
-    xml = get_cdmo_xml(timeline, station, WATER_PARAMS)
+    xml: bytes = get_cdmo_xml(timeline, station, WATER_PARAMS)
     if savePath is not None:
         try:
             logger.info(f"Saving {savePath}")
@@ -200,7 +208,9 @@ def get_cdmo_tide(timeline: Timeline, station: Station, savePath=None) -> dict:
     return parse_cdmo_tides_xml(timeline, station, xml)
 
 
-def get_cdmo_wind(timeline: Timeline, station: Station, savePath=None) -> dict:
+def get_cdmo_wind(
+    timeline: Timeline, station: Station, savePath: str | None = None
+) -> dict[datetime, Wind]:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
     As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
@@ -224,7 +234,7 @@ def get_cdmo_wind(timeline: Timeline, station: Station, savePath=None) -> dict:
         # CDMO data is always on 15-minute intervals.
         raise util.InternalError("datetimes must be on 15-minute intervals")
 
-    xml = get_cdmo_xml(timeline, station, WIND_PARAMS)
+    xml: bytes = get_cdmo_xml(timeline, station, WIND_PARAMS)
     if savePath is not None:
         try:
             util.dump_xml(xml, savePath)
@@ -233,7 +243,7 @@ def get_cdmo_wind(timeline: Timeline, station: Station, savePath=None) -> dict:
     return parse_cdmo_wind_xml(timeline, xml)
 
 
-def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> str:
+def get_cdmo_xml(timeline: Timeline, station: Station, params: list[Param]) -> bytes:
     """
     Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
 
@@ -243,7 +253,7 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> str:
     - params: list of requested CDMO parameters
 
     Returns:
-    - XML as string
+    - XML as bytes
     """
     # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
@@ -273,7 +283,9 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list) -> str:
         raise APIException()
 
 
-def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict:
+def parse_cdmo_tides_xml(
+    timeline: Timeline, station: Station, xml: bytes
+) -> dict[datetime, Tide]:
     """
     Parse the data returned from CDMO for the requested timeline.
 
@@ -340,7 +352,7 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict
             continue
 
         tides[dt_in_local] = Tide(
-            temp_f=util.celsius_to_fahrenheit(temp_c),
+            temp_f=util.celsius_to_fahrenheit(temp_c) if temp_c else None,
             corrected_nav_feet=util.meters_to_feet(corrected_level_nav_meters),
             mllw_offset=station.mllw_conversion,
         )
@@ -352,7 +364,7 @@ def parse_cdmo_tides_xml(timeline: Timeline, station: Station, xml: str) -> dict
     return tides
 
 
-def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
+def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
     """
     Parse the wind data returned from CDMO for the requested timeline.
 
@@ -422,13 +434,13 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: str) -> dict:
     return winds
 
 
-def text_error_check(rootElement):
+def text_error_check(rootElement: ElTree.Element) -> None:
     """If a node is not supposed to have text, return that text, else None
     This is how CDMO returns an error e.g. Invalid IP address.
     """
-    data_node = rootElement.find(".//data")
+    text: str | None = rootElement.findtext(".//data")
     try:
-        message = data_node.text.strip()
+        message = text.strip() if text else ""
         if len(message) > 0:
             logger.error("Received unexpected message from CDMO: %s", message)
             raise APIException(f"CDMO returned: {message}")
@@ -476,7 +488,7 @@ def compute_cdmo_request_dates(
 
 def find_all_hilos(
     timeline: GraphTimeline, tides: dict[datetime, Tide], astro_pred_dict: dict
-) -> dict:
+) -> dict[datetime, HighOrLow]:
     """
     Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
     timeline in the future, it will just use the provided PredictedHighOrLow as is. For the part of the
@@ -547,99 +559,9 @@ def find_all_hilos(
     return hilomap
 
 
-def clean_tide_data(in_dict: dict, station: Station) -> dict:
-    """Strip out one kind of known data error from CDMO. Sometimes when CDMO doesn't have a good value for
-    a data point it sends a 0 value (navd88).  While zero tide is a possible real value, if there are multiple
-    zeros in a row, or a zero that constitutes a large, unreasonable jump from the previous value, then we
-    just reject those values as bad data. Since values are sent in NAVD88, and at this point, all values are converted to MLLW, we have to convert back
-    to navd88 feet to do this analysis. We will reject any zero value that is not immediately preceeded or followed
-    by a non-zero value between -1 and +1 ft.
-    TODO: Remove this if this issue is addressed.
-
-    Args:
-        in_dict: the dt:val dict in chronological order
-        station (Station): The station object, so we can access the MLLW conversion
-
-    Returns:
-        dict: Same as passed in dict, with bad data removed.
-    """
-
-    class CleanStatus(Enum):
-        ACCEPT = 1
-        REJECT = 2
-        UNKNOWN = 3
-        ZERO = 4
-
-    keys = list(in_dict.keys())
-    first_bad_dt = None
-    reject_cnt = 0
-
-    # Examine the data prior to the zero found at this index, if any.
-    def look_back(idx, dt) -> CleanStatus:
-        if idx == 0:
-            return CleanStatus.UNKNOWN
-        prev_dt = keys[idx - 1]
-        if dt - prev_dt > timedelta(minutes=15):
-            return CleanStatus.UNKNOWN
-        prev_navd_feet = in_dict[prev_dt] - station.mllw_conversion
-        if prev_navd_feet == 0:
-            return CleanStatus.ZERO
-        return CleanStatus.ACCEPT if -1 <= prev_navd_feet <= 1 else CleanStatus.REJECT
-
-    # Examine the data after the zero found at this index, if any.
-    def look_ahead(idx, dt) -> bool:
-        if idx >= len(keys) - 1:
-            return False
-        next_dt = keys[idx + 1]
-        if next_dt - dt > timedelta(minutes=15):
-            return False
-        next_navd_feet = in_dict[next_dt] - station.mllw_conversion
-        if next_navd_feet == 0:
-            return False
-        return -1 <= next_navd_feet <= 1
-
-    def is_valid(idx, dt):
-        nonlocal keys
-        nonlocal first_bad_dt
-        nonlocal reject_cnt
-
-        navd_feet = in_dict[dt] - station.mllw_conversion
-
-        if navd_feet == 0:
-            accept = False
-            match look_back(idx, dt):
-                case CleanStatus.ACCEPT:
-                    accept = True  # No need to check ahead also
-                case CleanStatus.UNKNOWN | CleanStatus.ZERO:
-                    if look_ahead(idx, dt):
-                        accept = True  # Passed the ahead check, so OK
-                case CleanStatus.REJECT:
-                    pass
-
-            if not accept:
-                reject_cnt += 1
-                if first_bad_dt is None:
-                    first_bad_dt = dt
-                logger.debug(f"Rejecting value 0 navd88 at {dt}")
-            return accept
-
-        return True
-
-    cleaned = {dt: in_dict[dt] for idx, dt in enumerate(keys) if is_valid(idx, dt)}
-    if reject_cnt > 0:
-        logger.warning(
-            "for %s, rejected %d out of %d with value nav 0, first=%s",
-            station.id,
-            reject_cnt,
-            len(in_dict),
-            first_bad_dt,
-        )
-    return cleaned
-
-
 def handle_float(
     element: ElTree.Element[str], fieldName: str, required: bool, local_dt: datetime
-):
+) -> float | None:
     data_str = element.findtext(f"./{fieldName}")
     try:
         if data_str is None and not required:
@@ -652,7 +574,9 @@ def handle_float(
         return None
 
 
-def handle_windspeed(element: ElTree.Element[str], fieldName: str, local_dt: datetime):
+def handle_windspeed(
+    element: ElTree.Element[str], fieldName: str, local_dt: datetime
+) -> float | None:
     """Convert wind speed string in meters per sec to miles per hour. Returns None if missing or bad data."""
     wspd_str = element.findtext(f"./{fieldName}")
     try:
@@ -666,17 +590,18 @@ def handle_windspeed(element: ElTree.Element[str], fieldName: str, local_dt: dat
         return None
 
 
-def handle_wind_degrees(element, fieldName: str, local_dt: datetime):
+def handle_wind_degrees(
+    element: ElTree.Element, fieldName: str, local_dt: datetime
+) -> int | None:
     """Convert wind direction string to degrees. Returns None if missing or bad data."""
     try:
-        deg_str = "?"
-        deg_str = element.find(f"./{fieldName}").text
+        deg_str = element.findtext(f"./{fieldName}")
         if deg_str is None or len(deg_str.strip()) == 0:
             raise ValueError()
         degrees = int(deg_str)
         if degrees < 0 or degrees > 360:
             raise ValueError()
         return degrees
-    except Exception:  # noqa
+    except ValueError:
         logger.debug("invalid or missing %s: '%s' at %s", fieldName, deg_str, local_dt)
         return None

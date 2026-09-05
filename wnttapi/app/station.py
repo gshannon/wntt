@@ -53,7 +53,7 @@ class Station:
         return round(nav_feet + self.mllw_conversion, 2)
 
 
-def get_station_selection_data(data_dir=_default_file_dir) -> list:
+def get_station_selection_data(data_dir: str = _default_file_dir) -> list:
     """Build list of objects containing info for populating a select list of all stations
 
     Returns:
@@ -83,13 +83,13 @@ def get_supported_years() -> list:
 
 # Get a Station object for a given station id.  The station id is actually the water quality station id,
 # such as 'welinwq' for Wells.
-def get_station(station_id: str, data_dir=_default_file_dir) -> Station:
+def get_station(station_id: str, data_dir: str = _default_file_dir) -> Station:
     obj = get_station_data(station_id, data_dir=data_dir)
     return Station.from_dict(station_id, obj)
 
 
 def get_station_with_noaa_id(
-    noaa_station_id: str, data_dir=_default_file_dir
+    noaa_station_id: str, data_dir: str = _default_file_dir
 ) -> Station:
     stations = get_all_stations(data_dir)
     for id, data in stations.items():
@@ -98,7 +98,7 @@ def get_station_with_noaa_id(
     raise util.InternalError(f"Station with NOAA id {noaa_station_id} not found!")
 
 
-def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:
+def get_station_data(station_id: str, data_dir: str = _default_file_dir) -> dict:
     """Get an object with all station info for an id.
 
     Args:
@@ -116,7 +116,7 @@ def get_station_data(station_id: str, data_dir=_default_file_dir) -> dict:
     return data[station_id]
 
 
-def get_all_stations(data_dir=_default_file_dir) -> dict:
+def get_all_stations(data_dir: str = _default_file_dir) -> dict:
     """Get a list of Station objects
 
     Args:
@@ -129,7 +129,7 @@ def get_all_stations(data_dir=_default_file_dir) -> dict:
 
 
 def get_astro_high_tide_mllw(
-    station: Station, year: int, data_dir=_default_file_dir
+    station: Station, year: int, data_dir: str = _default_file_dir
 ) -> float | None:
     data = get_or_load_annual_highs(data_dir)
     year_str = str(year)

@@ -46,11 +46,6 @@ hawaii = ZoneInfo("US/Hawaii")  # UTC-10 (std), no DST
 utc = ZoneInfo("UTC")
 
 
-def now(tzone) -> datetime:
-    """Return current datetime in given time zone"""
-    return datetime.now(tzone)
-
-
 def isDst(dt: datetime) -> bool:
     """Returns whether the given datetime is in DST."""
     dst = dt.dst()
@@ -58,11 +53,11 @@ def isDst(dt: datetime) -> bool:
 
 
 # Return a datetime that is the first minute of a given date, in a time zone.
-def datetime_first(in_date: date, time_zone: ZoneInfo):
+def datetime_first(in_date: date, time_zone: ZoneInfo) -> datetime:
     return datetime.combine(in_date, time(0)).replace(tzinfo=time_zone)
 
 
 # Return a datetime that is the last minute of a given date, in a time zone.
-def datetime_last(in_date, time_zone: ZoneInfo):
+def datetime_last(in_date: date, time_zone: ZoneInfo) -> datetime:
     dt = datetime_first(in_date, time_zone)
     return dt + timedelta(days=1) - timedelta(minutes=1)

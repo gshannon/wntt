@@ -1,5 +1,7 @@
 import logging
-from datetime import date
+from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import date, datetime
 
 from app import graph_plot as gp
 from app import util
@@ -7,12 +9,21 @@ from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
-from app.hilo import PredictedHighOrLow
+from app.hilo import HighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
 
 from . import station as stn
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class GraphData:
+    dimensions: list[str]
+    blob: list[list[datetime | float | int | str | None]]
+    syzygy: list[dict[str, str | datetime]]
+    subtitle: str
+    highest_annual_prediction: float | None
 
 
 def get_graph_data(
@@ -21,7 +32,7 @@ def get_graph_data(
     hilo_mode: bool,
     station: stn.Station,
     special: bool,
-):
+) -> GraphData:
     """Generate data for an ECharts graph.
 
     Args:
@@ -66,7 +77,9 @@ def get_graph_data(
     )
 
     # Determine all highs and lows, whether observed or predicted.
-    hilo_event_dict = cdmo.find_all_hilos(timeline, obs_tides, astro_all_hilo_dict)
+    hilo_event_dict: dict[datetime, HighOrLow] = cdmo.find_all_hilos(
+        timeline, obs_tides, astro_all_hilo_dict
+    )
 
     if isinstance(timeline, HiloTimeline):
         # The HiloTimeline needs to keep track of these for later processing.
@@ -129,7 +142,7 @@ def get_graph_data(
         final_timeline = timeline.requested_times
 
     # Phase 3. Build the final data structure to return.
-    plots = {
+    plots: dict[str, Sequence[float | int | str | None] | None] = {
         "hist-tides": hist_tides_plot,
         "astro-tides": astro_tides_plot,
         "wind-speeds": wind_speed_plot,
@@ -145,28 +158,28 @@ def get_graph_data(
     }
 
     # Dimensions are the names of each column, in order.
-    dimensions = ["dt"] + [k for k in plots if plots[k] is not None]
+    dimensions = ["dt"] + [k for k in plots if plots[k]]
 
     # Each blob entry represents a "column" of data, with the first value being the datetime and
     # the rest being all the data for that time, in the same order as the dimensions.
-    blob = []
+    blob: list[list[datetime | float | int | str | None]] = []
+
     for ndx, dt in enumerate(final_timeline):
-        blob.append([dt] + [plots[k][ndx] for k in plots if plots[k] is not None])
+        row: list[datetime | float | int | str | None] = [dt]
+        row.extend(col[ndx] for col in plots.values() if col)
+        blob.append(row)
 
-    return {
-        "dimensions": dimensions,
-        "blob": blob,
-        # The rest is auxiliary data. Note we have to convert datetimes that are used as dict keys, or else the
-        # json serialization will fail. Keys have to be scalars, not objects.
-        "syzygy": syzygy_list,
-        "subtitle": build_subtitle(start_date, end_date),
-        "highest_annual_prediction": stn.get_astro_high_tide_mllw(
-            station, start_date.year
-        ),
-    }
+    data = GraphData(
+        dimensions,
+        blob,
+        syzygy_list,
+        build_subtitle(start_date, end_date),
+        stn.get_astro_high_tide_mllw(station, start_date.year),
+    )
+    return data
 
 
-def build_subtitle(start_date, end_date) -> str:
+def build_subtitle(start_date: date, end_date: date) -> str:
     # Build a subtitle for the graph, based on the start and end dates.
     start_date_str = start_date.strftime("%b %-d, %Y")
     end_date_str = end_date.strftime("%b %-d, %Y")
@@ -177,7 +190,7 @@ def build_subtitle(start_date, end_date) -> str:
     )
 
 
-def validate_dates(start: date, end: date):
+def validate_dates(start: date, end: date) -> None:
     """Verify the requested start and end dates are legal.
 
     Args:

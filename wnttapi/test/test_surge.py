@@ -24,14 +24,14 @@ dst_end_date = date(2024, 11, 3)
 class TestSurge(TestCase):
     def test_get_surge_file_info(self):
 
-        filepath, filedate, cycle, file_creation_dt = surge.get_latest_file_info(
+        fileinfo = surge.get_latest_file_info(
             wells.noaa_station_id, f"{test_dir_path}/data"
         )
 
-        self.assertTrue(filepath is not None)
-        self.assertEqual(filedate, "20260703")
-        self.assertEqual(cycle, 0)
-        self.assertIsNotNone(file_creation_dt)
+        self.assertTrue(fileinfo is not None)
+        self.assertEqual(fileinfo.filedate, "20260703")
+        self.assertEqual(fileinfo.cycle, 0)
+        self.assertIsNotNone(fileinfo.created_at)
 
     def test_read_surge_file(self):
 

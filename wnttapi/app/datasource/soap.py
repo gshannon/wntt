@@ -1,7 +1,9 @@
 import logging
 import os
+from typing import Any
 
 from suds.client import Client
+from suds.transport import Request
 from suds.transport.https import HttpAuthenticated, HttpTransport
 
 logger = logging.getLogger(__name__)
@@ -10,16 +12,16 @@ TIMEOUT_SEC = 300
 
 
 class CustomTransport(HttpAuthenticated):
-    def __init__(self, username, password):
+    def __init__(self, username: str, password: str):
         self.username = username
         self.password = password
         HttpAuthenticated.__init__(self, username=username, password=password)
 
-    def open(self, request):
+    def open(self, request: Request) -> Any:
         request.headers["authorization"] = f"Basic {self._basic_auth()}"
         return HttpTransport.open(self, request)
 
-    def _basic_auth(self):
+    def _basic_auth(self) -> str:
         import base64
 
         credentials = f"{self.username}:{self.password}"
@@ -32,7 +34,7 @@ class SoapClient:
     _client = None
 
     @classmethod
-    def get_client(cls):
+    def get_client(cls) -> Client:
         if cls._client is None:
             user_name = os.environ.get("CDMO_USER", None)
             password = os.environ.get("CDMO_PASSWORD", None)

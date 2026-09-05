@@ -259,7 +259,7 @@ def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
     return extract_json(response.text)
 
 
-def extract_json(raw) -> list:
+def extract_json(raw: str) -> list:
     """Convert the response to a json list."""
 
     json_dict = json.loads(raw)
