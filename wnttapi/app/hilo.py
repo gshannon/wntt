@@ -33,7 +33,7 @@ class ObservedHighOrLow(HighOrLow):
     def __init__(self, value: float, hilo: Hilo):
         super().__init__(value, hilo)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.value} {self.hilo.name}"
 
 
@@ -44,5 +44,5 @@ class PredictedHighOrLow(HighOrLow):
         super().__init__(value, hilo)
         self.real_dt = real_dt  # The actual time of the predicted event
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.value} {self.hilo.name} {self.real_dt.strftime('%Y-%m-%d %H:%M:%S')}"

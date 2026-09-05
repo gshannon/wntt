@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import sentry_sdk
@@ -20,11 +21,19 @@ _no_value = "9999.000"
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class SurgeFileInfo:
+    filepath: str
+    filedate: str
+    cycle: int
+    created_at: datetime
+
+
 def get_future_surge_data(
     timeline: Timeline,
     noaa_station_id: str,
     last_recorded_dt: datetime | None,
-    surge_file_dir=_default_surge_file_dir,
+    surge_file_dir: str = _default_surge_file_dir,
 ) -> dict:
     """Get a dense dict of future storm surge data for all possible timeline datetimes. These are
     extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).  They only
@@ -85,7 +94,7 @@ def get_recorded_storm_surge(astro_dict: dict, obs_tides: dict) -> dict:
 def get_or_load_projected_surge_file(
     noaa_station_id: str,
     timeline: Timeline,
-    surge_file_dir=_default_surge_file_dir,
+    surge_file_dir: str = _default_surge_file_dir,
 ) -> dict:
     """
     The csv files containing projected surge data are updated on the NOAA web site every 6 hours,
@@ -121,12 +130,12 @@ def get_or_load_projected_surge_file(
     else:
         logger.debug("nothing in cache")
 
-    filepath, filedate, cycle, file_creation_dt = get_latest_file_info(
+    fileinfo: SurgeFileInfo | None = get_latest_file_info(
         noaa_station_id, surge_file_dir
     )
 
     # First handle the case of a missing file.
-    if filedate is None:
+    if fileinfo is None:
         sentry_sdk.capture_message(f"missing surge file for {noaa_station_id}")
         if entry is None:
             logger.error(
@@ -139,30 +148,34 @@ def get_or_load_projected_surge_file(
 
     # We have a file. If we also have a cache entry, return the cache if the file isn't newer.
     if entry is not None:
-        if filedate == entry.get("filedate") and cycle == entry.get("cycle"):
+        if fileinfo.filedate == entry.get("filedate") and fileinfo.cycle == entry.get(
+            "cycle"
+        ):
             logger.debug(
-                f"cache match: {noaa_station_id}, {filedate}/{cycle} {min(entry['surges'])} - {max(entry['surges'])} "
+                f"cache match: {noaa_station_id}, {fileinfo.filedate}/{fileinfo.cycle} {min(entry['surges'])} - {max(entry['surges'])} "
             )
             return entry
         else:
             # There's a newer file for this cached station. We'll be replacing with a new one..
             logger.debug(
-                f"Will replace old cache for {noaa_station_id}, {filedate}/{cycle}"
+                f"Will replace old cache for {noaa_station_id}, {fileinfo.filedate}/{fileinfo.cycle}"
             )
 
     # We have a file, and we need to read it and cache it.
 
-    surges_dict = parse_surge_file(timeline, filepath)
+    surges_dict = parse_surge_file(timeline, fileinfo.filepath)
     if len(surges_dict) == 0:
-        logger.error(f"No valid surge data found in file {filepath}!")
-        sentry_sdk.capture_message(f"No valid surge data found in file {filepath}!")
+        logger.error(f"No valid surge data found in file {fileinfo.filepath}!")
+        sentry_sdk.capture_message(
+            f"No valid surge data found in file {fileinfo.filepath}!"
+        )
         return {}
 
     # Build the payload, cache it & return it.
     payload = {
-        "filedate": filedate,
-        "cycle": cycle,
-        "file_creation_dt": file_creation_dt,
+        "filedate": fileinfo.filedate,
+        "cycle": fileinfo.cycle,
+        "file_creation_dt": fileinfo.created_at,
         "surges": surges_dict,
     }
     # We'll use a TTL of 48 hours to handle cases where download fails a few times.
@@ -173,24 +186,26 @@ def get_or_load_projected_surge_file(
     return payload
 
 
-def get_latest_file_info(noaa_station_id: str, dir_path: str = _default_surge_file_dir):
+def get_latest_file_info(
+    noaa_station_id: str, dir_path: str = _default_surge_file_dir
+) -> SurgeFileInfo | None:
     """Find the most recent surge file available for this noaa station. Normally there will be
     just one file for the station, but in case there are more, we sort by name in reverse order
-    and take the first one.  The file name format is <noaa_station_id>-<filedate>-<cycle>.csv,
-    e.g  8419317-20260213-06.csv.  There are 4 6-hour cycles per day (00, 06, 12, 18).
+    and take the first one, which guarantees we get the latest.  The file name format is
+    <noaa_station_id>-<filedate>-<cycle>.csv, e.g  8419317-20260213-06.csv.  There are 4 6-hour
+    cycles per day (00, 06, 12, 18).
 
     Args:
         noaa_station_id: the NOAA station id whose predictions we want
         dir_path (optional): Path of directory to search.  Overrideable for testing.
 
     Returns:
-        str: complete path of the file, or None if not found
-        str: filedate string in YYYYMMDD format, or None if not found
-        int: the cycle -- 0, 6, 12, or 18, or None if not found
-        datetime: datetime in UTC of when the file was created (downloaded), or None if not found
+        If found, a SurgeFileInfo with complete path of the file, filedate string in YYYYMMDD format, the [0|6|12|18]
+            cycle, and the datetime in UTC of when the file was created (downloaded).
+        None if file not found.
     """
     pattern = r"(\d+)-(\d+)-(\d\d).csv$"  # e.g. 8419317-20260213-06.csv
-    filepath, filedate, cycle = None, None, None
+    info: SurgeFileInfo | None = None
 
     # Sort DirEntry objects by name in reverse (Z-A) order
     for e in sorted(os.scandir(dir_path), key=lambda e: e.name, reverse=True):
@@ -206,12 +221,11 @@ def get_latest_file_info(noaa_station_id: str, dir_path: str = _default_surge_fi
             file_creation_dt = datetime.fromtimestamp(
                 os.path.getctime(filepath), tz=tz.utc
             )
+            info = SurgeFileInfo(filepath, filedate, cycle, file_creation_dt)
             break
 
-    logger.debug(
-        f"surge file for station {noaa_station_id}: {filepath}, filedate {filedate}, cycle {cycle}"
-    )
-    return filepath, filedate, cycle, file_creation_dt
+    logger.debug(f"surge file for station {noaa_station_id}: {info}")
+    return info
 
 
 def parse_surge_file(timeline: Timeline, filepath: str) -> dict:

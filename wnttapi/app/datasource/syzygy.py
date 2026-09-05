@@ -1,11 +1,13 @@
 import csv
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
-from app import util
+
 import sentry_sdk
-from app.timeline import GraphTimeline
 from django.core.cache import cache
+
+from app import util
+from app.timeline import GraphTimeline
 
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/syzygy"  # default location of data files
@@ -22,7 +24,7 @@ APHELION = "AH"
 
 
 def get_current_moon_phases(
-    tzone: ZoneInfo, asof: datetime = None, data_dir: str = _default_file_dir
+    tzone: ZoneInfo, asof: datetime | None = None, data_dir: str = _default_file_dir
 ) -> dict:
     """Get the current moon phase and the next moon phase.
 
@@ -68,7 +70,9 @@ def get_current_moon_phases(
     }
 
 
-def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) -> list:
+def get_syzygy_data(
+    timeline: GraphTimeline, data_dir: str = _default_file_dir
+) -> list[dict[str, str | datetime]]:
     """Get moon phase, moon perigee and sun perihelion that occur within this timeline,
     sorted by datetime. They don't have to align with any specific times, they just need
     to be contained in its bounds.
@@ -80,10 +84,10 @@ def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) 
         [{ 'code': <code>, 'real_dt': <datetime>] }, [...] ]
     """
 
-    data = []
-    code, dt = get_moon_phase(timeline, data_dir)
-    if dt:
-        data.append({"code": code, "real_dt": dt})
+    data: list[dict[str, str | datetime]] = []
+    phase = get_moon_phase(timeline, data_dir)
+    if phase:
+        data.append({"code": phase[0], "real_dt": phase[1]})
 
     dt = get_perigee(timeline, data_dir)
     if dt:
@@ -98,7 +102,7 @@ def get_syzygy_data(timeline: GraphTimeline, data_dir: str = _default_file_dir) 
 
 def get_moon_phase(
     timeline: GraphTimeline, data_dir: str = _default_file_dir
-) -> tuple[str | None, datetime | None]:
+) -> tuple[str, datetime] | None:
     """Find the moon phase that is within the timeline, if any.
 
     Args:
@@ -116,7 +120,7 @@ def get_moon_phase(
         if utc > timeline.end_dt:
             break
 
-    return None, None
+    return None
 
 
 def get_perigee(

@@ -207,5 +207,5 @@ class TestHiloTimeline(TestCase):
         dt3 = datetime(2025, 9, 2, 0, tzinfo=zone)
         data = {dt1: 8.0, dt2: 12.51, dt3: 9.3}
         timeline.register_hilo_times(list(data.keys()))
-        plot = timeline.build_plots(lambda dt: data.get(dt, None))
+        (plot,) = timeline.build_plots(lambda dt: (data.get(dt, None),))
         self.assertEqual(plot, [8.0, 12.51, 9.3])

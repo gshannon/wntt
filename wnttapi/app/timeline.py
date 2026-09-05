@@ -1,5 +1,7 @@
 import logging
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
+from typing import Any, TypeVar, overload
 from zoneinfo import ZoneInfo
 
 from app import util
@@ -7,6 +9,11 @@ from app import util
 from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
+
+# For the build_plots() overloads below: one type variable per tuple position.
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
 
 
 class Timeline:
@@ -43,7 +50,7 @@ class Timeline:
         self.start_date = start_dt.date()
         self.end_date = end_dt.date()
         self.time_zone = start_dt.tzinfo
-        self.now = tz.now(self.time_zone) if now is None else now
+        self.now = datetime.now(self.time_zone) if now is None else now
         if self.start_dt.tzinfo != self.end_dt.tzinfo:
             logger.error(
                 f"start tz is {start_dt.tzinfo}, but end tz is {end_dt.tzinfo}"
@@ -84,21 +91,21 @@ class Timeline:
                 if dt <= self.now:
                     self._end_padding.append(dt)
 
-    def is_future(self, dt):
+    def is_future(self, dt: datetime) -> bool:
         return dt > self.now
 
-    def is_past(self, dt):
+    def is_past(self, dt: datetime) -> bool:
         return dt < self.now
 
-    def is_all_past(self):
+    def is_all_past(self) -> bool:
         """Returns whether the end time is in the past."""
         return self.end_dt <= self.now
 
-    def is_all_future(self):
+    def is_all_future(self) -> bool:
         """Returns whether the start time is in the future."""
         return self.start_dt > self.now
 
-    def length_requested(self):
+    def length_requested(self) -> int:
         """Return the number of times in the requested timeline."""
         return len(self.requested_times)
 
@@ -106,7 +113,7 @@ class Timeline:
         """Returns whether the given datetime is within the boundries of the requested timeline."""
         return dt is not None and self.start_dt <= dt <= self.end_dt
 
-    def get_requested(self) -> list:
+    def get_requested(self) -> list[datetime]:
         return self.requested_times
 
     def get_all_past(self, padded: bool) -> list:
@@ -173,28 +180,41 @@ class GraphTimeline(Timeline):
             now,
         )
 
-    def build_plots(self, callback):
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1]]
+    ) -> tuple[list[T1]]: ...
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1, T2]]
+    ) -> tuple[list[T1], list[T2]]: ...
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1, T2, T3]]
+    ) -> tuple[list[T1], list[T2], list[T3]]: ...
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[Any, ...]]
+    ) -> tuple[list[Any], ...]:
         """Build one or more lists of data values corresponding to this timeline.
 
-        If the callback returns a single value (or None), a single list is returned.
-        If the callback returns a tuple of N values, a tuple of N lists is returned.
+        The callback must return a tuple of N values for a given datetime; a tuple of N lists
+        is returned, one per position. (The three @overload signatures above give callers the
+        exact per-position types -- e.g. tuple[list[float], list[str]] -- instead of the widened
+        Any this real implementation is typed with.)
 
         Args:
             callback (function): Callback function that, based on the datetime in question,
-                returns either a single data value (or None), or a tuple of N values.
+                returns a tuple of N values.
 
         Returns:
-            list | tuple[list, ...]: A single list of values, or a tuple of N lists.
+            tuple[list, ...]: A tuple of N lists.
         """
         results = [callback(dt) for dt in self.requested_times]
 
-        if results and isinstance(results[0], tuple):
-            n = len(results[0])
-            return tuple([row[i] for row in results] for i in range(n))
+        n = len(results[0])
+        return tuple([row[i] for row in results] for i in range(n))
 
-        return results
-
-    def get_final_times(self, corrections: dict):
+    def get_final_times(self, corrections: dict[datetime, datetime]) -> list[datetime]:
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
 
         Args:
@@ -205,9 +225,7 @@ class GraphTimeline(Timeline):
         Returns:
             list: An array of datetimes which will define a Plotly scatter plot x axis.
         """
-        return [
-            corrections[dt] if dt in corrections else dt for dt in self.requested_times
-        ]
+        return [corrections.get(dt, dt) for dt in self.requested_times]
 
 
 class HiloTimeline(GraphTimeline):
@@ -235,7 +253,7 @@ class HiloTimeline(GraphTimeline):
         self._hilo_timeline: list[datetime] | None = None
         super().__init__(start_date, end_date, time_zone, now)
 
-    def register_hilo_times(self, hilo_dts: list):
+    def register_hilo_times(self, hilo_dts: list) -> None:
         """Call this to alter the timeline so it includes only these times, plus start and end times,
         with no repeats. This must be called before build_plot or get_final_times. Times not between
         the start and end times are ignored. Any duplicates are silently removed.
@@ -260,20 +278,31 @@ class HiloTimeline(GraphTimeline):
         )
         self._hilo_timeline.sort()
 
-    def build_plots(self, callback):
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1]]
+    ) -> tuple[list[T1]]: ...
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1, T2]]
+    ) -> tuple[list[T1], list[T2]]: ...
+    @overload
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[T1, T2, T3]]
+    ) -> tuple[list[T1], list[T2], list[T3]]: ...
+    def build_plots(
+        self, callback: Callable[[datetime], tuple[Any, ...]]
+    ) -> tuple[list[Any], ...]:
         """Same as parent class function, but uses the registered high/low times, plus start and end times."""
         if self._hilo_timeline is None:
             raise util.InternalError("register_hilo_times must be called first")
 
         results = [callback(dt) for dt in self._hilo_timeline]
 
-        if results and isinstance(results[0], tuple):
-            n = len(results[0])
-            return tuple([row[i] for row in results] for i in range(n))
+        n = len(results[0])
+        return tuple([row[i] for row in results] for i in range(n))
 
-        return results
-
-    def get_final_times(self, corrections) -> list:
+    def get_final_times(self, corrections: dict[datetime, datetime]) -> list[datetime]:
         """Get a corrected timeline consisting of start + times with data + end, without repeating start or end
 
         Args:
@@ -290,6 +319,4 @@ class HiloTimeline(GraphTimeline):
         if self._hilo_timeline is None:
             raise util.InternalError("register_hilo_times must be called first")
 
-        return [
-            corrections[dt] if dt in corrections else dt for dt in self._hilo_timeline
-        ]
+        return [corrections.get(dt, dt) for dt in self._hilo_timeline]

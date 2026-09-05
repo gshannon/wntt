@@ -1,11 +1,15 @@
 import functools
 import logging
 import os
-from datetime import date
+from collections.abc import Callable, Mapping
+from dataclasses import asdict
+from datetime import datetime
+from typing import Any, ParamSpec, TypeVar
 
 import sentry_sdk
 from requests.exceptions import RequestException
 from rest_framework.exceptions import APIException, NotAcceptable
+from rest_framework.request import Request as DrfRequest
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,12 +24,15 @@ from .models import Request, User, get_station
 logger = logging.getLogger(__name__)
 api_version = os.getenv("APP_VERSION", "set-me")
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def endpoint_logger(func):
+
+def endpoint_logger(func: Callable[P, R]) -> Callable[P, R]:
     # Decorator for error handling. We want to do stack traces only for "unexpected" exceptions.
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return func(*args, **kwargs)
         except NotAcceptable:
@@ -56,17 +63,18 @@ def endpoint_logger(func):
 
 class StationsView(APIView):
     @endpoint_logger
-    def post(self, request):
-        params = clean_params(request.data)
+    def post(self, request: DrfRequest) -> Response:
+        data = object_body(request)
+        params = clean_params(data)
         logger.info("%s: %s", self.__class__.__name__, params)
-        verify_version(request.data)
+        verify_version(data)
 
-        user = log_user(request.data.get("uid", None))
+        user = log_user(data.get("uid", None))
         log_request(
             Request.Type.STATION,
             user,
-            request.data.get("version"),
-            request.data.get("screenWidth"),
+            get_required(data, "version"),
+            data.get("screenWidth"),
         )
         return Response(
             data={
@@ -78,55 +86,58 @@ class StationsView(APIView):
 
 class LatestInfoView(APIView):
     @endpoint_logger
-    def post(self, request, format=None):
-        params = clean_params(request.data)
+    def post(self, request: DrfRequest, format: str | None = None) -> Response:
+        data = object_body(request)
+        params = clean_params(data)
         logger.info("%s: %s", self.__class__.__name__, params)
-        verify_version(request.data)
-        swmp_station_id = get_required(request.data, "station_id")
+        verify_version(data)
+        swmp_station_id = get_required(data, "station_id")
         station = stn.get_station(swmp_station_id)
         return Response(data=swmp.get_latest_conditions(station))
 
 
 class CreateGraphView(APIView):
     @endpoint_logger
-    def post(self, request, format=None):
-        params = clean_params(request.data)
+    def post(self, request: DrfRequest, format: str | None = None) -> Response:
+        data = object_body(request)
+        params = clean_params(data)
         logger.info("%s: %s", self.__class__.__name__, params)
-        verify_version(request.data)
-        start_date = date.strptime(get_required(request.data, "start"), "%m/%d/%Y")
-        end_date = date.strptime(get_required(request.data, "end"), "%m/%d/%Y")
-        hilo_mode = get_required(request.data, "hilo")
-        station_id = get_required(request.data, "station_id")
+        verify_version(data)
+        start_date = datetime.strptime(get_required(data, "start"), "%m/%d/%Y").date()  # noqa
+        end_date = datetime.strptime(get_required(data, "end"), "%m/%d/%Y").date()  # noqa
+        hilo_mode = get_required(data, "hilo")
+        station_id = get_required(data, "station_id")
         station = stn.get_station(station_id)
-        is_special = request.data.get("special", False)
+        is_special = data.get("special", False)
 
-        user_id = log_user(request.data.get("uid", None))
+        user_id = log_user(data.get("uid", None))
         log_request(
             Request.Type.GRAPH,
             user_id,
-            request.data.get("version"),
-            request.data.get("screenWidth"),
+            get_required(data, "version"),
+            data.get("screenWidth"),
             station_id=station_id,
             start_date=start_date,
             end_date=end_date,
             hilo_mode=hilo_mode,
-            customNav=request.data.get("customNav"),
+            customNav=data.get("customNav"),
         )
 
         # Gather all data needed for the graph and pass it back here
         graph_data = gr.get_graph_data(
             start_date, end_date, hilo_mode, station, is_special
         )
-        return Response(data=graph_data)
+        return Response(data=asdict(graph_data))
 
 
 class AddressView(APIView):
     @endpoint_logger
-    def post(self, request, format=None):
-        params = clean_params(request.data)
+    def post(self, request: DrfRequest, format: str | None = None) -> Response:
+        data = object_body(request)
+        params = clean_params(data)
         logger.info("%s: %s", self.__class__.__name__, params)
-        verify_version(request.data)
-        search = get_required(request.data, "search")
+        verify_version(data)
+        search = get_required(data, "search")
         latlng = address.get_location(search)
         return Response(data=latlng)
 
@@ -139,7 +150,7 @@ def log_user(uid: str | None) -> User | None:
         user, created = User.objects.get_or_create(
             uuid=uid,
             # Use UTC since sqlite converts all times to UTC anyway.
-            defaults={"uuid": uid, "created_at": tz.now(tz.utc)},
+            defaults={"uuid": uid, "created_at": datetime.now(tz.utc)},
         )
         logger.debug(f"user created? {created} id: {id}")
         return user
@@ -150,18 +161,26 @@ def log_user(uid: str | None) -> User | None:
         return None
 
 
+def object_body(request: DrfRequest) -> dict[str, Any]:
+    """These endpoints only accept a JSON object body; DRF types request.data as dict | list."""
+    data = request.data
+    if not isinstance(data, dict):
+        raise NotAcceptable()
+    return data
+
+
 def log_request(
     request_type: Request.Type,
     user: User | None,
     version: str,
-    screenWidth: int,
-    **kwargs,
-):
+    screenWidth: int | None,
+    **kwargs: Any,
+) -> None:
     if user is None:
         return
     try:
         # Use UTC since sqlite converts all times to UTC anyway.
-        now = tz.now(tz.utc)
+        now = datetime.now(tz.utc)
         if request_type == Request.Type.STATION:
             Request.objects.create(
                 user=user,
@@ -195,14 +214,14 @@ def log_request(
         sentry_sdk.capture_exception(exc)
 
 
-def clean_params(data):
+def clean_params(data: Mapping[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in data.items() if k != "signal"}
 
 
 # Try to get a param from the request. If not there, raise
 # NotAcceptable (406), which in this context probably means
 # the app is out of date and needs refreshed.
-def get_required(data, param):
+def get_required(data: Mapping[str, Any], param: str) -> Any:
     if param in data:
         return data[param]
     logger.warning("Missing request parameter %s", param)
@@ -211,7 +230,7 @@ def get_required(data, param):
 
 # Verify that caller's release version matches ours.  If not, raise NotAcceptable
 # which app should interpret as version out of date.
-def verify_version(data):
+def verify_version(data: Mapping[str, Any]) -> None:
     caller_version = get_required(data, "version")
     if caller_version != api_version:
         raise NotAcceptable()

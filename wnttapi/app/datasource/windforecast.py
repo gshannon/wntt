@@ -95,7 +95,9 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
     return json_dict[granularity]
 
 
-def pred_json_to_dict(pred_json: dict, timeline: GraphTimeline, overlap: list):
+def pred_json_to_dict(
+    pred_json: dict, timeline: GraphTimeline, overlap: list
+) -> dict[datetime, dict[str, float | int]]:
     if overlap[0].tzinfo != timeline.time_zone:
         raise util.InternalError("incompatible timezones")
     result = {}

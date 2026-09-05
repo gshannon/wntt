@@ -9,25 +9,16 @@ exclude = '(^|/)migrations/|/__pycache__/'
 ignore_missing_imports = true
 implicit_optional = true
 check_untyped_defs = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 warn_return_any = false
 show_error_codes = true
 
 [tool.django-stubs]
 django_settings_module = "project.settings.dev"
 
-# Phase 1 baseline: these modules have pre-existing type errors. They are still
-# parsed (so imports resolve for the checked modules) but their own errors are
-# suppressed. Peel one module off per PR in phase 2 and fix its errors.
-[[tool.mypy.overrides]]
-module = [
-    # "app.datasource.windforecast",
-]
-ignore_errors = true
-
 [tool.pyright]
 include = ["app", "project", "tools"]
-exclude = ["**/migrations", "**/__pycache__", ".venv"]
+exclude = ["**.migrations", "**/__pycache__", ".venv"]
 typeCheckingMode = "basic"
 venvPath = "."
 venv = ".venv"

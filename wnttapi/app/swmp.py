@@ -1,14 +1,13 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app import util
 from app.datasource import astrotide, cdmo, surge, syzygy
+from app.datasource.winds import Wind
 from app.hilo import Hilo
 from app.station import Station
 from app.timeline import Timeline
-
-from . import tzutil as tz
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +23,13 @@ def get_latest_conditions(station: Station) -> dict:
     """
 
     # Find recent cdmo data. If it's not in this time window, it's not current enough to display.
-    cdmo_end_dt = util.round_to_quarter(tz.now(station.time_zone))
+    cdmo_end_dt = util.round_to_quarter(datetime.now(station.time_zone))
     cdmo_timeline = Timeline(cdmo_end_dt - timedelta(hours=4), cdmo_end_dt)
     obs_tides = cdmo.get_water_data(station, cdmo_timeline)
     winds = cdmo.get_wind_data(station, cdmo_timeline)
 
     # For future tides, we start at 1 minute in future and go far enough out to cover diurnal and semidiurnal.
-    future_start_dt = tz.now(station.time_zone)
+    future_start_dt = datetime.now(station.time_zone)
     future_end_dt = future_start_dt + timedelta(days=1)
     astro_dict = astrotide.get_hilo_astro_tides(
         station.noaa_station_id,
@@ -40,7 +39,8 @@ def get_latest_conditions(station: Station) -> dict:
     )
     moon_dict = syzygy.get_current_moon_phases(station.time_zone)
     surge_timeline = Timeline(
-        tz.now(station.time_zone), tz.now(station.time_zone) + timedelta(days=1)
+        datetime.now(station.time_zone),
+        datetime.now(station.time_zone) + timedelta(days=1),
     )
     surge_dict = surge.get_future_surge_data(
         surge_timeline, station.noaa_station_id, None
@@ -57,7 +57,7 @@ def get_latest_conditions(station: Station) -> dict:
 
 
 def extract_data(
-    winds: dict,
+    winds: dict[datetime, Wind],
     obs_tides: dict,
     astro_dict: dict,
     surge_dict: dict,
@@ -102,7 +102,7 @@ def extract_data(
     futures = [
         v
         for v in astro_dict.values()
-        if v.real_dt > tz.now(tzone) and v.hilo == Hilo.HIGH
+        if v.real_dt > datetime.now(tzone) and v.hilo == Hilo.HIGH
     ]
 
     next_tide_dt = None
@@ -116,7 +116,7 @@ def extract_data(
     return data
 
 
-def find_nearest_surge_value(surge_dict, next_tide_dt) -> float | None:
+def find_nearest_surge_value(surge_dict: dict, next_tide_dt: datetime) -> float | None:
     # Get the nearest storm surge value associated with the tide time, past or future,
     # within one hour. Returns estimated surge value, or None if no value is found.
     if next_tide_dt is None or "surges" not in surge_dict:

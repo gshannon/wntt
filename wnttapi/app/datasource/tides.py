@@ -19,11 +19,11 @@ class Tide:
     mllw_offset: float
 
     @property
-    def corrected_mllw_feet(self):
+    def corrected_mllw_feet(self) -> float:
         return self.navd88_to_mllw(self.corrected_nav_feet)
 
     @property
-    def todict(self):
+    def todict(self) -> dict[str, float | None]:
         return {
             "temp_f": self.temp_f,
             "corrected_nav_feet": self.corrected_nav_feet,
@@ -37,10 +37,10 @@ class Tide:
             return False
         return corrected_nav_feet == self.corrected_nav_feet
 
-    def navd88_to_mllw(self, navd88_value):
+    def navd88_to_mllw(self, navd88_value: float) -> float:
         return round(navd88_value + self.mllw_offset, 2)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for fld in fields(self):
             if getattr(self, fld.name) is None:
                 raise ValueError(f"Field '{fld.name}' cannot be None")
