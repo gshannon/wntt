@@ -46,7 +46,7 @@ def get_15m_astro_tides(
     timeline: Timeline,
     navd88_func: Callable[[float], float],
     useDb: bool = False,
-) -> dict:
+) -> dict[datetime, float]:
     """
     Fetch astronomical tide level predictions for the desired timeline.
     CAVEAT: time zone of the timeline MUST match the time zone that NOAA associates with the requested
@@ -91,6 +91,8 @@ def get_15m_astro_tides(
 
     else:
         pred_json = pull_data(noaa_station_id, "15", timeline)
+        # print("15-MIN:")
+        # print(pred_json)
         return pred15_json_to_dict(pred_json, timeline, navd88_func)
 
 
@@ -99,7 +101,7 @@ def get_hilo_astro_tides(
     timeline: Timeline,
     navd88_func: Callable[[float], float],
     useDb: bool = False,
-) -> dict:
+) -> dict[datetime, PredictedHighOrLow]:
     """
     Fetch high/low astronomical tide predictions for the date range.
     CAVEAT: time zone of the timeline MUST match the time zone that NOAA associates with the requested
@@ -148,14 +150,16 @@ def get_hilo_astro_tides(
 
     else:
         future_preds_json = pull_data(noaa_station_id, "hilo", timeline)
+        # print("HILO:")
+        # print(future_preds_json)
         return hilo_json_to_dict(future_preds_json, timeline, navd88_func)
 
 
 def pred15_json_to_dict(
-    pred_json: list,
+    pred_json: list[dict[str, str]],
     timeline: Timeline,
     navd88_func: Callable[[float], float],
-) -> dict:
+) -> dict[datetime, float]:
     """
     Given a list of NAVD88 feet predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" },
     return a sparse dict of {dt: value} for all times that exist in the timeline.  Converts values to
@@ -174,10 +178,10 @@ def pred15_json_to_dict(
 
 
 def hilo_json_to_dict(
-    hilo_json: list,
+    hilo_json: list[dict[str, str]],
     timeline: Timeline,
     navd88_func: Callable[[float], float],
-) -> dict:
+) -> dict[datetime, PredictedHighOrLow]:
     """
     Convert json returned from the api call into a dict of high or low data values.
     Args:
@@ -215,7 +219,9 @@ def hilo_json_to_dict(
 
 
 @util.request_logger
-def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
+def pull_data(
+    noaa_station_id: str, interval: str, timeline: Timeline
+) -> list[dict[str, str]]:
     """Call the tides&currents API, using:
         - time_zone=lst_ldt
         - datum=NAVD, which means the data will be in NAVD88 feet.
@@ -259,7 +265,7 @@ def pull_data(noaa_station_id: str, interval: str, timeline: Timeline) -> list:
     return extract_json(response.text)
 
 
-def extract_json(raw: str) -> list:
+def extract_json(raw: str) -> list[dict[str, str]]:
     """Convert the response to a json list."""
 
     json_dict = json.loads(raw)

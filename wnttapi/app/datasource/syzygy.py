@@ -25,7 +25,7 @@ APHELION = "AH"
 
 def get_current_moon_phases(
     tzone: ZoneInfo, asof: datetime | None = None, data_dir: str = _default_file_dir
-) -> dict:
+) -> dict[str, datetime | str | None]:
     """Get the current moon phase and the next moon phase.
 
     Args:
@@ -46,15 +46,15 @@ def get_current_moon_phases(
 
     now_utc = now.astimezone(utc)
 
-    data = get_or_load_phase_data(data_dir)
+    data: dict[datetime, str] = get_or_load_phase_data(data_dir)
 
-    for utc, code in data.items():
-        if utc <= now_utc:
+    for dt, code in data.items():
+        if dt <= now_utc:
             current_phase_code = code
-            current_phase_utc = utc
+            current_phase_utc = dt
         else:
             next_phase_code = code
-            next_phase_utc = utc
+            next_phase_utc = dt
             break
 
     if current_phase_code is None or next_phase_code is None:
@@ -149,10 +149,12 @@ def get_perihelion(
     return None
 
 
-def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> list:
+def get_or_load_datetime_data(
+    type: str, data_dir: str = _default_file_dir
+) -> list[datetime]:
     """Get from cache a list of datetimes. Load from disk to cache first if necessary."""
     cache_key = f"{type}_data"
-    data = cache.get(cache_key)
+    data: list[datetime] | None = cache.get(cache_key)
     if data is not None:
         logger.debug(f"Cache hit for {cache_key}")
         return data
@@ -175,10 +177,10 @@ def get_or_load_datetime_data(type: str, data_dir: str = _default_file_dir) -> l
         raise util.InternalError(f"Got {e} processing {filepath}") from None
 
 
-def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict:
+def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict[datetime, str]:
     """Get from cache a dict of moon phases. Load from disk to cache first if necessary."""
     cache_key = "phase_data"
-    data = cache.get(cache_key)
+    data: dict[datetime, str] | None = cache.get(cache_key)
     if data is not None:
         logger.debug(f"Cache hit for {cache_key}")
         return data

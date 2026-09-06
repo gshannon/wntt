@@ -10,6 +10,7 @@ import sentry_sdk
 from django.core.cache import cache
 
 from app import tzutil as tz
+from app.datasource.tides import Tide
 from app.timeline import Timeline
 
 # /surgedata is a mount defined in docker-compose.yml
@@ -29,51 +30,47 @@ class SurgeFileInfo:
     created_at: datetime
 
 
+@dataclass(frozen=True)
+class SurgeFileCache:
+    filedate: str
+    cycle: int
+    file_creation_dt: datetime
+    surges: dict[datetime, float]
+
+
 def get_future_surge_data(
     timeline: Timeline,
     noaa_station_id: str,
-    last_recorded_dt: datetime | None,
     surge_file_dir: str = _default_surge_file_dir,
-) -> dict:
+) -> SurgeFileCache | None:
     """Get a dense dict of future storm surge data for all possible timeline datetimes. These are
     extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).  They only
-    publish about 4 days of it, so don't bother looking too far ahead. We restrict to data later than
-    the last_recorded_dt, if provided. This allows callers to use this data for parts of the timeline
-    that are in the past, but have no observed tide data to display.
+    publish about 4 days of it, so don't bother looking if the timeline is too far in the future.
+
 
     Args:
         timeline (Timeline): the timeline
         noaa_station_id: the NOAA station code so we can get the right data
-        last_recorded_dt (datetime): time of latest recorded tide, or None
+        surge_file_dir: the directory where the surge files are stored.  Overrideable for testing.
 
     Returns:
-    {
-        "filedate": filedate string,
-        "cycle": cycle int,
-        "file_creation_dt": file download datetime,
-        "surges": { <dt>: <surge> }
-    }
+        SurgeFileCache object or None
     """
-    future_surge_dict = {}
+    future_surge_cache = None
     # Don't bother looking for data more than 6 days in the future.
     if timeline.end_dt >= timeline.now and timeline.start_dt < timeline.now + timedelta(
         days=6
     ):
-        future_surge_dict = get_or_load_projected_surge_file(
+        future_surge_cache = get_or_load_projected_surge_file(
             noaa_station_id, timeline, surge_file_dir
         )
-        # If there's any recorded tides in the timeline, we don't want any data for those times.
-        if last_recorded_dt is not None and len(future_surge_dict) > 0:
-            future_surge_dict["surges"] = {
-                dt: val
-                for dt, val in future_surge_dict["surges"].items()
-                if dt > last_recorded_dt
-            }
 
-    return future_surge_dict
+    return future_surge_cache
 
 
-def get_recorded_storm_surge(astro_dict: dict, obs_tides: dict) -> dict:
+def get_recorded_storm_surge(
+    astro_dict: dict[datetime, float], obs_tides: dict[datetime, Tide]
+) -> dict[datetime, float]:
     """Calculate the past storm surge, which is the difference between the observed tide and the
     predicted tide.
 
@@ -84,7 +81,7 @@ def get_recorded_storm_surge(astro_dict: dict, obs_tides: dict) -> dict:
     Returns:
         dict: A dictionary of past storm surge values, keyed by datetime
     """
-    data = {}  # {dt: surge_value}
+    data: dict[datetime, float] = {}  # {dt: surge_value}
     for dt, tide in obs_tides.items():
         if dt in astro_dict:
             data[dt] = round(tide.corrected_mllw_feet - astro_dict[dt], 2)
@@ -95,7 +92,7 @@ def get_or_load_projected_surge_file(
     noaa_station_id: str,
     timeline: Timeline,
     surge_file_dir: str = _default_surge_file_dir,
-) -> dict:
+) -> SurgeFileCache | None:
     """
     The csv files containing projected surge data are updated on the NOAA web site every 6 hours,
     and are normally downloaded by a cron job. Here, we cached the contents in Django for performance.
@@ -125,7 +122,7 @@ def get_or_load_projected_surge_file(
     entry = cache.get(noaa_station_id)
     if entry is not None:
         logger.debug(
-            f"cache exists for {noaa_station_id} filedate {entry.get('filedate', None)}, cycle {entry.get('cycle', None)}"
+            f"cache exists for {noaa_station_id} filedate {entry.filedate}, cycle {entry.cycle}"
         )
     else:
         logger.debug("nothing in cache")
@@ -142,17 +139,15 @@ def get_or_load_projected_surge_file(
                 "file not found, and there is no cached surge data for %s",
                 noaa_station_id,
             )
-            return {}
+            return None
         logger.error(f"No file for {noaa_station_id}, forced to use cache")
         return entry
 
     # We have a file. If we also have a cache entry, return the cache if the file isn't newer.
     if entry is not None:
-        if fileinfo.filedate == entry.get("filedate") and fileinfo.cycle == entry.get(
-            "cycle"
-        ):
+        if fileinfo.filedate == entry.filedate and fileinfo.cycle == entry.cycle:
             logger.debug(
-                f"cache match: {noaa_station_id}, {fileinfo.filedate}/{fileinfo.cycle} {min(entry['surges'])} - {max(entry['surges'])} "
+                f"cache match: {noaa_station_id}, {fileinfo.filedate}/{fileinfo.cycle} {min(entry.surges)} - {max(entry.surges)} "
             )
             return entry
         else:
@@ -169,15 +164,13 @@ def get_or_load_projected_surge_file(
         sentry_sdk.capture_message(
             f"No valid surge data found in file {fileinfo.filepath}!"
         )
-        return {}
+        return None
 
     # Build the payload, cache it & return it.
-    payload = {
-        "filedate": fileinfo.filedate,
-        "cycle": fileinfo.cycle,
-        "file_creation_dt": fileinfo.created_at,
-        "surges": surges_dict,
-    }
+    payload = SurgeFileCache(
+        fileinfo.filedate, fileinfo.cycle, fileinfo.created_at, surges_dict
+    )
+
     # We'll use a TTL of 48 hours to handle cases where download fails a few times.
     cache.set(noaa_station_id, payload, timeout=60 * 60 * 48)
     logger.debug(
@@ -228,12 +221,12 @@ def get_latest_file_info(
     return info
 
 
-def parse_surge_file(timeline: Timeline, filepath: str) -> dict:
+def parse_surge_file(timeline: Timeline, filepath: str) -> dict[datetime, float]:
     """
     Parse the surge file and return a dict of surge values for all times in the timeline.
     The dict keys are the datetimes and the values are the surge values.
     """
-    surges_dict = {}  # key=datetime, value=surge
+    surges_dict: dict[datetime, float] = {}  # key=datetime, value=surge
     logger.debug(f"Reading {filepath}...")
     try:
         """

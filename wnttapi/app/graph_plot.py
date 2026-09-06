@@ -2,14 +2,20 @@ import logging
 from datetime import datetime, timedelta
 
 from app import util
+from app.datasource.surge import SurgeFileCache
+from app.datasource.tides import Tide
+from app.datasource.winds import Wind
 from app.hilo import HighOrLow, Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
+from app.datasource.windforecast import WindForecast
 
 logger = logging.getLogger(__name__)
 
 
 def build_observed_tide_plot(
-    timeline: GraphTimeline, obs_tides: dict, hilo_event_dict: dict
+    timeline: GraphTimeline,
+    obs_tides: dict[datetime, Tide],
+    hilo_event_dict: dict[datetime, HighOrLow],
 ) -> tuple[list[float | None] | None, list[str | None] | None]:
     """Build lists for observed tide and high or low tide labels that match the timeline length. If there's
     no observed tide data for the timeline, returns None for both lists.
@@ -53,7 +59,9 @@ def build_observed_tide_plot(
 
 
 def build_wind_plots(
-    timeline: GraphTimeline, winds: dict, hilo_event_dict: dict
+    timeline: GraphTimeline,
+    winds: dict[datetime, Wind],
+    hilo_event_dict: dict[datetime, HighOrLow],
 ) -> tuple[
     list[float | None] | None, list[float | None] | None, list[int | None] | None
 ]:
@@ -104,8 +112,8 @@ def build_wind_plots(
 
 def build_astro_plot(
     timeline: GraphTimeline,
-    reg_preds_dict: dict,
-    hilo_event_dict: dict,
+    reg_preds_dict: dict[datetime, float],
+    hilo_event_dict: dict[datetime, HighOrLow],
 ) -> tuple[list[float | None] | None, list[str | None] | None]:
     """
     Builds lists for the astronomical tide data. We essentially merge the regular 15-min predictions and the
@@ -176,9 +184,9 @@ def build_past_surge_plot(
 
 def build_future_surge_plots(
     timeline: GraphTimeline,
-    future_surges_dict: dict | None,
-    reg_preds_dict: dict,
-    astro_hilo_dict: dict,
+    surge_data: SurgeFileCache | None,
+    reg_preds_dict: dict[datetime, float],
+    astro_hilo_dict: dict[datetime, PredictedHighOrLow],
 ) -> tuple[list[float | None] | None, list[float | None] | None]:
     """
     Build lists for predicted storm surge and predicted storm tide that correspond to the
@@ -189,14 +197,14 @@ def build_future_surge_plots(
 
     Args:
         timeline: list of datetimes
-        future_surges_dict: hourly surge predictions, in feet {dt: surge_value}
+        surge_data: hourly surge predictions, in feet {dt: surge_value}
         reg_preds_dict: 15-minute astronomical tide predictions for the timeline {dt: value}
 
     Returns: tuple[list, list].  Both lists have None in the same indexes -- no partial data.
         - future_surge_plot: predicted surge values in feet, or None if no data
         - future_storm_tide_plot: predicted storm tide values in MLLW feet, or None if no data
     """
-    if future_surges_dict is None or len(future_surges_dict) == 0:
+    if surge_data is None:
         return None, None
 
     # If a dt doesn't have a surge value, we will use one up to 45 minutes older, since surge values
@@ -205,7 +213,7 @@ def build_future_surge_plots(
         surge = None
         min_dt = dt - timedelta(minutes=45)
         while surge is None and dt >= min_dt:
-            surge = future_surges_dict.get(dt, None)
+            surge = surge_data.surges.get(dt, None)
             dt -= timedelta(minutes=15)
         return surge
 
@@ -242,7 +250,9 @@ def build_future_surge_plots(
 
 
 def build_wind_forecast_plots(
-    timeline: GraphTimeline, forecast_dict: dict, hilo_event_dict: dict
+    timeline: GraphTimeline,
+    forecast_dict: dict[datetime, WindForecast],
+    hilo_event_dict: dict[datetime, HighOrLow],
 ) -> tuple[list[float | None] | None, list[int | None] | None]:
     """
     Build lists for forecast wind speed and direction (0-360) which correspond to the timeline.
@@ -264,9 +274,9 @@ def build_wind_forecast_plots(
         if isinstance(timeline, HiloTimeline) and dt not in hilo_event_dict:
             return None, None
         if dt in forecast_dict:
+            forecast = forecast_dict[dt]
             return (
-                forecast_dict[dt].get("mph"),
-                forecast_dict[dt].get("dir"),
+                forecast["mph"], forecast["dir"],
             )
         return None, None
 

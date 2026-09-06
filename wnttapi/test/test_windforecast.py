@@ -23,7 +23,7 @@ class TestWindForecast(TestCase):
         forecast_window = wind.get_forecast_window(tline)
 
         raw = util.read_file(f"{cur_path}/data/wind-20260202-03.json")
-        contents = json.loads(raw)["hourly"]
+        contents = wind.RawForecast.model_validate(json.loads(raw)["hourly"])
 
         result = wind.pred_json_to_dict(contents, tline, forecast_window)
         self.assertEqual(len(result), 13)

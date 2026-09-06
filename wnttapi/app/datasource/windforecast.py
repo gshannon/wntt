@@ -1,11 +1,13 @@
 import json
 import logging
 from datetime import datetime, time, timedelta
+from typing import TypedDict
 
 import requests
 import sentry_sdk
+from pydantic import BaseModel
 
-from app import util as util
+from app import util
 from app.station import Station
 from app.timeline import GraphTimeline
 
@@ -21,9 +23,24 @@ _request_timeout_seconds = 5
 base_url = "https://api.open-meteo.com/v1/forecast"
 
 
+class WindForecast(TypedDict):
+    mph: float
+    dir: int
+
+
+class RawForecast(BaseModel):
+    """The parsed/validated "hourly" or "minutely_15" section of the Open-Meteo response.
+    pydantic coerces JSON ints and numeric strings into the declared list element types, so
+    downstream code can treat these as plain str/float lists."""
+
+    time: list[str]
+    wind_speed_10m: list[float]
+    wind_direction_10m: list[int]
+
+
 def get_wind_forecast(
     station: Station, timeline: GraphTimeline, hilo_mode: bool
-) -> dict:
+) -> dict[datetime, WindForecast]:
     """
     Fetch wind speed and direction forecast for the desired timeline. We only support forecasts for a period of 7
     days starting with the current date, so if timeline does not overlap with that time window, no data is retrieved.
@@ -34,7 +51,7 @@ def get_wind_forecast(
         hilo_mode: if true, pull 15-min data instead of hourly, so graph will have something to display for every high or low.
 
     Returns:
-        - dict of hourly or 15-min forecasts for the relevant portion of the timeline. {datetime: {"mph": float, "dir": str}}.
+        - dict of hourly or 15-min forecasts for the relevant portion of the timeline. {datetime: {"mph": float, "dir": int}}.
     """
 
     # If timeline is in past, or the forecast window does not overlap the timeline, do nothing.
@@ -46,14 +63,14 @@ def get_wind_forecast(
         return {}
 
     days = (overlap[-1].date() - timeline.now.date()).days + 1
-    forecast_json = pull_data(station, days, hilo_mode)
+    forecast = pull_data(station, days, hilo_mode)
 
-    if len(forecast_json) > 0:
-        return pred_json_to_dict(forecast_json, timeline, overlap)
-    return {}
+    if forecast is None or len(forecast.time) == 0:
+        return {}
+    return pred_json_to_dict(forecast, timeline, overlap)
 
 
-def get_forecast_window(timeline: GraphTimeline) -> list:
+def get_forecast_window(timeline: GraphTimeline) -> list[datetime]:
     """
     Build a list of datetimes which are a subset of the timeline for which we would like
     to get wind speed and direction forecasts.
@@ -74,7 +91,9 @@ def get_forecast_window(timeline: GraphTimeline) -> list:
 
 
 @util.request_logger
-def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
+def pull_data(
+    station: Station, forecast_days: int, hilo_mode: bool
+) -> RawForecast | None:
     granularity = "hourly" if not hilo_mode else "minutely_15"
 
     params: dict[str, str | int | float] = {
@@ -91,21 +110,24 @@ def pull_data(station: Station, forecast_days: int, hilo_mode: bool) -> dict:
         timeout=_request_timeout_seconds,
     )
     response.raise_for_status()
-    json_dict = json.loads(response.text)
-    return json_dict[granularity]
+    # Validate the "granularity" section (keys "time", "wind_speed_10m", "wind_direction_10m").
+    # A malformed payload raises ValidationError, which request_logger turns into None.
+    return RawForecast.model_validate(json.loads(response.text)[granularity])
 
 
 def pred_json_to_dict(
-    pred_json: dict, timeline: GraphTimeline, overlap: list
-) -> dict[datetime, dict[str, float | int]]:
+    pred_json: RawForecast,
+    timeline: GraphTimeline,
+    overlap: list[datetime],
+) -> dict[datetime, WindForecast]:
     if overlap[0].tzinfo != timeline.time_zone:
         raise util.InternalError("incompatible timezones")
-    result = {}
+    result: dict[datetime, WindForecast] = {}
     try:
         for t, s, d in zip(
-            pred_json["time"],
-            pred_json["wind_speed_10m"],
-            pred_json["wind_direction_10m"],
+            pred_json.time,
+            pred_json.wind_speed_10m,
+            pred_json.wind_direction_10m,
         ):
             dt = datetime.strptime(t, "%Y-%m-%dT%H:%M").replace(
                 tzinfo=timeline.time_zone
@@ -115,10 +137,7 @@ def pred_json_to_dict(
                 if dt > overlap[-1]:
                     break  # we're past the range of interest
                 if timeline.contains(dt):
-                    result[dt] = {
-                        "mph": util.kilometers_to_miles(float(s)),
-                        "dir": d,
-                    }
+                    result[dt] = WindForecast(mph=util.kilometers_to_miles(s), dir=d)
 
         return result
     except Exception as e:

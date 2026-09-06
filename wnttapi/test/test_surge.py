@@ -40,7 +40,7 @@ class TestSurge(TestCase):
         timeline = Timeline(start_dt, end_dt, datetime(2026, 6, 29, tzinfo=tzone))
 
         data = surge.get_future_surge_data(
-            timeline, wells.noaa_station_id, None, f"{test_dir_path}/data"
+            timeline, wells.noaa_station_id, f"{test_dir_path}/data"
         )
         self.assertTrue(data is not None)
 

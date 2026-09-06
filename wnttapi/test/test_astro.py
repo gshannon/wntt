@@ -10,7 +10,7 @@ setup()
 import app.datasource.astrotide as astro
 import app.station as stn
 import app.tzutil as tz
-import app.util as util
+from app import util
 from app.timeline import Timeline
 
 cur_path = os.path.dirname(os.path.abspath(__file__))

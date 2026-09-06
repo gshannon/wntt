@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Any
 
 import requests
 
@@ -16,7 +17,7 @@ base_url = "https://geocode.maps.co/search"
 
 
 @util.request_logger
-def get_location(search: str) -> dict:
+def get_location(search: str) -> dict[str, float]:
     """
     Call the geocode service with an address to look up, and get the lat/lon of that address, or error.
     All addresses are assumed to be in U.S.  They should include state.
@@ -33,6 +34,6 @@ def get_location(search: str) -> dict:
     response = requests.get(base_url, params=params, timeout=_request_timeout_seconds)
     response.raise_for_status()
 
-    jtext = json.loads(response.text)
+    jtext: list[dict[str, Any]] = json.loads(response.text)
     logger.debug(f"response text as json: {jtext}")
     return {"lat": jtext[0]["lat"], "lng": jtext[0]["lon"]} if len(jtext) > 0 else {}

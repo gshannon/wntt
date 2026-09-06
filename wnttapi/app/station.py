@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import date
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from django.core.cache import cache
@@ -20,7 +21,7 @@ backend processing are included here.
 class Station:
     # Builder method
     @staticmethod
-    def from_dict(station_id: str, data: dict) -> "Station":
+    def from_dict(station_id: str, data: dict[str, Any]) -> "Station":
         return Station(
             id=station_id,
             weather_station_id=data["weatherStationId"],
@@ -53,13 +54,15 @@ class Station:
         return round(nav_feet + self.mllw_conversion, 2)
 
 
-def get_station_selection_data(data_dir: str = _default_file_dir) -> list:
+def get_station_selection_data(
+    data_dir: str = _default_file_dir,
+) -> list[dict[str, Any]]:
     """Build list of objects containing info for populating a select list of all stations
 
     Returns:
         list: list of station selection dicts
     """
-    data = get_or_load_stations(data_dir)
+    data = get_all_stations(data_dir)
     selection_data = []
     for station_id, station in data.items():
         selection_data.append(
@@ -72,7 +75,7 @@ def get_station_selection_data(data_dir: str = _default_file_dir) -> list:
     return selection_data
 
 
-def get_supported_years() -> list:
+def get_supported_years() -> list[int]:
     """
     Get the years the API supports, in order. By default this means the last 2 years, the current year,
     plus the next 2 years.
@@ -98,7 +101,9 @@ def get_station_with_noaa_id(
     raise util.InternalError(f"Station with NOAA id {noaa_station_id} not found!")
 
 
-def get_station_data(station_id: str, data_dir: str = _default_file_dir) -> dict:
+def get_station_data(
+    station_id: str, data_dir: str = _default_file_dir
+) -> dict[str, Any]:
     """Get an object with all station info for an id.
 
     Args:
@@ -110,22 +115,10 @@ def get_station_data(station_id: str, data_dir: str = _default_file_dir) -> dict
     Returns:
         dict: station data object
     """
-    data = get_or_load_stations(data_dir)
+    data = get_all_stations(data_dir)
     if station_id not in data:
         raise util.InternalError(f"Station ID {station_id} not found")
     return data[station_id]
-
-
-def get_all_stations(data_dir: str = _default_file_dir) -> dict:
-    """Get a list of Station objects
-
-    Args:
-        data_dir: override for testing
-
-    Returns:
-        dict of station data objects
-    """
-    return get_or_load_stations(data_dir)
 
 
 def get_astro_high_tide_mllw(
@@ -154,7 +147,9 @@ def get_astro_high_tide_mllw(
     return station.navd88_feet_to_mllw_feet(navd88_high)
 
 
-def get_or_load_stations(data_dir: str = _default_file_dir) -> dict:
+def get_all_stations(
+    data_dir: str = _default_file_dir,
+) -> dict[str, dict[str, Any]]:
     """Get the cached stations, or load them from the json file if not cached yet."""
     cache_key = "stations_data"
     data = cache.get(cache_key)
@@ -173,7 +168,7 @@ def get_or_load_stations(data_dir: str = _default_file_dir) -> dict:
 
 def get_or_load_annual_highs(
     data_dir: str = _default_file_dir,
-) -> dict:
+) -> dict[str, dict[str, float]]:
     """Get the cached annual highs, or load them from the json file if not cached yet."""
     cache_key = "annual_highs_navd88"
     data = cache.get(cache_key)

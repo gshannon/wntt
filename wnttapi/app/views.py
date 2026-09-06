@@ -93,7 +93,8 @@ class LatestInfoView(APIView):
         verify_version(data)
         swmp_station_id = get_required(data, "station_id")
         station = stn.get_station(swmp_station_id)
-        return Response(data=swmp.get_latest_conditions(station))
+        conditions = swmp.get_latest_conditions(station)
+        return Response(data=asdict(conditions))
 
 
 class CreateGraphView(APIView):
@@ -124,7 +125,7 @@ class CreateGraphView(APIView):
         )
 
         # Gather all data needed for the graph and pass it back here
-        graph_data = gr.get_graph_data(
+        graph_data: gr.GraphData = gr.get_graph_data(
             start_date, end_date, hilo_mode, station, is_special
         )
         return Response(data=asdict(graph_data))
