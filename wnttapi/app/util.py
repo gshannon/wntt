@@ -24,7 +24,7 @@ def request_logger(func: Callable[P, R]) -> Callable[P, R]:
             )
             if func.__module__.endswith("windforecast"):
                 sentry_sdk.capture_exception(e)
-                return {}  # type: ignore[return-value]  # deliberate: swallow non-essential wind-forecast failure
+                return None  # type: ignore[return-value]  # deliberate: swallow non-essential wind-forecast failure
             raise
 
     return wrapper

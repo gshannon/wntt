@@ -116,7 +116,7 @@ class Timeline:
     def get_requested(self) -> list[datetime]:
         return self.requested_times
 
-    def get_all_past(self, padded: bool) -> list:
+    def get_all_past(self, padded: bool) -> list[datetime]:
         # Return all requested times, plus any padding if requested, that are in the past.
         # Padding is only needed for water level in GraphTimeline and its subclasses.
         if self.start_dt >= self.now:
@@ -253,7 +253,7 @@ class HiloTimeline(GraphTimeline):
         self._hilo_timeline: list[datetime] | None = None
         super().__init__(start_date, end_date, time_zone, now)
 
-    def register_hilo_times(self, hilo_dts: list) -> None:
+    def register_hilo_times(self, hilo_dts: list[datetime]) -> None:
         """Call this to alter the timeline so it includes only these times, plus start and end times,
         with no repeats. This must be called before build_plot or get_final_times. Times not between
         the start and end times are ignored. Any duplicates are silently removed.

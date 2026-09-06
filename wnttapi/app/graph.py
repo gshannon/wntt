@@ -69,11 +69,15 @@ def get_graph_data(
     )
 
     # Get wind forecasts.
-    forecast_wind_dict = wind.get_wind_forecast(station, timeline, hilo_mode)
+    forecast_wind_dict: dict[datetime, wind.WindForecast] = wind.get_wind_forecast(
+        station, timeline, hilo_mode
+    )
 
     # Get astronomical tide predictions
-    astro_all_hilo_dict = astro.get_hilo_astro_tides(
-        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
+    astro_all_hilo_dict: dict[datetime, PredictedHighOrLow] = (
+        astro.get_hilo_astro_tides(
+            station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
+        )
     )
 
     # Determine all highs and lows, whether observed or predicted.
@@ -87,11 +91,7 @@ def get_graph_data(
 
     past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, obs_tides)
 
-    future_surge_dict = sg.get_future_surge_data(
-        timeline,
-        station.noaa_station_id,
-        max(obs_tides) if len(obs_tides) > 0 else None,
-    )
+    future_surge_data = sg.get_future_surge_data(timeline, station.noaa_station_id)
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
@@ -119,7 +119,7 @@ def get_graph_data(
 
     future_surge_plot, future_storm_tide_plot = gp.build_future_surge_plots(
         timeline,
-        future_surge_dict.get("surges", None),
+        future_surge_data,
         astro_preds15_dict,
         astro_all_hilo_dict,
     )

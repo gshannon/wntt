@@ -9,7 +9,7 @@ from rest_framework.exceptions import APIException
 from app import tzutil as tz
 from app import util
 from app.datasource.winds import Wind
-from app.hilo import HighOrLow, Hilo, ObservedHighOrLow
+from app.hilo import HighOrLow, Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
 
@@ -487,7 +487,9 @@ def compute_cdmo_request_dates(
 
 
 def find_all_hilos(
-    timeline: GraphTimeline, tides: dict[datetime, Tide], astro_pred_dict: dict
+    timeline: GraphTimeline,
+    tides: dict[datetime, Tide],
+    astro_pred_dict: dict[datetime, PredictedHighOrLow],
 ) -> dict[datetime, HighOrLow]:
     """
     Build a dense dict of high and low tides times from observed and predicted tide data.  For the part the
@@ -510,7 +512,7 @@ def find_all_hilos(
         sparse dict of {dt: <HighOrLow subclass>} best information on all high or low tides in timeline
     """
 
-    hilomap = {}  # {dt: HighLowEvent}
+    hilomap: dict[datetime, HighOrLow] = {}  # {dt: HighLowEvent}
 
     past_padded_timeline = timeline.get_all_past(padded=True)
 
