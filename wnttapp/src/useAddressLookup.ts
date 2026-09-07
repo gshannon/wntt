@@ -15,14 +15,17 @@ export default function useAddressLookup(search: string, doLookup: boolean) {
         queryKey: ['geocode', subKey],
         queryFn: async ({ signal }) => {
             return await axios
-                .post(import.meta.env.VITE_API_ADDRESS_URL, {
-                    signal,
-                    uid: mainStore.uid,
-                    session: mainStore.session,
-                    started: mainStore.started,
-                    version: import.meta.env.VITE_APP_VERSION,
-                    search: encoded,
-                })
+                .post(
+                    import.meta.env.VITE_API_ADDRESS_URL,
+                    {
+                        uid: mainStore.uid,
+                        session: mainStore.session,
+                        started: mainStore.started,
+                        version: import.meta.env.VITE_APP_VERSION,
+                        search: encoded,
+                    },
+                    { signal },
+                )
                 .then((res) => {
                     return { lat: res.data.lat ?? null, lng: res.data.lng ?? null }
                 })

@@ -65,8 +65,7 @@ class StationsView(APIView):
     @endpoint_logger
     def post(self, request: DrfRequest) -> Response:
         data = object_body(request)
-        params = clean_params(data)
-        logger.info("%s: %s", self.__class__.__name__, params)
+        logger.info("%s: %s", self.__class__.__name__, data)
         verify_version(data)
 
         user = log_user(data.get("uid", None))
@@ -88,8 +87,7 @@ class LatestInfoView(APIView):
     @endpoint_logger
     def post(self, request: DrfRequest, format: str | None = None) -> Response:
         data = object_body(request)
-        params = clean_params(data)
-        logger.info("%s: %s", self.__class__.__name__, params)
+        logger.info("%s: %s", self.__class__.__name__, data)
         verify_version(data)
         swmp_station_id = get_required(data, "station_id")
         station = stn.get_station(swmp_station_id)
@@ -101,8 +99,7 @@ class CreateGraphView(APIView):
     @endpoint_logger
     def post(self, request: DrfRequest, format: str | None = None) -> Response:
         data = object_body(request)
-        params = clean_params(data)
-        logger.info("%s: %s", self.__class__.__name__, params)
+        logger.info("%s: %s", self.__class__.__name__, data)
         verify_version(data)
         start_date = datetime.strptime(get_required(data, "start"), "%m/%d/%Y").date()  # noqa
         end_date = datetime.strptime(get_required(data, "end"), "%m/%d/%Y").date()  # noqa
@@ -135,8 +132,7 @@ class AddressView(APIView):
     @endpoint_logger
     def post(self, request: DrfRequest, format: str | None = None) -> Response:
         data = object_body(request)
-        params = clean_params(data)
-        logger.info("%s: %s", self.__class__.__name__, params)
+        logger.info("%s: %s", self.__class__.__name__, data)
         verify_version(data)
         search = get_required(data, "search")
         latlng = address.get_location(search)
@@ -213,10 +209,6 @@ def log_request(
         # Log but do not raise
         logger.error(str(exc), stack_info=False)
         sentry_sdk.capture_exception(exc)
-
-
-def clean_params(data: Mapping[str, Any]) -> dict[str, Any]:
-    return {k: v for k, v in data.items() if k != "signal"}
 
 
 # Try to get a param from the request. If not there, raise
