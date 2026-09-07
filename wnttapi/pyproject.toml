@@ -6,7 +6,7 @@ explicit_package_bases = true
 namespace_packages = true
 files = ["app", "project"]
 exclude = '(^|/)migrations/|/__pycache__/'
-ignore_missing_imports = true
+ignore_missing_imports = false
 implicit_optional = false
 disallow_any_generics = true
 check_untyped_defs = true
@@ -16,6 +16,11 @@ show_error_codes = true
 
 [tool.django-stubs]
 django_settings_module = "project.settings.dev"
+
+[[tool.mypy.overrides]]
+module = ["suds.*", "sentry_sdk.*"]
+ignore_missing_imports = true
+
 
 [tool.pyright]
 include = ["app", "project", "tools"]
