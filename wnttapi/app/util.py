@@ -6,6 +6,10 @@ from typing import ParamSpec, TypeVar
 
 import sentry_sdk
 
+type FloatPlot = list[float | None]
+type IntPlot = list[int | None]
+type StrPlot = list[str | None]
+
 P = ParamSpec("P")
 R = TypeVar("R")
 logger = logging.getLogger(__name__)

@@ -1,13 +1,13 @@
 import logging
 from datetime import datetime, timedelta
 
-from app import util
 from app.datasource.surge import SurgeFileCache
 from app.datasource.tides import Tide
+from app.datasource.windforecast import WindForecast
 from app.datasource.winds import Wind
 from app.hilo import HighOrLow, Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
-from app.datasource.windforecast import WindForecast
+from app.util import FloatPlot, InternalError, IntPlot, StrPlot
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def build_observed_tide_plot(
     timeline: GraphTimeline,
     obs_tides: dict[datetime, Tide],
     hilo_event_dict: dict[datetime, HighOrLow],
-) -> tuple[list[float | None] | None, list[str | None] | None]:
+) -> tuple[FloatPlot | None, StrPlot | None]:
     """Build lists for observed tide and high or low tide labels that match the timeline length. If there's
     no observed tide data for the timeline, returns None for both lists.
 
@@ -62,9 +62,7 @@ def build_wind_plots(
     timeline: GraphTimeline,
     winds: dict[datetime, Wind],
     hilo_event_dict: dict[datetime, HighOrLow],
-) -> tuple[
-    list[float | None] | None, list[float | None] | None, list[int | None] | None
-]:
+) -> tuple[FloatPlot | None, FloatPlot | None, IntPlot | None]:
     """Build lists for wind data which correspond to the timeline.  Returns None for all lists if there
     is no wind data.
 
@@ -114,7 +112,7 @@ def build_astro_plot(
     timeline: GraphTimeline,
     reg_preds_dict: dict[datetime, float],
     hilo_event_dict: dict[datetime, HighOrLow],
-) -> tuple[list[float | None] | None, list[str | None] | None]:
+) -> tuple[FloatPlot | None, StrPlot | None]:
     """
     Builds lists for the astronomical tide data. We essentially merge the regular 15-min predictions and the
     hilo-only data, preferring the hilo value if present, which is more accurate.
@@ -155,7 +153,7 @@ def build_past_surge_plot(
     timeline: GraphTimeline,
     past_surge_dict: dict[datetime, float],
     hilo_event_dict: dict[datetime, HighOrLow],
-) -> list[float | None] | None:
+) -> FloatPlot | None:
     """
     Build a list for recorded storm surge that corresponds to the timeline, with None for missing data.
 
@@ -187,7 +185,7 @@ def build_future_surge_plots(
     surge_data: SurgeFileCache | None,
     reg_preds_dict: dict[datetime, float],
     astro_hilo_dict: dict[datetime, PredictedHighOrLow],
-) -> tuple[list[float | None] | None, list[float | None] | None]:
+) -> tuple[FloatPlot | None, FloatPlot | None]:
     """
     Build lists for predicted storm surge and predicted storm tide that correspond to the
     timeline, with None for missing data. For each timeline datetime, we'll use the astronomical
@@ -228,7 +226,7 @@ def build_future_surge_plots(
         if surge_val is not None and hilo_pred is None:
             msg = f"Missing future prediction for {dt}"
             logger.error(msg)
-            raise util.InternalError(msg)
+            raise InternalError(msg)
         return surge_val, hilo_pred
 
     def callback(dt: datetime) -> tuple[float | None, float | None]:
@@ -253,7 +251,7 @@ def build_wind_forecast_plots(
     timeline: GraphTimeline,
     forecast_dict: dict[datetime, WindForecast],
     hilo_event_dict: dict[datetime, HighOrLow],
-) -> tuple[list[float | None] | None, list[int | None] | None]:
+) -> tuple[FloatPlot | None, IntPlot | None]:
     """
     Build lists for forecast wind speed and direction (0-360) which correspond to the timeline.
 
@@ -276,7 +274,8 @@ def build_wind_forecast_plots(
         if dt in forecast_dict:
             forecast = forecast_dict[dt]
             return (
-                forecast["mph"], forecast["dir"],
+                forecast["mph"],
+                forecast["dir"],
             )
         return None, None
 

@@ -1,26 +1,25 @@
 import logging
 from collections.abc import Sequence
-from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Any, TypedDict
 
 from app import graph_plot as gp
-from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
-from app.hilo import HighOrLow, PredictedHighOrLow
+from app.hilo import PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
+from app.util import FloatPlot, InternalError, IntPlot, StrPlot
 
 from . import station as stn
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class GraphData:
+class GraphData(TypedDict):
     dimensions: list[str]
-    blob: list[list[datetime | float | int | str | None]]
+    blob: Sequence[Sequence[Any]]
     syzygy: list[dict[str, str | datetime]]
     subtitle: str
     highest_annual_prediction: float | None
@@ -64,24 +63,24 @@ def get_graph_data(
     obs_winds = cdmo.get_wind_data(station, timeline)
 
     # Get 15-minute interval astronomical tide predictions for the entire timeline.
-    astro_preds15_dict = astro.get_15m_astro_tides(
+    astro_preds15_dict: dict[datetime, float] = astro.get_15m_astro_tides(
         station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
     )
 
     # Get wind forecasts.
-    forecast_wind_dict: dict[datetime, wind.WindForecast] = wind.get_wind_forecast(
+    forecast_wind_dict = wind.get_wind_forecast(
         station, timeline, hilo_mode
     )
 
     # Get astronomical tide predictions
-    astro_all_hilo_dict: dict[datetime, PredictedHighOrLow] = (
+    astro_all_hilo_dict = (
         astro.get_hilo_astro_tides(
             station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
         )
     )
 
     # Determine all highs and lows, whether observed or predicted.
-    hilo_event_dict: dict[datetime, HighOrLow] = cdmo.find_all_hilos(
+    hilo_event_dict = cdmo.find_all_hilos(
         timeline, obs_tides, astro_all_hilo_dict
     )
 
@@ -89,9 +88,13 @@ def get_graph_data(
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, obs_tides)
+    past_surge_dict = sg.get_recorded_storm_surge(
+        astro_preds15_dict, obs_tides
+    )
 
-    future_surge_data = sg.get_future_surge_data(timeline, station.noaa_station_id)
+    future_surge_data = sg.get_future_surge_data(
+        timeline, station.noaa_station_id
+    )
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
@@ -141,8 +144,9 @@ def get_graph_data(
     else:
         final_timeline = timeline.requested_times
 
-    # Phase 3. Build the final data structure to return.
-    plots: dict[str, Sequence[float | int | str | None] | None] = {
+    # Phase 3. Build the final data structure to return.  All these plots are strongly typed lists,
+    # so it's cool to type the blob they're headed to as a list of lists of Any.
+    plots: dict[str, FloatPlot | StrPlot | IntPlot | None] = {
         "hist-tides": hist_tides_plot,
         "astro-tides": astro_tides_plot,
         "wind-speeds": wind_speed_plot,
@@ -162,19 +166,19 @@ def get_graph_data(
 
     # Each blob entry represents a "column" of data, with the first value being the datetime and
     # the rest being all the data for that time, in the same order as the dimensions.
-    blob: list[list[datetime | float | int | str | None]] = []
+    blob: list[list[Any]] = []
 
     for ndx, dt in enumerate(final_timeline):
-        row: list[datetime | float | int | str | None] = [dt]
-        row.extend(col[ndx] for col in plots.values() if col)
-        blob.append(row)
+        blob.append([dt] + [col[ndx] for col in plots.values() if col])
 
     data = GraphData(
-        dimensions,
-        blob,
-        syzygy_list,
-        build_subtitle(start_date, end_date),
-        stn.get_astro_high_tide_mllw(station, start_date.year),
+        dimensions=dimensions,
+        blob=blob,
+        syzygy=syzygy_list,
+        subtitle=build_subtitle(start_date, end_date),
+        highest_annual_prediction=stn.get_astro_high_tide_mllw(
+            station, start_date.year
+        ),
     )
     return data
 
@@ -208,10 +212,8 @@ def validate_dates(start: date, end: date) -> None:
         or end > latest_date
         or end < earliest_date
     ):
-        raise util.InternalError(
+        raise InternalError(
             f"{start} - {end} is not between {earliest_date} - {latest_date}"
         )
     if end < start:
-        raise util.InternalError(
-            f"end_date {end} cannot be earlier than start_date {start}"
-        )
+        raise InternalError(f"end_date {end} cannot be earlier than start_date {start}")

@@ -1,8 +1,9 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
+
+from pydantic import BaseModel
 
 from app import util
 from app.datasource import astrotide, cdmo, surge, syzygy
@@ -15,8 +16,7 @@ from app.timeline import Timeline
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ConditionsData:
+class ConditionsData(BaseModel):
     phase: str | None
     phase_dt: datetime | None
     next_phase: str | None
@@ -76,7 +76,7 @@ def get_latest_conditions(station: Station) -> ConditionsData:
         station.time_zone,
     )
 
-    return ConditionsData(**as_dict)
+    return ConditionsData.model_validate(as_dict)
 
 
 def extract_data(
@@ -145,7 +145,7 @@ def extract_data(
         data["next_tide_dt"] = next_tide_dt
         data["next_high_tide"] = futures[0].value
         data["next_tide_surge"] = find_nearest_surge_value(surge_data, next_tide_dt)
-        data["surge_time"] = surge_data.file_creation_dt if surge_data else None
+        data["surge_time"] = surge_data.created_at if surge_data else None
     else:
         data["next_tide_dt"] = None
         data["next_high_tide"] = None
