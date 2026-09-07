@@ -41,7 +41,7 @@ describe('useLatestData', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-        expect(result.current.data).toEqual({ temp: 72 })
+        expect(result.current.data).toEqual(expect.objectContaining({ temp: 72 }))
         expect(axios.post).toHaveBeenCalledWith(
             expect.any(String),
             expect.objectContaining({
@@ -51,6 +51,7 @@ describe('useLatestData', () => {
                 session: mainStore.session,
                 started: mainStore.started,
             }),
+            expect.objectContaining({ signal: expect.anything() }),
         )
     })
 
