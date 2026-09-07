@@ -14,14 +14,17 @@ export default function useLatestData(station: Station) {
         queryKey: [station.id, 'latest'],
         queryFn: async ({ signal }) => {
             return await axios
-                .post(import.meta.env.VITE_API_LATEST_URL, {
-                    signal,
-                    uid: mainStore.uid,
-                    session: mainStore.session,
-                    started: mainStore.started,
-                    version: import.meta.env.VITE_APP_VERSION,
-                    station_id: station.id,
-                })
+                .post(
+                    import.meta.env.VITE_API_LATEST_URL,
+                    {
+                        uid: mainStore.uid,
+                        session: mainStore.session,
+                        started: mainStore.started,
+                        version: import.meta.env.VITE_APP_VERSION,
+                        station_id: station.id,
+                    },
+                    { signal },
+                )
                 .then((res): LatestConditions => {
                     const d = res.data
                     return {

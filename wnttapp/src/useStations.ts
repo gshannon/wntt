@@ -18,7 +18,6 @@ export default function useStations() {
                 .post<{ stations: Record<string, StationJson>; banner: string }>(
                     import.meta.env.VITE_API_STATIONS_URL,
                     {
-                        signal,
                         version: import.meta.env.VITE_APP_VERSION,
                         // For logging...
                         uid: mainStore.uid ?? 'NONE',
@@ -26,6 +25,7 @@ export default function useStations() {
                         started: mainStore.started,
                         screenWidth: window.innerWidth,
                     },
+                    { signal },
                 )
                 .then((res) => {
                     const asArray = Object.entries(res.data.stations).map(([id, stn]) => [

@@ -22,21 +22,24 @@ export default function useGraphData(
         queryKey: buildCacheKey(station.id, startDateStr, endDateStr, hiloMode),
         queryFn: async ({ signal }) => {
             return await axios
-                .post(import.meta.env.VITE_API_GRAPH_URL, {
-                    signal,
-                    version: import.meta.env.VITE_APP_VERSION,
-                    station_id: station.id,
-                    start: startDateStr,
-                    end: endDateStr,
-                    hilo: hiloMode,
-                    // These fields are for logging
-                    uid: mainStore.uid ?? 'NONE',
-                    session: mainStore.session,
-                    started: mainStore.started,
-                    screenWidth: window.innerWidth,
-                    customNav: permStore.customElevationNav ?? null,
-                    special: special,
-                })
+                .post(
+                    import.meta.env.VITE_API_GRAPH_URL,
+                    {
+                        version: import.meta.env.VITE_APP_VERSION,
+                        station_id: station.id,
+                        start: startDateStr,
+                        end: endDateStr,
+                        hilo: hiloMode,
+                        // These fields are for logging
+                        uid: mainStore.uid ?? 'NONE',
+                        session: mainStore.session,
+                        started: mainStore.started,
+                        screenWidth: window.innerWidth,
+                        customNav: permStore.customElevationNav ?? null,
+                        special: special,
+                    },
+                    { signal },
+                )
                 .then((res) => res.data)
                 .catch((error) =>
                     handleQueryError(error, {
