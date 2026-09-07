@@ -2,7 +2,6 @@ import functools
 import logging
 import os
 from collections.abc import Callable, Mapping
-from dataclasses import asdict
 from datetime import datetime
 from typing import Any, ParamSpec, TypeVar
 
@@ -91,8 +90,8 @@ class LatestInfoView(APIView):
         verify_version(data)
         swmp_station_id = get_required(data, "station_id")
         station = stn.get_station(swmp_station_id)
-        conditions = swmp.get_latest_conditions(station)
-        return Response(data=asdict(conditions))
+        conditions: swmp.ConditionsData = swmp.get_latest_conditions(station)
+        return Response(data=conditions.model_dump())
 
 
 class CreateGraphView(APIView):
@@ -125,7 +124,7 @@ class CreateGraphView(APIView):
         graph_data: gr.GraphData = gr.get_graph_data(
             start_date, end_date, hilo_mode, station, is_special
         )
-        return Response(data=asdict(graph_data))
+        return Response(data=graph_data)
 
 
 class AddressView(APIView):

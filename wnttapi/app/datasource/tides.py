@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +22,6 @@ class Tide:
     def corrected_mllw_feet(self) -> float:
         return self.navd88_to_mllw(self.corrected_nav_feet)
 
-    @property
-    def todict(self) -> dict[str, float | None]:
-        return {
-            "temp_f": self.temp_f,
-            "corrected_nav_feet": self.corrected_nav_feet,
-            "corrected_mllw_feet": self.corrected_mllw_feet,
-        }
-
     def nav_feet_equals(self, corrected_nav_feet: float) -> bool:
         if corrected_nav_feet is None and self.corrected_nav_feet is None:
             return True
@@ -39,8 +31,3 @@ class Tide:
 
     def navd88_to_mllw(self, navd88_value: float) -> float:
         return round(navd88_value + self.mllw_offset, 2)
-
-    def __post_init__(self) -> None:
-        for fld in fields(self):
-            if getattr(self, fld.name) is None:
-                raise ValueError(f"Field '{fld.name}' cannot be None")

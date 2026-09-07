@@ -3,11 +3,11 @@ import logging
 import os
 import os.path
 import re
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import sentry_sdk
 from django.core.cache import cache
+from pydantic import BaseModel
 
 from app import tzutil as tz
 from app.datasource.tides import Tide
@@ -22,19 +22,17 @@ _no_value = "9999.000"
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class SurgeFileInfo:
+class SurgeFileInfo(BaseModel):
     filepath: str
     filedate: str
     cycle: int
     created_at: datetime
 
 
-@dataclass(frozen=True)
-class SurgeFileCache:
+class SurgeFileCache(BaseModel):
     filedate: str
     cycle: int
-    file_creation_dt: datetime
+    created_at: datetime
     surges: dict[datetime, float]
 
 
@@ -113,7 +111,7 @@ def get_or_load_projected_surge_file(
     Returns: an object with
         "filedate": filedate string,
         "cycle": cycle int,
-        "file_creation_dt": file download datetime,
+        "created_at": file download datetime,
         "surges": { <dt>: <surge> }
     """
     logger.debug(f"looking in surge cache for station {noaa_station_id}...")
@@ -168,7 +166,10 @@ def get_or_load_projected_surge_file(
 
     # Build the payload, cache it & return it.
     payload = SurgeFileCache(
-        fileinfo.filedate, fileinfo.cycle, fileinfo.created_at, surges_dict
+        filedate=fileinfo.filedate,
+        cycle=fileinfo.cycle,
+        created_at=fileinfo.created_at,
+        surges=surges_dict,
     )
 
     # We'll use a TTL of 48 hours to handle cases where download fails a few times.
@@ -211,10 +212,13 @@ def get_latest_file_info(
                 int(matches[0][2]),
             )
             filepath = os.path.join(dir_path, e.name)
-            file_creation_dt = datetime.fromtimestamp(
-                os.path.getctime(filepath), tz=tz.utc
+            created_at = datetime.fromtimestamp(os.path.getctime(filepath), tz=tz.utc)
+            info = SurgeFileInfo(
+                filepath=filepath,
+                filedate=filedate,
+                cycle=cycle,
+                created_at=created_at,
             )
-            info = SurgeFileInfo(filepath, filedate, cycle, file_creation_dt)
             break
 
     logger.debug(f"surge file for station {noaa_station_id}: {info}")
