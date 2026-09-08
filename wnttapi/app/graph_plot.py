@@ -8,9 +8,13 @@ from app.datasource.windforecast import WindForecast
 from app.datasource.winds import Wind
 from app.hilo import HighOrLow, Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
-from app.util import FloatPlot, InternalError, IntPlot, StrPlot
+from app.util import InternalError
 
 logger = logging.getLogger(__name__)
+
+type FloatPlot = list[float | None]
+type IntPlot = list[int | None]
+type StrPlot = list[str | None]
 
 
 def build_observed_tide_plot(

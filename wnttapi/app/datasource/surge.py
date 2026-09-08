@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import sentry_sdk
 from django.core.cache import cache
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app import tzutil as tz
 from app.datasource.tides import Tide
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class SurgeFileInfo(BaseModel):
+    model_config = ConfigDict(frozen=True)
     filepath: str
     filedate: str
     cycle: int
@@ -30,6 +31,7 @@ class SurgeFileInfo(BaseModel):
 
 
 class SurgeFileCache(BaseModel):
+    model_config = ConfigDict(frozen=True)
     filedate: str
     cycle: int
     created_at: datetime
