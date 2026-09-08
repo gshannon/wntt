@@ -3,23 +3,25 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import Any, TypedDict
 
-from app import graph_plot as gp
+from app import graph_plot as plot
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
 from app.hilo import PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
-from app.util import FloatPlot, InternalError, IntPlot, StrPlot
+from app.util import InternalError
 
 from . import station as stn
 
 logger = logging.getLogger(__name__)
 
+type GraphColumn = list[datetime | float | int | str | None]
+
 
 class GraphData(TypedDict):
     dimensions: list[str]
-    blob: Sequence[Sequence[Any]]
+    blob: Sequence[GraphColumn]
     syzygy: list[dict[str, str | datetime]]
     subtitle: str
     highest_annual_prediction: float | None
@@ -68,59 +70,49 @@ def get_graph_data(
     )
 
     # Get wind forecasts.
-    forecast_wind_dict = wind.get_wind_forecast(
-        station, timeline, hilo_mode
-    )
+    forecast_wind_dict = wind.get_wind_forecast(station, timeline, hilo_mode)
 
     # Get astronomical tide predictions
-    astro_all_hilo_dict = (
-        astro.get_hilo_astro_tides(
-            station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
-        )
+    astro_all_hilo_dict = astro.get_hilo_astro_tides(
+        station.noaa_station_id, timeline, station.navd88_feet_to_mllw_feet, True
     )
 
     # Determine all highs and lows, whether observed or predicted.
-    hilo_event_dict = cdmo.find_all_hilos(
-        timeline, obs_tides, astro_all_hilo_dict
-    )
+    hilo_event_dict = cdmo.find_all_hilos(timeline, obs_tides, astro_all_hilo_dict)
 
     if isinstance(timeline, HiloTimeline):
         # The HiloTimeline needs to keep track of these for later processing.
         timeline.register_hilo_times(list(hilo_event_dict.keys()))
 
-    past_surge_dict = sg.get_recorded_storm_surge(
-        astro_preds15_dict, obs_tides
-    )
+    past_surge_dict = sg.get_recorded_storm_surge(astro_preds15_dict, obs_tides)
 
-    future_surge_data = sg.get_future_surge_data(
-        timeline, station.noaa_station_id
-    )
+    future_surge_data = sg.get_future_surge_data(timeline, station.noaa_station_id)
 
     # Phase 2. Now we have all the data we need, in dense dictionaries. Build the lists required
     # by the graph plots, which must be the same length as the timeline so the front end can graph them.
     # They are sparse rather than dense -- they have None for any missing data.
 
-    hist_tides_plot, hist_tides_label_plot = gp.build_observed_tide_plot(
+    hist_tides_plot, hist_tides_label_plot = plot.build_observed_tide_plot(
         timeline, obs_tides, hilo_event_dict
     )
 
-    wind_speed_plot, wind_gust_plot, wind_dir_plot = gp.build_wind_plots(
+    wind_speed_plot, wind_gust_plot, wind_dir_plot = plot.build_wind_plots(
         timeline, obs_winds, hilo_event_dict
     )
 
-    astro_tides_plot, astro_label_plot = gp.build_astro_plot(
+    astro_tides_plot, astro_label_plot = plot.build_astro_plot(
         timeline, astro_preds15_dict, hilo_event_dict
     )
 
-    past_surge_plot = gp.build_past_surge_plot(
+    past_surge_plot = plot.build_past_surge_plot(
         timeline, past_surge_dict, hilo_event_dict
     )
 
-    forecast_wind_speed_plot, forecast_wind_dir_plot = gp.build_wind_forecast_plots(
+    forecast_wind_speed_plot, forecast_wind_dir_plot = plot.build_wind_forecast_plots(
         timeline, forecast_wind_dict, hilo_event_dict
     )
 
-    future_surge_plot, future_storm_tide_plot = gp.build_future_surge_plots(
+    future_surge_plot, future_storm_tide_plot = plot.build_future_surge_plots(
         timeline,
         future_surge_data,
         astro_preds15_dict,
@@ -144,9 +136,8 @@ def get_graph_data(
     else:
         final_timeline = timeline.requested_times
 
-    # Phase 3. Build the final data structure to return.  All these plots are strongly typed lists,
-    # so it's cool to type the blob they're headed to as a list of lists of Any.
-    plots: dict[str, FloatPlot | StrPlot | IntPlot | None] = {
+    # Phase 3. Build the final data structure to return.
+    plots: dict[str, plot.FloatPlot | plot.StrPlot | plot.IntPlot | None] = {
         "hist-tides": hist_tides_plot,
         "astro-tides": astro_tides_plot,
         "wind-speeds": wind_speed_plot,
@@ -166,7 +157,7 @@ def get_graph_data(
 
     # Each blob entry represents a "column" of data, with the first value being the datetime and
     # the rest being all the data for that time, in the same order as the dimensions.
-    blob: list[list[Any]] = []
+    blob: list[GraphColumn] = []
 
     for ndx, dt in enumerate(final_timeline):
         blob.append([dt] + [col[ndx] for col in plots.values() if col])
