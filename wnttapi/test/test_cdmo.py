@@ -36,7 +36,7 @@ class TestCdmo(TestCase):
 
         # A single-day timeline for the 21st. Remember we pull in extra padding for cdmo tide data.
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
-        with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "rb") as file:
             xml = file.read()
         tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
 
@@ -74,7 +74,7 @@ class TestCdmo(TestCase):
         )
 
         # Get observed tides from CDMO for the timeline
-        with open(f"{test_data_path}/data/cdmo-level-20251203-06.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-level-20251203-06.xml", "rb") as file:
             xml = file.read()
         obs_tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
 

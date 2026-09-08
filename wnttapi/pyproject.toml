@@ -4,7 +4,7 @@ plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 mypy_path = "."
 explicit_package_bases = true
 namespace_packages = true
-files = ["app", "project"]
+files = ["app", "project", "test"]
 exclude = '(^|/)migrations/|/__pycache__/'
 ignore_missing_imports = false
 implicit_optional = false
@@ -21,9 +21,16 @@ django_settings_module = "project.settings.dev"
 module = ["suds.*", "sentry_sdk.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["test.*"]
+disallow_untyped_defs = false
 
 [tool.pyright]
-include = ["app", "project", "tools"]
+# "test" is in `include` so Pylance treats the test files as part of the project
+# (go-to-definition / hover into `app/` works from them); "ignore" then suppresses
+# type-diagnostics for that dir so test code doesn't sprout squiggles.
+include = ["app", "project", "tools", "test"]
+# ignore = ["test"]
 exclude = ["**.migrations", "**/__pycache__", ".venv"]
 typeCheckingMode = "basic"
 venvPath = "."
