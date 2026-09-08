@@ -130,7 +130,7 @@ class TestGraphTimeline(TestCase):
         self.assertTrue(real_time_2 in final)
 
     def test_build_plots(self):
-        def my_callback(dt: datetime) -> tuple:
+        def my_callback(dt: datetime) -> tuple[float | None, str | None]:
             if dt.hour == 3 and dt.minute == 15:
                 return (12.51, "label1")
             return (None, None)
@@ -156,7 +156,7 @@ class TestHiloTimeline(TestCase):
         timeline = HiloTimeline(start_date, end_date, tz.central)
 
         with self.assertRaisesRegex(util.InternalError, "must be called first"):
-            timeline.build_plots(lambda _: None)
+            timeline.build_plots(lambda _: (None, None))
         with self.assertRaisesRegex(util.InternalError, "must be called first"):
             timeline.get_final_times({})
 

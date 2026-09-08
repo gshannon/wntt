@@ -26,7 +26,7 @@ class TestCdmo(TestCase):
         end_date = date(2025, 12, 28)
         timeline = GraphTimeline(start_date, end_date, tzone)
 
-        with open(f"{test_data_path}/data/cdmo-20251228-wind.xml", "r") as file:
+        with open(f"{test_data_path}/data/cdmo-20251228-wind.xml", "rb") as file:
             xml = file.read()
 
         winds = cdmo.parse_cdmo_wind_xml(timeline, xml)
@@ -43,13 +43,17 @@ class TestCdmo(TestCase):
         dt = min(winds)
         self.assertEqual(dt, datetime(2025, 12, 28, 0, 0, tzinfo=tzone))
         entry = winds.get(dt)
-        self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.7))
-        self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.8))
-        self.assertEqual(entry.direction_deg, 319)
+        self.assertIsNotNone(entry)
+        if entry is not None:
+            self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.7))
+            self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.8))
+            self.assertEqual(entry.direction_deg, 319)
 
         dt = max(winds)
         self.assertEqual(dt, datetime(2025, 12, 29, 0, 0, tzinfo=tzone))
         entry = winds.get(dt)
-        self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.0))
-        self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.1))
-        self.assertEqual(entry.direction_deg, 240)
+        self.assertIsNotNone(entry)
+        if entry is not None:
+            self.assertEqual(entry.speed_mph, util.meters_per_second_to_mph(1.0))
+            self.assertEqual(entry.gust_mph, util.meters_per_second_to_mph(2.1))
+            self.assertEqual(entry.direction_deg, 240)
