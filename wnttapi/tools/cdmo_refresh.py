@@ -78,7 +78,7 @@ def get_timeline(station) -> Timeline:
         end_dt = datetime.strptime(args.end, "%Y-%m-%dT%H:%M").replace(
             tzinfo=station.time_zone
         )
-        logger.info(f"Processing {start_dt} to {end_dt} ...", file=sys.stderr)
+        logger.info(f"Processing {start_dt} to {end_dt} ...")
         timeline = Timeline(start_dt, end_dt)
     elif args.year is not None and args.week is not None:
         start_date = date.fromisocalendar(int(args.year), int(args.week), 1)
