@@ -1,11 +1,8 @@
+import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+
 import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
-from django import setup
-
-setup()
 
 import app.datasource.astrotide as astro
 import app.station as stn
@@ -16,8 +13,6 @@ from app.hilo import ObservedHighOrLow, PredictedHighOrLow
 from app.timeline import GraphTimeline, Timeline
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
-
-wells = stn.get_station("welinwq", f"{cur_path}/../../datamount/stations")
 test_data_path = os.path.dirname(os.path.abspath(__file__))
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
@@ -25,6 +20,12 @@ dst_end_date = date(2024, 11, 3)
 
 class TestCdmo(TestCase):
     tzone = tz.eastern  # Do not change, tests use hard-coded times
+    wells: stn.Station
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.wells = stn.get_station("welinwq", f"{cur_path}/../../datamount/stations")
 
     def test_hilos_with_predicted_high_on_previous_day(self):
         # Edge case: The last high tide on day 12/20 was at 23:48. Using that as guidance, the max nearby
@@ -38,13 +39,13 @@ class TestCdmo(TestCase):
         timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
         with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "rb") as file:
             xml = file.read()
-        tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
+        tides = cdmo.parse_cdmo_tides_xml(timeline, self.wells, xml)
 
         # First, see what happens when we just pull the 21st high/low predictions.
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251221.json")
         contents = astro.extract_json(raw)
         pred_hilo_dict = astro.hilo_json_to_dict(
-            contents, timeline, wells.navd88_feet_to_mllw_feet
+            contents, timeline, self.wells.navd88_feet_to_mllw_feet
         )
         hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
 
@@ -56,7 +57,7 @@ class TestCdmo(TestCase):
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-20251220-21.json")
         contents = astro.extract_json(raw)
         pred_hilo_dict = astro.hilo_json_to_dict(
-            contents, timeline, wells.navd88_feet_to_mllw_feet
+            contents, timeline, self.wells.navd88_feet_to_mllw_feet
         )
         hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
         midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
@@ -70,13 +71,13 @@ class TestCdmo(TestCase):
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-120405.json")
         contents = astro.extract_json(raw)
         pred_hilo_dict = astro.hilo_json_to_dict(
-            contents, timeline, wells.navd88_feet_to_mllw_feet
+            contents, timeline, self.wells.navd88_feet_to_mllw_feet
         )
 
         # Get observed tides from CDMO for the timeline
         with open(f"{test_data_path}/data/cdmo-level-20251203-06.xml", "rb") as file:
             xml = file.read()
-        obs_tides = cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
+        obs_tides = cdmo.parse_cdmo_tides_xml(timeline, self.wells, xml)
 
         # Find the hilos in the observed data.
         hilos = cdmo.find_all_hilos(timeline, obs_tides, pred_hilo_dict)
@@ -100,7 +101,7 @@ class TestCdmo(TestCase):
         xml = self.load_xml("cdmo-invalid-ip.xml")
         timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
         with self.assertRaisesRegex(Exception, "Invalid ip"):
-            cdmo.parse_cdmo_tides_xml(timeline, wells, xml)
+            cdmo.parse_cdmo_tides_xml(timeline, self.wells, xml)
 
     def test_cdmo_dates_graph_standard(self):
         """In standard time, no changes are needed for any time zone."""
