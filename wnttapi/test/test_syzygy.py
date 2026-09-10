@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
 
 import os

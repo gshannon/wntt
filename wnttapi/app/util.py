@@ -1,7 +1,7 @@
 import functools
 import logging
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import ParamSpec, TypeVar
 
 import sentry_sdk
@@ -35,6 +35,15 @@ class InternalError(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
+
+
+def get_supported_years() -> list[int]:
+    """
+    Get the years the API supports, in order. By default this means the last 2 years, the current year,
+    plus the next 2 years.
+    """
+    year = date.today().year  # noqa
+    return [y for y in range(year - 2, year + 3)]
 
 
 def round_to_quarter(dt: datetime) -> datetime:

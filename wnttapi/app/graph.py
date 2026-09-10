@@ -1,16 +1,16 @@
 import logging
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from app import graph_plot as plot
+from app import util
 from app.datasource import astrotide as astro
 from app.datasource import cdmo, syzygy
 from app.datasource import surge as sg
 from app.datasource import windforecast as wind
 from app.hilo import PredictedHighOrLow
 from app.timeline import GraphTimeline, HiloTimeline
-from app.util import InternalError
 
 from . import station as stn
 
@@ -195,16 +195,18 @@ def validate_dates(start: date, end: date) -> None:
     Raises:
         ValidationError: If date range is too big, or end < start.
     """
-    earliest_date = date(stn.get_supported_years()[0], 1, 1)
-    latest_date = date(stn.get_supported_years()[-1], 12, 31)
+    earliest_date = date(util.get_supported_years()[0], 1, 1)
+    latest_date = date(util.get_supported_years()[-1], 12, 31)
     if (
         start > latest_date
         or start < earliest_date
         or end > latest_date
         or end < earliest_date
     ):
-        raise InternalError(
+        raise util.InternalError(
             f"{start} - {end} is not between {earliest_date} - {latest_date}"
         )
     if end < start:
-        raise InternalError(f"end_date {end} cannot be earlier than start_date {start}")
+        raise util.InternalError(
+            f"end_date {end} cannot be earlier than start_date {start}"
+        )

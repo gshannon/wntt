@@ -91,7 +91,7 @@ def get_water_data(
             tides[dt_in_local] = Tide(
                 temp_f=rec.temp_f,
                 corrected_nav_feet=rec.clevel_nf,
-                mllw_offset=station.mllw_conversion,
+                mllw_offset=station.navd88_to_mllw_conversion,
             )
 
     else:
@@ -354,7 +354,7 @@ def parse_cdmo_tides_xml(
         tides[dt_in_local] = Tide(
             temp_f=util.celsius_to_fahrenheit(temp_c) if temp_c else None,
             corrected_nav_feet=util.meters_to_feet(corrected_level_nav_meters),
-            mllw_offset=station.mllw_conversion,
+            mllw_offset=station.navd88_to_mllw_conversion,
         )
 
     if none_or_bad > 0:

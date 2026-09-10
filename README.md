@@ -128,35 +128,37 @@ docker build --platform=linux/amd64 \
 ## stations.json format
 
     {
-        "welinwq": {
-            "timeZone": "US/Eastern",
-            "reserveName": "Wells",
-            "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
-            "waterStationName": "Inlet",
-            "weatherStationId": "wellfmet",
-            "weatherStationName": "Laudholm Farm",
-            "noaaStationId": "8419317",
-            "noaaStationName": "Wells, ME",
-            "noaaStationLocation": {
-                "lat": 43.32,
-                "lng": -70.563333
-            },
-            "navd88ToMllwConversion": 5.14,
-            "meanHighWaterMllw": 9.13,
-            "mapBounds": [
-                [44.01, -70.73],
-                [43.01, -69.8]
-            ],
-            "swmpLocation": {
-                "lat": 43.320089,
-                "lng": -70.563442
-            },
-            "weatherLocation": {
-                "lat": 43.33738,
-                "lng": -70.54944
-            },
-            "recordTideNavd88": 8.13,
-            "recordTideDate": "2024-1-13",
+        "data": {
+            "welinwq": {
+                "timeZone": "US/Eastern",
+                "reserveName": "Wells",
+                "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
+                "waterStationName": "Inlet",
+                "weatherStationId": "wellfmet",
+                "weatherStationName": "Laudholm Farm",
+                "noaaStationId": "8419317",
+                "noaaStationName": "Wells, ME",
+                "noaaStationLocation": {
+                    "lat": 43.32,
+                    "lng": -70.563333
+                },
+                "navd88ToMllwConversion": 5.14,
+                "meanHighWaterMllw": 9.13,
+                "mapBounds": [
+                    [44.01, -70.73],
+                    [43.01, -69.8]
+                ],
+                "swmpLocation": {
+                    "lat": 43.320089,
+                    "lng": -70.563442
+                },
+                "weatherLocation": {
+                    "lat": 43.33738,
+                    "lng": -70.54944
+                },
+                "recordTideNavd88": 8.13,
+                "recordTideDate": "2024-1-13",
+            }
+            [, ... ]
         }
-        [, ... ]
     }
