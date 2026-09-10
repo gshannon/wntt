@@ -1,5 +1,5 @@
+# ruff: noqa: I001
 import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
-
 import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
@@ -19,7 +19,7 @@ dst_end_date = date(2024, 11, 3)
 
 
 class TestCdmo(TestCase):
-    tzone = tz.eastern  # Do not change, tests use hard-coded times
+    eastern = tz.eastern
     wells: stn.Station
 
     @classmethod
@@ -36,7 +36,7 @@ class TestCdmo(TestCase):
         # timeline start when pulling predicted high/lows.
 
         # A single-day timeline for the 21st. Remember we pull in extra padding for cdmo tide data.
-        timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.tzone)
+        timeline = GraphTimeline(date(2025, 12, 20), date(2025, 12, 21), self.eastern)
         with open(f"{test_data_path}/data/cdmo-level-20251221.xml", "rb") as file:
             xml = file.read()
         tides = cdmo.parse_cdmo_tides_xml(timeline, self.wells, xml)
@@ -49,7 +49,7 @@ class TestCdmo(TestCase):
         )
         hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
 
-        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
+        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.eastern)
         # The predicted high tide from the 20th is not included in the 21st predictions.
         self.assertNotIn(midnight_high, hilos)
 
@@ -60,12 +60,12 @@ class TestCdmo(TestCase):
             contents, timeline, self.wells.navd88_feet_to_mllw_feet
         )
         hilos = cdmo.find_all_hilos(timeline, tides, pred_hilo_dict)
-        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.tzone)
+        midnight_high = datetime(2025, 12, 21, 0, tzinfo=self.eastern)
         self.assertIn(midnight_high, hilos)
 
     def test_hilos_with_missing_data(self):
         # With seven hours of missing observed data, make sure all highs and lows are still found.
-        timeline = GraphTimeline(date(2025, 12, 4), date(2025, 12, 5), self.tzone)
+        timeline = GraphTimeline(date(2025, 12, 4), date(2025, 12, 5), self.eastern)
 
         # Get astro predictions for the timeline
         raw = util.read_file(f"{test_data_path}/data/astro-hilo-120405.json")
@@ -83,7 +83,7 @@ class TestCdmo(TestCase):
         hilos = cdmo.find_all_hilos(timeline, obs_tides, pred_hilo_dict)
         self.assertEqual(len(hilos), len(pred_hilo_dict))
         # We're missing 12/5 00:30 - 07:15
-        missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.tzone)
+        missing_obs = datetime(2025, 12, 5, 4, 15, tzinfo=self.eastern)
         self.assertIsNone(obs_tides.get(missing_obs, None))
         self.assertIsInstance(hilos[missing_obs], PredictedHighOrLow)
 
@@ -99,7 +99,7 @@ class TestCdmo(TestCase):
 
     def test_cdmo_invalid_ip(self):
         xml = self.load_xml("cdmo-invalid-ip.xml")
-        timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.tzone)
+        timeline = GraphTimeline(date(2025, 3, 31), date(2025, 3, 31), self.eastern)
         with self.assertRaisesRegex(Exception, "Invalid ip"):
             cdmo.parse_cdmo_tides_xml(timeline, self.wells, xml)
 

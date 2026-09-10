@@ -97,8 +97,8 @@ def pull_data(
     granularity = "hourly" if not hilo_mode else "minutely_15"
 
     params: dict[str, str | int | float] = {
-        "latitude": station.weather_station_latitude,
-        "longitude": station.weather_station_longitude,
+        "latitude": station.weather_location["lat"],
+        "longitude": station.weather_location["lng"],
         "timezone": station.time_zone.key,
         granularity: "wind_speed_10m,wind_direction_10m",
         "forecast_days": forecast_days,

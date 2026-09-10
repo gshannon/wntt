@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest import TestCase
 
 import app.tzutil as tz
-import app.util as util
+from app import util
 
 
 class TestUtil(TestCase):

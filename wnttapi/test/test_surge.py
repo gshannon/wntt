@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
 
 import os.path
@@ -6,7 +7,7 @@ from unittest import TestCase
 from zoneinfo import ZoneInfo
 
 import app.station as stn
-from app import swmp as swmp
+from app import swmp
 from app.datasource import surge
 from app.timeline import Timeline
 

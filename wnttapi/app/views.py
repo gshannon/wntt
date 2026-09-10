@@ -76,7 +76,7 @@ class StationsView(APIView):
         )
         return Response(
             data={
-                "stations": stn.get_all_stations(),
+                "stations": stn.get_all_stations_api(),
                 "banner": os.getenv("APP_BANNER", "").strip(),
             }
         )
