@@ -1,21 +1,15 @@
+import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+
 import os.path
 from datetime import date, datetime
 from unittest import TestCase
 
-from django import setup
-
-import app.station as stn
 import app.tzutil as tz
 from app import util
 from app.datasource import cdmo
 from app.timeline import GraphTimeline
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
-setup()
-
 cur_path = os.path.dirname(os.path.abspath(__file__))
-
-wells = stn.get_station("welinwq", f"{cur_path}/../../datamount/stations")
 test_data_path = os.path.dirname(os.path.abspath(__file__))
 tzone = tz.eastern
 
