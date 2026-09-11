@@ -1,7 +1,6 @@
 # ruff: noqa: I001
-import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+import test._bootstrap as boot
 
-import os.path
 from datetime import date, datetime
 from unittest import TestCase
 
@@ -10,8 +9,6 @@ from app import util
 from app.datasource import cdmo
 from app.timeline import GraphTimeline
 
-cur_path = os.path.dirname(os.path.abspath(__file__))
-test_data_path = os.path.dirname(os.path.abspath(__file__))
 tzone = tz.eastern
 
 
@@ -21,7 +18,7 @@ class TestCdmo(TestCase):
         end_date = date(2025, 12, 28)
         timeline = GraphTimeline(start_date, end_date, tzone)
 
-        with open(f"{test_data_path}/data/cdmo-20251228-wind.xml", "rb") as file:
+        with open(f"{boot.test_data_dir}/cdmo-20251228-wind.xml", "rb") as file:
             xml = file.read()
 
         winds = cdmo.parse_cdmo_wind_xml(timeline, xml)

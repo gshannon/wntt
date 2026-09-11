@@ -19,6 +19,8 @@ from app import util
 logger = logging.getLogger(__name__)
 _default_file_dir = "/data/stations"
 _default_file_name = "stations.json"
+stations_cls_cache_key = "swmp_stations_cls"
+stations_dict_cache_key = "swmp_stations_dict"
 
 
 class Station(BaseModel):
@@ -114,8 +116,7 @@ def get_all_stations(
     force_reload: bool = False,
 ) -> dict[str, Station]:
     """Get the cached stations, or load them from the json file if not cached yet."""
-    cache_key = "swmp_stations_cls"
-    data = cache.get(cache_key)
+    data = cache.get(stations_cls_cache_key)
     if data is not None and not force_reload:
         return data
 
@@ -125,10 +126,10 @@ def get_all_stations(
     try:
         allStations = AllStationsRecord.model_validate_json(json_content, strict=True)
         cache.set(
-            cache_key, allStations.data, timeout=None
+            stations_cls_cache_key, allStations.data, timeout=None
         )  # Cache for as long as the server is running
         logger.debug(
-            f"Loaded {len(allStations.data)} stations from disk and cached with key {cache_key}"
+            f"Loaded {len(allStations.data)} stations from disk and cached with key {stations_cls_cache_key}"
         )
         return allStations.data
     except ValidationError as ve:
@@ -140,8 +141,7 @@ def get_all_stations_api(
     file_name: str = _default_file_name,
     force_reload: bool = False,
 ) -> dict[str, dict[str, Any]]:
-    cache_key = "swmp_stations_dict"
-    data = cache.get(cache_key)
+    data = cache.get(stations_dict_cache_key)
     if data is not None and not force_reload:
         return data
 
@@ -155,7 +155,7 @@ def get_all_stations_api(
         stations_dict = AllStationsRecord.model_dump(
             allStations, by_alias=True, mode="json"
         )
-        cache.set(cache_key, stations_dict["data"], timeout=None)
+        cache.set(stations_dict_cache_key, stations_dict["data"], timeout=None)
         return stations_dict["data"]
     except ValidationError as ve:
         raise util.InternalError("Station json validation error") from ve

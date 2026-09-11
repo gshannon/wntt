@@ -1,16 +1,14 @@
 # ruff: noqa: I001
-import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+import test._bootstrap as boot
 
-import os
 from datetime import date, datetime
 from unittest import TestCase
 
-import app.datasource.syzygy as syzygy
+from app.datasource import syzygy
 import app.tzutil as tz
 from app.timeline import GraphTimeline
 
-cur_path = os.path.dirname(os.path.abspath(__file__))
-csv_location = f"{cur_path}/../../datamount/syzygy"
+csv_location = f"{boot.test_data_dir}/../../../datamount/syzygy"
 
 
 class TestSyzygy(TestCase):

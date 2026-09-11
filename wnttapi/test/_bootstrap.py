@@ -20,3 +20,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.dev")
 import django
 
 django.setup()
+import app.station as stn
+
+test_data_dir = os.path.dirname(os.path.abspath(__file__)) + "/data"
+prod_data_root_dir = f"{test_data_dir}/../../../datamount"
+
+
+def load_station(id: str) -> stn.Station:
+    return stn.get_station(id, data_dir=f"{prod_data_root_dir}/stations")
