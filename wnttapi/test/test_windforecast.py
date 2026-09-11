@@ -1,5 +1,7 @@
+# ruff: noqa: I001
+import test._bootstrap as boot
+
 import json
-import os.path
 from datetime import date, datetime
 from unittest import TestCase
 
@@ -7,8 +9,6 @@ import app.datasource.windforecast as wind
 import app.tzutil as tz
 from app import util
 from app.timeline import GraphTimeline
-
-cur_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestWindForecast(TestCase):
@@ -22,7 +22,7 @@ class TestWindForecast(TestCase):
         tline = GraphTimeline(start, end, zone, now)
         forecast_window = wind.get_forecast_window(tline)
 
-        raw = util.read_file(f"{cur_path}/data/wind-20260202-03.json")
+        raw = util.read_file(f"{boot.test_data_dir}/wind-20260202-03.json")
         contents = wind.RawForecast.model_validate(json.loads(raw)["hourly"])
 
         result = wind.pred_json_to_dict(contents, tline, forecast_window)

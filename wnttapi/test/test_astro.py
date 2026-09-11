@@ -1,7 +1,6 @@
 # ruff: noqa: I001
-import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+import test._bootstrap as boot
 
-import os.path
 from datetime import datetime
 from unittest import TestCase
 
@@ -11,9 +10,6 @@ import app.tzutil as tz
 from app import util
 from app.timeline import Timeline
 
-cur_path = os.path.dirname(os.path.abspath(__file__))
-csv_location = f"{cur_path}/../../datamount/stations"
-
 
 class TestAstro(TestCase):
     station: stn.Station
@@ -21,12 +17,12 @@ class TestAstro(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.station = stn.get_station("welinwq", csv_location)
+        cls.station = boot.load_station("welinwq")
 
     def test_parse_15m_predictions(self):
         """Able to parse 15m predictions from a json list of predictions from API call."""
         zone = tz.eastern
-        raw = util.read_file(f"{cur_path}/data/astro-15m.json")
+        raw = util.read_file(f"{boot.test_data_dir}/astro-15m.json")
         contents = astro.extract_json(raw)
         # file has entire day of data, but we'll extract just 1 hour
         start_dt = datetime(2025, 5, 6, 1, tzinfo=zone)
@@ -55,7 +51,7 @@ class TestAstro(TestCase):
 
     def test_api_error(self):
         """Able to handle API error."""
-        raw = util.read_file(f"{cur_path}/data/astro-error.json")
+        raw = util.read_file(f"{boot.test_data_dir}/astro-error.json")
         self.assertRaisesRegex(
             Exception,
             "No Predictions data was found. Please make sure the Datum input is valid",

@@ -1,7 +1,6 @@
 # ruff: noqa: I001
-import test._bootstrap  # noqa: F401  (configures Django; must precede app.* imports)
+import test._bootstrap as boot
 
-import os.path
 from datetime import date, datetime, timedelta
 from unittest import TestCase
 from zoneinfo import ZoneInfo
@@ -11,8 +10,6 @@ from app import swmp
 from app.datasource import surge
 from app.timeline import Timeline
 
-cur_path = os.path.dirname(os.path.abspath(__file__))
-test_dir_path = os.path.dirname(os.path.abspath(__file__))
 dst_start_date = date(2024, 3, 10)
 dst_end_date = date(2024, 11, 3)
 
@@ -24,13 +21,13 @@ class TestSurge(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.wells = stn.get_station("welinwq", f"{cur_path}/../../datamount/stations")
+        cls.wells = boot.load_station("welinwq")
         cls.tzone = cls.wells.time_zone  # Do not change, tests use hard-coded times
 
     def test_get_surge_file_info(self):
 
         fileinfo = surge.get_latest_file_info(
-            self.wells.noaa_station_id, f"{test_dir_path}/data"
+            self.wells.noaa_station_id, f"{boot.test_data_dir}"
         )
 
         self.assertTrue(fileinfo is not None)
@@ -46,7 +43,7 @@ class TestSurge(TestCase):
         timeline = Timeline(start_dt, end_dt, datetime(2026, 6, 29, tzinfo=self.tzone))
 
         data = surge.get_future_surge_data(
-            timeline, self.wells.noaa_station_id, f"{test_dir_path}/data"
+            timeline, self.wells.noaa_station_id, f"{boot.test_data_dir}"
         )
         self.assertTrue(data is not None)
 
