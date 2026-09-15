@@ -3,8 +3,16 @@ import logging
 import os
 from collections.abc import Callable
 from datetime import datetime
+from typing import Any, Literal
 
 import requests
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
 
 from app import tzutil as tz
 from app import util
@@ -12,6 +20,53 @@ from app.hilo import Hilo, PredictedHighOrLow
 from app.timeline import Timeline
 
 from ..models import AstroTide15, AstroTideHilo
+
+
+class Prediction(BaseModel):
+    # A single 15-minute prediction
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    timestamp: datetime = Field(alias="t")
+    value: float = Field(alias="v")
+
+    @field_validator("timestamp", mode="before")
+    @classmethod
+    def ensure_timezone(cls, dts: str, info: ValidationInfo) -> datetime:
+        if info.context is None:
+            raise ValueError("no context")
+        return datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(
+            tzinfo=info.context["tz"]
+        )
+
+    @field_validator("value", mode="after")
+    @classmethod
+    def convert_datum(cls, tide: float, info: ValidationInfo) -> float:
+        if info.context is None:
+            raise ValueError("no context")
+        convert: Callable[[float], float] = info.context["to_mllw"]
+        return convert(tide)
+
+
+class HiloPrediction(Prediction):
+    # A single High/Low prediction
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    type: Literal["H", "L"]
+
+
+class PredictionList(BaseModel):
+    # Model to represent contents of json payload returned from 15-min api
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    predictions: list[Prediction]
+
+
+class HiloPredictionList(BaseModel):
+    # Model to represent contents of json payload returned from high/low api
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    predictions: list[HiloPrediction]
+
 
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
@@ -90,10 +145,10 @@ def get_15m_astro_tides(
         return reg_preds_dict
 
     else:
-        pred_json = pull_data(noaa_station_id, "15", timeline)
-        # print("15-MIN:")
-        # print(pred_json)
-        return pred15_json_to_dict(pred_json, timeline, navd88_func)
+        json_dict = pull_raw_json(noaa_station_id, "15", timeline)
+        json_error_check(json_dict)
+        predlist = validate_15m(json_dict, timeline, navd88_func)
+        return pred15_json_to_dict(predlist, timeline)
 
 
 def get_hilo_astro_tides(
@@ -149,46 +204,36 @@ def get_hilo_astro_tides(
         return data
 
     else:
-        future_preds_json = pull_data(noaa_station_id, "hilo", timeline)
-        # print("HILO:")
-        # print(future_preds_json)
-        return hilo_json_to_dict(future_preds_json, timeline, navd88_func)
+        json_dict = pull_raw_json(noaa_station_id, "hilo", timeline)
+        json_error_check(json_dict)
+        predlist = validate_hilo(json_dict, timeline, navd88_func)
+        return hilo_json_to_dict(predlist, timeline)
 
 
 def pred15_json_to_dict(
-    pred_json: list[dict[str, str]],
+    predlist: PredictionList,
     timeline: Timeline,
-    navd88_func: Callable[[float], float],
 ) -> dict[datetime, float]:
     """
-    Given a list of NAVD88 feet predictions at 15-min intervals like { "t": "2025-05-06 01:00", "v": "-3.624" },
+    Given a PredictionList with cooked data (right timezone & values in MLLW),
     return a sparse dict of {dt: value} for all times that exist in the timeline.  Converts values to
     MLLW per the callback param. Assumes datetimes are in the timezone of the timeline.
     """
     reg_preds_dict: dict[datetime, float] = {}  # {dt: value}
-    if len(pred_json) == 0:
-        return reg_preds_dict
-    for pred in pred_json:
-        dts = pred["t"]
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
-        if timeline.contains(dt):
-            val = pred["v"]
-            reg_preds_dict[dt] = navd88_func(float(val))
+    if len(predlist.predictions) > 0:
+        for pred in predlist.predictions:
+            if timeline.contains(pred.timestamp):
+                reg_preds_dict[pred.timestamp] = pred.value
     return reg_preds_dict
 
 
 def hilo_json_to_dict(
-    hilo_json: list[dict[str, str]],
+    predlist: HiloPredictionList,
     timeline: Timeline,
-    navd88_func: Callable[[float], float],
 ) -> dict[datetime, PredictedHighOrLow]:
     """
-    Convert json returned from the api call into a dict of high or low data values.
-    Args:
-        hilo_json (string): json content: list of high/low predictions like
-            {"t":"2027-01-01 04:25", "v":"-4.618", "type":"L"}
-        tzone: timezone of the station
-
+    Given a HiloPredictionList with cooked data (right timezone & values in MLLW),
+    build a dict that can be used to build a plot for the timeline.
     Returns:
         A sparse dict of {timeline_dt: PredictedHighOrLow} for all values that exist in the requested timeline.
         Converts tide values to MLLW per the parameter and builds time-aware datetimes in the timeline's timezone.
@@ -196,32 +241,25 @@ def hilo_json_to_dict(
     Raises:
         APIException: Invalid data from API
     """
-    future_hilo_dict: dict[datetime, PredictedHighOrLow] = {}  # {dt: value}
-    if len(hilo_json) == 0:
-        return future_hilo_dict
-    for pred in hilo_json:
-        dts = pred["t"]
-
-        dt = datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(tzinfo=timeline.time_zone)
-
-        if timeline.contains(dt):
-            val = pred["v"]
-            if pred["type"] not in ["H", "L"]:
-                logger.error("Unknown type %s for date %s", pred["type"], dts)
-                continue
-            hilo = Hilo.HIGH if pred["type"] == "H" else Hilo.LOW
-            # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
-            future_hilo_dict[util.round_to_quarter(dt)] = PredictedHighOrLow(
-                navd88_func(float(val)), hilo, dt
-            )
+    future_hilo_dict: dict[
+        datetime, PredictedHighOrLow
+    ] = {}  # {dt: PredictedHighOrLow}
+    if len(predlist.predictions) > 0:
+        for pred in predlist.predictions:
+            if timeline.contains(pred.timestamp):
+                hilo = Hilo.HIGH if pred.type == "H" else Hilo.LOW
+                # Note the key is the 15-min time, to match the timeline. The actual datetime is in real_dt
+                future_hilo_dict[util.round_to_quarter(pred.timestamp)] = (
+                    PredictedHighOrLow(pred.value, hilo, pred.timestamp)
+                )
 
     return future_hilo_dict
 
 
 @util.request_logger
-def pull_data(
+def pull_raw_json(
     noaa_station_id: str, interval: str, timeline: Timeline
-) -> list[dict[str, str]]:
+) -> dict[str, Any]:
     """Call the tides&currents API, using:
         - time_zone=lst_ldt
         - datum=NAVD, which means the data will be in NAVD88 feet.
@@ -262,16 +300,34 @@ def pull_data(
         base_url, params=base_params | params, timeout=_request_timeout_seconds
     )
     response.raise_for_status()
-    return extract_json(response.text)
+    d: dict[str, Any] = json.loads(response.text)
+    return d
 
 
-def extract_json(raw: str) -> list[dict[str, str]]:
-    """Convert the response to a json list."""
+def validate_15m(
+    json_dict: dict[str, Any], timeline: Timeline, mllw_func: Callable[[float], float]
+) -> PredictionList:
+    """Convert the response to a PredictionList."""
 
-    json_dict = json.loads(raw)
+    return PredictionList.model_validate(
+        obj=json_dict,
+        context={"tz": timeline.time_zone, "to_mllw": mllw_func},
+    )
+
+
+def validate_hilo(
+    json_dict: dict[str, Any], timeline: Timeline, mllw_func: Callable[[float], float]
+) -> HiloPredictionList:
+    """Convert the response to a HiloPredictionList."""
+
+    return HiloPredictionList.model_validate(
+        obj=json_dict,
+        context={"tz": timeline.time_zone, "to_mllw": mllw_func},
+    )
+
+
+def json_error_check(json_dict: dict[str, Any]) -> None:
     # This is what content may look like if it's an invalid request.
     #  {"error": {"message":"No Predictions data was found. Please make sure the Datum input is valid."}}
     if "error" in json_dict:
         raise util.InternalError(f"found in returned json: {json_dict['error']}")
-
-    return json_dict["predictions"]

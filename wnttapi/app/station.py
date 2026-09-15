@@ -11,6 +11,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     ValidationError,
 )
 
@@ -53,11 +54,10 @@ class Station(BaseModel):
         return round(nav_feet + self.navd88_to_mllw_conversion, 2)
 
 
-class AllStationsRecord(BaseModel):
+class AllStationsRecord(RootModel[dict[str, Station]]):
     """This class maps the station json file and provides validation"""
 
     model_config = ConfigDict(frozen=True)
-    data: dict[str, Station]
 
 
 # Get a Station object for a given station id.  The station id is actually the water quality station id,
@@ -116,7 +116,7 @@ def get_all_stations(
     force_reload: bool = False,
 ) -> dict[str, Station]:
     """Get the cached stations, or load them from the json file if not cached yet."""
-    data = cache.get(stations_cls_cache_key)
+    data: dict[str, Station] = cache.get(stations_cls_cache_key)
     if data is not None and not force_reload:
         return data
 
@@ -125,13 +125,14 @@ def get_all_stations(
 
     try:
         allStations = AllStationsRecord.model_validate_json(json_content, strict=True)
+        data = allStations.root
         cache.set(
-            stations_cls_cache_key, allStations.data, timeout=None
+            stations_cls_cache_key, data, timeout=None
         )  # Cache for as long as the server is running
         logger.debug(
-            f"Loaded {len(allStations.data)} stations from disk and cached with key {stations_cls_cache_key}"
+            f"Loaded {len(allStations.root)} stations from disk and cached with key {stations_cls_cache_key}"
         )
-        return allStations.data
+        return data
     except ValidationError as ve:
         raise util.InternalError("Station json validation error") from ve
 
@@ -141,7 +142,7 @@ def get_all_stations_api(
     file_name: str = _default_file_name,
     force_reload: bool = False,
 ) -> dict[str, dict[str, Any]]:
-    data = cache.get(stations_dict_cache_key)
+    data: dict[str, dict[str, Any]] = cache.get(stations_dict_cache_key)
     if data is not None and not force_reload:
         return data
 
@@ -152,11 +153,11 @@ def get_all_stations_api(
         allStations = AllStationsRecord.model_validate_json(json_content, strict=True)
         # Create a dict that can be returned to the api caller. We use the alias field names which are camel case
         # and use json mode so it handles the ZoneInfo.
-        stations_dict = AllStationsRecord.model_dump(
+        stations_dict: dict[str, dict[str, Any]] = AllStationsRecord.model_dump(
             allStations, by_alias=True, mode="json"
         )
-        cache.set(stations_dict_cache_key, stations_dict["data"], timeout=None)
-        return stations_dict["data"]
+        cache.set(stations_dict_cache_key, stations_dict, timeout=None)
+        return stations_dict
     except ValidationError as ve:
         raise util.InternalError("Station json validation error") from ve
 
@@ -166,7 +167,7 @@ def get_or_load_annual_highs(
 ) -> dict[str, dict[str, float]]:
     """Get the cached annual highs, or load them from the json file if not cached yet."""
     cache_key = "annual_highs_navd88"
-    data = cache.get(cache_key)
+    data: dict[str, dict[str, float]] = cache.get(cache_key)
     if data is not None:
         return data
 
