@@ -270,7 +270,7 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list[Param]) -> b
     try:
         logger.debug(f"Calling CDMO for {params} {req_start_date} to {req_end_date}")
         param_str = ",".join(p.value for p in params)
-        xml = SoapClient.get_client().service.exportAllParamsDateRangeXMLNew(
+        xml: bytes = SoapClient.get_client().service.exportAllParamsDateRangeXMLNew(
             data_station_id, req_start_date, req_end_date, param_str
         )
         return xml

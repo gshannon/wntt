@@ -43,7 +43,7 @@ def get_future_surge_data(
     noaa_station_id: str,
     surge_file_dir: str = _default_surge_file_dir,
 ) -> SurgeFileCache | None:
-    """Get a dense dict of future storm surge data for all possible timeline datetimes. These are
+    """Get future storm surge data for all possible timeline datetimes. These are
     extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).  They only
     publish about 4 days of it, so don't bother looking if the timeline is too far in the future.
 
@@ -110,23 +110,12 @@ def get_or_load_projected_surge_file(
         timeline (Timeline): The timeline for which to calculate surge values.
         surge_file_dir (str, optional): for testing, use to override standard surge file location.
 
-    Returns: an object with
-        "filedate": filedate string,
-        "cycle": cycle int,
-        "created_at": file download datetime,
-        "surges": { <dt>: <surge> }
+    Returns: SurgeFileCache object
     """
     logger.debug(f"looking in surge cache for station {noaa_station_id}...")
 
     # pull the existing cache value, if any
-    entry = cache.get(noaa_station_id)
-    if entry is not None:
-        logger.debug(
-            f"cache exists for {noaa_station_id} filedate {entry.filedate}, cycle {entry.cycle}"
-        )
-    else:
-        logger.debug("nothing in cache")
-
+    entry: SurgeFileCache | None = cache.get(noaa_station_id)
     fileinfo: SurgeFileInfo | None = get_latest_file_info(
         noaa_station_id, surge_file_dir
     )
@@ -140,8 +129,9 @@ def get_or_load_projected_surge_file(
                 noaa_station_id,
             )
             return None
-        logger.error(f"No file for {noaa_station_id}, forced to use cache")
-        return entry
+        else:
+            logger.error(f"No file for {noaa_station_id}, forced to use cache")
+            return entry
 
     # We have a file. If we also have a cache entry, return the cache if the file isn't newer.
     if entry is not None:
