@@ -129,10 +129,11 @@ docker build --platform=linux/amd64 \
 
     {
         "welinwq": {
+            "id": "welinwq",
             "timeZone": "US/Eastern",
             "reserveName": "Wells",
             "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
-            "waterStationName": "Inlet",
+            "waterStationName": "Wells Harbor",
             "weatherStationId": "wellfmet",
             "weatherStationName": "Laudholm Farm",
             "noaaStationId": "8419317",
@@ -144,8 +145,8 @@ docker build --platform=linux/amd64 \
             "navd88ToMllwConversion": 5.14,
             "meanHighWaterMllw": 9.13,
             "mapBounds": [
-                [44.01, -70.73],
-                [43.01, -69.8]
+                [43.412, -70.73],
+                [43.194, -70.41]
             ],
             "swmpLocation": {
                 "lat": 43.320089,
@@ -155,8 +156,9 @@ docker build --platform=linux/amd64 \
                 "lat": 43.33738,
                 "lng": -70.54944
             },
-            "recordTideNavd88": 8.13,
-            "recordTideDate": "2024-1-13",
-        }
+            "recordTideNavd88": 9.25,
+            "recordTideDate": "2024-01-13",
+            "minDateOverride": null
+        },
         [, ... ]
     }

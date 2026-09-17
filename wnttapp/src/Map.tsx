@@ -272,6 +272,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                         <MapContainer
                             center={mapCenter ?? station.swmpLocation}
                             boundsOptions={{ maxZoom: mu.MaxZoom }}
+                            maxBounds={station.mapBounds}
                             zoom={zoom ?? mu.DefaultMapZoom}>
                             <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
                             <ChangeView
@@ -364,8 +365,8 @@ const instructions = (ctx: AppContextValue, pendingElevationNav: number | null) 
             <>
                 <p>
                     Your chosen elevation is{' '}
-                    <b>{station.navd88ToMllw(ctx.customElevationNav)} ft</b> MLLW. You may
-                    change it by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
+                    <b>{station.navd88ToMllw(ctx.customElevationNav)} ft</b> MLLW. You may change it
+                    by <b>clicking on the map</b>, <b>dragging the pin</b>, or{' '}
                     <b>looking up an address</b>.
                 </p>{' '}
                 {cleartext()}
