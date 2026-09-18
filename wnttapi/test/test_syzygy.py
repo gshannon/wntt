@@ -3,12 +3,14 @@ import test._bootstrap as boot
 
 from datetime import date, datetime
 from unittest import TestCase
+from django.core.cache import cache
 
 from app.datasource import syzygy
 import app.tzutil as tz
 from app.timeline import GraphTimeline
 
 csv_location = f"{boot.test_data_dir}/../../../datamount/syzygy"
+bad_location = "/no-such-directory"
 
 
 class TestSyzygy(TestCase):
@@ -38,8 +40,17 @@ class TestSyzygy(TestCase):
         }
         self.assertEqual(data, expected)
 
-    def test_timeline_syzygy(self):
-        """Able to get all syzygy data for a timeline from JSON data"""
+    def test_current_moon_phases_error_does_not_raise(self):
+        """Able to get current phases of moon from cvs data"""
+        cache.clear()
+        data = syzygy.get_current_moon_phases(tzone=tz.eastern, data_dir=bad_location)
+        self.assertEqual(
+            data,
+            {"current": None, "currentdt": None, "nextphase": None, "nextdt": None},
+        )
+
+    def test_full_syzygy(self):
+        """Able to get all syzygy data for a timeline"""
         zone = tz.eastern
         start_date = date(2026, 1, 1)
         end_date = date(2026, 1, 4)
@@ -62,6 +73,13 @@ class TestSyzygy(TestCase):
         ]
         self.assertEqual(data, expected)
 
+    def test_full_syzygy_failure_does_not_raise(self):
+        """Failure while getting all syzygy data for a timeline does not raise exception"""
+        cache.clear()
+        timeline = GraphTimeline(date(2026, 1, 1), date(2026, 1, 4), tz.eastern)
+        data = syzygy.get_syzygy_data(timeline, data_dir=bad_location)
+        self.assertEqual(data, [])
+
     def test_perigee_over_year(self):
         """Able to get perigee over year boundary"""
         zone = tz.eastern
@@ -70,6 +88,15 @@ class TestSyzygy(TestCase):
         timeline = GraphTimeline(start_date, end_date, zone)
         expected = datetime(2026, 1, 1, 16, 45, tzinfo=zone)
         self.assertEqual(expected, syzygy.get_perigee(timeline, csv_location))
+
+    def test_perigee_failure_does_not_raise(self):
+        cache.clear()
+        zone = tz.eastern
+        start_date = date(2026, 1, 1)
+        end_date = date(2026, 1, 4)
+        timeline = GraphTimeline(start_date, end_date, zone)
+        perigee_times = syzygy.get_perigee(timeline=timeline, data_dir=bad_location)
+        self.assertIsNone(perigee_times)
 
     def test_perihelion_over_year(self):
         """Able to get perihelion over year boundary"""
