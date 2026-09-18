@@ -60,7 +60,8 @@ There are several events which require action.
 1. At end of year, check the astrotide15 and astrotidehilo tables in the database and make sure the new year is covered. As of now we are good through 2033.
 1. When a new NTDE (National Tidal Datum Epoch) is released, update all navd88ToMllwConversion values for all stations in stations.json.
 1. If a new record high tide occurs at any station, update recordTideNavd88 and recordTideDate in stations.json.
-1. Optional: Old data may be purged from the sqlite database -- astrotide15, astrotidehilo, water & wind.
+1. Populate future years of syzygy data as needed.
+1. Optional: Data no longer displayable may be purged from the sqlite database -- astrotide15, astrotidehilo, water & wind.
 
 ## Configuration
 

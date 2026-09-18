@@ -34,6 +34,7 @@ def get_current_moon_phases(
 
     Returns:
         dict: {"current": "phase", currentdt: datetime, "nextphase": "phase", "nextdt": datetime}
+            Will be empty if there's a data loading error.
     """
     current_phase_code = None
     current_phase_utc = None
@@ -46,7 +47,7 @@ def get_current_moon_phases(
 
     now_utc = now.astimezone(utc)
 
-    data: dict[datetime, str] = get_or_load_phase_data(data_dir)
+    data: dict[datetime, str] = get_moon_phase_data(data_dir)
 
     for dt, code in data.items():
         if dt <= now_utc:
@@ -109,10 +110,10 @@ def get_moon_phase(
         timeline: we are looking for a phase start within this timeline
 
     Returns:
-        <phase-name>, <phase-datetime>
+        tuple(phase-name, phase-datetime) or None
     """
 
-    data = get_or_load_phase_data(data_dir)
+    data = get_moon_phase_data(data_dir)
 
     for utc, code in data.items():
         if timeline.contains(utc):
@@ -127,8 +128,8 @@ def get_perigee(
     timeline: GraphTimeline, data_dir: str = _default_file_dir
 ) -> datetime | None:
     """Get the datetime of the Perigee that occurs in this timeline, if any."""
-    data = get_or_load_datetime_data("perigee", data_dir)
-    for utc in data:
+    all_times = get_type_times("perigee", data_dir)
+    for utc in all_times:
         if timeline.contains(utc):
             return utc.astimezone(timeline.time_zone)
         if utc > timeline.end_dt:
@@ -140,7 +141,7 @@ def get_perihelion(
     timeline: GraphTimeline, data_dir: str = _default_file_dir
 ) -> datetime | None:
     """Get the datetime of the Perihelion that occurs in this timeline, if any."""
-    data = get_or_load_datetime_data("perihelion", data_dir)
+    data = get_type_times("perihelion", data_dir)
     for utc in data:
         if timeline.contains(utc):
             return utc.astimezone(timeline.time_zone)
@@ -149,17 +150,15 @@ def get_perihelion(
     return None
 
 
-def get_or_load_datetime_data(
-    type: str, data_dir: str = _default_file_dir
-) -> list[datetime]:
-    """Get from cache a list of datetimes. Load from disk to cache first if necessary."""
+def get_type_times(type: str, data_dir: str = _default_file_dir) -> list[datetime]:
+    """Get from cache a list of datetimes for an event type. Load from disk to cache first if necessary."""
     cache_key = f"{type}_data"
-    data: list[datetime] | None = cache.get(cache_key)
-    if data is not None:
+    all_times: list[datetime] | None = cache.get(cache_key)
+    if all_times is not None:
         logger.debug(f"Cache hit for {cache_key}")
-        return data
+        return all_times
 
-    data = []
+    all_times = []
     filepath = f"{data_dir}/{type}.csv"
 
     try:
@@ -167,18 +166,25 @@ def get_or_load_datetime_data(
             reader = csv.reader(csvfile)
             for row in reader:
                 dt_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M").replace(tzinfo=utc)
-                data.append(dt_utc)
+                all_times.append(dt_utc)
 
-        logger.debug(f"Loaded {len(data)} {type} entries from {filepath}")
-        cache.set(cache_key, data, timeout=None)  # unlimited timeout
-        return data
+        logger.debug(f"Loaded {len(all_times)} {type} entries from {filepath}")
+        cache.set(cache_key, all_times, timeout=None)  # unlimited timeout
+        return all_times
 
-    except Exception as e:
-        raise util.InternalError(f"Got {e} processing {filepath}") from None
+    except Exception as e:  # noqa
+        logger.error(
+            f"exception loading {type} data from {filepath}",
+            stack_info=False,
+        )
+        sentry_sdk.capture_exception(e)
+        return all_times
 
 
-def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict[datetime, str]:
-    """Get from cache a dict of moon phases. Load from disk to cache first if necessary."""
+def get_moon_phase_data(data_dir: str = _default_file_dir) -> dict[datetime, str]:
+    """Get from cache a dict of moon phases. Load from disk to cache first if necessary.
+    Returns a dict
+    """
     cache_key = "phase_data"
     data: dict[datetime, str] | None = cache.get(cache_key)
     if data is not None:
@@ -204,5 +210,10 @@ def get_or_load_phase_data(data_dir: str = _default_file_dir) -> dict[datetime, 
         cache.set(cache_key, data, timeout=None)  # unlimited timeout
         return data
 
-    except Exception as e:
-        raise util.InternalError(f"Got {e} processing {filepath}") from None
+    except Exception as e:  # noqa
+        logger.error(
+            f"exception loading moon phases from {filepath}",
+            stack_info=False,
+        )
+        sentry_sdk.capture_exception(e)
+        return data
