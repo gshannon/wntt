@@ -1,6 +1,9 @@
 # Download latest NOAA surge predictions, approx 30 min after the usual publish time.
+45 */2 * * * /home/tides/bin/pull-surge-data >> /var/log/wntt/cron.log 2>&1
 
-#45 0,6,12,18 * * * /home/tides/bin/pull-surge-data >> /home/tides/cron.log 2>&1
-45 */2 * * * /home/tides/bin/pull-surge-data >> /home/tides/cron.log 2>&1
+# These are the times data normally is available for wind and tides
+21 * * * * /home/tides/bin/refresh-cdmo-data -t W -x >> /var/log/wntt/cron.log 2>&1
+35 * * * * /home/tides/bin/refresh-cdmo-data -t T -x >> /var/log/wntt/cron.log 2>&1
 
-10,40 * * * * /home/tides/bin/refresh-cdmo-data >> /home/tides/cron.log 2>&1
+# Backup the database daily
+0 1 * * * /home/tides/bin/db-backup >> /var/log/wntt/cron.log 2>&1
