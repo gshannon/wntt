@@ -12,6 +12,7 @@ The main technical features are:
 
 - A React front end with Nginx reverse proxy
 - A Python service (wnttapi) in a Django framework, with Gunicorn HTTP/WSGI server
+- The service uses a sqlite3 database to track usage history and cache data
 - Both apps are built into Docker images, stored at DockerHub
 - Docker images are deployed to hosting provider
 - Each image is run in a separate Docker container
@@ -19,7 +20,7 @@ The main technical features are:
 
 ## Runtime Data
 
-On the hosting server there is a directory that is mounted by the API Docker container which contains configuration and astronomical data files required by the application. See the _volumes_ section in docker-compose.yml for the definition. These files can be edited on the server and then put into immediate use by by restarting the API.
+On the hosting server there is a directory that is mounted by the API Docker container which contains configuration and astronomical data files required by the application. See the _volumes_ section in docker-compose.yml for the definition. This data is stored in files rather than the database to make it easier to periodically add or delete data without interacting with the database, since the changes will need to occur so rarely. The files can be edited on the server and then put into immediate use by by restarting the API.
 
 - stations/
     - stations.json - configuration details of all supported SWMP stations. See below for details.

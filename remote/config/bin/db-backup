@@ -1,0 +1,45 @@
+#!/bin/bash
+
+#
+# Back up a SQLite3 database using VACUUM INTO and keep only the newest N backups.
+# Intended to be run daily from cron.
+
+set -euo pipefail
+
+# ---- Configuration ---------------------------------------------------------
+DB_PATH="$HOME/datamount/db/wntt.sqlite3"     # database to back up
+BACKUP_DIR="$HOME/backups"   # where backups are written
+KEEP=5                       # number of backups to retain
+# ----------------------------------------------------------------------------
+
+if [[ ! -f "$DB_PATH" ]]; then
+    echo "error: database not found: $DB_PATH" >&2
+    exit 1
+fi
+
+mkdir -p "$BACKUP_DIR"
+
+db_name="$(basename "$DB_PATH")"
+prefix="${db_name%.*}"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+backup_file="$BACKUP_DIR/${prefix}-${timestamp}.db"
+tmp_file="${backup_file}.tmp"
+
+# Never leave a partial temp file behind if the backup fails or is interrupted.
+trap 'rm -f "$tmp_file"' EXIT
+
+# VACUUM INTO requires that the target not already exist. Double any single
+# quotes in the path so it is safe inside the SQL string literal.
+sq="'"
+sql_path="${tmp_file//$sq/$sq$sq}"
+sqlite3 "$DB_PATH" "VACUUM INTO '${sql_path}';"
+mv "$tmp_file" "$backup_file"
+
+# Prune: keep the newest $KEEP backups for this database, delete the rest.
+# Timestamped names sort chronologically, so a name sort is enough.
+find "$BACKUP_DIR" -maxdepth 1 -type f -name "${prefix}-*.db" -print0 \
+    | sort -z \
+    | head -z -n "-${KEEP}" \
+    | xargs -0 -r rm -f --
+
+echo "$(date +'%Y-%m-%d %H:%M:%S') backup ok: $backup_file"
