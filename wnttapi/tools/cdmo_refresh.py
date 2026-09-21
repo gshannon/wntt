@@ -92,9 +92,9 @@ def get_timeline(station) -> Timeline:
     return timeline
 
 
-def getDumpPath(type):
+def getDumpPath(type, adhoc: bool = False):
     fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
-    dirname = date.today().strftime("%Y%m%d")  # noqa
+    dirname = "adhoc" if adhoc else date.today().strftime("%Y%m%d")  # noqa
 
     if nocontainer:
         dirpath = f"../data/cdmo/{dirname}"
@@ -132,13 +132,14 @@ def refresh(
         + f"{timeline.start_dt.strftime('%Y-%m-%d %H:%M')} - {timeline.end_dt.strftime('%Y-%m-%d %H:%M:00')}"
     )
 
+    savePath = None
+    if args.xmlsave:
+        savePath = getDumpPath(type)
+    elif args.xmladhoc:
+        savePath = getDumpPath(type, adhoc=True)
+
     if type == "T":
-        tides = cdmo.get_water_data(
-            station,
-            timeline,
-            useDb=False,
-            savePath=getDumpPath(type) if args.xmlsave else None,
-        )
+        tides = cdmo.get_water_data(station, timeline, useDb=False, savePath=savePath)
 
         diffs = None
         if tides is not None and len(tides) > 0:
@@ -347,6 +348,13 @@ def build_parser():
         required=False,
         action="store_true",
         help="Save all xml files",
+    )
+    parser.add_argument(
+        "-X",
+        "--xmladhoc",
+        required=False,
+        action="store_true",
+        help="Save all xml files to adhoc folder",
     )
     return parser
 

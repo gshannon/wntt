@@ -29,7 +29,7 @@ disallow_untyped_defs = false
 # "test" is in `include` so Pylance treats the test files as part of the project
 # (go-to-definition / hover into `app/` works from them); "ignore" then suppresses
 # type-diagnostics for that dir so test code doesn't sprout squiggles.
-include = ["app", "project", "tools", "test"]
+include = ["app", "project", "test"]
 # ignore = ["test"]
 exclude = ["**.migrations", "**/__pycache__", ".venv"]
 typeCheckingMode = "basic"
