@@ -47,22 +47,23 @@ def get_water_data(
     savePath: str | None = None,
 ) -> dict[datetime, Tide]:
     """
-    For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
+    For the given datetime range, get a dense dict of data from CDMO.
 
     Paramters:
     station (Station): the station object
     timeline (Timeline): the timeline of datetimes to fetch data for
     useDb: use database instead of calling API; can be overridden with FORCE_API_CDMO env setting
-    savePath: optional pathname to save the xml
+    savePath: optional pathname to save the xml, ignored if useDb = True
 
     Returns:
-    dict of {dt: Tide}
+    dict of {datetime: Tide}
     """
     tides: dict[datetime, Tide] = {}
 
     if timeline.is_all_future():
         return tides
 
+    # This env variable can be set to "1" to force useDb to False, in case the db is corrupt or down.
     force_api = os.environ.get("FORCE_API_CDMO", "0") == "1"
     if force_api:
         logger.warning("Forced to use API for CDMO data!")
@@ -98,7 +99,7 @@ def get_water_data(
         logger.debug(
             f"station.id={station.id} pulling {WATER_PARAMS} for {timeline.start_dt} to {timeline.end_dt} from cdmo"
         )
-        reverse_tides = get_cdmo_tide(timeline, station, savePath=savePath)
+        reverse_tides = get_cdmo_tides(timeline, station, savePath=savePath)
         # Before returning, sort by datetime, since cdmo returns most recent data first.
         tides = dict(sorted(reverse_tides.items()))
         logger.debug(f"Total water data points: {len(tides)}")
@@ -113,7 +114,7 @@ def get_wind_data(
     savePath: str | None = None,
 ) -> dict[datetime, Wind]:
     """
-    For the given list of timezone-aware datetimes, get a dense dict of data from CDMO.
+    For the given datetime range, get a dense dict of data from CDMO.
 
     Args:
     station (Station): the station object
@@ -122,7 +123,7 @@ def get_wind_data(
     savePath: optional pathname to save the xml
 
     Returns:
-    - dict of {datetime: Wind}, which may contain no data.
+    - dict of {datetime: Wind}, which may be empty.
     """
 
     winds: dict[datetime, Wind] = {}
@@ -131,6 +132,7 @@ def get_wind_data(
     if timeline.is_all_future():
         return winds
 
+    # This env variable can be set to "1" to force useDb to False, in case the db is corrupt or down.
     force_api = os.environ.get("FORCE_API_CDMO", "0") == "1"
     if force_api:
         logger.warning("Forced to use API for CDMO data!")
@@ -172,15 +174,11 @@ def get_wind_data(
     return winds
 
 
-def get_cdmo_tide(
+def get_cdmo_tides(
     timeline: Timeline, station: Station, savePath: str | None = None
 ) -> dict[datetime, Tide]:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
-    As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
-    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
-    data points starting from the oldest data, not the latest.  So care should be taken not to ask for too much,
-    else data at the beginning of the graph will be missing.
 
     Parameters:
     - timeline: list of datetime representing what will be displayed on the graph
@@ -190,9 +188,6 @@ def get_cdmo_tide(
     - dict of {dt: Tide}
 
     """
-    if station is None:
-        raise util.InternalError("station is required")
-
     # validate that timeline datetimes are on 15-minute intervals and seconds=0
     if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
         # CDMO data is always on 15-minute intervals.
@@ -213,10 +208,6 @@ def get_cdmo_wind(
 ) -> dict[datetime, Wind]:
     """
     Get XML data from CDMO, parse it, convert to requested timezone.
-    As of Feb 2024, these CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
-    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
-    data points starting from the oldest data, not the latest.  So care should be taken not to ask for too much,
-    else data at the beginning of the graph will be missing.
 
     Parameters:
     - timeline: list of datetime representing what will be displayed on the graph
@@ -226,9 +217,6 @@ def get_cdmo_wind(
     - dict of {datetime: Wind}, which may be empty.
 
     """
-    if station is None:
-        raise util.InternalError("station is required")
-
     # validate that timeline datetimes are on 15-minute intervals and seconds=0
     if timeline.start_dt.minute % 15 > 0 or timeline.start_dt.second > 0:
         # CDMO data is always on 15-minute intervals.
@@ -246,6 +234,10 @@ def get_cdmo_wind(
 def get_cdmo_xml(timeline: Timeline, station: Station, params: list[Param]) -> bytes:
     """
     Retrieve CDMO data as requested. Returns the xml returned from CDMO as a string.
+    As of Feb 2024, CDMO endpoints will return a maximum of 1000 data points. At 96 points per day (4 per hour),
+    that's about 10.5 days. Therefore, no more than 10 days should be requested.  If you ask for more, CDMO truncates
+    data points starting from the oldest data, not the latest.  So care should be taken not to ask for too much,
+    else data at the beginning of the graph will be missing.
 
     Parameters:
     - timeline: list of datetime representing what will be displayed on the graph
@@ -255,14 +247,16 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list[Param]) -> b
     Returns:
     - XML as bytes
     """
-    # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
     use_padding = Param.LevelNav in params and isinstance(timeline, GraphTimeline)
 
+    # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
     req_start_date, req_end_date = compute_cdmo_request_dates(
         timeline.get_min(use_padding), timeline.get_max(use_padding)
     )
 
+    # Determine which station id to use -- the id of either the station's swmp station or the weather station.
+    # Note that station.id is the swmp station id.
     data_station_id = (
         station.id if Param.LevelNav in params else station.weather_station_id
     )
@@ -295,7 +289,7 @@ def parse_cdmo_tides_xml(
     - xml: tide data xml from cdmo
 
     Returns:
-    - dict of {dt: Tide}
+    - dict of {datetime: Tide}
 
     """
     tides: dict[datetime, Tide] = {}
@@ -304,17 +298,16 @@ def parse_cdmo_tides_xml(
         return tides
 
     # We need to pull data for the padded timeline, for hi/lo functionality, not just
-    # display times. No sense looking for future, these are observations. If asking for
-    # tide level, we need a padded timeline to identify highs and lows that are near the edges of the timeline.
+    # display times. No sense looking for future, these are observations.
     past_timeline = timeline.get_all_past(padded=isinstance(timeline, GraphTimeline))
 
-    root = ElTree.fromstring(xml)  # ElementTree.Element
-    text_error_check(root)
+    root = ElTree.fromstring(xml)
+    ensure_no_text(root)
     records = ignored = none_or_bad = 0
-    for reading in root.findall(".//data"):  # use XPATH to dig out our data points
+    for record in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
-        # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
-        date_str = reading.findtext("./utcStamp")
+        # we use <utcStamp>, not <DateTimeStamp> because the latter is in LST, not sensitive to DST.
+        date_str = record.findtext("./utcStamp")
         try:
             dt_in_local = (
                 datetime.strptime(date_str or "", "%m/%d/%Y %H:%M")
@@ -326,23 +319,21 @@ def parse_cdmo_tides_xml(
             logger.error(f"Skipping due to bad or missing utcStamp: [{date_str}]")
             continue
 
-        # Since we query more data than we need, only save the data that is in the requested timeline.
-        # For GraphTimeline's, this includes any padded times for hi/lo functionality.
+        # Since we are usually forced to query more data than we need, only save the data that is in the
+        # requested timeline. For GraphTimeline's, this includes any padded times for hi/lo functionality.
         if dt_in_local not in past_timeline:
             ignored += 1
             continue
 
         # Extract and convert all the params we're looking for.
-        temp_c = handle_float(reading, Param.Temperature.value, False, dt_in_local)
-        level_nav_meters = handle_float(
-            reading, Param.LevelNav.value, True, dt_in_local
-        )
+        temp_c = handle_float(record, Param.Temperature.value, False, dt_in_local)
+        level_nav_meters = handle_float(record, Param.LevelNav.value, True, dt_in_local)
         if level_nav_meters is None:
             none_or_bad += 1
             continue
 
         corrected_level_nav_meters = handle_float(
-            reading,
+            record,
             Param.CorrectedLevelNav.value,
             True,
             dt_in_local,
@@ -384,12 +375,12 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
     past_timeline = timeline.get_all_past(False)
 
     root = ElTree.fromstring(xml)  # ElementTree.Element
-    text_error_check(root)
+    ensure_no_text(root)
     records = ignored = none_or_bad = 0
-    for reading in root.findall(".//data"):  # use XPATH to dig out our data points
+    for record in root.findall(".//data"):  # use XPATH to dig out our data points
         records += 1
         # we use utcStamp, not the DateTimeStamp because the latter is in LST, not sensitive to DST.
-        date_str = reading.findtext("./utcStamp")
+        date_str = record.findtext("./utcStamp")
         try:
             dt_in_local = (
                 datetime.strptime(date_str or "", "%m/%d/%Y %H:%M")
@@ -407,10 +398,10 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
             continue
 
         # Extract and convert all the params we're looking for.
-        wind_speed_mph = handle_windspeed(reading, Param.WindSpeed.value, dt_in_local)
-        wind_gust_mph = handle_windspeed(reading, Param.WindGust.value, dt_in_local)
+        wind_speed_mph = handle_windspeed(record, Param.WindSpeed.value, dt_in_local)
+        wind_gust_mph = handle_windspeed(record, Param.WindGust.value, dt_in_local)
         wind_direction_deg = handle_wind_degrees(
-            reading, Param.WindDir.value, dt_in_local
+            record, Param.WindDir.value, dt_in_local
         )
         if (
             wind_speed_mph is None
@@ -434,9 +425,9 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
     return winds
 
 
-def text_error_check(rootElement: ElTree.Element) -> None:
-    """If a node is not supposed to have text, return that text, else None
-    This is how CDMO returns an error e.g. Invalid IP address.
+def ensure_no_text(rootElement: ElTree.Element) -> None:
+    """The root node is not supposed to have text, so if it does, we assume it's an error message since
+    that's how CDMO does it. e.g., "Invalid IP address"
     """
     text: str | None = rootElement.findtext(".//data")
     try:
@@ -456,10 +447,10 @@ def compute_cdmo_request_dates(
     does not honor DST, so we may have to adjust the start date and/or the end date, to avoid missing data
     or getting too much data. We depend on the timeline being chronologically ordered. Here is the logic:
 
-    - Start date: If timeline starts in standard time, no change.  Else if timeline starts in DST and
+    - Start date: If timeline starts in standard time, no change.  If timeline starts in DST and
     asks for anything before 01:00, we must ask for the previous day, else we'll miss that hour.
 
-    - End date: If timeline ends in standard time, no change.  Else if timeline ends in DST and asks for
+    - End date: If timeline ends in standard time, no change.  If timeline ends in DST and asks for
     only data in the first hour, we won't need that date since it will be included in data for the previous
     day, so we bump back the end date. (Note that this can never push it back before the requested
     start date. In the extreme case of asking for a single datapoint, the start date would have also been pushed

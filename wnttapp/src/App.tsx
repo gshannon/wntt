@@ -3,14 +3,13 @@ import './css/App.css'
 // uncomment to show bootstrap debug
 //import './css/bs-breakpoint.css'
 import { useEffect, useState } from 'react'
-import Top from './Top'
-import Control from './Control'
+import AppTop from './AppTop'
+import AppBottom from './AppBottom'
 import * as storage from './storage'
 import { AppContext } from './AppContext'
 import { Page, WELLS_STATION_ID } from './utils'
 import type { LatLng } from './types'
 import type Station from './Station'
-// import Station from './Station'
 import useStations from './useStations'
 import { stringify } from './utils'
 
@@ -108,8 +107,8 @@ export default function App() {
                 toggleSpecial,
             }}>
             <div className='App app-box'>
-                <Top page={curPage} gotoPage={gotoPage} />
-                <Control page={curPage} returnPage={returnPage} gotoPage={gotoPage} />
+                <AppTop page={curPage} gotoPage={gotoPage} />
+                <AppBottom page={curPage} returnPage={returnPage} gotoPage={gotoPage} />
             </div>
         </AppContext.Provider>
     )

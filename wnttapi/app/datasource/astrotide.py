@@ -21,17 +21,34 @@ from app.timeline import Timeline
 
 from ..models import AstroTide15, AstroTideHilo
 
+"""
+    Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
+        https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
+    For values, we request data in NAVD88 feet, and convert to MLLW feet using station configuration.
+    For timezones, we request lst_ldt, which returns it in the local time of the station as known to NOAA.
+    Since the times come back as strings with no TZ component, we use the timezone of the requested timeline
+    to convert the returned times into timezone-aware datetimes. Thus, for graphing, the requested timeline
+    must match the actual timezone of the station in question, and there's no way to guarantee that herein.
+    We could request the data in GMT, but that complicates the date range we request. E.g. for 
+    US/Eastern, we would never care about the first 4 or 5 hours of data returned, and we'd have to ask for 
+    an extra day to get the last 4 or 5 hours we care about. 
+
+"""
+
 
 class Prediction(BaseModel):
-    # A single 15-minute prediction
+    # Using a pydantic model for type validation when reading json from API.
+    # This class represents a single prediction
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    # The fields come in from the API labeled "t" and "v"
     timestamp: datetime = Field(alias="t")
     value: float = Field(alias="v")
 
     @field_validator("timestamp", mode="before")
     @classmethod
     def ensure_timezone(cls, dts: str, info: ValidationInfo) -> datetime:
+        # read a string, convert it to datetime in timezone from context
         if info.context is None:
             raise ValueError("no context")
         return datetime.strptime(dts, "%Y-%m-%d %H:%M").replace(
@@ -41,6 +58,7 @@ class Prediction(BaseModel):
     @field_validator("value", mode="after")
     @classmethod
     def convert_datum(cls, tide: float, info: ValidationInfo) -> float:
+        # Convert the tide level from navd88 to mllw
         if info.context is None:
             raise ValueError("no context")
         convert: Callable[[float], float] = info.context["to_mllw"]
@@ -71,19 +89,6 @@ class HiloPredictionList(BaseModel):
 logger = logging.getLogger(__name__)
 _request_timeout_seconds = 20
 
-"""
-    Access NOAA tides & currents API interface for astronomical tide predictions. For Wells, see
-        https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8419317
-    For values, we request data in NAVD88 feet, and convert to MLLW feet using station configuration.
-    For timezones, we request lst_ldt, which returns it in the local time of the station as known to NOAA.
-    Since the times come back as strings with no TZ component, we use the timezone of the requested timeline
-    to convert the returned times into timezone-aware datetimes. Thus, for graphing, the requested timeline
-    must match the actual timezone of the station in question, and there's no way to guarantee that herein.
-    We could request the data in GMT, but that complicates the date range we request. E.g. for 
-    US/Eastern, we would never care about the first 4 or 5 hours of data returned, and we'd have to ask for 
-    an extra day to get the last 4 or 5 hours we care about. 
-
-"""
 base_url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
 base_params = {
@@ -307,7 +312,7 @@ def pull_raw_json(
 def validate_15m(
     json_dict: dict[str, Any], timeline: Timeline, mllw_func: Callable[[float], float]
 ) -> PredictionList:
-    """Convert the response to a PredictionList."""
+    """Convert the json dict response to a PredictionList."""
 
     return PredictionList.model_validate(
         obj=json_dict,
@@ -318,7 +323,7 @@ def validate_15m(
 def validate_hilo(
     json_dict: dict[str, Any], timeline: Timeline, mllw_func: Callable[[float], float]
 ) -> HiloPredictionList:
-    """Convert the response to a HiloPredictionList."""
+    """Convert the json dict response to a HiloPredictionList."""
 
     return HiloPredictionList.model_validate(
         obj=json_dict,
