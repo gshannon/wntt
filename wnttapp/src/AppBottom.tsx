@@ -9,7 +9,7 @@ import { AppContext } from './AppContext'
 import ErrorBlock from './ErrorBlock'
 import type { GotoPage } from './types'
 
-export default function Control({
+export default function AppBottom({
     page,
     returnPage,
     gotoPage,

@@ -1,4 +1,4 @@
-import './css/Top.css'
+import './css/AppTop.css'
 import { Activity, useContext, useState } from 'react'
 import Container from 'react-bootstrap/Container'
 import { Row, Col } from 'react-bootstrap'
@@ -16,7 +16,7 @@ import ReserveSelect from './ReserveSelect'
 import { AppContext } from './AppContext'
 import type { GotoPage } from './types'
 
-export default function Top({ page, gotoPage }: { page: number; gotoPage: GotoPage }) {
+export default function AppTop({ page, gotoPage }: { page: number; gotoPage: GotoPage }) {
     const ctx = useContext(AppContext)
 
     const [showConditions, setShowConditions] = useState(false)
@@ -42,7 +42,9 @@ export default function Top({ page, gotoPage }: { page: number; gotoPage: GotoPa
                 <NavLink onClick={() => gotoPage(Page.About)} active={page === Page.About}>
                     About
                 </NavLink>
-                <NavDropdown title='Help' active={([Page.Glossary, Page.HelpSyzygy] as number[]).includes(page)}>
+                <NavDropdown
+                    title='Help'
+                    active={([Page.Glossary, Page.HelpSyzygy] as number[]).includes(page)}>
                     <HelpItems page={page} gotoPage={gotoPage} />
                 </NavDropdown>
             </Nav>
