@@ -23,7 +23,7 @@ export default function About() {
         <Container className='mt-3'>
             <Accordion alwaysOpen defaultActiveKey={['0']}>
                 <Accordion.Item eventKey='0'>
-                    <Accordion.Header>DISCLAIMER</Accordion.Header>
+                    <Accordion.Header>Disclaimer</Accordion.Header>
                     <Accordion.Body>
                         <div className='fw-bold'>
                             This web application gathers and collates publicly available information
@@ -42,6 +42,18 @@ export default function About() {
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey='1'>
+                    <Accordion.Header>Privacy</Accordion.Header>
+                    <Accordion.Body>
+                        No account is necessary to use this application. We do not ask for your
+                        name, email, or other personal details. No cookies are used. Your settings
+                        are saved in your browser&apos;s local storage, and your browser is assigned
+                        a random anonymous ID that we use to count usage. If you use the address
+                        search, the address you enter is sent to a third-party geocoding service to
+                        find its location, and may appear in our server logs. Error reports may be
+                        sent to a third-party monitoring service to help us fix bugs.
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey='2'>
                     <Accordion.Header>Who is this for?</Accordion.Header>
                     <Accordion.Body>
                         This is intended for the residents and property owners in the surrounding
@@ -54,7 +66,7 @@ export default function About() {
                         you are comparing apples to apples? If not, this is for you.
                     </Accordion.Body>
                 </Accordion.Item>
-                <Accordion.Item eventKey='2'>
+                <Accordion.Item eventKey='3'>
                     <Accordion.Header>Why do we need this?</Accordion.Header>
                     <Accordion.Body>
                         <p>
@@ -85,7 +97,7 @@ export default function About() {
                         </p>
                     </Accordion.Body>
                 </Accordion.Item>
-                <Accordion.Item eventKey='3'>
+                <Accordion.Item eventKey='4'>
                     <Accordion.Header>Sources</Accordion.Header>
                     <Accordion.Body>
                         <ol className='list-group list-group-numbered'>
@@ -205,6 +217,14 @@ export default function About() {
                             </li>
                             <li className='list-group-item d-flex justify-content-between align-items-start'>
                                 <div className='ms-2 me-auto'>
+                                    <div className='fw-bold'>Address Lookup</div>
+                                    <div>
+                                        <Link href='https://geocode.maps.co' text='Geocoding API' />
+                                    </div>
+                                </div>
+                            </li>
+                            <li className='list-group-item d-flex justify-content-between align-items-start'>
+                                <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>
                                         Translation of Latitude/Longitude to Elevation
                                     </div>
@@ -230,7 +250,7 @@ export default function About() {
                         </ol>
                     </Accordion.Body>
                 </Accordion.Item>
-                <Accordion.Item eventKey='4'>
+                <Accordion.Item eventKey='5'>
                     <Accordion.Header>More Information</Accordion.Header>
                     <Accordion.Body>
                         Want to see more information about sea level rise in Maine? Try these links.
