@@ -28,5 +28,7 @@ __pycache__
 __init__.py
 dist
 .DS_Store
-FileVaultMaster.*
 personal/
+datamount/
+mytools/
+node_modules
