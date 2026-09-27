@@ -276,7 +276,7 @@ def build_wind_forecast_plots(
     def callback(dt: datetime) -> tuple[float | None, int | None]:
         if isinstance(timeline, HiloTimeline) and dt not in hilo_event_dict:
             return None, None
-        if dt in forecast_dict:
+        if dt in forecast_dict and dt >= timeline.now:
             forecast = forecast_dict[dt]
             return (
                 forecast["mph"],

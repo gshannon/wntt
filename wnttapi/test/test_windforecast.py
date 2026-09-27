@@ -2,44 +2,36 @@
 import test._bootstrap as boot
 
 import json
-from datetime import date, datetime
+from datetime import datetime
 from unittest import TestCase
 
 import app.datasource.windforecast as wind
 import app.tzutil as tz
 from app import util
-from app.timeline import GraphTimeline
 
 
 class TestWindForecast(TestCase):
-    def test_forecast(self):
-        """Able to extract forecast data for the future part of a single day."""
+    def test_uncached_forecast(self):
+        """Able to extract forecast data."""
         zone = tz.eastern
-        now = datetime(2026, 2, 2, 11, 59, tzinfo=zone)
-
-        start = date(2026, 2, 2)
-        end = date(2026, 2, 2)
-        tline = GraphTimeline(start, end, zone, now)
-        forecast_window = wind.get_forecast_window(tline)
 
         raw = util.read_file(f"{boot.test_data_dir}/wind-20260202-03.json")
         contents = wind.RawForecast.model_validate(json.loads(raw)["hourly"])
 
-        result = wind.pred_json_to_dict(contents, tline, forecast_window)
-        self.assertEqual(len(result), 13)
-        self.assertEqual(len(result), len(forecast_window))
+        result = wind.pred_json_to_dict(contents, zone)
+        self.assertEqual(len(result), 48)
         self.assertEqual(
             result[min(result)],
             {
-                "mph": util.kilometers_to_miles(10.5),
-                "dir": 311,
+                "mph": util.kilometers_to_miles(21.5),
+                "dir": 325,
             },
         )
-        self.assertEqual(max(result), datetime(2026, 2, 3, 0, tzinfo=zone))
+        self.assertEqual(max(result), datetime(2026, 2, 3, 23, tzinfo=zone))
         self.assertEqual(
             result[max(result)],
             {
-                "mph": util.kilometers_to_miles(8.1),
-                "dir": 302,
+                "mph": util.kilometers_to_miles(12.6),
+                "dir": 243,
             },
         )
