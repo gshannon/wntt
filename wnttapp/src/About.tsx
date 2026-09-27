@@ -194,7 +194,13 @@ export default function About() {
                                 <div className='ms-2 me-auto'>
                                     <div className='fw-bold'>Future Storm Surge Projections</div>
                                     <div>
-                                        Storm surge projections come from{' '}
+                                        This is an experimental project and is not to be considered
+                                        a forecast. Please read{' '}
+                                        <Link
+                                            href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php'
+                                            text="NOAA's disclaimer"
+                                        />
+                                        . Storm surge projections come from{' '}
                                         <Link
                                             href={SurgeUrl}
                                             text={`Probabilistic Extra-Tropical Storm Surge (NOAA)`}

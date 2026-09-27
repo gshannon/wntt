@@ -109,9 +109,12 @@ export default function Glossary() {
                     A computer model-generated estimate of adjustments to Predicted Tide levels in
                     the near future (about 4 days), based on NOAA&apos;s{' '}
                     <Link href={SurgeUrl} text='Probabilistic Extra-Tropical Storm Surge' /> data.{' '}
-                    <b>This is an EXPERIMENTAL project and is not to be considered a forecast</b>.
-                    The data is refreshed four times a day. Please read NOAA&apos;s disclaimer{' '}
-                    <Link href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php' text='here' />
+                    <b>This is an experimental project and is not to be considered a forecast</b>.
+                    The data is refreshed four times a day. Please read{' '}
+                    <Link
+                        href='https://slosh.nws.noaa.gov/etsurge2.0/disclaimer.php'
+                        text="NOAA's disclaimer"
+                    />
                     .
                 </Entry>
                 <Entry title='Projected Storm Tide'>
