@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.datasource import address
+from app.log_config import refresh_log_levels
 
 from . import graph as gr
 from . import station as stn
@@ -32,6 +33,7 @@ def endpoint_logger(func: Callable[P, R]) -> Callable[P, R]:
 
     @functools.wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        refresh_log_levels()
         try:
             return func(*args, **kwargs)
         except NotAcceptable:

@@ -29,6 +29,3 @@ __init__.py
 dist
 .DS_Store
 personal/
-datamount/
-mytools/
-node_modules

@@ -58,6 +58,7 @@ On the hosting server there is a directory that is mounted by the API Docker con
     - perigee.csv : UTC datetimes of moon perigee for the supported date range
     - perihelion.csv : UTC datetimes of earth-sun perihelion for the supported date range
     - phases.csv : UTC datetimes and phase code (NM, FQ, FM, LQ) for moon phases in supported date range
+- log_levels.json (optional) - overrides Python logger levels, e.g. `{"app.datasource.cdmo": "DEBUG"}`. Unlike the other runtime config files, this one does not require an API restart -- it's checked on every request and takes effect within one request of being changed. If absent, the hardcoded defaults in the Django settings apply.
 
 ## Cron Jobs
 
