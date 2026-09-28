@@ -45,7 +45,7 @@ def get_future_surge_data(
 ) -> SurgeFileCache | None:
     """Get future storm surge data for all possible timeline datetimes. These are
     extracted from a csv file obtained from NOAA's NOMADS division (nomads.ncep.noaa.gov).  They only
-    publish about 4 days of it, so don't bother looking if the timeline is too far in the future.
+    publish 4 days of it, so don't bother looking if the timeline is too far in the future.
 
 
     Args:
@@ -57,9 +57,9 @@ def get_future_surge_data(
         SurgeFileCache object or None
     """
     future_surge_cache = None
-    # Don't bother looking for data more than 6 days in the future.
+    # Don't bother looking for data more than 4 days in the future.
     if timeline.end_dt >= timeline.now and timeline.start_dt < timeline.now + timedelta(
-        days=6
+        days=4
     ):
         future_surge_cache = get_or_load_projected_surge_file(
             noaa_station_id, timeline, surge_file_dir

@@ -26,11 +26,13 @@ class TestSurge(TestCase):
 
     def test_get_surge_file_info(self):
 
+        # This should find 8419317-20260703-00.csv.
+        # 8419317-20260703-00.csv is there to prove it pulls the lastest by reverse filename order.
         fileinfo = surge.get_latest_file_info(
             self.wells.noaa_station_id, f"{boot.test_data_dir}"
         )
 
-        self.assertTrue(fileinfo is not None)
+        self.assertIsNotNone(fileinfo)
         if fileinfo is not None:
             self.assertEqual(fileinfo.filedate, "20260703")
             self.assertEqual(fileinfo.cycle, 0)
@@ -42,17 +44,23 @@ class TestSurge(TestCase):
         end_dt = start_dt + timedelta(hours=4)
         timeline = Timeline(start_dt, end_dt, datetime(2026, 6, 29, tzinfo=self.tzone))
 
-        data = surge.get_future_surge_data(
+        # This should find 8419317-20260703-00.csv
+        fileinfo = surge.get_future_surge_data(
             timeline, self.wells.noaa_station_id, f"{boot.test_data_dir}"
         )
-        self.assertTrue(data is not None)
+        self.assertIsNotNone(fileinfo)
+        if fileinfo is not None:
+            self.assertTrue(fileinfo is not None)
+            self.assertEqual(fileinfo.filedate, "20260703")
+            self.assertEqual(fileinfo.cycle, 0)
+            self.assertIsNotNone(fileinfo.created_at)
 
         # matches the value at start of the hour
         next_tide_dt = datetime(2026, 6, 30, 13, 29, tzinfo=self.tzone)
-        surge_feet = swmp.find_nearest_surge_value(data, next_tide_dt)
+        surge_feet = swmp.find_nearest_surge_value(fileinfo, next_tide_dt)
         self.assertEqual(surge_feet, 0.3)
 
         # matches the value at start of the next hour
         next_tide_dt = datetime(2026, 6, 30, 13, 31, tzinfo=self.tzone)
-        surge_feet = swmp.find_nearest_surge_value(data, next_tide_dt)
+        surge_feet = swmp.find_nearest_surge_value(fileinfo, next_tide_dt)
         self.assertEqual(surge_feet, 0.4)
