@@ -53,12 +53,7 @@ LOGGING = {
         },
         "django": {
             "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        },
-        "app.datasource.cdmo": {
-            "handlers": ["console"],
-            "level": os.getenv("CDMO_LOG_LEVEL", "INFO"),
+            "level": "INFO",
             "propagate": False,
         },
     },

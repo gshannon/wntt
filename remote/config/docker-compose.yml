@@ -30,7 +30,6 @@ services:
             CDMO_USER: ${CDMO_USER}
             CDMO_PASSWORD: ${CDMO_PASSWORD}
             GEOCODE_KEY: ${GEOCODE_KEY}
-            CDMO_LOG_LEVEL: ${CDMO_LOG_LEVEL-INFO}
             FORCE_API_CDMO: ${FORCE_API_CDMO-0}
             FORCE_API_ASTRO: ${FORCE_API_ASTRO-0}
             API_ALLOWED_HOST: api-c
