@@ -47,4 +47,4 @@ def _apply_log_levels(filepath: str) -> None:
             )
             continue
         logging.getLogger(name).setLevel(level_upper)
-        logger.info("Set logger %r to level %s (from %s)", name, level_upper, filepath)
+        logger.debug("Set logger %r to level %s (from %s)", name, level_upper, filepath)
