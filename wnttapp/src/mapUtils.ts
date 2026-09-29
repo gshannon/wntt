@@ -3,8 +3,8 @@ import type Station from './Station'
 import type { LatLng, MapBounds } from './types'
 
 export const DefaultMapZoom = 13
-export const MinZoom = 8
-export const MaxZoom = 18
+export const MinZoom = 10 // Zoomed all the way out. There are 9 more levels (1-9) that don't seem useful.
+export const MaxZoom = 18 // Zoomed all the way in. 18 is the max supported by Leaflet
 
 export const stationIcon = (emoji: string) => {
     return L.divIcon({
