@@ -81,7 +81,7 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
     const [pendingElevationNav, setPendingElevationNav] = useState<number | null>(null)
     const [mapType, setMapType] = useState(stationOptions.mapType)
     const mapTile = mapType === 'basic' ? mu.openMap : mu.satelliteMap
-    const [mapCenter, setMapCenter] = useState<LatLng | undefined>(stationOptions.mapCenter)
+    const [mapCenter, setMapCenter] = useState<LatLng>(stationOptions.mapCenter)
     const [zoom, setZoom] = useState<number | undefined>(stationOptions.zoom)
 
     const markerRef = useRef<L.Marker>(null)
@@ -94,10 +94,9 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
         error: queryError,
     } = useElevationData(pendingMarkerLocation)
 
-    if (!isLoading && !!elevation && elevation !== pendingElevationNav) {
+    if (!isLoading && !!elevation && elevation !== pendingElevationNav && !!pendingMarkerLocation) {
         setPendingElevationNav(elevation)
-        setMapCenter(pendingMarkerLocation ?? undefined) // recenter on looked up location
-        // TODO: Consider zooming in also, but only after address lookup, not after map click/drag.
+        setMapCenter(pendingMarkerLocation) // recenter on looked up location
     }
 
     const addtoGraph = () => {
@@ -147,7 +146,11 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
     )
 
     const handleRecenterToMarker = () => {
-        setMapCenter((pendingMarkerLocation || ctx.customLocation) ?? undefined)
+        // recenter to what they've clicked on here, or previously set custom location.
+        const loc = pendingMarkerLocation || ctx.customLocation
+        if (loc) {
+            setMapCenter(loc)
+        }
     }
 
     const handleRecenterToDefault = () => {
@@ -270,15 +273,13 @@ export default function Map({ onMapClose }: { onMapClose: () => void }) {
                     <ErrorSection error={queryError} />
                     <Row className='justify-content-center mt-0 mx-1 mx-sm-2'>
                         <MapContainer
-                            center={mapCenter ?? station.swmpLocation}
-                            boundsOptions={{ maxZoom: mu.MaxZoom }}
+                            center={mapCenter}
                             maxBounds={station.mapBounds}
+                            minZoom={mu.MinZoom}
+                            maxZoom={mu.MaxZoom}
                             zoom={zoom ?? mu.DefaultMapZoom}>
                             <TileLayer attribution={mapTile.attrib} url={mapTile.url} />
-                            <ChangeView
-                                center={mapCenter ?? station.swmpLocation}
-                                zoom={zoom ?? mu.DefaultMapZoom}
-                            />
+                            <ChangeView center={mapCenter} zoom={zoom ?? mu.DefaultMapZoom} />
                             <MapClickHandler
                                 setMarkerLatLng={setMarkerLatLng}
                                 setZoom={setZoom}

@@ -30,7 +30,7 @@ type StationCtorArgs = StationJson & { id: string }
 export interface StationOptions {
     customElevationNav?: number | null
     customLocation?: LatLng | null
-    mapCenter?: LatLng
+    mapCenter: LatLng
     mapType?: string
     zoom?: number
 }
