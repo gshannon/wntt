@@ -1,5 +1,6 @@
 import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from typing import TypedDict
 from zoneinfo import ZoneInfo
@@ -12,12 +13,23 @@ from app.timeline import GraphTimeline
 from django.core.cache import cache
 from pydantic import BaseModel, ConfigDict
 
+
+@dataclass
+class CacheStat:
+    hits: int
+    misses: int
+
+
 logger = logging.getLogger(__name__)
 
 # Max number of future days, including current day, to retrieve wind forecasts. Open-Meteo supports 16 days.
 _max_forecast_days = 14
-_request_timeout_seconds = 5
+_request_timeout_seconds = 10
 _cache_timeout_seconds = 30 * 60  # 30 min
+
+# We'll track cache hits/misses for debugging
+_cache_stats: dict[str, CacheStat] = {}
+
 
 """
   Access Wind forecasts from open-meteo.com.
@@ -69,17 +81,27 @@ def get_wind_forecast(
         return {}
 
     cache_key = "openmeteo-" + ("hilo" if hilo_mode else "15")
+    stats = _cache_stats.setdefault(cache_key, CacheStat(0, 0))
 
     # first try to read it from cache
     data: dict[datetime, WindForecast] = cache.get(cache_key)
     if data:
-        logger.debug(f"Cache HIT for {cache_key}")
+        stats.hits += 1
+        logger.debug(
+            f"Cache HIT for {cache_key} (hits={stats.hits},misses={stats.misses})"
+        )
         return data
 
     # Not in cache yet, so go to the source.
     try:
-        logger.debug(f"Cache MISS for {cache_key}")
+        stats.misses += 1
+        logger.debug(
+            f"Cache MISS for {cache_key} (hits={stats.hits},misses={stats.misses})"
+        )
         raw_forecast = pull_data(station, hilo_mode)
+        if raw_forecast is None:
+            # pull_data's own request_logger wrapper already logged and captured this to Sentry.
+            return {}
         data = pred_json_to_dict(raw_forecast, timeline.time_zone)
         if len(data) > 0:
             cache.set(cache_key, data, timeout=_cache_timeout_seconds)
@@ -91,7 +113,7 @@ def get_wind_forecast(
 
 
 @util.request_logger
-def pull_data(station: Station, hilo_mode: bool) -> RawForecast:
+def pull_data(station: Station, hilo_mode: bool) -> RawForecast | None:
     # Pull the data and validate the "granularity" section, with keys "time", "wind_speed_10m",
     # and "wind_direction_10m". A malformed payload raises ValidationError.
     granularity = "hourly" if not hilo_mode else "minutely_15"
