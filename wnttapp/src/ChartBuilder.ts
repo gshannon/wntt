@@ -9,7 +9,7 @@ const GridLeftFactor = 0.08 // this is treated by echarts as a minimum; it's wid
 const ChartDisplayFactor = 0.833 // this is 10/12 -- the graph is in the middle of a bootstrap row of [col-1 + col-10 + col-1]
 const PrevFactor = 0.083 // 1/12 of screen width, size of the Prev/Next columns
 
-export const Dimension = Object.freeze({
+export const Dimension = {
     DateTime: 'dt',
     RecordTide: 'rec',
     CustomElevation: 'custom-elevation',
@@ -28,10 +28,10 @@ export const Dimension = Object.freeze({
     WindDir: 'wind-dir',
     AstroTidesLabels: 'astro-tides-labels',
     ForecastWindDir: 'forecast-wind-dir',
-})
+} as const
 
 // For uniquely identifying traces in event handling. Values don't matter, so long as they are unique.
-export const LegendId = Object.freeze({
+export const LegendId = {
     RecordTide: 1,
     HighestAnnualPredicted: 2,
     CustomElevation: 4,
@@ -49,7 +49,7 @@ export const LegendId = Object.freeze({
     XPastStormSurgeCheck: 16,
     XPastStormSurgeCheckBias1: 17,
     XPastStormSurgeCheckBias2: 18,
-})
+} as const
 
 export interface ResponsivePlacement {
     gridLeftPix: number

@@ -24,14 +24,14 @@ export const LargeBase = 992
 export const XLBase = 1200
 export const XXLBase = 1400
 
-export const ScreenSize = Object.freeze({
+export const ScreenSize = {
     XSmall: 'xsmall',
     Small: 'small',
     Medium: 'medium',
     Large: 'large',
     XLarge: 'xlarge',
     XXLarge: 'xxlarge',
-})
+} as const
 
 export const getScreenSize = () => {
     const width = window.innerWidth
@@ -115,13 +115,13 @@ export const maxGraphDate = () => {
     return new Date(`12/31/${year + 2}`)
 }
 
-export const Page = Object.freeze({
+export const Page = {
     Home: 1,
     Graph: 2,
     About: 3,
     Glossary: 4,
     HelpSyzygy: 5,
-})
+} as const
 
 // Round a floating point value string to n digits of precision
 export const roundTo = (value: number, digits: number) => Number(value.toFixed(digits))
@@ -143,10 +143,7 @@ export function buildCacheKey(
 
 // Calculate a reasonable tick interval for wind graphs so it's
 // just the right amount of clutter.
-export const calcWindspeedTickInterval = (
-    gusts: number[] | null,
-    forecasts: number[] | null,
-) => {
+export const calcWindspeedTickInterval = (gusts: number[] | null, forecasts: number[] | null) => {
     let interval = 10
     if (gusts !== null || forecasts !== null) {
         const range = gusts ? Math.max(...gusts) : Math.max(...(forecasts ?? []))
