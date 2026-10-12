@@ -94,7 +94,7 @@ def get_timeline(station) -> Timeline:
 
 def getDumpPath(type, adhoc: bool = False):
     fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
-    dirname = "adhoc" if adhoc else date.today().strftime("%Y%m%d")  # noqa
+    dirname = "adhoc" if adhoc else date.today().strftime("%Y%m")  # noqa
 
     if nocontainer:
         dirpath = f"../data/cdmo/{dirname}"
