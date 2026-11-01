@@ -94,7 +94,7 @@ def get_timeline(station) -> Timeline:
 
 def getDumpPath(type, adhoc: bool = False):
     fname = datetime.now(tz=tz.utc).strftime("%Y%m%d-%H%M%S")
-    dirname = "adhoc" if adhoc else date.today().strftime("%Y%m")  # noqa
+    dirname = "adhoc" if adhoc else date.today().strftime("%Y%m")
 
     if nocontainer:
         dirpath = f"../data/cdmo/{dirname}"
@@ -235,7 +235,7 @@ def diff_wind_record(db: WindDb, cdmo: Wind):
             print("DIFFS: (old speed mph, gust mph, dir) ==> new")
             wind_diff_found = True
         old = (db.speed, db.gust, db.dir_deg)
-        new = (cdmo.speed_mph, cdmo.gust_mph, db.dir_deg)
+        new = (cdmo.speed_mph, cdmo.gust_mph, cdmo.direction_deg)
         print(f"{db.time}: {old} ==> {new}")
         return 1
     return 0
