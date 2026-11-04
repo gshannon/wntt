@@ -4,14 +4,13 @@ import xml.etree.ElementTree as ElTree
 from datetime import date, datetime, timedelta
 from enum import Enum
 
-from rest_framework.exceptions import APIException
-
 from app import tzutil as tz
 from app import util
 from app.datasource.winds import Wind
 from app.hilo import HighOrLow, Hilo, ObservedHighOrLow, PredictedHighOrLow
 from app.station import Station
 from app.timeline import GraphTimeline, Timeline
+from rest_framework.exceptions import APIException
 
 from ..models import Water, get_station
 from ..models import Wind as WindDb
@@ -160,6 +159,7 @@ def get_wind_data(
                 speed_mph=rec.speed,
                 gust_mph=rec.gust,
                 direction_deg=rec.dir_deg,
+                bp=rec.bp,
             )
 
     else:
@@ -403,6 +403,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
         wind_direction_deg = handle_wind_degrees(
             record, Param.WindDir.value, dt_in_local
         )
+        bp = handle_bp(record, Param.BarometricPressure.value, dt_in_local)
         if (
             wind_speed_mph is None
             or wind_gust_mph is None
@@ -415,10 +416,11 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
             speed_mph=wind_speed_mph,
             gust_mph=wind_gust_mph,
             direction_deg=wind_direction_deg,
+            bp=bp,
         )
 
     if none_or_bad > 0:
-        logger.debug(
+        logger.warning(
             f"{none_or_bad} of {records - ignored} expected wind records had missing or invalid data"
         )
 
@@ -597,4 +599,14 @@ def handle_wind_degrees(
         return degrees
     except ValueError:
         logger.debug("invalid or missing %s: '%s' at %s", fieldName, deg_str, local_dt)
+        return None
+
+
+def handle_bp(element: ElTree.Element, fieldName: str, local_dt: datetime):
+    """Exract barometric pressure. Returns None if missing or bad data."""
+    try:
+        bp_str = element.findtext(f"./{fieldName}")
+        return bp_str
+    except ValueError:
+        logger.debug("invalid or missing %s: '%s' at %s", fieldName, bp_str, local_dt)
         return None

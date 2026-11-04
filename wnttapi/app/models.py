@@ -1,6 +1,5 @@
-from django.db import models
-
 from app import util
+from django.db import models
 
 
 class Station(models.TextChoices):
@@ -72,6 +71,7 @@ class Wind(models.Model):
     speed = models.FloatField(null=False)
     gust = models.FloatField(null=False)
     dir_deg = models.SmallIntegerField(null=False)
+    bp = models.CharField(max_length=10, null=True)
 
     class Meta:
         db_table = "wind"

@@ -230,12 +230,13 @@ def diff_wind_record(db: WindDb, cdmo: Wind):
         db.gust != cdmo.gust_mph
         or db.speed != cdmo.speed_mph
         or db.dir_deg != cdmo.direction_deg
+        or db.bp != cdmo.bp
     ):
         if not wind_diff_found:
-            print("DIFFS: (old speed mph, gust mph, dir) ==> new")
+            print("DIFFS: (old speed mph, gust mph, dir, bp) ==> new")
             wind_diff_found = True
-        old = (db.speed, db.gust, db.dir_deg)
-        new = (cdmo.speed_mph, cdmo.gust_mph, cdmo.direction_deg)
+        old = (db.speed, db.gust, db.dir_deg, db.bp)
+        new = (cdmo.speed_mph, cdmo.gust_mph, cdmo.direction_deg, cdmo.bp)
         print(f"{db.time}: {old} ==> {new}")
         return 1
     return 0
@@ -269,6 +270,7 @@ def upsert_wind(winds: dict, db_station_code: str):
                 "speed": wind_rec.speed_mph,
                 "gust": wind_rec.gust_mph,
                 "dir_deg": wind_rec.direction_deg,
+                "bp": wind_rec.bp,
             },
         )
         if created:
