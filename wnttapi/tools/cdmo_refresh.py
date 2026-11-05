@@ -25,7 +25,6 @@ force_console_logging()
 
 import app.station as stn
 import app.tzutil as tz
-from app import util
 from app.datasource import cdmo
 from app.datasource.tides import Tide
 from app.datasource.winds import Wind
@@ -204,22 +203,15 @@ def diff_water_record(db: Water, cdmo: Tide) -> int:
 
     global tide_diff_found
 
-    # We only diff Corrected water level, as temp is not important in this app
-    if not cdmo.nav_feet_equals(db.clevel_nf):
+    # We only diff water level, as temp is not important in this app
+    # TODO: once we no longer need to diff data before 11/5/2026, change to compare clevel_raw instead.
+    if cdmo.clevel_nf != db.clevel_nf:
         if not tide_diff_found:
-            print("DIFFS: (old nav-meters, nav-feet, mllw-feet) ==> new")
+            print("timestamp,raw1,raw2,nf1,nf2")
             tide_diff_found = True
-        old = (
-            util.feet_to_meters(db.clevel_nf),
-            db.clevel_nf,
-            cdmo.navd88_to_mllw(db.clevel_nf),
+        print(
+            f"{db.time},{db.clevel_raw},{cdmo.clevel_raw},{db.clevel_nf},{cdmo.clevel_nf}"
         )
-        new = (
-            util.feet_to_meters(cdmo.corrected_nav_feet),
-            cdmo.corrected_nav_feet,
-            cdmo.corrected_mllw_feet,
-        )
-        print(f"{db.time}: {old} ==> {new}")
         return 1
     return 0
 
@@ -230,14 +222,15 @@ def diff_wind_record(db: WindDb, cdmo: Wind):
         db.gust != cdmo.gust_mph
         or db.speed != cdmo.speed_mph
         or db.dir_deg != cdmo.direction_deg
-        or db.bp != cdmo.bp
+        or (db.bp is not None and db.bp != cdmo.bp)
     ):
         if not wind_diff_found:
-            print("DIFFS: (old speed mph, gust mph, dir, bp) ==> new")
+            print("timestamp,speed1,speed2,gust1,gust2,dir1,dir2,bp1,bp2")
             wind_diff_found = True
-        old = (db.speed, db.gust, db.dir_deg, db.bp)
-        new = (cdmo.speed_mph, cdmo.gust_mph, cdmo.direction_deg, cdmo.bp)
-        print(f"{db.time}: {old} ==> {new}")
+        print(
+            f"{db.time},{db.speed},{cdmo.speed_mph},{db.gust},{cdmo.gust_mph},"
+            + f"{db.dir_deg},{cdmo.direction_deg},{db.bp},{cdmo.bp}"
+        )
         return 1
     return 0
 
@@ -250,7 +243,8 @@ def upsert_water(tides: dict, db_station_code: str):
             time=dt.astimezone(tz.utc).isoformat(),
             defaults={
                 "temp_f": tide.temp_f,
-                "clevel_nf": tide.corrected_nav_feet,
+                "clevel_nf": tide.clevel_nf,
+                "clevel_raw": tide.clevel_raw,
             },
         )
         if created:

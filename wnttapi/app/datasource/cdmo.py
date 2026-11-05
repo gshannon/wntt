@@ -90,7 +90,8 @@ def get_water_data(
             dt_in_local = in_utc.astimezone(timeline.time_zone)
             tides[dt_in_local] = Tide(
                 temp_f=rec.temp_f,
-                corrected_nav_feet=rec.clevel_nf,
+                clevel_nf=rec.clevel_nf,
+                clevel_raw=rec.clevel_raw,  # not needed, but for completeness
                 mllw_offset=station.navd88_to_mllw_conversion,
             )
 
@@ -332,6 +333,7 @@ def parse_cdmo_tides_xml(
             none_or_bad += 1
             continue
 
+        clevel_raw: str = handle_str(record, Param.CorrectedLevelNav.value, dt_in_local)
         corrected_level_nav_meters = handle_float(
             record,
             Param.CorrectedLevelNav.value,
@@ -344,7 +346,8 @@ def parse_cdmo_tides_xml(
 
         tides[dt_in_local] = Tide(
             temp_f=util.celsius_to_fahrenheit(temp_c) if temp_c else None,
-            corrected_nav_feet=util.meters_to_feet(corrected_level_nav_meters),
+            clevel_nf=util.meters_to_feet(corrected_level_nav_meters),
+            clevel_raw=clevel_raw,
             mllw_offset=station.navd88_to_mllw_conversion,
         )
 
@@ -403,7 +406,7 @@ def parse_cdmo_wind_xml(timeline: Timeline, xml: bytes) -> dict[datetime, Wind]:
         wind_direction_deg = handle_wind_degrees(
             record, Param.WindDir.value, dt_in_local
         )
-        bp = handle_bp(record, Param.BarometricPressure.value, dt_in_local)
+        bp = handle_str(record, Param.BarometricPressure.value, dt_in_local)
         if (
             wind_speed_mph is None
             or wind_gust_mph is None
@@ -602,11 +605,11 @@ def handle_wind_degrees(
         return None
 
 
-def handle_bp(element: ElTree.Element, fieldName: str, local_dt: datetime):
+def handle_str(element: ElTree.Element, fieldName: str, local_dt: datetime):
     """Exract barometric pressure. Returns None if missing or bad data."""
     try:
-        bp_str = element.findtext(f"./{fieldName}")
-        return bp_str
+        as_str = element.findtext(f"./{fieldName}")
+        return as_str
     except ValueError:
-        logger.debug("invalid or missing %s: '%s' at %s", fieldName, bp_str, local_dt)
+        logger.debug("invalid or missing %s: '%s' at %s", fieldName, as_str, local_dt)
         return None

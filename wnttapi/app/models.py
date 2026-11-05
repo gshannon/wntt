@@ -55,6 +55,7 @@ class Water(models.Model):
     )  # store as ISO string in UTC, e.g. "2024-01-01T05:30:00+00:00"
     temp_f = models.FloatField(null=True)
     clevel_nf = models.FloatField(null=False)  #  Corrected NAVD88 feet
+    clevel_raw = models.CharField(max_length=10, null=True)  # exactly as in xml
 
     class Meta:
         db_table = "water"

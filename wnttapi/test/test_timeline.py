@@ -172,9 +172,9 @@ class TestHiloTimeline(TestCase):
         non_hilo_time_2 = datetime(2025, 2, 1, 9, 30, tzinfo=zone)
 
         winds = {}
-        winds[non_hilo_time_1] = Wind(8.1, 22, 0)
-        winds[non_hilo_time_2] = Wind(16, 35.2, 60)
-        winds[past_hilo_time_1] = Wind(12, 15.5, 325)
+        winds[non_hilo_time_1] = Wind(8.1, 22, 0, "1012")
+        winds[non_hilo_time_2] = Wind(16, 35.2, 60, "900")
+        winds[past_hilo_time_1] = Wind(12, 15.5, 325, "1010")
 
         timeline = HiloTimeline(start_date, end_date, zone)
         hilo_dict = {
