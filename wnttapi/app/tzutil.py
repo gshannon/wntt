@@ -46,10 +46,20 @@ hawaii = ZoneInfo("US/Hawaii")  # UTC-10 (std), no DST
 utc = ZoneInfo("UTC")
 
 
-def isDst(dt: datetime) -> bool:
+def is_dst(dt: datetime) -> bool:
     """Returns whether the given datetime is in DST."""
     dst = dt.dst()
     return dst is not None and dst > timedelta(hours=0)
+
+
+def to_lst(dt: datetime, tz: ZoneInfo | None = None) -> datetime:
+    """Convert an aware datetime to LST for a given timezone, which defaults to that of given dt."""
+    tzone = tz if tz is not None else dt.tzinfo
+    local = dt.astimezone(tzone)
+    if is_dst(local):
+        return local - timedelta(hours=1)
+    else:
+        return local
 
 
 # Return a datetime that is the first minute of a given date, in a time zone.

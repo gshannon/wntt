@@ -275,10 +275,7 @@ def upsert_wind(winds: dict, db_station_code: str):
 
 
 def build_latest_timeline(last_dt_str, station) -> Timeline:
-    # Note: the db times are in UTC, stored in ISO format which is "+00:00". But when calling
-    # datetime.fromisoformat, it sets tzinfo to a 'datetime.timezone' type, not ZoneInfo. This
-    # means it only knows about tz offsets, not DST. So we convert that to a DST-aware ZoneInfo.
-    last_dt_utc = datetime.fromisoformat(last_dt_str).replace(tzinfo=tz.utc)
+    last_dt_utc = datetime.fromisoformat(last_dt_str)
     last_dt_local = last_dt_utc.astimezone(station.time_zone)
     now = datetime.now(tz=station.time_zone)
     max_dt_local = min(

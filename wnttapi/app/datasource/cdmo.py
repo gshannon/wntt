@@ -1,7 +1,7 @@
 import logging
 import os
 import xml.etree.ElementTree as ElTree
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 
 from app import tzutil as tz
@@ -251,10 +251,9 @@ def get_cdmo_xml(timeline: Timeline, station: Station, params: list[Param]) -> b
     # When getting Level data, we add padding before and after to help determine highs/lows when they are near the boundaries.
     use_padding = Param.LevelNav in params and isinstance(timeline, GraphTimeline)
 
-    # Because CDMO returns units of entire days using LST, we may need to adjust the dates we request.
-    req_start_date, req_end_date = compute_cdmo_request_dates(
-        timeline.get_min(use_padding), timeline.get_max(use_padding)
-    )
+    # CDMO returns units of entire days using LST, so compute the correct start/end dates to request.
+    req_start_date = tz.to_lst(timeline.get_min(use_padding), timeline.time_zone).date()
+    req_end_date = tz.to_lst(timeline.get_max(use_padding), timeline.time_zone).date()
 
     # Determine which station id to use -- the id of either the station's swmp station or the weather station.
     # Note that station.id is the swmp station id.
@@ -442,44 +441,6 @@ def ensure_no_text(rootElement: ElTree.Element) -> None:
             raise APIException(f"CDMO returned: {message}")
     except AttributeError:
         pass  # Not every payload has text in their data node
-
-
-def compute_cdmo_request_dates(
-    start_time: datetime, end_time: datetime
-) -> tuple[date, date]:
-    """
-    CDMO will give us only full days of data, using LST of the time zone of the requesting station. LST
-    does not honor DST, so we may have to adjust the start date and/or the end date, to avoid missing data
-    or getting too much data. We depend on the timeline being chronologically ordered. Here is the logic:
-
-    - Start date: If timeline starts in standard time, no change.  If timeline starts in DST and
-    asks for anything before 01:00, we must ask for the previous day, else we'll miss that hour.
-
-    - End date: If timeline ends in standard time, no change.  If timeline ends in DST and asks for
-    only data in the first hour, we won't need that date since it will be included in data for the previous
-    day, so we bump back the end date. (Note that this can never push it back before the requested
-    start date. In the extreme case of asking for a single datapoint, the start date would have also been pushed
-    back.
-    """
-
-    requested_start_date = start_time.date()
-    requested_end_date = end_time.date()
-
-    if tz.isDst(start_time) and start_time.hour < 1:
-        requested_start_date -= timedelta(days=1)
-
-    if tz.isDst(end_time) and end_time.hour < 1:
-        requested_end_date -= timedelta(days=1)
-
-    logger.debug(
-        f"Timeline: {start_time.strftime('%Y-%m-%d %H:%M')} "
-        f"- {end_time.strftime('%Y-%m-%d %H:%M')}, "
-        "Requesting CDMO dates: "
-        f"{requested_start_date.strftime('%Y-%m-%d')} - "
-        f"{requested_end_date.strftime('%Y-%m-%d')}"
-    )
-
-    return requested_start_date, requested_end_date
 
 
 def find_all_hilos(

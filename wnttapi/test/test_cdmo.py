@@ -113,7 +113,10 @@ class TestCdmo(TestCase):
         for tzone in [tz.central, tz.mountain, tz.pacific]:
             timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (start_date, end_date + timedelta(days=1)),
             )
 
@@ -125,7 +128,10 @@ class TestCdmo(TestCase):
             end_dt = datetime(2025, 3, 10, 0, tzinfo=zone)
             timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (start_dt.date(), end_dt.date() - timedelta(days=1)),
             )
 
@@ -135,7 +141,10 @@ class TestCdmo(TestCase):
             end_dt = datetime(2025, 3, 10, 1, tzinfo=zone)
             timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (start_dt.date(), end_dt.date()),
             )
 
@@ -147,7 +156,10 @@ class TestCdmo(TestCase):
             end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
             timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (start_dt.date() - timedelta(days=1), end_dt.date()),
             )
 
@@ -157,7 +169,10 @@ class TestCdmo(TestCase):
             end_dt = datetime(2025, 10, 2, 23, 45, tzinfo=zone)
             timeline = Timeline(start_dt, end_dt)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (start_dt.date(), end_dt.date()),
             )
 
@@ -170,12 +185,18 @@ class TestCdmo(TestCase):
         for tzone in [tz.central, tz.mountain, tz.pacific]:
             timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (expected_start_date, end_date),
             )
             timeline = GraphTimeline(start_date, end_date, tzone)
             self.assertEqual(
-                cdmo.compute_cdmo_request_dates(timeline.start_dt, timeline.end_dt),
+                (
+                    tz.to_lst(timeline.start_dt).date(),
+                    tz.to_lst(timeline.end_dt).date(),
+                ),
                 (expected_start_date, end_date),
             )
 
