@@ -107,7 +107,7 @@ There are no code changes required when a station is added. It is only configura
     {
         "welinwq": {
             "id": "welinwq",
-            "timeZone": "US/Eastern",
+            "timeZone": "America/New_York",
             "reserveName": "Wells",
             "reserveUrl": "https://www.nerra.org/reserve/wells-reserve/",
             "waterStationName": "Wells Harbor",

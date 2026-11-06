@@ -23,7 +23,7 @@ class TestStation(TestCase):
         cache.clear()
         wells1 = boot.load_station("welinwq")
         self.assertEqual(wells1.id, "welinwq")
-        self.assertEqual(wells1.time_zone, ZoneInfo("US/Eastern"))
+        self.assertEqual(wells1.time_zone, ZoneInfo("America/New_York"))
 
         # read from cache
         self.assertTrue(cache.has_key(stn.stations_cls_cache_key))

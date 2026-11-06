@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 datatype = "-t T"
-start = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("US/Eastern"))
-end = datetime(2026, 8, 1, 0, 0, tzinfo=ZoneInfo("US/Eastern"))
+start = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("America/New_York"))
+end = datetime(2026, 8, 1, 0, 0, tzinfo=ZoneInfo("America/New_York"))
 
 cmd = "refresh-cdmo-data"
 

@@ -6,6 +6,10 @@ from datetime import datetime
 from typing import Any, Literal
 
 import requests
+from app import tzutil as tz
+from app import util
+from app.hilo import Hilo, PredictedHighOrLow
+from app.timeline import Timeline
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -13,11 +17,6 @@ from pydantic import (
     ValidationInfo,
     field_validator,
 )
-
-from app import tzutil as tz
-from app import util
-from app.hilo import Hilo, PredictedHighOrLow
-from app.timeline import Timeline
 
 from ..models import AstroTide15, AstroTideHilo
 
@@ -30,7 +29,7 @@ from ..models import AstroTide15, AstroTideHilo
     to convert the returned times into timezone-aware datetimes. Thus, for graphing, the requested timeline
     must match the actual timezone of the station in question, and there's no way to guarantee that herein.
     We could request the data in GMT, but that complicates the date range we request. E.g. for 
-    US/Eastern, we would never care about the first 4 or 5 hours of data returned, and we'd have to ask for 
+    America/New_York, we would never care about the first 4 or 5 hours of data returned, and we'd have to ask for 
     an extra day to get the last 4 or 5 hours we care about. 
 
 """

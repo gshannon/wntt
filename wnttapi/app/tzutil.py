@@ -16,11 +16,11 @@ datetime.now().replace(tzinfo=central)
 datetime(2024,6,1,tzinfo=pacific)
 naive_datetime.replace(tzinfo=mountain)
 
-Do NOT: datetime(2024,6,1).astimezone(ZoneInfo('US/Eastern')).  
+Do NOT: datetime(2024,6,1).astimezone(ZoneInfo('America/New_York')).  
 This will first assume the naive datetime is machine timezone, then convert it to eastern.
 
 Convert between aware timezones:
-datetime(2024,6,18,10,14,tzinfo=ZoneInfo('UTC')).astimezone(ZoneInfo('US/Eastern'))
+datetime(2024,6,18,10,14,tzinfo=ZoneInfo('UTC')).astimezone(ZoneInfo('America/New_York'))
 
 Is a datetime tz aware?
 dt.tzinfo is not None
@@ -38,11 +38,11 @@ FYI, some DST dates are:
 """
 
 logger = logging.getLogger(__name__)
-eastern = ZoneInfo("US/Eastern")  # UTC-5 (std), UTC-4 (DST)
-central = ZoneInfo("US/Central")  # UTC-6 (std), UTC-5 (DST)
-mountain = ZoneInfo("US/Mountain")  # UTC-7 (std), UTC-6 (DST)
-pacific = ZoneInfo("US/Pacific")  # UTC-8 (std), UTC-7 (DST)
-hawaii = ZoneInfo("US/Hawaii")  # UTC-10 (std), no DST
+eastern = ZoneInfo("America/New_York")  # UTC-5 (std), UTC-4 (DST)
+central = ZoneInfo("America/Chicago")  # UTC-6 (std), UTC-5 (DST)
+mountain = ZoneInfo("America/Denver")  # UTC-7 (std), UTC-6 (DST)
+pacific = ZoneInfo("America/Los_Angeles")  # UTC-8 (std), UTC-7 (DST)
+hawaii = ZoneInfo("Pacific/Honolulu")  # UTC-10 (std), no DST
 utc = ZoneInfo("UTC")
 
 

@@ -315,13 +315,13 @@ def build_parser():
         "-S",
         "--start",
         required=False,
-        help="start datetime in US/Eastern as YYYY-mm-ddTHH:MM",
+        help="start datetime in America/New_York as YYYY-mm-ddTHH:MM",
     )
     parser.add_argument(
         "-E",
         "--end",
         required=False,
-        help="end datetime in US/Eastern as YYYY-mm-ddTHH:MM",
+        help="end datetime in America/New_York as YYYY-mm-ddTHH:MM",
     )
     parser.add_argument(
         "-y",
